@@ -3,18 +3,23 @@
  *
  * Real-time approval management dashboard for the SINT Protocol.
  * Connects to the Gateway Server via REST + SSE.
+ *
+ * Requires operator authentication before accessing the dashboard.
  */
 
+import { useEffect } from "react";
 import { Header } from "./components/Header.js";
 import { OverviewCards } from "./components/OverviewCards.js";
 import { PendingApprovals } from "./components/PendingApprovals.js";
 import { AuditLog } from "./components/AuditLog.js";
 import { TierLegend } from "./components/TierLegend.js";
+import { LoginScreen } from "./components/LoginScreen.js";
+import { useAuth } from "./contexts/AuthContext.js";
 import { useApprovals } from "./hooks/useApprovals.js";
 import { usePolling } from "./hooks/usePolling.js";
-import { getHealth, getLedger } from "./api/client.js";
+import { getHealth, getLedger, configureAuth } from "./api/client.js";
 
-export function App() {
+function Dashboard() {
   const { pending, connected, error: sseError, refresh: refreshApprovals } = useApprovals();
   const { data: health } = usePolling(getHealth, 10_000);
   const {
@@ -62,4 +67,19 @@ export function App() {
       </main>
     </>
   );
+}
+
+export function App() {
+  const { session } = useAuth();
+
+  // Sync API client auth headers whenever session changes
+  useEffect(() => {
+    configureAuth(session?.apiKey ?? null);
+  }, [session]);
+
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  return <Dashboard />;
 }

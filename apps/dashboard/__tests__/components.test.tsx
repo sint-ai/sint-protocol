@@ -9,7 +9,14 @@ import { PendingApprovals } from "../src/components/PendingApprovals.js";
 import { AuditLog } from "../src/components/AuditLog.js";
 import { OverviewCards } from "../src/components/OverviewCards.js";
 import { TierLegend } from "../src/components/TierLegend.js";
+import { AuthProvider } from "../src/contexts/AuthContext.js";
 import type { ApprovalRequest, HealthResponse, LedgerResponse } from "../src/api/types.js";
+import type { ReactNode } from "react";
+
+/** Wrapper that provides auth context for components that require it. */
+function WithAuth({ children }: { children: ReactNode }) {
+  return <AuthProvider>{children}</AuthProvider>;
+}
 
 const mockHealth: HealthResponse = {
   status: "ok",
@@ -56,32 +63,32 @@ const mockLedger: LedgerResponse = {
 
 describe("Header", () => {
   it("renders logo and status", () => {
-    render(<Header health={mockHealth} sseConnected={true} pendingCount={0} />);
+    render(<Header health={mockHealth} sseConnected={true} pendingCount={0} />, { wrapper: WithAuth });
     expect(screen.getByText("SINT")).toBeDefined();
     expect(screen.getByText("Approval Dashboard")).toBeDefined();
     expect(screen.getByText("Live")).toBeDefined();
   });
 
   it("shows pending badge when count > 0", () => {
-    render(<Header health={mockHealth} sseConnected={true} pendingCount={3} />);
+    render(<Header health={mockHealth} sseConnected={true} pendingCount={3} />, { wrapper: WithAuth });
     expect(screen.getByText("3")).toBeDefined();
     expect(screen.getByText("pending")).toBeDefined();
   });
 
   it("shows offline when disconnected", () => {
-    render(<Header health={null} sseConnected={false} pendingCount={0} />);
+    render(<Header health={null} sseConnected={false} pendingCount={0} />, { wrapper: WithAuth });
     expect(screen.getByText("Offline")).toBeDefined();
   });
 });
 
 describe("PendingApprovals", () => {
   it("renders empty state when no requests", () => {
-    render(<PendingApprovals requests={[]} onResolved={vi.fn()} />);
+    render(<PendingApprovals requests={[]} onResolved={vi.fn()} />, { wrapper: WithAuth });
     expect(screen.getByText("No pending approvals")).toBeDefined();
   });
 
   it("renders approval card with details", () => {
-    render(<PendingApprovals requests={[mockApprovalRequest]} onResolved={vi.fn()} />);
+    render(<PendingApprovals requests={[mockApprovalRequest]} onResolved={vi.fn()} />, { wrapper: WithAuth });
     expect(screen.getByText("T3_COMMIT")).toBeDefined();
     expect(screen.getByText("mcp://exec/run")).toBeDefined();
     expect(screen.getByText("exec.run")).toBeDefined();
@@ -98,7 +105,7 @@ describe("PendingApprovals", () => {
       json: async () => ({ requestId: "req-001", resolution: { status: "approved" } }),
     }));
 
-    render(<PendingApprovals requests={[mockApprovalRequest]} onResolved={mockResolve} />);
+    render(<PendingApprovals requests={[mockApprovalRequest]} onResolved={mockResolve} />, { wrapper: WithAuth });
 
     const approveButton = screen.getByText("Approve");
     fireEvent.click(approveButton);

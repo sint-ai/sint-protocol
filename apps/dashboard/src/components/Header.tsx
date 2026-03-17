@@ -1,10 +1,12 @@
 /**
  * SINT Dashboard — Header Component.
  *
- * Shows the SINT logo, connection status, and health stats.
+ * Shows the SINT logo, connection status, health stats,
+ * and the authenticated operator identity with logout.
  */
 
 import type { HealthResponse } from "../api/types.js";
+import { useAuth } from "../contexts/AuthContext.js";
 
 interface HeaderProps {
   health: HealthResponse | null;
@@ -13,6 +15,8 @@ interface HeaderProps {
 }
 
 export function Header({ health, sseConnected, pendingCount }: HeaderProps) {
+  const { session, logout } = useAuth();
+
   return (
     <header className="header">
       <div className="header-left">
@@ -50,6 +54,20 @@ export function Header({ health, sseConnected, pendingCount }: HeaderProps) {
             <span className="stat" title="Revoked tokens">
               <span className="stat-icon">&#x1F6AB;</span> {health.revokedTokens}
             </span>
+          </div>
+        )}
+
+        {session && (
+          <div className="operator-badge">
+            <span className="operator-icon">&#x1F464;</span>
+            <span className="operator-name">{session.operatorName}</span>
+            <button
+              className="btn-logout"
+              onClick={logout}
+              title="Sign out"
+            >
+              &#x23FB;
+            </button>
           </div>
         )}
       </div>

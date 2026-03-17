@@ -8,6 +8,7 @@
 import { useState } from "react";
 import type { ApprovalRequest } from "../api/types.js";
 import { resolveApproval } from "../api/client.js";
+import { useAuth } from "../contexts/AuthContext.js";
 
 interface PendingApprovalsProps {
   requests: ApprovalRequest[];
@@ -35,6 +36,7 @@ function timeRemaining(expiresAt: string): string {
 }
 
 export function PendingApprovals({ requests, onResolved }: PendingApprovalsProps) {
+  const { session } = useAuth();
   const [resolving, setResolving] = useState<Set<string>>(new Set());
 
   async function handleResolve(requestId: string, status: "approved" | "denied") {
@@ -42,7 +44,7 @@ export function PendingApprovals({ requests, onResolved }: PendingApprovalsProps
     try {
       await resolveApproval(requestId, {
         status,
-        by: "dashboard-operator",
+        by: session?.operatorName ?? "unknown-operator",
       });
       onResolved();
     } catch (err) {

@@ -3,6 +3,9 @@
  *
  * Communicates with the SINT Gateway Server REST API.
  * In development, Vite proxies /v1/* to localhost:3100.
+ *
+ * All authenticated requests include the operator's API key
+ * via the X-API-Key header (set by `configureAuth()`).
  */
 
 import type {
@@ -14,11 +17,27 @@ import type {
 
 const BASE = "";
 
+/** Current auth headers injected by configureAuth(). */
+let authHeaders: Record<string, string> = {};
+
+/**
+ * Set the API key used for all subsequent requests.
+ * Called once on login; cleared on logout.
+ */
+export function configureAuth(apiKey: string | null): void {
+  if (apiKey) {
+    authHeaders = { "X-API-Key": apiKey };
+  } else {
+    authHeaders = {};
+  }
+}
+
 async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...init?.headers,
     },
   });
