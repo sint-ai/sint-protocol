@@ -8,7 +8,7 @@
  * @module @sint/mcp/enforcer
  */
 
-import type { SintRequest, PolicyDecision } from "@sint/core";
+import { type SintRequest, type PolicyDecision, ApprovalTier } from "@sint/core";
 import type { PolicyGateway } from "@sint/gate-policy-gateway";
 import type { ApprovalQueue } from "@sint/gate-policy-gateway";
 import { generateUUIDv7, nowISO8601 } from "@sint/gate-capability-tokens";
@@ -16,6 +16,29 @@ import { toResourceUri, toSintAction } from "@sint/bridge-mcp";
 import type { MCPToolCall } from "@sint/bridge-mcp";
 import type { ParsedNamespace } from "./aggregator.js";
 import type { DownstreamManager } from "./downstream.js";
+
+/**
+ * Ordered tier values for comparison.
+ * Lower index = lower risk.
+ */
+const TIER_ORDER: readonly ApprovalTier[] = [
+  ApprovalTier.T0_OBSERVE,
+  ApprovalTier.T1_PREPARE,
+  ApprovalTier.T2_ACT,
+  ApprovalTier.T3_COMMIT,
+];
+
+/** Map config tier strings to ApprovalTier enum. */
+const TIER_FROM_CONFIG: Record<string, ApprovalTier> = {
+  T0_observe: ApprovalTier.T0_OBSERVE,
+  T1_prepare: ApprovalTier.T1_PREPARE,
+  T2_act: ApprovalTier.T2_ACT,
+  T3_commit: ApprovalTier.T3_COMMIT,
+};
+
+function tierIndex(tier: ApprovalTier): number {
+  return TIER_ORDER.indexOf(tier);
+}
 
 /** Result of enforcing policy on a tool call. */
 export interface EnforcementResult {
@@ -101,6 +124,43 @@ export class PolicyEnforcer {
       this.recentActions.shift();
     }
 
+    // ── Per-server policy enforcement ──
+    // Apply maxTier ceiling and requireApproval override from server config.
+    const serverConfig = this.downstream.getServerConfig(parsed.serverName);
+    const serverPolicy = serverConfig?.policy;
+
+    // If server has requireApproval=true, force escalation for non-T0 actions
+    if (serverPolicy?.requireApproval && decision.action === "allow") {
+      if (decision.assignedTier !== ApprovalTier.T0_OBSERVE) {
+        return this.handleEscalation(
+          sintRequest,
+          decision,
+          parsed,
+          args,
+          `Server "${parsed.serverName}" requires human approval for all non-observe actions`,
+        );
+      }
+    }
+
+    // If server has maxTier, deny or escalate if the decision's tier exceeds it
+    if (serverPolicy?.maxTier && decision.action === "allow") {
+      const maxTier = TIER_FROM_CONFIG[serverPolicy.maxTier];
+      if (maxTier !== undefined) {
+        const assignedIdx = tierIndex(decision.assignedTier);
+        const maxIdx = tierIndex(maxTier);
+
+        if (assignedIdx > maxIdx) {
+          // Tool's tier exceeds the server's allowed maximum → deny
+          return {
+            allowed: false,
+            decision,
+            denyReason: `Server "${parsed.serverName}" policy restricts to ${serverPolicy.maxTier}. ` +
+              `Tool "${parsed.toolName}" requires ${decision.assignedTier}.`,
+          };
+        }
+      }
+    }
+
     switch (decision.action) {
       case "allow": {
         // Forward to downstream
@@ -118,33 +178,13 @@ export class PolicyEnforcer {
       }
 
       case "escalate": {
-        // Enqueue for human approval
-        const approvalReq = this.approvalQueue.enqueue(sintRequest, decision);
-        const reason = decision.escalation?.reason ?? "Requires human approval";
-
-        // Wait for resolution with timeout
-        const resolution = await this.waitForResolution(approvalReq.requestId);
-
-        if (resolution === "approved") {
-          const result = await this.downstream.callTool(
-            parsed.serverName,
-            parsed.toolName,
-            args,
-          );
-          return {
-            allowed: true,
-            decision,
-            approvalRequestId: approvalReq.requestId,
-            result,
-          };
-        }
-
-        return {
-          allowed: false,
+        return this.handleEscalation(
+          sintRequest,
           decision,
-          denyReason: `Escalated: ${reason}. Use sint__approve to approve pending actions.`,
-          approvalRequestId: approvalReq.requestId,
-        };
+          parsed,
+          args,
+          decision.escalation?.reason ?? "Requires human approval",
+        );
       }
 
       case "transform": {
@@ -165,6 +205,43 @@ export class PolicyEnforcer {
         };
       }
     }
+  }
+
+  /**
+   * Handle escalation flow — enqueue for approval and wait.
+   */
+  private async handleEscalation(
+    sintRequest: SintRequest,
+    decision: PolicyDecision,
+    parsed: ParsedNamespace,
+    args: Record<string, unknown>,
+    reason: string,
+  ): Promise<EnforcementResult> {
+    const approvalReq = this.approvalQueue.enqueue(sintRequest, decision);
+
+    // Wait for resolution with timeout
+    const resolution = await this.waitForResolution(approvalReq.requestId);
+
+    if (resolution === "approved") {
+      const result = await this.downstream.callTool(
+        parsed.serverName,
+        parsed.toolName,
+        args,
+      );
+      return {
+        allowed: true,
+        decision,
+        approvalRequestId: approvalReq.requestId,
+        result,
+      };
+    }
+
+    return {
+      allowed: false,
+      decision,
+      denyReason: `Escalated: ${reason}. Use sint__approve to approve pending actions.`,
+      approvalRequestId: approvalReq.requestId,
+    };
   }
 
   /**

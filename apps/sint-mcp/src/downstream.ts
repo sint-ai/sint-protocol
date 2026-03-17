@@ -126,10 +126,15 @@ export class DownstreamManager {
   /**
    * Add a pre-connected client (useful for testing).
    */
-  addConnectedClient(name: string, client: Client, tools: DownstreamTool[]): void {
+  addConnectedClient(
+    name: string,
+    client: Client,
+    tools: DownstreamTool[],
+    config?: DownstreamServerConfig,
+  ): void {
     this.servers.set(name, {
       name,
-      config: {},
+      config: config ?? {},
       client,
       transport: null,
       tools,

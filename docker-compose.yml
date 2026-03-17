@@ -21,6 +21,16 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    ports:
+      - "3201:3201"
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     environment:
