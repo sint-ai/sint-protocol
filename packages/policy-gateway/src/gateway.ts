@@ -27,8 +27,8 @@ import { checkConstraints } from "./constraint-checker.js";
 import { checkForbiddenCombos } from "./forbidden-combos.js";
 import type { AgentTrustLevel } from "@sint/core";
 
-/** Token resolver — looks up a capability token by ID. */
-export type TokenResolver = (tokenId: string) => SintCapabilityToken | undefined;
+/** Token resolver — looks up a capability token by ID (sync or async). */
+export type TokenResolver = (tokenId: string) => SintCapabilityToken | undefined | Promise<SintCapabilityToken | undefined>;
 
 /** Event emitter for ledger integration. */
 export type LedgerEmitter = (event: {
@@ -82,7 +82,7 @@ export class PolicyGateway {
    * This is the ONLY entry point for all agent actions.
    * NOTHING bypasses this method.
    */
-  intercept(request: SintRequest): PolicyDecision {
+  async intercept(request: SintRequest): Promise<PolicyDecision> {
     const timestamp = nowISO8601();
     const requestId = request.requestId;
 
@@ -93,7 +93,7 @@ export class PolicyGateway {
     }
 
     // 2. Resolve the capability token
-    const token = this.config.resolveToken(request.tokenId);
+    const token = await this.config.resolveToken(request.tokenId);
     if (!token) {
       return this.deny(requestId, timestamp, "TOKEN_NOT_FOUND", "Capability token not found");
     }

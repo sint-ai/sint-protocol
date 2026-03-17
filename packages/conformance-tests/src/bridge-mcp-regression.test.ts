@@ -93,7 +93,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-1: Read-only tool call should be forwarded
   // ──────────────────────────────────────────────────────────
-  it("MCP-1. Read-only filesystem tool call should be forwarded", () => {
+  it("MCP-1. Read-only filesystem tool call should be forwarded", async () => {
     const token = issueAndStore();
     const sessionId = interceptor.createSession({
       agentId: agent.publicKey,
@@ -101,7 +101,7 @@ describe("Bridge-MCP Regression Tests", () => {
       serverName: "filesystem",
     });
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "readFile" }),
     );
@@ -112,7 +112,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-2: Tool call with revoked token must be denied
   // ──────────────────────────────────────────────────────────
-  it("MCP-2. Tool call with revoked token must be denied", () => {
+  it("MCP-2. Tool call with revoked token must be denied", async () => {
     const token = issueAndStore();
     const sessionId = interceptor.createSession({
       agentId: agent.publicKey,
@@ -123,7 +123,7 @@ describe("Bridge-MCP Regression Tests", () => {
     // Revoke the token
     revocationStore.revoke(token.tokenId, "Security incident", "admin");
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "writeFile" }),
     );
@@ -147,8 +147,8 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-4: Session not found must deny
   // ──────────────────────────────────────────────────────────
-  it("MCP-4. Tool call with invalid session must be denied", () => {
-    const result = interceptor.interceptToolCall(
+  it("MCP-4. Tool call with invalid session must be denied", async () => {
+    const result = await interceptor.interceptToolCall(
       "nonexistent-session-id",
       makeToolCall(),
     );
@@ -160,7 +160,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-5: Recent actions are tracked across calls
   // ──────────────────────────────────────────────────────────
-  it("MCP-5. Recent actions accumulate across intercepted calls", () => {
+  it("MCP-5. Recent actions accumulate across intercepted calls", async () => {
     const token = issueAndStore();
     const sessionId = interceptor.createSession({
       agentId: agent.publicKey,
@@ -169,11 +169,11 @@ describe("Bridge-MCP Regression Tests", () => {
     });
 
     // Make several calls
-    interceptor.interceptToolCall(
+    await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "readFile" }),
     );
-    interceptor.interceptToolCall(
+    await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "writeFile" }),
     );
@@ -188,7 +188,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-6: Exec tool should get high risk tier
   // ──────────────────────────────────────────────────────────
-  it("MCP-6. Exec tool call gets T3 COMMIT tier assignment", () => {
+  it("MCP-6. Exec tool call gets T3 COMMIT tier assignment", async () => {
     const token = issueAndStore({
       resource: "mcp://exec/*",
       actions: ["call", "exec.run"],
@@ -199,7 +199,7 @@ describe("Bridge-MCP Regression Tests", () => {
       serverName: "exec",
     });
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({
         serverName: "exec",
@@ -215,7 +215,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-7: Credential tool should get T3 COMMIT
   // ──────────────────────────────────────────────────────────
-  it("MCP-7. Credential tool call gets T3 COMMIT tier assignment", () => {
+  it("MCP-7. Credential tool call gets T3 COMMIT tier assignment", async () => {
     const token = issueAndStore({
       resource: "mcp://credential/*",
       actions: ["call"],
@@ -226,7 +226,7 @@ describe("Bridge-MCP Regression Tests", () => {
       serverName: "credential",
     });
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({
         serverName: "credential",
@@ -241,7 +241,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-8: Ledger records all policy evaluations
   // ──────────────────────────────────────────────────────────
-  it("MCP-8. All policy evaluations generate ledger events", () => {
+  it("MCP-8. All policy evaluations generate ledger events", async () => {
     const token = issueAndStore();
     const sessionId = interceptor.createSession({
       agentId: agent.publicKey,
@@ -250,7 +250,7 @@ describe("Bridge-MCP Regression Tests", () => {
     });
 
     // Make a call that will be evaluated
-    interceptor.interceptToolCall(
+    await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "readFile" }),
     );
@@ -262,7 +262,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-9: Session removal prevents further calls
   // ──────────────────────────────────────────────────────────
-  it("MCP-9. Removed session cannot make further calls", () => {
+  it("MCP-9. Removed session cannot make further calls", async () => {
     const token = issueAndStore();
     const sessionId = interceptor.createSession({
       agentId: agent.publicKey,
@@ -271,7 +271,7 @@ describe("Bridge-MCP Regression Tests", () => {
     });
 
     // First call should work
-    const first = interceptor.interceptToolCall(
+    const first = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "readFile" }),
     );
@@ -281,7 +281,7 @@ describe("Bridge-MCP Regression Tests", () => {
     interceptor.removeSession(sessionId);
 
     // Next call should be denied
-    const second = interceptor.interceptToolCall(
+    const second = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({ toolName: "readFile" }),
     );
@@ -291,7 +291,7 @@ describe("Bridge-MCP Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // MCP-10: Prompt injection in arguments doesn't alter tier
   // ──────────────────────────────────────────────────────────
-  it("MCP-10. Prompt injection in tool arguments does not alter tier assignment", () => {
+  it("MCP-10. Prompt injection in tool arguments does not alter tier assignment", async () => {
     const token = issueAndStore({
       resource: "mcp://exec/*",
       actions: ["call", "exec.run"],
@@ -302,7 +302,7 @@ describe("Bridge-MCP Regression Tests", () => {
       serverName: "exec",
     });
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall({
         serverName: "exec",

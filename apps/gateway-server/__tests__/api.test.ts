@@ -29,7 +29,7 @@ describe("Gateway Server API", () => {
     app = createApp(ctx);
   });
 
-  function issueAndStoreToken(
+  async function issueAndStoreToken(
     overrides?: Partial<SintCapabilityTokenRequest>,
   ) {
     const request: SintCapabilityTokenRequest = {
@@ -45,7 +45,7 @@ describe("Gateway Server API", () => {
     };
     const result = issueCapabilityToken(request, root.privateKey);
     if (!result.ok) throw new Error(`Token issuance failed: ${result.error}`);
-    ctx.tokenStore.set(result.value.tokenId, result.value);
+    await ctx.tokenStore.store(result.value);
     return result.value;
   }
 
@@ -63,7 +63,7 @@ describe("Gateway Server API", () => {
   // ── Intercept ──
 
   it("POST /v1/intercept with valid request", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
 
     const res = await app.request("/v1/intercept", {
       method: "POST",
@@ -97,7 +97,7 @@ describe("Gateway Server API", () => {
   // ── Batch Intercept ──
 
   it("POST /v1/intercept/batch returns 207", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
     const timestamp = new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
 
     const res = await app.request("/v1/intercept/batch", {
@@ -165,13 +165,13 @@ describe("Gateway Server API", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.tokenId).toBeDefined();
-    expect(ctx.tokenStore.has(body.tokenId)).toBe(true);
+    expect(await ctx.tokenStore.get(body.tokenId)).toBeDefined();
   });
 
   // ── Token Revocation ──
 
   it("POST /v1/tokens/revoke revokes a token", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
 
     const res = await app.request("/v1/tokens/revoke", {
       method: "POST",
@@ -201,7 +201,7 @@ describe("Gateway Server API", () => {
   // ── Ledger ──
 
   it("GET /v1/ledger returns events", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
 
     // Generate some ledger events via intercept
     await app.request("/v1/intercept", {
@@ -260,7 +260,7 @@ describe("Gateway Server API", () => {
   }
 
   it("POST /v1/intercept escalated request returns approvalRequestId", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     const res = await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -274,7 +274,7 @@ describe("Gateway Server API", () => {
   });
 
   it("GET /v1/approvals/pending lists queued requests", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -291,7 +291,7 @@ describe("Gateway Server API", () => {
   });
 
   it("GET /v1/approvals/:requestId returns request details", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     const interceptRes = await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -314,7 +314,7 @@ describe("Gateway Server API", () => {
   });
 
   it("POST /v1/approvals/:requestId/resolve approves a request", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     const interceptRes = await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -335,7 +335,7 @@ describe("Gateway Server API", () => {
   });
 
   it("POST /v1/approvals/:requestId/resolve denies a request", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     const interceptRes = await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -373,7 +373,7 @@ describe("Gateway Server API", () => {
   });
 
   it("resolve creates ledger event", async () => {
-    const token = issueT2Token();
+    const token = await issueT2Token();
     const interceptRes = await app.request("/v1/intercept", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

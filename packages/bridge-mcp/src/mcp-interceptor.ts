@@ -84,10 +84,10 @@ export class MCPInterceptor {
    * Maps the tool call to a SintRequest, routes it through the
    * PolicyGateway, and returns a forward/deny/escalate decision.
    */
-  interceptToolCall(
+  async interceptToolCall(
     sessionId: string,
     toolCall: MCPToolCall,
-  ): MCPInterceptResult {
+  ): Promise<MCPInterceptResult> {
     const session = this.sessions.get(sessionId);
     if (!session) {
       return {
@@ -122,7 +122,7 @@ export class MCPInterceptor {
     };
 
     // Route through Policy Gateway
-    const decision = this.gateway.intercept(sintRequest);
+    const decision = await this.gateway.intercept(sintRequest);
 
     // Record the action for future combo detection
     const toolId = toToolId(toolCall.serverName, toolCall.toolName);

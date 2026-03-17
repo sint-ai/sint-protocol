@@ -37,7 +37,7 @@ describe("Authentication Middleware", () => {
       app = createApp(ctx, { requireSignatures: true });
     });
 
-    function storeToken() {
+    async function storeToken() {
       const request: SintCapabilityTokenRequest = {
         issuer: root.publicKey,
         subject: agent.publicKey,
@@ -50,12 +50,12 @@ describe("Authentication Middleware", () => {
       };
       const result = issueCapabilityToken(request, root.privateKey);
       if (!result.ok) throw new Error(`Token issuance failed: ${result.error}`);
-      ctx.tokenStore.set(result.value.tokenId, result.value);
+      await ctx.tokenStore.store(result.value);
       return result.value;
     }
 
     it("allows requests with valid Ed25519 signature", async () => {
-      const token = storeToken();
+      const token = await storeToken();
       const body = JSON.stringify({
         requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
         timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),

@@ -57,7 +57,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Subscribe (T0) ──
 
-  it("allows sensor subscribe (T0)", () => {
+  it("allows sensor subscribe (T0)", async () => {
     const token = issueToken({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
@@ -69,7 +69,7 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptSubscribe("/camera/front");
+    const result = await interceptor.interceptSubscribe("/camera/front");
 
     expect(result.action).toBe("forward");
     expect(result.decision.assignedTier).toBe(ApprovalTier.T0_OBSERVE);
@@ -77,7 +77,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Publish cmd_vel (T2) ──
 
-  it("escalates cmd_vel publish (T2)", () => {
+  it("escalates cmd_vel publish (T2)", async () => {
     const token = issueToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
@@ -91,7 +91,7 @@ describe("ROS2Interceptor", () => {
       robotMassKg: 25,
     });
 
-    const result = interceptor.interceptPublish({
+    const result = await interceptor.interceptPublish({
       topicName: "/cmd_vel",
       messageType: "geometry_msgs/Twist",
       data: {
@@ -107,7 +107,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Velocity constraint violation ──
 
-  it("denies cmd_vel publish exceeding velocity constraint", () => {
+  it("denies cmd_vel publish exceeding velocity constraint", async () => {
     const token = issueToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
@@ -120,7 +120,7 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptPublish({
+    const result = await interceptor.interceptPublish({
       topicName: "/cmd_vel",
       messageType: "geometry_msgs/Twist",
       data: {
@@ -135,7 +135,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Service call (mode_change → T3) ──
 
-  it("escalates mode_change service call (T3)", () => {
+  it("escalates mode_change service call (T3)", async () => {
     const token = issueToken({
       resource: "ros2:///mode_change",
       actions: ["call"],
@@ -147,7 +147,7 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptServiceCall({
+    const result = await interceptor.interceptServiceCall({
       serviceName: "/mode_change",
       serviceType: "std_srvs/SetBool",
       request: { data: true },
@@ -161,7 +161,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Action goal ──
 
-  it("handles action goal interception", () => {
+  it("handles action goal interception", async () => {
     const token = issueToken({
       resource: "ros2:///navigate_to_pose",
       actions: ["call"],
@@ -173,7 +173,7 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptActionGoal({
+    const result = await interceptor.interceptActionGoal({
       actionName: "/navigate_to_pose",
       actionType: "nav2_msgs/NavigateToPose",
       goal: {
@@ -192,7 +192,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Unauthorized resource ──
 
-  it("denies publish to unauthorized topic", () => {
+  it("denies publish to unauthorized topic", async () => {
     const token = issueToken({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
@@ -204,7 +204,7 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptPublish({
+    const result = await interceptor.interceptPublish({
       topicName: "/cmd_vel",
       messageType: "geometry_msgs/Twist",
       data: {
@@ -219,7 +219,7 @@ describe("ROS2Interceptor", () => {
 
   // ── Revoked token ──
 
-  it("denies operations with revoked token", () => {
+  it("denies operations with revoked token", async () => {
     const token = issueToken({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
@@ -233,13 +233,13 @@ describe("ROS2Interceptor", () => {
       tokenId: token.tokenId,
     });
 
-    const result = interceptor.interceptSubscribe("/camera/front");
+    const result = await interceptor.interceptSubscribe("/camera/front");
     expect(result.action).toBe("deny");
   });
 
   // ── Physical context extraction ──
 
-  it("extracts velocity from Twist in physical context", () => {
+  it("extracts velocity from Twist in physical context", async () => {
     const token = issueToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
@@ -254,7 +254,7 @@ describe("ROS2Interceptor", () => {
     });
 
     // velocity = sqrt(0.3^2 + 0.4^2) = 0.5 m/s, under limit of 2.0
-    const result = interceptor.interceptPublish({
+    const result = await interceptor.interceptPublish({
       topicName: "/cmd_vel",
       messageType: "geometry_msgs/Twist",
       data: {

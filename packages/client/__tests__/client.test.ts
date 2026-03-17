@@ -44,7 +44,7 @@ describe("SintClient", () => {
     });
   });
 
-  function issueAndStoreToken(overrides?: Partial<SintCapabilityTokenRequest>) {
+  async function issueAndStoreToken(overrides?: Partial<SintCapabilityTokenRequest>) {
     const request: SintCapabilityTokenRequest = {
       issuer: root.publicKey,
       subject: agent.publicKey,
@@ -58,7 +58,7 @@ describe("SintClient", () => {
     };
     const result = issueCapabilityToken(request, root.privateKey);
     if (!result.ok) throw new Error(`Token issuance failed: ${result.error}`);
-    ctx.tokenStore.set(result.value.tokenId, result.value);
+    await ctx.tokenStore.store(result.value);
     return result.value;
   }
 
@@ -69,7 +69,7 @@ describe("SintClient", () => {
   });
 
   it("intercept() evaluates a request", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
     const result = await client.intercept({
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
       timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
@@ -83,7 +83,7 @@ describe("SintClient", () => {
   });
 
   it("interceptBatch() evaluates multiple requests", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
     const timestamp = new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
     const results = await client.interceptBatch([
       {
@@ -124,11 +124,11 @@ describe("SintClient", () => {
       root.privateKey,
     );
     expect(result.tokenId).toBeDefined();
-    expect(ctx.tokenStore.has(result.tokenId)).toBe(true);
+    expect(await ctx.tokenStore.get(result.tokenId)).toBeDefined();
   });
 
   it("revokeToken() revokes a token", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
     const result = await client.revokeToken(
       token.tokenId,
       "Security incident",
@@ -138,7 +138,7 @@ describe("SintClient", () => {
   });
 
   it("queryLedger() returns events", async () => {
-    const token = issueAndStoreToken();
+    const token = await issueAndStoreToken();
     await client.intercept({
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
       timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
@@ -160,7 +160,7 @@ describe("SintClient", () => {
   });
 
   it("pendingApprovals() lists pending requests", async () => {
-    const token = issueAndStoreToken({
+    const token = await issueAndStoreToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
     });
@@ -178,7 +178,7 @@ describe("SintClient", () => {
   });
 
   it("resolveApproval() approves a pending request", async () => {
-    const token = issueAndStoreToken({
+    const token = await issueAndStoreToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
     });

@@ -1,5 +1,9 @@
 /**
  * SINT Gateway Server — Ledger routes.
+ *
+ * Uses the in-memory LedgerWriter as primary source of truth for
+ * the current process. The persistent LedgerStore receives events
+ * asynchronously for durability across restarts.
  */
 
 import { Hono } from "hono";

@@ -66,14 +66,14 @@ describe("createSintMiddleware", () => {
     };
   }
 
-  it("intercept() forwards allowed tool calls", () => {
+  it("intercept() forwards allowed tool calls", async () => {
     const token = issueToken();
     const middleware = createSintMiddleware({
       gateway,
       serverName: "test-server",
     });
 
-    const result = middleware.intercept({
+    const result = await middleware.intercept({
       agentId: agent.publicKey,
       tokenId: token.tokenId,
       toolCall: makeToolCall(),
@@ -82,7 +82,7 @@ describe("createSintMiddleware", () => {
     expect(result.action).toBe("forward");
   });
 
-  it("intercept() denies calls with revoked tokens", () => {
+  it("intercept() denies calls with revoked tokens", async () => {
     const token = issueToken();
     const middleware = createSintMiddleware({
       gateway,
@@ -92,7 +92,7 @@ describe("createSintMiddleware", () => {
     // Revoke the token
     revocationStore.revoke(token.tokenId, "test", "admin");
 
-    const result = middleware.intercept({
+    const result = await middleware.intercept({
       agentId: agent.publicKey,
       tokenId: token.tokenId,
       toolCall: makeToolCall(),
@@ -132,7 +132,7 @@ describe("createSintMiddleware", () => {
     await expect(protected_(makeToolCall())).rejects.toThrow("SINT: Tool call denied");
   });
 
-  it("auto-creates sessions per agent", () => {
+  it("auto-creates sessions per agent", async () => {
     const token = issueToken();
     const middleware = createSintMiddleware({
       gateway,
@@ -141,7 +141,7 @@ describe("createSintMiddleware", () => {
 
     expect(middleware.sessionCount).toBe(0);
 
-    middleware.intercept({
+    await middleware.intercept({
       agentId: agent.publicKey,
       tokenId: token.tokenId,
       toolCall: makeToolCall(),
@@ -150,7 +150,7 @@ describe("createSintMiddleware", () => {
     expect(middleware.sessionCount).toBe(1);
 
     // Same agent, same session
-    middleware.intercept({
+    await middleware.intercept({
       agentId: agent.publicKey,
       tokenId: token.tokenId,
       toolCall: makeToolCall(),
@@ -159,14 +159,14 @@ describe("createSintMiddleware", () => {
     expect(middleware.sessionCount).toBe(1);
   });
 
-  it("removeSession() cleans up agent sessions", () => {
+  it("removeSession() cleans up agent sessions", async () => {
     const token = issueToken();
     const middleware = createSintMiddleware({
       gateway,
       serverName: "test-server",
     });
 
-    middleware.intercept({
+    await middleware.intercept({
       agentId: agent.publicKey,
       tokenId: token.tokenId,
       toolCall: makeToolCall(),

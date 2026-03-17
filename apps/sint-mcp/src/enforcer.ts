@@ -116,7 +116,7 @@ export class PolicyEnforcer {
     };
 
     // Route through PolicyGateway
-    const decision = this.gateway.intercept(sintRequest);
+    const decision = await this.gateway.intercept(sintRequest);
 
     // Record action for combo detection
     this.recentActions.push(`${parsed.serverName}.${parsed.toolName}`);

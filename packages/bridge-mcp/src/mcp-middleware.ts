@@ -76,7 +76,7 @@ export function createSintMiddleware(config: SintMiddlewareConfig) {
      * Intercept a tool call and return the policy decision.
      * Auto-creates a session for the agent if needed.
      */
-    intercept(context: ToolCallContext): MCPInterceptResult {
+    async intercept(context: ToolCallContext): Promise<MCPInterceptResult> {
       const sessionId = ensureSession(context.agentId, context.tokenId);
       return interceptor.interceptToolCall(sessionId, context.toolCall);
     },
@@ -94,7 +94,7 @@ export function createSintMiddleware(config: SintMiddlewareConfig) {
       tokenId: string,
     ): ToolHandler<T> {
       return async (toolCall: MCPToolCall): Promise<T> => {
-        const result = this.intercept({ agentId, tokenId, toolCall });
+        const result = await this.intercept({ agentId, tokenId, toolCall });
 
         if (result.action === "deny") {
           throw new Error(`SINT: Tool call denied — ${result.denyReason ?? "policy violation"}`);

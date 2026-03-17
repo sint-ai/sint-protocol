@@ -27,6 +27,7 @@
     "@sint/gate-capability-tokens": "workspace:*",
     "@sint/gate-policy-gateway": "workspace:*",
     "@sint/gate-evidence-ledger": "workspace:*",
+    "@sint/persistence": "workspace:*",
     "hono": "^4.7.0",
     "@hono/node-server": "^1.14.0",
     "zod": "^3.24.0"

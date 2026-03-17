@@ -99,7 +99,7 @@ describe("MCPInterceptor", () => {
 
   // ── Forwarding (allow) ──
 
-  it("forwards allowed read-only tool calls", () => {
+  it("forwards allowed read-only tool calls", async () => {
     const token = issueToken({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
@@ -111,7 +111,7 @@ describe("MCPInterceptor", () => {
       serverName: "filesystem",
     });
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("filesystem", "readFile"),
     );
@@ -122,8 +122,8 @@ describe("MCPInterceptor", () => {
 
   // ── Denial ──
 
-  it("denies tool calls for non-existent session", () => {
-    const result = interceptor.interceptToolCall(
+  it("denies tool calls for non-existent session", async () => {
+    const result = await interceptor.interceptToolCall(
       "non-existent",
       makeToolCall("filesystem", "readFile"),
     );
@@ -132,7 +132,7 @@ describe("MCPInterceptor", () => {
     expect(result.denyReason).toBe("Session not found");
   });
 
-  it("denies tool calls for wrong resource", () => {
+  it("denies tool calls for wrong resource", async () => {
     const token = issueToken({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
@@ -145,7 +145,7 @@ describe("MCPInterceptor", () => {
     });
 
     // Try to write when only read is permitted
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("filesystem", "writeFile"),
     );
@@ -153,7 +153,7 @@ describe("MCPInterceptor", () => {
     expect(result.action).toBe("deny");
   });
 
-  it("denies tool calls with revoked token", () => {
+  it("denies tool calls with revoked token", async () => {
     const token = issueToken();
 
     const sessionId = interceptor.createSession({
@@ -164,7 +164,7 @@ describe("MCPInterceptor", () => {
 
     revocationStore.revoke(token.tokenId, "compromised", "admin");
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("filesystem", "readFile"),
     );
@@ -174,7 +174,7 @@ describe("MCPInterceptor", () => {
 
   // ── Escalation ──
 
-  it("escalates T2 tool calls (cmd_vel publish)", () => {
+  it("escalates T2 tool calls (cmd_vel publish)", async () => {
     const token = issueToken({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
@@ -188,7 +188,7 @@ describe("MCPInterceptor", () => {
     });
 
     // Manually construct a tool call that maps to ros2:///cmd_vel publish
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("ros2", "cmd_vel", {
         // This maps to mcp://ros2/cmd_vel — won't match ros2:///cmd_vel
@@ -203,7 +203,7 @@ describe("MCPInterceptor", () => {
 
   // ── Recent action tracking ──
 
-  it("tracks recent actions across calls", () => {
+  it("tracks recent actions across calls", async () => {
     const token = issueToken({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
@@ -215,7 +215,7 @@ describe("MCPInterceptor", () => {
       serverName: "filesystem",
     });
 
-    interceptor.interceptToolCall(
+    await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("filesystem", "readFile"),
     );
@@ -224,7 +224,7 @@ describe("MCPInterceptor", () => {
     expect(recent).toContain("filesystem.readFile");
   });
 
-  it("records actions even for denied calls", () => {
+  it("records actions even for denied calls", async () => {
     const token = issueToken({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
@@ -237,7 +237,7 @@ describe("MCPInterceptor", () => {
     });
 
     // This will be denied (wrong resource)
-    interceptor.interceptToolCall(
+    await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("filesystem", "writeFile"),
     );
@@ -248,7 +248,7 @@ describe("MCPInterceptor", () => {
 
   // ── Forbidden combo detection ──
 
-  it("detects forbidden combo: write → exec", () => {
+  it("detects forbidden combo: write → exec", async () => {
     // Token that allows exec.run on MCP exec server
     const token = issueToken({
       resource: "mcp://exec/run",
@@ -264,7 +264,7 @@ describe("MCPInterceptor", () => {
     // Manually seed the session with a filesystem.write action
     interceptor.sessions.recordAction(sessionId, "filesystem.write");
 
-    const result = interceptor.interceptToolCall(
+    const result = await interceptor.interceptToolCall(
       sessionId,
       makeToolCall("exec", "run"),
     );
@@ -276,7 +276,7 @@ describe("MCPInterceptor", () => {
 
   // ── Concurrent sessions ──
 
-  it("manages multiple sessions independently", () => {
+  it("manages multiple sessions independently", async () => {
     const token1 = issueToken({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
@@ -298,11 +298,11 @@ describe("MCPInterceptor", () => {
     });
 
     // Each session works independently
-    const r1 = interceptor.interceptToolCall(
+    const r1 = await interceptor.interceptToolCall(
       session1,
       makeToolCall("filesystem", "readFile"),
     );
-    const r2 = interceptor.interceptToolCall(
+    const r2 = await interceptor.interceptToolCall(
       session2,
       makeToolCall("database", "query"),
     );

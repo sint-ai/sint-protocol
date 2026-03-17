@@ -96,7 +96,7 @@ describe("SINT Security Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // TEST 4: Prompt injection in tool results must NOT change approval tier
   // ──────────────────────────────────────────────────────────
-  it("4. Prompt injection must NOT change approval tier", () => {
+  it("4. Prompt injection must NOT change approval tier", async () => {
     const token = issueAndStore();
 
     // Simulate a tool result containing prompt injection
@@ -112,7 +112,7 @@ describe("SINT Security Regression Tests", () => {
       },
     });
 
-    const decision = gateway.intercept(request);
+    const decision = await gateway.intercept(request);
     // cmd_vel publish should be T2_ACT, NOT downgraded to T0
     expect(decision.assignedTier).not.toBe(ApprovalTier.T0_OBSERVE);
   });
@@ -199,7 +199,7 @@ describe("SINT Security Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // TEST 8: Revoked token must fail within 1 second
   // ──────────────────────────────────────────────────────────
-  it("8. Revoked token must fail validation", () => {
+  it("8. Revoked token must fail validation", async () => {
     const token = issueAndStore();
 
     // Verify it works before revocation
@@ -220,7 +220,7 @@ describe("SINT Security Regression Tests", () => {
       agentId: agent.publicKey,
       tokenId: token.tokenId,
     });
-    const decision = gateway.intercept(request);
+    const decision = await gateway.intercept(request);
     expect(decision.action).toBe("deny");
     expect(decision.denial?.policyViolated).toBe("TOKEN_REVOKED");
   });
@@ -228,7 +228,7 @@ describe("SINT Security Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // TEST 9: Force limit violation must be blocked
   // ──────────────────────────────────────────────────────────
-  it("9. Action commanding > token maxForceNewtons must be blocked", () => {
+  it("9. Action commanding > token maxForceNewtons must be blocked", async () => {
     const token = issueAndStore({
       constraints: { maxForceNewtons: 50 },
     });
@@ -239,14 +239,14 @@ describe("SINT Security Regression Tests", () => {
       params: { force: 75 }, // Exceeds 50N limit
     });
 
-    const decision = gateway.intercept(request);
+    const decision = await gateway.intercept(request);
     expect(decision.action).toBe("deny");
   });
 
   // ──────────────────────────────────────────────────────────
   // TEST 10: Geofence violation must be blocked
   // ──────────────────────────────────────────────────────────
-  it("10. Action outside token geofence polygon must be blocked", () => {
+  it("10. Action outside token geofence polygon must be blocked", async () => {
     const token = issueAndStore({
       constraints: {
         geofence: {
@@ -268,7 +268,7 @@ describe("SINT Security Regression Tests", () => {
       },
     });
 
-    const decision = gateway.intercept(request);
+    const decision = await gateway.intercept(request);
     expect(decision.action).toBe("deny");
   });
 

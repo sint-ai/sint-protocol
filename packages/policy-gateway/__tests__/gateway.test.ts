@@ -86,13 +86,13 @@ describe("PolicyGateway", () => {
 
   // ── T0: Sensor subscribe → auto-allow ──
 
-  it("allows T0 sensor subscribe requests", () => {
+  it("allows T0 sensor subscribe requests", async () => {
     const token = issueAndStore({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
     });
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -107,13 +107,13 @@ describe("PolicyGateway", () => {
 
   // ── T1: Navigation plan → auto-allow with audit ──
 
-  it("allows T1 plan publish requests", () => {
+  it("allows T1 plan publish requests", async () => {
     const token = issueAndStore({
       resource: "ros2:///plan",
       actions: ["publish"],
     });
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -128,10 +128,10 @@ describe("PolicyGateway", () => {
 
   // ── T2: cmd_vel publish → escalate ──
 
-  it("escalates T2 cmd_vel publish requests", () => {
+  it("escalates T2 cmd_vel publish requests", async () => {
     const token = issueAndStore();
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -145,13 +145,13 @@ describe("PolicyGateway", () => {
 
   // ── T3: mode_change → escalate with safe-stop ──
 
-  it("escalates T3 mode_change with safe-stop fallback", () => {
+  it("escalates T3 mode_change with safe-stop fallback", async () => {
     const token = issueAndStore({
       resource: "ros2:///mode_change",
       actions: ["call"],
     });
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -167,8 +167,8 @@ describe("PolicyGateway", () => {
 
   // ── Token not found → deny ──
 
-  it("denies request with non-existent token", () => {
-    const decision = gateway.intercept(
+  it("denies request with non-existent token", async () => {
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: "01905f7c-0000-7000-8000-000000000000",
@@ -181,11 +181,11 @@ describe("PolicyGateway", () => {
 
   // ── Revoked token → deny ──
 
-  it("denies request with revoked token", () => {
+  it("denies request with revoked token", async () => {
     const token = issueAndStore();
     revocationStore.revoke(token.tokenId, "Security incident", "admin");
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -198,13 +198,13 @@ describe("PolicyGateway", () => {
 
   // ── Wrong resource → deny ──
 
-  it("denies request for unauthorized resource", () => {
+  it("denies request for unauthorized resource", async () => {
     const token = issueAndStore({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
     });
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -218,12 +218,12 @@ describe("PolicyGateway", () => {
 
   // ── Force violation → deny ──
 
-  it("denies request exceeding force constraint", () => {
+  it("denies request exceeding force constraint", async () => {
     const token = issueAndStore({
       constraints: { maxForceNewtons: 50 },
     });
 
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -236,7 +236,7 @@ describe("PolicyGateway", () => {
 
   // ── Forbidden combo → escalate ──
 
-  it("escalates on forbidden tool combination", () => {
+  it("escalates on forbidden tool combination", async () => {
     // Token that allows exec.run on an MCP resource
     const token = issueAndStore({
       resource: "mcp://server/exec",
@@ -244,7 +244,7 @@ describe("PolicyGateway", () => {
     });
 
     // "filesystem.write" followed by "exec.run" is a forbidden combo
-    const decision = gateway.intercept(
+    const decision = await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -260,13 +260,13 @@ describe("PolicyGateway", () => {
 
   // ── Ledger events ──
 
-  it("emits ledger event for every evaluated request", () => {
+  it("emits ledger event for every evaluated request", async () => {
     const token = issueAndStore({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
     });
 
-    gateway.intercept(
+    await gateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -286,7 +286,7 @@ describe("PolicyGateway", () => {
 
   // ── No revocation store → skip check ──
 
-  it("works without revocation store configured", () => {
+  it("works without revocation store configured", async () => {
     const noRevokeGateway = new PolicyGateway({
       resolveToken: (id) => tokenStore.get(id),
     });
@@ -296,7 +296,7 @@ describe("PolicyGateway", () => {
       actions: ["subscribe"],
     });
 
-    const decision = noRevokeGateway.intercept(
+    const decision = await noRevokeGateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,

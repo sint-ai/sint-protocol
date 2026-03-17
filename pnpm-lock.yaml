@@ -75,6 +75,9 @@ importers:
       '@sint/gate-policy-gateway':
         specifier: workspace:*
         version: link:../../packages/policy-gateway
+      '@sint/persistence':
+        specifier: workspace:*
+        version: link:../../packages/persistence
       hono:
         specifier: ^4.7.0
         version: 4.12.8

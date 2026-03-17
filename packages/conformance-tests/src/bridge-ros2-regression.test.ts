@@ -99,14 +99,14 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-1: Sensor subscribe should be forwarded (T0)
   // ──────────────────────────────────────────────────────────
-  it("ROS2-1. Camera sensor subscribe should be forwarded", () => {
+  it("ROS2-1. Camera sensor subscribe should be forwarded", async () => {
     const token = issueAndStore({
       resource: "ros2:///camera/*",
       actions: ["subscribe"],
     });
     const interceptor = createInterceptor(token);
 
-    const result = interceptor.interceptSubscribe("/camera/front");
+    const result = await interceptor.interceptSubscribe("/camera/front");
 
     expect(result.action).toBe("forward");
     expect(result.decision.assignedTier).toBe(ApprovalTier.T0_OBSERVE);
@@ -115,7 +115,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-2: cmd_vel publish is T2_ACT (escalation required)
   // ──────────────────────────────────────────────────────────
-  it("ROS2-2. cmd_vel publish gets T2_ACT tier requiring review", () => {
+  it("ROS2-2. cmd_vel publish gets T2_ACT tier requiring review", async () => {
     const token = issueAndStore();
     const interceptor = createInterceptor(token);
 
@@ -129,7 +129,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptPublish(message);
+    const result = await interceptor.interceptPublish(message);
 
     // cmd_vel is T2_ACT — requires review (escalation)
     expect(result.decision.assignedTier).toBe(ApprovalTier.T2_ACT);
@@ -139,7 +139,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-3: cmd_vel with excessive velocity must be denied
   // ──────────────────────────────────────────────────────────
-  it("ROS2-3. cmd_vel publish exceeding velocity constraint must be denied", () => {
+  it("ROS2-3. cmd_vel publish exceeding velocity constraint must be denied", async () => {
     const token = issueAndStore({
       constraints: { maxVelocityMps: 0.5 },
     });
@@ -155,7 +155,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptPublish(message);
+    const result = await interceptor.interceptPublish(message);
 
     expect(result.action).toBe("deny");
   });
@@ -163,12 +163,12 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-4: Human presence should escalate cmd_vel tier
   // ──────────────────────────────────────────────────────────
-  it("ROS2-4. cmd_vel with human presence escalates to T3_COMMIT", () => {
+  it("ROS2-4. cmd_vel with human presence escalates to T3_COMMIT", async () => {
     const token = issueAndStore();
 
     // Test via direct gateway call since the interceptor
     // extracts physical context from Twist but doesn't set humanDetected
-    const decision = gateway.intercept({
+    const decision = await gateway.intercept({
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
       agentId: agent.publicKey,
@@ -190,7 +190,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-5: Revoked token must deny publish
   // ──────────────────────────────────────────────────────────
-  it("ROS2-5. Publish with revoked token must be denied", () => {
+  it("ROS2-5. Publish with revoked token must be denied", async () => {
     const token = issueAndStore();
     const interceptor = createInterceptor(token);
 
@@ -207,7 +207,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptPublish(message);
+    const result = await interceptor.interceptPublish(message);
 
     expect(result.action).toBe("deny");
   });
@@ -215,7 +215,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-6: Service call maps to correct resource URI
   // ──────────────────────────────────────────────────────────
-  it("ROS2-6. Service call routes through gateway correctly", () => {
+  it("ROS2-6. Service call routes through gateway correctly", async () => {
     const token = issueAndStore({
       resource: "ros2:///set_mode",
       actions: ["call"],
@@ -229,7 +229,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptServiceCall(serviceCall);
+    const result = await interceptor.interceptServiceCall(serviceCall);
 
     // Should be processed by gateway (not session-not-found)
     expect(result.decision).toBeDefined();
@@ -239,7 +239,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-7: Action goal routes through gateway
   // ──────────────────────────────────────────────────────────
-  it("ROS2-7. Action goal routes through gateway correctly", () => {
+  it("ROS2-7. Action goal routes through gateway correctly", async () => {
     const token = issueAndStore({
       resource: "ros2:///navigate_to_pose",
       actions: ["call"],
@@ -255,7 +255,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptActionGoal(actionGoal);
+    const result = await interceptor.interceptActionGoal(actionGoal);
 
     expect(result.decision).toBeDefined();
     expect(result.resourceName).toBe("/navigate_to_pose");
@@ -264,7 +264,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-8: All intercepts generate ledger events
   // ──────────────────────────────────────────────────────────
-  it("ROS2-8. All intercepts generate audit ledger events", () => {
+  it("ROS2-8. All intercepts generate audit ledger events", async () => {
     const token = issueAndStore();
     const interceptor = createInterceptor(token);
 
@@ -278,7 +278,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    interceptor.interceptPublish(message);
+    await interceptor.interceptPublish(message);
 
     expect(ledger.length).toBeGreaterThan(0);
 
@@ -290,7 +290,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-9: Force constraint violation must be blocked
   // ──────────────────────────────────────────────────────────
-  it("ROS2-9. Twist message with estimated force exceeding limit is denied", () => {
+  it("ROS2-9. Twist message with estimated force exceeding limit is denied", async () => {
     const token = issueAndStore({
       constraints: { maxForceNewtons: 50 },
     });
@@ -307,7 +307,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptPublish(message);
+    const result = await interceptor.interceptPublish(message);
 
     // Should be denied due to velocity/force constraint violation
     expect(result.action).toBe("deny");
@@ -316,7 +316,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
   // ──────────────────────────────────────────────────────────
   // ROS2-10: Mode change requires T3_COMMIT
   // ──────────────────────────────────────────────────────────
-  it("ROS2-10. Mode change gets T3_COMMIT tier (irreversible)", () => {
+  it("ROS2-10. Mode change gets T3_COMMIT tier (irreversible)", async () => {
     const token = issueAndStore({
       resource: "ros2:///mode_change",
       actions: ["publish", "call"],
@@ -330,7 +330,7 @@ describe("Bridge-ROS2 Regression Tests", () => {
       timestamp: nowISO(),
     };
 
-    const result = interceptor.interceptPublish(message);
+    const result = await interceptor.interceptPublish(message);
 
     expect(result.decision.assignedTier).toBe(ApprovalTier.T3_COMMIT);
   });

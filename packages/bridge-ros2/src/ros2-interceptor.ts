@@ -71,7 +71,7 @@ export class ROS2Interceptor {
   /**
    * Intercept a topic publish operation.
    */
-  interceptPublish(message: ROS2TopicMessage): ROS2InterceptResult {
+  async interceptPublish(message: ROS2TopicMessage): Promise<ROS2InterceptResult> {
     const physicalCtx = extractPhysicalContext(message, this.robotMassKg);
 
     const request: SintRequest = {
@@ -96,7 +96,7 @@ export class ROS2Interceptor {
   /**
    * Intercept a topic subscribe operation.
    */
-  interceptSubscribe(topicName: string): ROS2InterceptResult {
+  async interceptSubscribe(topicName: string): Promise<ROS2InterceptResult> {
     const request: SintRequest = {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
@@ -113,7 +113,7 @@ export class ROS2Interceptor {
   /**
    * Intercept a service call.
    */
-  interceptServiceCall(serviceCall: ROS2ServiceCall): ROS2InterceptResult {
+  async interceptServiceCall(serviceCall: ROS2ServiceCall): Promise<ROS2InterceptResult> {
     const request: SintRequest = {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
@@ -130,7 +130,7 @@ export class ROS2Interceptor {
   /**
    * Intercept an action goal submission.
    */
-  interceptActionGoal(actionGoal: ROS2ActionGoal): ROS2InterceptResult {
+  async interceptActionGoal(actionGoal: ROS2ActionGoal): Promise<ROS2InterceptResult> {
     const request: SintRequest = {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
@@ -144,8 +144,8 @@ export class ROS2Interceptor {
     return this.evaluate(request, actionGoal.actionName);
   }
 
-  private evaluate(request: SintRequest, resourceName: string): ROS2InterceptResult {
-    const decision = this.gateway.intercept(request);
+  private async evaluate(request: SintRequest, resourceName: string): Promise<ROS2InterceptResult> {
+    const decision = await this.gateway.intercept(request);
 
     const result: ROS2InterceptResult = {
       action: decision.action === "allow" ? "forward" : decision.action === "deny" ? "deny" : "escalate",

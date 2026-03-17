@@ -23,7 +23,7 @@ export function tokenRoutes(ctx: ServerContext): Hono {
       return c.json({ error: result.error }, 400);
     }
 
-    ctx.tokenStore.set(result.value.tokenId, result.value);
+    await ctx.tokenStore.store(result.value);
 
     ctx.ledger.append({
       eventType: "agent.capability.granted",
@@ -43,7 +43,7 @@ export function tokenRoutes(ctx: ServerContext): Hono {
     const body = await c.req.json();
     const { parentTokenId, request, privateKey } = body;
 
-    const parentToken = ctx.tokenStore.get(parentTokenId);
+    const parentToken = await ctx.tokenStore.get(parentTokenId);
     if (!parentToken) {
       return c.json({ error: "Parent token not found" }, 404);
     }
@@ -53,7 +53,7 @@ export function tokenRoutes(ctx: ServerContext): Hono {
       return c.json({ error: result.error }, 400);
     }
 
-    ctx.tokenStore.set(result.value.tokenId, result.value);
+    await ctx.tokenStore.store(result.value);
 
     ctx.ledger.append({
       eventType: "agent.capability.granted",
@@ -82,7 +82,7 @@ export function tokenRoutes(ctx: ServerContext): Hono {
 
     ctx.revocationStore.revoke(tokenId, reason, revokedBy);
 
-    const token = ctx.tokenStore.get(tokenId);
+    const token = await ctx.tokenStore.get(tokenId);
     ctx.ledger.append({
       eventType: "agent.capability.revoked",
       agentId: token?.subject ?? "unknown",

@@ -8,11 +8,11 @@
  */
 
 import { serve } from "@hono/node-server";
-import { createApp, createContext } from "./server.js";
+import { createApp, createPersistentContext } from "./server.js";
 import { loadConfig } from "./config.js";
 
 const config = loadConfig();
-const ctx = createContext();
+const ctx = createPersistentContext(config);
 const app = createApp(ctx, {
   apiKey: config.apiKey,
   requireSignatures: config.requireSignatures,

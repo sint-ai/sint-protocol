@@ -22,7 +22,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
       );
     }
 
-    const decision = ctx.gateway.intercept(parsed.data as SintRequest);
+    const decision = await ctx.gateway.intercept(parsed.data as SintRequest);
 
     ctx.ledger.append({
       eventType: "request.received",
@@ -59,7 +59,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
       return c.json({ error: "Maximum 50 requests per batch" }, 400);
     }
 
-    const results = body.map((item: unknown) => {
+    const results = await Promise.all(body.map(async (item: unknown) => {
       const parsed = sintRequestSchema.safeParse(item);
       if (!parsed.success) {
         return {
@@ -69,7 +69,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
         };
       }
 
-      const decision = ctx.gateway.intercept(parsed.data as SintRequest);
+      const decision = await ctx.gateway.intercept(parsed.data as SintRequest);
 
       ctx.ledger.append({
         eventType: "request.received",
@@ -91,7 +91,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
       }
 
       return { status: 200, decision };
-    });
+    }));
 
     return c.json(results, 207);
   });
