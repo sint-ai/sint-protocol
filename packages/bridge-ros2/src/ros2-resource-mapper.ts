@@ -1,0 +1,98 @@
+/**
+ * SINT Bridge-ROS2 — Resource Mapper.
+ *
+ * Maps ROS 2 topic/service/action names to SINT resource URIs.
+ * Extracts physical context from message payloads.
+ *
+ * URI scheme: ros2:///{topicName} (triple-slash for absolute topic names)
+ *
+ * @module @sint/bridge-ros2/ros2-resource-mapper
+ */
+
+import type { ROS2TopicMessage } from "./types.js";
+import {
+  twistSchema,
+  wrenchSchema,
+  extractPhysicalContextFromTwist,
+  extractPhysicalContextFromWrench,
+} from "./ros2-message-types.js";
+
+/**
+ * Map a ROS 2 topic name to a SINT resource URI.
+ *
+ * @example
+ * ```ts
+ * topicToResourceUri("/cmd_vel") // => "ros2:///cmd_vel"
+ * topicToResourceUri("/camera/front") // => "ros2:///camera/front"
+ * ```
+ */
+export function topicToResourceUri(topicName: string): string {
+  // Strip leading slash if present, then add ros2:/// prefix
+  const normalized = topicName.startsWith("/") ? topicName.slice(1) : topicName;
+  return `ros2:///${normalized}`;
+}
+
+/**
+ * Map a ROS 2 service name to a SINT resource URI.
+ */
+export function serviceToResourceUri(serviceName: string): string {
+  const normalized = serviceName.startsWith("/") ? serviceName.slice(1) : serviceName;
+  return `ros2:///${normalized}`;
+}
+
+/**
+ * Map a ROS 2 action name to a SINT resource URI.
+ */
+export function actionToResourceUri(actionName: string): string {
+  const normalized = actionName.startsWith("/") ? actionName.slice(1) : actionName;
+  return `ros2:///${normalized}`;
+}
+
+/**
+ * Determine the SINT action for a topic operation.
+ */
+export function topicAction(operation: "publish" | "subscribe"): string {
+  return operation;
+}
+
+/**
+ * Determine the SINT action for a service call.
+ */
+export function serviceAction(): string {
+  return "call";
+}
+
+/**
+ * Extract physical context from a ROS 2 topic message payload.
+ *
+ * Recognizes Twist (velocity commands) and Wrench (force commands)
+ * messages and extracts the relevant physical parameters.
+ */
+export function extractPhysicalContext(
+  message: ROS2TopicMessage,
+  robotMassKg?: number,
+): {
+  currentVelocityMps?: number;
+  currentForceNewtons?: number;
+} | undefined {
+  // Try to parse as Twist (cmd_vel)
+  const twistResult = twistSchema.safeParse(message.data);
+  if (twistResult.success) {
+    const ctx = extractPhysicalContextFromTwist(twistResult.data, robotMassKg);
+    return {
+      currentVelocityMps: ctx.velocityMps,
+      currentForceNewtons: ctx.forceNewtons,
+    };
+  }
+
+  // Try to parse as Wrench
+  const wrenchResult = wrenchSchema.safeParse(message.data);
+  if (wrenchResult.success) {
+    const ctx = extractPhysicalContextFromWrench(wrenchResult.data);
+    return {
+      currentForceNewtons: ctx.forceNewtons,
+    };
+  }
+
+  return undefined;
+}

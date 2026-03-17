@@ -51,6 +51,50 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(tsx@4.21.0)
+
+  packages/bridge-mcp:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(tsx@4.21.0)
+
+  packages/bridge-ros2:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(tsx@4.21.0)
 
   packages/capability-tokens:
     dependencies:
@@ -76,6 +120,12 @@ importers:
 
   packages/conformance-tests:
     devDependencies:
+      '@sint/bridge-mcp':
+        specifier: workspace:*
+        version: link:../bridge-mcp
+      '@sint/bridge-ros2':
+        specifier: workspace:*
+        version: link:../bridge-ros2
       '@sint/core':
         specifier: workspace:*
         version: link:../core
@@ -117,6 +167,22 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(tsx@4.21.0)
+
+  packages/persistence:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -136,6 +202,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

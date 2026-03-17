@@ -13,6 +13,8 @@
     "@sint/gate-capability-tokens": "workspace:*",
     "@sint/gate-policy-gateway": "workspace:*",
     "@sint/gate-evidence-ledger": "workspace:*",
+    "@sint/bridge-mcp": "workspace:*",
+    "@sint/bridge-ros2": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }

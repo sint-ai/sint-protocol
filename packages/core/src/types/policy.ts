@@ -156,3 +156,31 @@ export interface ForbiddenCombination {
   readonly requiredTier: ApprovalTier;
   readonly reason: string;
 }
+
+/**
+ * Status of an approval request in the queue.
+ */
+export type ApprovalRequestStatus =
+  | "pending"
+  | "approved"
+  | "denied"
+  | "timeout"
+  | "expired";
+
+/**
+ * A batch intercept request — array of SintRequests.
+ */
+export interface BatchInterceptRequest {
+  readonly requests: readonly SintRequest[];
+}
+
+/**
+ * A batch intercept response — per-request results.
+ */
+export interface BatchInterceptResponse {
+  readonly results: readonly {
+    readonly status: number;
+    readonly decision?: PolicyDecision;
+    readonly error?: string;
+  }[];
+}

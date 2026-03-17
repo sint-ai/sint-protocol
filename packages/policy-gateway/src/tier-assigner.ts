@@ -60,20 +60,24 @@ function escalateTier(tier: ApprovalTier): ApprovalTier {
 function matchesPattern(pattern: string, resource: string): boolean {
   if (pattern === resource) return true;
 
-  if (pattern.endsWith("/*")) {
+  // Simple trailing wildcard — only when no earlier wildcards exist
+  const firstStar = pattern.indexOf("*");
+  if (firstStar >= 0 && firstStar === pattern.length - 1) {
+    // Single trailing * — prefix match
     const prefix = pattern.slice(0, -1);
     return resource.startsWith(prefix);
   }
 
-  if (pattern.endsWith("*")) {
+  if (pattern.endsWith("/*") && !pattern.slice(0, -2).includes("*")) {
+    // Single trailing /* — prefix match
     const prefix = pattern.slice(0, -1);
     return resource.startsWith(prefix);
   }
 
-  // Handle mcp://* style patterns
+  // General glob with wildcards — use regex
   if (pattern.includes("*")) {
     const regex = new RegExp(
-      "^" + pattern.replace(/\*/g, ".*").replace(/\//g, "\\/") + "$",
+      "^" + pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$",
     );
     return regex.test(resource);
   }

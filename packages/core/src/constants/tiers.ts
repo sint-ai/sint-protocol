@@ -108,6 +108,56 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     escalateOnNewAgent: true,
   },
 
+  // MCP read-only tools — OBSERVE
+  {
+    resourcePattern: "mcp://filesystem/readFile",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "mcp://filesystem/readDirectory",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "mcp://filesystem/getFileInfo",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "mcp://database/query",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+
+  // MCP write tools — PREPARE
+  {
+    resourcePattern: "mcp://filesystem/writeFile",
+    actions: ["call"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+
+  // MCP execution tools — COMMIT (code execution is irreversible)
+  {
+    resourcePattern: "mcp://exec/*",
+    actions: ["call", "exec.run"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
+  // MCP credential tools — COMMIT (credential access is sensitive)
+  {
+    resourcePattern: "mcp://credential/*",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
   // Financial operations — always COMMIT
   {
     resourcePattern: "mcp://*/trade.*",

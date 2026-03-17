@@ -6,3 +6,11 @@ export { checkConstraints, extractPhysicalContext } from "./constraint-checker.j
 export type { ConstraintViolation } from "./constraint-checker.js";
 export { checkForbiddenCombos } from "./forbidden-combos.js";
 export type { ComboCheckResult } from "./forbidden-combos.js";
+export { ApprovalQueue } from "./approval-flow.js";
+export type {
+  ApprovalRequest,
+  ApprovalResolution,
+  ApprovalEvent,
+  ApprovalEventHandler,
+  ApprovalQueueConfig,
+} from "./approval-flow.js";

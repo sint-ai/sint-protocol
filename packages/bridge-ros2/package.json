@@ -1,7 +1,7 @@
 {
-  "name": "@sint/gate-policy-gateway",
+  "name": "@sint/bridge-ros2",
   "version": "0.1.0",
-  "description": "SINT Gate — Policy Gateway: the single choke point for all agent actions",
+  "description": "SINT Bridge — ROS 2 adapter: intercepts robot topic publishes and service calls through the security gate",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,10 +21,10 @@
   "dependencies": {
     "@sint/core": "workspace:*",
     "@sint/gate-capability-tokens": "workspace:*",
+    "@sint/gate-policy-gateway": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@sint/gate-evidence-ledger": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }

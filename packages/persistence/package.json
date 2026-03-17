@@ -1,7 +1,7 @@
 {
-  "name": "@sint/gate-policy-gateway",
+  "name": "@sint/persistence",
   "version": "0.1.0",
-  "description": "SINT Gate — Policy Gateway: the single choke point for all agent actions",
+  "description": "SINT Persistence — storage interfaces and adapters for ledger, tokens, and revocation",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,12 +19,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*",
-    "zod": "^3.24.0"
+    "@sint/core": "workspace:*"
   },
   "devDependencies": {
-    "@sint/gate-evidence-ledger": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }
