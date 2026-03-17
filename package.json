@@ -9,10 +9,12 @@
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "demo": "pnpm --filter @sint/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
+    "tsx": "^4.19.0",
     "turbo": "^2.4.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

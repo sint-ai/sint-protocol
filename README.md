@@ -59,12 +59,12 @@ AI agents can now control robots, execute code, move money, and operate machiner
 | [`@sint/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 43 |
 | [`@sint/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 20 |
 | [`@sint/persistence`](packages/persistence) | Storage interfaces + in-memory/PG/Redis implementations | 26 |
-| [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API | 10 |
-| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite (MCP + ROS 2 + general) | 29 |
-| [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API server with approval routes + metrics | 44 |
-| [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | 80 |
-| [`@sint/dashboard`](apps/dashboard) | Real-time approval management dashboard | 19 |
-| **Total** | **12 packages** | **370** |
+| [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | 12 |
+| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite (MCP + ROS 2 + E2E demo) | 39 |
+| [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, metrics | 49 |
+| [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | 90 |
+| [`@sint/dashboard`](apps/dashboard) | Real-time approval dashboard with operator auth | 29 |
+| **Total** | **12 packages** | **407** |
 
 ## Quick Start
 
@@ -72,7 +72,7 @@ AI agents can now control robots, execute code, move money, and operate machiner
 # Prerequisites: Node.js >= 22, pnpm >= 9
 pnpm install
 pnpm run build
-pnpm run test        # 370 tests
+pnpm run test        # 407 tests
 ```
 
 ### Start the Gateway Server
@@ -95,16 +95,6 @@ pnpm --filter @sint/dashboard dev
 # Create sint-mcp.config.json (see sint-mcp.config.example.json)
 pnpm --filter @sint/mcp dev
 # → Connects via stdio to upstream MCP client (Claude, Cursor, etc.)
-```
-
-### Docker Compose (Production)
-
-```bash
-docker-compose up
-# Gateway:   http://localhost:3100
-# Dashboard: http://localhost:3201
-# Postgres:  localhost:5432
-# Redis:     localhost:6379
 ```
 
 ## SINT MCP Proxy
@@ -131,7 +121,11 @@ The SINT MCP server sits between your MCP client (Claude, Cursor) and any number
 }
 ```
 
-**Built-in tools** (prefixed `sint__`): `status`, `servers`, `whoami`, `pending`, `approve`, `deny`, `audit`, `add_server`, `remove_server`
+**Built-in tools** (11 total, prefixed `sint__`): `status`, `servers`, `whoami`, `pending`, `approve`, `deny`, `audit`, `add_server`, `remove_server`, `issue_token`, `revoke_token`
+
+**MCP Resources** (7 total, `sint://` scheme): `ledger/recent`, `tokens/active`, `approvals/pending`, `servers/list`, `policy/decisions`, `ledger/event/{eventId}`, `tokens/{tokenId}`
+
+**Transports:** stdio (default) or Streamable HTTP (`--sse --port 3200`) for remote agents
 
 **Per-server policy:**
 - `maxTier` — ceiling on allowed tiers; denies calls that exceed it
@@ -195,11 +189,56 @@ Every policy decision is recorded in a SHA-256 hash-chained append-only log:
 
 ### Approval Dashboard
 Real-time web UI for managing SINT approvals:
+- **Operator authentication** — login with name + API key, validated against the gateway
 - Live SSE-powered pending approval feed
-- One-click approve/deny with operator identity
+- One-click approve/deny with operator identity tracked in the audit trail
 - Audit trail with hash chain integrity verification
 - Overview cards: tokens, events, connection status
 - Tier legend with auto/manual classification
+
+## Deployment
+
+### Railway (Recommended)
+
+One-command setup for production Postgres + Redis:
+
+```bash
+brew install railway
+railway login
+./scripts/railway-setup.sh
+```
+
+This provisions PostgreSQL 17 and Redis 7, runs migrations, and outputs connection strings. Set the service env vars:
+
+```bash
+railway variables --set SINT_STORE=postgres
+railway variables --set SINT_CACHE=redis
+railway variables --set SINT_API_KEY=$(openssl rand -hex 32)
+railway up
+```
+
+### Docker Compose (Self-hosted)
+
+```bash
+docker-compose up
+# Gateway:   http://localhost:3100
+# Dashboard: http://localhost:3201
+# Postgres:  localhost:5432
+# Redis:     localhost:6379
+```
+
+### Environment Variables
+
+See [`.env.example`](.env.example) for all options. Key vars:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SINT_STORE` | `memory` | `memory` or `postgres` |
+| `SINT_CACHE` | `memory` | `memory` or `redis` |
+| `DATABASE_URL` | — | PostgreSQL connection string |
+| `REDIS_URL` | — | Redis connection string |
+| `SINT_API_KEY` | — | Admin API key (disabled in dev) |
+| `SINT_PORT` | `3100` | Gateway server port |
 
 ## Project Structure
 
@@ -235,14 +274,14 @@ sint-protocol/
 - **Crypto:** @noble/ed25519, @noble/hashes (audited, zero-dependency)
 - **MCP SDK:** @modelcontextprotocol/sdk
 - **Dashboard:** React 19, Vite 6, CSS custom properties
-- **Testing:** Vitest (370 tests)
-- **Infra:** Docker, PostgreSQL 16, Redis 7, GitHub Actions CI
+- **Testing:** Vitest (407 tests)
+- **Infra:** Docker, PostgreSQL 16+, Redis 7, GitHub Actions CI, Railway
 
 ## Development
 
 ```bash
 pnpm run build       # Build all packages
-pnpm run test        # Run all 370 tests
+pnpm run test        # Run all 407 tests
 pnpm run typecheck   # Type-check without emitting
 pnpm run clean       # Remove dist/ and build artifacts
 ```
