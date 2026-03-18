@@ -38,12 +38,27 @@ export type LedgerEmitter = (event: {
   payload: Record<string, unknown>;
 }) => void;
 
+/**
+ * Economy plugin hooks for PolicyGateway integration.
+ *
+ * preIntercept runs before tier assignment — can short-circuit with a deny.
+ * postIntercept runs after an allow decision — bills the action.
+ */
+export interface EconomyPluginHooks {
+  /** Called before tier assignment. Return PolicyDecision to short-circuit, undefined to proceed. */
+  preIntercept(request: SintRequest): Promise<PolicyDecision | undefined>;
+  /** Called after final decision. Used for billing on allow. */
+  postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void>;
+}
+
 /** Policy Gateway configuration. */
 export interface PolicyGatewayConfig {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
   readonly emitLedgerEvent?: LedgerEmitter;
   readonly getAgentTrustLevel?: (agentId: string) => AgentTrustLevel;
+  /** Optional economy plugin for budget/balance/trust enforcement. */
+  readonly economyPlugin?: EconomyPluginHooks;
 }
 
 /**
@@ -128,6 +143,25 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, tokenValidation.error, `Token validation failed: ${tokenValidation.error}`);
     }
 
+    // 4b. Economy pre-intercept (budget, balance, trust checks)
+    if (this.config.economyPlugin) {
+      try {
+        const economyDecision = await this.config.economyPlugin.preIntercept(request);
+        if (economyDecision) {
+          // Economy plugin short-circuits — emit and return
+          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+            decision: economyDecision.action,
+            tier: economyDecision.assignedTier,
+            risk: economyDecision.assignedRisk,
+            source: "economy_plugin",
+          });
+          return economyDecision;
+        }
+      } catch {
+        // Economy plugin error → fail-open, continue normal flow
+      }
+    }
+
     // 5. Assign approval tier
     const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
     const tierAssignment = assignTier(request, { agentTrustLevel });
@@ -172,6 +206,15 @@ export class PolicyGateway {
       tier: decision.assignedTier,
       risk: decision.assignedRisk,
     });
+
+    // 10. Economy post-intercept (billing on allow)
+    if (this.config.economyPlugin) {
+      try {
+        await this.config.economyPlugin.postIntercept(request, decision);
+      } catch {
+        // Post-intercept billing error → fail-open (decision stands)
+      }
+    }
 
     return decision;
   }

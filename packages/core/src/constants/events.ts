@@ -58,8 +58,23 @@ export const SINT_EVENTS = {
   HAL_HARDWARE_DETECTED: "hal.hardware.detected",
   HAL_PROFILE_SELECTED: "hal.profile.selected",
 
-  // Economic
+  // Economic — Marketplace
   CAPSULE_PURCHASED: "capsule.purchased",
   TASK_BID_PLACED: "task.bid.placed",
   PAYMENT_SETTLED: "payment.settled",
+
+  // Economic — Balance
+  ECONOMY_BALANCE_CHECKED: "economy.balance.checked",
+  ECONOMY_BALANCE_DEDUCTED: "economy.balance.deducted",
+  ECONOMY_BALANCE_INSUFFICIENT: "economy.balance.insufficient",
+
+  // Economic — Budget
+  ECONOMY_BUDGET_CHECKED: "economy.budget.checked",
+  ECONOMY_BUDGET_EXCEEDED: "economy.budget.exceeded",
+  ECONOMY_BUDGET_ALERT: "economy.budget.alert",
+
+  // Economic — Trust & Billing
+  ECONOMY_TRUST_EVALUATED: "economy.trust.evaluated",
+  ECONOMY_TRUST_BLOCKED: "economy.trust.blocked",
+  ECONOMY_ACTION_BILLED: "economy.action.billed",
 } as const;

@@ -1,5 +1,5 @@
 export { PolicyGateway } from "./gateway.js";
-export type { PolicyGatewayConfig, TokenResolver, LedgerEmitter } from "./gateway.js";
+export type { PolicyGatewayConfig, TokenResolver, LedgerEmitter, EconomyPluginHooks } from "./gateway.js";
 export { assignTier } from "./tier-assigner.js";
 export type { TierAssignment } from "./tier-assigner.js";
 export { checkConstraints, extractPhysicalContext } from "./constraint-checker.js";

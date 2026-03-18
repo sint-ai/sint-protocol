@@ -68,10 +68,22 @@ export type SintEventType =
   // Engine — Hardware Abstraction Layer
   | "hal.hardware.detected"
   | "hal.profile.selected"
-  // Economic (Layer 4)
+  // Economic (Layer 4) — Marketplace
   | "capsule.purchased"
   | "task.bid.placed"
-  | "payment.settled";
+  | "payment.settled"
+  // Economic (Layer 4) — Balance
+  | "economy.balance.checked"
+  | "economy.balance.deducted"
+  | "economy.balance.insufficient"
+  // Economic (Layer 4) — Budget
+  | "economy.budget.checked"
+  | "economy.budget.exceeded"
+  | "economy.budget.alert"
+  // Economic (Layer 4) — Trust & Billing
+  | "economy.trust.evaluated"
+  | "economy.trust.blocked"
+  | "economy.action.billed";
 
 /**
  * A single immutable event in the Evidence Ledger.

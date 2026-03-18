@@ -35,6 +35,7 @@ import { interceptRoutes } from "./routes/intercept.js";
 import { tokenRoutes } from "./routes/tokens.js";
 import { ledgerRoutes } from "./routes/ledger.js";
 import { approvalRoutes } from "./routes/approvals.js";
+import { economyRoutes, type EconomyRouteContext } from "./routes/economy.js";
 import type { SintConfig } from "./config.js";
 
 /** Shared server state — injectable for testing. */
@@ -175,6 +176,8 @@ export interface ServerOptions {
   rateLimitMax?: number;
   /** Rate limit: window duration in ms. Default: 60000. */
   rateLimitWindowMs?: number;
+  /** Optional economy route context for balance/budget/trust endpoints. */
+  economyContext?: EconomyRouteContext;
 }
 
 /** Create a fully configured Hono app. */
@@ -204,6 +207,11 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   app.route("", ledgerRoutes(context));
   app.route("", approvalRoutes(context));
   app.route("", metricsRoutes());
+
+  // Economy routes (optional — only when economy context is configured)
+  if (options.economyContext) {
+    app.route("", economyRoutes(options.economyContext));
+  }
 
   return app;
 }
