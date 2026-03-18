@@ -12,14 +12,20 @@ import { Hono } from "hono";
 import { RevocationStore } from "@sint/gate-capability-tokens";
 import { PolicyGateway, ApprovalQueue } from "@sint/gate-policy-gateway";
 import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import type { TokenStore, LedgerStore } from "@sint/persistence";
+import type { TokenStore, LedgerStore, CacheStore, RevocationBus } from "@sint/persistence";
 import {
   InMemoryTokenStore,
   InMemoryLedgerStore,
+  InMemoryCache,
+  InMemoryRevocationBus,
   PgTokenStore,
   PgLedgerStore,
   getPool,
+  RedisCache,
+  RedisRevocationBus,
 } from "@sint/persistence";
+import type { SintCapabilityToken } from "@sint/core";
+import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
 import { structuredLogging } from "./middleware/logging.js";
@@ -39,6 +45,8 @@ export interface ServerContext {
   readonly ledgerStore: LedgerStore;
   readonly gateway: PolicyGateway;
   readonly approvalQueue: ApprovalQueue;
+  readonly cache: CacheStore;
+  readonly revocationBus: RevocationBus;
 }
 
 /** Create a default server context with in-memory stores (testing/dev). */
@@ -48,6 +56,8 @@ export function createContext(): ServerContext {
   const ledgerStore = new InMemoryLedgerStore();
   const ledger = new LedgerWriter();
   const approvalQueue = new ApprovalQueue();
+  const cache = new InMemoryCache();
+  const revocationBus = new InMemoryRevocationBus();
 
   const gateway = new PolicyGateway({
     resolveToken: async (id) => tokenStore.get(id),
@@ -59,22 +69,36 @@ export function createContext(): ServerContext {
         tokenId: event.tokenId,
         payload: event.payload,
       });
-      // Also persist to backing store (fire-and-forget)
-      ledgerStore.append(written).catch(() => {});
+      // Also persist to backing store
+      ledgerStore.append(written).catch((err) => {
+        console.error("[SINT] Failed to persist ledger event:", err);
+      });
     },
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue };
+  // Wire revocation bus → local store sync
+  revocationBus.subscribe((event) => {
+    revocationStore.revoke(event.tokenId, event.reason, event.revokedBy);
+  });
+
+  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
 }
 
 /**
  * Create a server context backed by PostgreSQL and optionally Redis.
  * Falls back to in-memory stores for any unconfigured backends.
+ *
+ * Redis integration:
+ * - RedisCache: Distributed TTL cache for hot token lookups
+ * - RedisRevocationBus: Pub/sub for <1s revocation propagation across nodes
  */
 export function createPersistentContext(config: SintConfig): ServerContext {
   let tokenStore: TokenStore;
   let ledgerStore: LedgerStore;
+  let cache: CacheStore;
+  let revocationBus: RevocationBus;
 
+  // ── Storage backend ──
   if (config.store === "postgres" && config.databaseUrl) {
     const pool = getPool({ connectionString: config.databaseUrl });
     tokenStore = new PgTokenStore(pool);
@@ -84,12 +108,38 @@ export function createPersistentContext(config: SintConfig): ServerContext {
     ledgerStore = new InMemoryLedgerStore();
   }
 
+  // ── Cache + revocation bus backend ──
+  if (config.cache === "redis" && config.redisUrl) {
+    const redisPublisher = createRedisClient(config.redisUrl);
+    const redisCacheClient = createRedisClient(config.redisUrl);
+    cache = new RedisCache(redisCacheClient);
+    const redisUrl = config.redisUrl;
+    revocationBus = new RedisRevocationBus(
+      redisPublisher,
+      () => createRedisClient(redisUrl), // Subscriber needs its own connection
+    );
+    console.log("[SINT] Redis cache + revocation bus connected");
+  } else {
+    cache = new InMemoryCache();
+    revocationBus = new InMemoryRevocationBus();
+  }
+
   const revocationStore = new RevocationStore();
   const ledger = new LedgerWriter();
   const approvalQueue = new ApprovalQueue();
 
   const gateway = new PolicyGateway({
-    resolveToken: async (id) => tokenStore.get(id),
+    resolveToken: async (id) => {
+      // Check cache first for hot token lookups
+      const cached = await cache.get<SintCapabilityToken>(`token:${id}`);
+      if (cached) return cached;
+      const token = await tokenStore.get(id);
+      if (token) {
+        // Cache for 60s — tokens are validated every request anyway
+        await cache.set(`token:${id}`, token, 60_000);
+      }
+      return token;
+    },
     revocationStore,
     emitLedgerEvent: (event) => {
       const written = ledger.append({
@@ -105,7 +155,14 @@ export function createPersistentContext(config: SintConfig): ServerContext {
     },
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue };
+  // Wire revocation bus: when any node revokes a token, all nodes update their local store
+  revocationBus.subscribe((event) => {
+    revocationStore.revoke(event.tokenId, event.reason, event.revokedBy);
+    // Invalidate cached token on revocation
+    cache.delete(`token:${event.tokenId}`).catch(() => {});
+  });
+
+  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
 }
 
 /** Server configuration options. */

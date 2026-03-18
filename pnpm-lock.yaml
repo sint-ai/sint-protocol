@@ -88,6 +88,12 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
+      ioredis:
+        specifier: ^5.4.0
+        version: 5.10.0
       tsx:
         specifier: ^4.19.0
         version: 4.21.0

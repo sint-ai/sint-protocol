@@ -15,7 +15,13 @@ import type {
   ResolveApprovalRequest,
 } from "./types.js";
 
-const BASE = "";
+/**
+ * Gateway URL base. In development, Vite proxies /v1/* to localhost:3100.
+ * In production, set VITE_GATEWAY_URL to the gateway's origin
+ * (e.g. "https://gateway.sint.example.com") or leave empty
+ * when using nginx proxy on the same domain.
+ */
+const BASE = import.meta.env.VITE_GATEWAY_URL ?? "";
 
 /** Current auth headers injected by configureAuth(). */
 let authHeaders: Record<string, string> = {};

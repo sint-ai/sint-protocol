@@ -40,42 +40,58 @@ export function useApprovals(): UseApprovalsResult {
     // Initial fetch
     void refresh();
 
-    // Connect SSE
-    const es = new EventSource("/v1/approvals/events");
-    eventSourceRef.current = es;
+    // SSE connection with exponential backoff reconnection
+    const sseBase = import.meta.env.VITE_GATEWAY_URL ?? "";
+    let retryCount = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    es.onopen = () => {
-      setConnected(true);
-      setError(null);
-    };
+    function connect() {
+      const es = new EventSource(`${sseBase}/v1/approvals/events`);
+      eventSourceRef.current = es;
 
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data) as ApprovalSSEEvent;
+      es.onopen = () => {
+        retryCount = 0;
+        setConnected(true);
+        setError(null);
+      };
 
-        if (data.type === "queued" && data.request) {
-          setPending((prev) => {
-            // Avoid duplicates
-            if (prev.some((r) => r.requestId === data.request!.requestId)) {
-              return prev;
-            }
-            return [...prev, data.request!];
-          });
-        } else if (data.type === "resolved" || data.type === "timeout") {
-          setPending((prev) => prev.filter((r) => r.requestId !== data.requestId));
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as ApprovalSSEEvent;
+
+          if (data.type === "queued" && data.request) {
+            setPending((prev) => {
+              if (prev.some((r) => r.requestId === data.request!.requestId)) {
+                return prev;
+              }
+              return [...prev, data.request!];
+            });
+          } else if (data.type === "resolved" || data.type === "timeout") {
+            setPending((prev) => prev.filter((r) => r.requestId !== data.requestId));
+          }
+        } catch {
+          // Ignore malformed events (including heartbeat comments)
         }
-      } catch {
-        // Ignore malformed events
-      }
-    };
+      };
 
-    es.onerror = () => {
-      setConnected(false);
-      setError("SSE connection lost. Reconnecting...");
-    };
+      es.onerror = () => {
+        setConnected(false);
+        es.close();
+        eventSourceRef.current = null;
+
+        // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 30_000);
+        retryCount++;
+        setError(`SSE disconnected. Reconnecting in ${Math.round(delay / 1000)}s...`);
+        retryTimer = setTimeout(connect, delay);
+      };
+    }
+
+    connect();
 
     return () => {
-      es.close();
+      if (retryTimer) clearTimeout(retryTimer);
+      eventSourceRef.current?.close();
       eventSourceRef.current = null;
     };
   }, [refresh]);

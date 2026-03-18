@@ -19,10 +19,30 @@ export function approvalRoutes(ctx: ServerContext): Hono {
     const stream = new ReadableStream({
       start(controller) {
         const encoder = new TextEncoder();
+        let closed = false;
 
         const send = (data: string) => {
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          if (closed) return;
+          try {
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          } catch {
+            closed = true;
+          }
         };
+
+        // Heartbeat every 30s — keeps connection alive through proxies/firewalls
+        const heartbeat = setInterval(() => {
+          if (closed) {
+            clearInterval(heartbeat);
+            return;
+          }
+          try {
+            controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+          } catch {
+            closed = true;
+            clearInterval(heartbeat);
+          }
+        }, 30_000);
 
         // Send initial pending state
         const pending = ctx.approvalQueue.getPending();
@@ -37,6 +57,8 @@ export function approvalRoutes(ctx: ServerContext): Hono {
 
         // Clean up when client disconnects
         c.req.raw.signal.addEventListener("abort", () => {
+          closed = true;
+          clearInterval(heartbeat);
           unsubscribe();
           controller.close();
         });
@@ -48,6 +70,7 @@ export function approvalRoutes(ctx: ServerContext): Hono {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
       },
     });
   });
