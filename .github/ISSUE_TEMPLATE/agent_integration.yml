@@ -1,0 +1,53 @@
+name: Agent Integration Request
+description: Request help integrating an AI agent or platform with SINT Protocol
+labels: ["integration"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us about the agent or platform you want to integrate with SINT Protocol.
+  - type: input
+    id: agent-platform
+    attributes:
+      label: Agent / Platform
+      description: What agent framework or platform are you integrating?
+      placeholder: "Claude, GPT, LangChain, custom agent, ROS 2 robot, etc."
+    validations:
+      required: true
+  - type: dropdown
+    id: bridge
+    attributes:
+      label: Bridge type
+      options:
+        - MCP (tool calls via Model Context Protocol)
+        - ROS 2 (robotics topics/services/actions)
+        - HTTP API (direct Gateway Server calls)
+        - Custom / Other
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What will the agent do? What physical or sensitive actions need governance?
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Specific policy, approval, or audit requirements for your integration.
+    validations:
+      required: false
+  - type: dropdown
+    id: tier-range
+    attributes:
+      label: Expected max tier
+      description: Highest risk tier your agent actions will reach.
+      options:
+        - T0 — Read-only, no side effects
+        - T1 — Reversible side effects
+        - T2 — Irreversible but non-dangerous
+        - T3 — Dangerous physical actions
+    validations:
+      required: true
