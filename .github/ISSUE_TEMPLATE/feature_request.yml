@@ -1,0 +1,57 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for SINT Protocol? Tell us about it. For substantial protocol changes, consider starting an [RFC Discussion](https://github.com/sint-ai/sint-protocol/discussions/categories/rfc) first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this feature solve? What use case does it enable?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: How do you think this should work? Include API sketches, diagrams, or examples if helpful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other approaches you considered and why you prefer the proposed solution.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the protocol does this affect?
+      options:
+        - "Core types / schemas"
+        - "Policy Gateway / tier rules"
+        - "Capability tokens / delegation"
+        - "Evidence ledger / audit"
+        - "Bridge adapter (MCP, ROS 2, new)"
+        - "Gateway API / HTTP server"
+        - "Dashboard / UI"
+        - "Persistence / storage"
+        - "SDK / client library"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to submit a PR for this feature

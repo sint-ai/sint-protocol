@@ -1,0 +1,79 @@
+name: Bug Report
+description: Report a bug in SINT Protocol
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please fill out the sections below so we can reproduce and fix it.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear, concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Minimal steps to reproduce the behavior.
+      placeholder: |
+        1. Run `pnpm --filter @sint/gate-policy-gateway test`
+        2. See error in ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened. Include error messages or logs if available.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package is affected?
+      options:
+        - "@sint/core"
+        - "@sint/gate-capability-tokens"
+        - "@sint/gate-policy-gateway"
+        - "@sint/gate-evidence-ledger"
+        - "@sint/bridge-mcp"
+        - "@sint/bridge-ros2"
+        - "@sint/persistence"
+        - "@sint/client"
+        - "@sint/conformance-tests"
+        - "@sint/gateway-server"
+        - "@sint/mcp"
+        - "@sint/dashboard"
+        - "Other / not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: Package version or git commit hash.
+      placeholder: "e.g., 0.1.0 or abc1234"
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node.js version, OS, etc.
+      placeholder: "e.g., Node 22.x, macOS 15"
