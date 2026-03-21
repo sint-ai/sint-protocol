@@ -59,6 +59,23 @@ These are non-negotiable. PRs that violate them will be rejected.
 3. **Append-only ledger.** The evidence ledger supports `append()` and `query()`. No updates, no deletes.
 4. **Interface-first persistence.** Storage adapters implement interfaces from `@sint/persistence`. Don't import concrete implementations outside of tests and DI setup.
 
+## Proposing Changes (RFC Process)
+
+For substantial changes to the protocol, architecture, or public API, we use a lightweight RFC (Request for Comments) process:
+
+1. **Open a Discussion.** Start a thread in [GitHub Discussions](https://github.com/sint-ai/sint-protocol/discussions) under the "RFC" category. Describe the problem, your proposed solution, and trade-offs.
+2. **Gather feedback.** Allow at least one week for community and maintainer input.
+3. **Reach consensus.** A maintainer will mark the discussion as accepted, rejected, or needs-revision. Accepted RFCs get a tracking issue.
+4. **Implement.** Open a PR referencing the RFC discussion and tracking issue.
+
+Not every change needs an RFC. Bug fixes, documentation improvements, test additions, and small enhancements can go directly to a PR. When in doubt, open an issue first.
+
+**Examples of changes that warrant an RFC:**
+- New protocol primitives (e.g., a new task state, a new governance tier)
+- Changes to the heartbeat or checkout model
+- New bridge adapters for external systems
+- Breaking changes to the public API or type definitions
+
 ## What to Work On
 
 Check the [issue tracker](https://github.com/sint-ai/sint-protocol/issues) for open issues. Good first issues are labeled `good-first-issue`.
@@ -109,6 +126,10 @@ test(conformance): add forbidden combo regression tests
 - [ ] New code has tests
 - [ ] Architecture rules are respected
 - [ ] PR description explains what and why
+
+## Code of Conduct
+
+All participants in the SINT Protocol community are expected to be respectful and constructive. Welcome newcomers, focus on what is best for the community and the protocol, and avoid harassment, discrimination, or personal attacks.
 
 ## Reporting Security Issues
 
