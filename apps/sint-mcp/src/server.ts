@@ -36,6 +36,10 @@ import {
   type ResourceContext,
 } from "./resources/sint-resources.js";
 import type { SintMCPConfig } from "./config.js";
+import {
+  TrajectoryRecorder,
+  type TrajectoryOutcome,
+} from "./trajectory.js";
 
 /** SINT MCP Server — the security-first multi-MCP proxy. */
 export class SintMCPServer {
@@ -47,6 +51,7 @@ export class SintMCPServer {
   readonly ledger: LedgerWriter;
   readonly gateway: PolicyGateway;
   readonly approvalQueue: ApprovalQueue;
+  readonly trajectory: TrajectoryRecorder;
 
   private identity: AgentIdentity | null = null;
   private enforcer: PolicyEnforcer | null = null;
@@ -72,6 +77,13 @@ export class SintMCPServer {
     this.ledger = new LedgerWriter();
     this.approvalQueue = new ApprovalQueue({
       defaultTimeoutMs: config.approvalTimeoutMs,
+    });
+    this.trajectory = new TrajectoryRecorder({
+      runId: process.env["PAPERCLIP_RUN_ID"] ?? `run-${Date.now()}`,
+      agentId: process.env["PAPERCLIP_AGENT_ID"] ?? "unknown-agent",
+      taskId: process.env["PAPERCLIP_TASK_ID"] ?? "unknown-task",
+      model: process.env["OPENAI_MODEL"] ?? process.env["MODEL"] ?? "unknown-model",
+      outputDir: process.env["SINT_TRAJECTORY_DIR"] ?? ".sint/trajectories",
     });
 
     this.gateway = new PolicyGateway({
@@ -115,6 +127,7 @@ export class SintMCPServer {
       this.downstream,
       this.identity.publicKey,
       this.identity.defaultToken.tokenId,
+      this.trajectory,
     );
 
     // Connect to downstream servers
@@ -233,6 +246,11 @@ export class SintMCPServer {
    */
   getSintToolCount(): number {
     return getSintToolDefinitions().length;
+  }
+
+  async finalizeTrajectory(outcome: TrajectoryOutcome): Promise<string> {
+    this.trajectory.markOutcome(outcome);
+    return this.trajectory.flushToFile();
   }
 
   private getToolContext(): SintToolContext {
