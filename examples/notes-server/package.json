@@ -1,0 +1,17 @@
+{
+  "name": "@sint/example-notes-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example: minimal MCP server with SINT protection",
+  "type": "module",
+  "scripts": {
+    "start": "tsx server.ts",
+    "build": "echo 'no build needed — runs with tsx'"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0"
+  }
+}
