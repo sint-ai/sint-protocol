@@ -1,6 +1,6 @@
 # Show HN Draft — SINT Protocol
 
-> **Title:** Show HN: SINT Protocol – Open-source security layer for physical AI (capability tokens + tiered approval)
+> **Title:** Show HN: SINT Protocol – MCP security layer with capability tokens, T0–T3 tiers, and tamper-evident audit log
 
 > **URL:** https://github.com/sint-ai/sint-protocol
 
@@ -10,25 +10,62 @@
 
 Hi HN,
 
-We built SINT Protocol because AI agents are increasingly controlling physical systems — robots, industrial equipment, financial infrastructure — and there's no standard security layer between the model's decision and the physical action.
+Try this first — it'll make the rest concrete:
 
-**What SINT does:** Every agent action (tool call, robot command, API request) passes through a single Policy Gateway that enforces:
+```bash
+npx sint-scan --server myserver --tools '[
+  {"name":"bash","description":"runs shell commands"},
+  {"name":"readFile","description":"reads files"},
+  {"name":"deleteFile","description":"deletes files"}
+]'
+```
+
+It maps your MCP server's tools to SINT approval tiers and flags anything that needs human sign-off before an agent can call it. Exit code 2 on CRITICAL — drop it in CI.
+
+---
+
+**Why we built this:**
+
+MCP gives AI agents powerful tools. But there's no authorization layer between "the LLM decided to call bash()" and "bash() ran." No token required. No audit trail. No rate limit. No human-in-the-loop. If the agent is compromised, you find out when the damage is done.
+
+We built SINT Protocol because we needed a principled answer to: *what should actually happen between an agent's decision and a physical action?*
+
+---
+
+**What SINT does:**
+
+Every agent action (tool call, robot command, code execution) passes through a single Policy Gateway that enforces:
 
 1. **Capability tokens** — Ed25519-signed, attenuating credentials scoped to specific resources and actions. Delegation can only reduce permissions, never escalate.
 
-2. **Tiered approval** — Four levels (T0–T3) matching authorization requirements to physical consequence severity. Read-only is auto-approved. Moving a robot arm requires escalation. Executing code requires a human.
+2. **Tiered approval (T0–T3)** — authorization requirements matched to physical consequence severity:
+   - T0 OBSERVE: `readFile`, `listDir` → auto-approved, logged
+   - T1 PREPARE: `writeFile`, `saveConfig` → auto-approved, audited
+   - T2 ACT: `deleteFile`, `moveRobot` → escalation required
+   - T3 COMMIT: `bash`, `exec`, `eval` → human sign-off required
 
-3. **Physical constraints** — Hard limits on velocity, force, temperature, geofence boundaries enforced at the protocol level.
+3. **Physics constraints** — hard velocity/force/geofence limits enforced at the protocol level, not in application code that can be bypassed.
 
-4. **Evidence ledger** — SHA-256 hash-chained, append-only audit log. Every decision is recorded and tamper-detectable.
+4. **Tamper-evident ledger** — SHA-256 hash-chained, append-only audit log. Every decision is recorded and cryptographically detectable if tampered with.
+
+---
 
 **Technical details:**
-- TypeScript monorepo, 12 packages, 370+ tests
-- Bridge adapters for MCP (Model Context Protocol) and ROS 2
+- TypeScript monorepo, 31 packages, 1,105 tests
+- Bridge adapters for MCP, ROS 2, MAVLink, MQTT, OPC-UA, A2A
 - Works as a proxy between any AI agent and any tool server
+- All 10 OWASP Agentic AI Top-10 categories regression-tested
 - Result<T, E> pattern throughout — no exceptions for control flow
 - Apache 2.0 licensed
 
-**What we're looking for:** Feedback on the security model, the tier classification system, and the capability token design. We're especially interested in hearing from people building with MCP servers or robotic systems.
+---
 
-We built this because we needed it for our own AI agents and couldn't find anything like it. Happy to answer questions about the architecture or design decisions.
+**What we're looking for:** Feedback on the security model, the tier classification system, and the capability token design. We're especially interested in hearing from people building with MCP servers, physical robots, or agentic pipelines where an agent going wrong would have real consequences.
+
+Want to know if your MCP server has unsafe tools? Run:
+
+```bash
+npx sint-scan --server myserver --tools '[{"name":"bash","description":"runs shell"}]'
+```
+
+Happy to answer questions about the architecture or design decisions.

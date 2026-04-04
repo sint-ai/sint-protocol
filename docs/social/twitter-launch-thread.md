@@ -1,72 +1,87 @@
 # X/Twitter Launch Thread — SINT Protocol
 
-> **Instructions:** Post as a thread from @sint_ai. Each numbered section is one tweet.
+> **Instructions:** Post as a thread. Each numbered section = one tweet. Add [VIDEO] asset to Tweet 1 (30s demo: dashboard + ROS2 robot denial). Screenshot of `npx sint-scan` output goes in Tweet 4.
 
 ---
 
 **1/**
-We just open-sourced SINT Protocol — a security enforcement layer for physical AI.
+We built the Policy Gateway MCP has been begging for.
 
-AI agents can now control robots, move money, and execute code. But there's no standard security layer between "the model decided" and "the action happened."
+Capability tokens. T0–T3 approval tiers. Physics constraints. Tamper-evident ledger.
 
-SINT is that layer.
+Every agent action — tool calls, robot commands, code execution — flows through a single choke point before it touches the real world.
+
+[VIDEO: 30s demo — dashboard + ROS2 robot denial]
 
 github.com/sint-ai/sint-protocol
+
+---
 
 **2/**
-How it works:
+Here's the gap nobody talks about:
 
-Every agent action passes through a single Policy Gateway.
+MCP gives AI agents powerful tools. But there's zero authorization between "the LLM decided to call bash()" and "bash() ran."
 
-The gateway checks:
-- Capability tokens (Ed25519-signed, scoped credentials)
-- Approval tier (T0 observe → T3 irreversible)
-- Physical constraints (velocity, force, geofence)
-- Forbidden action combos
+No token required. No audit trail. No rate limit. No human-in-the-loop.
 
-No action bypasses the gate.
+If the agent is compromised, you find out when the damage is done.
+
+---
 
 **3/**
-The approval tier system matches authorization to physical consequence:
+SINT maps authorization to physical consequence:
 
-T0 OBSERVE — auto-approve (read sensors)
-T1 PREPARE — auto-approve (save config)
-T2 ACT — requires escalation (move robot)
-T3 COMMIT — human required (exec code, transfer funds)
+🟢 T0 OBSERVE — readFile, listDir → auto-allowed, logged
+🟡 T1 PREPARE — writeFile, saveConfig → auto-allowed, audited
+🟠 T2 ACT — deleteFile, moveRobot → requires escalation
+🔴 T3 COMMIT — bash, exec, eval → requires human sign-off
+
+A robot arm moving at 3 m/s needs different governance than a read query. SINT encodes that difference.
+
+---
 
 **4/**
-Every decision is recorded in a SHA-256 hash-chained evidence ledger.
+`npx sint-scan` — audit any MCP server for risks in 10 seconds:
 
-Append-only. No updates. No deletes.
+[SCREENSHOT: terminal showing CRITICAL bash + HIGH deleteFile + recommendations]
 
-Any tampering is cryptographically detectable.
+```
+npx sint-scan --server myserver \
+  --tools '[{"name":"bash","description":"runs shell"}]'
+```
 
-This is your audit trail when the regulator asks "what did your AI do and why?"
+Exit code 2 on CRITICAL. Drop it in your CI pipeline.
+
+---
 
 **5/**
-What's shipping today:
+Two features nobody else has:
 
-- 12 packages, 370+ tests
-- MCP bridge (works with Claude, Cursor, any MCP client)
-- ROS 2 bridge (robots, drones, industrial equipment)
-- Ed25519 capability tokens with delegation
-- Real-time approval dashboard
-- TypeScript SDK
+**Physics constraints** — velocity caps, force limits, geofence polygons enforced at the protocol level. Not in application code that can be bypassed.
+
+**Tamper-evident ledger** — SHA-256 hash-chained, append-only. Every decision recorded. Any tampering is cryptographically detectable.
+
+Your compliance team will thank you.
+
+---
 
 **6/**
-We built SINT because we needed it ourselves.
+Full OWASP Agentic AI Top-10 coverage. All 10 ASI categories regression-tested:
 
-We run AI agents that operate in the physical world. The security primitives available were either too coarse (ACLs) or too brittle (prompt constraints).
+ASI01 goal hijacking → GoalHijackPlugin (5-layer heuristics)
+ASI05 shell via tool calls → T3 classifier
+ASI06 memory poisoning → MemoryIntegrityChecker
+ASI10 rogue agent → CircuitBreakerPlugin (EU AI Act Art. 14(4)(e) stop button)
 
-So we built the enforcement layer we wished existed and open-sourced it.
+1,105 tests. 31 packages. Apache-2.0.
+
+---
 
 **7/**
-Want to contribute?
+If you're building with MCP, thinking about physical AI, or care about what happens when agents go wrong — this is for you.
 
-- 3 good-first-issue tickets open now
-- Whitepaper, tokenomics, and roadmap in docs/
-- GitHub Discussions enabled
+Star, share, break it: github.com/sint-ai/sint-protocol
 
-Apache 2.0 licensed. Build with us.
+cc @jspahrsummers @doppenhe @Aurimas_Gr @M_haggis @SlowMist_Team
 
-github.com/sint-ai/sint-protocol
+#MCP #AgentSecurity #PhysicalAI #AIGovernance #OWASP

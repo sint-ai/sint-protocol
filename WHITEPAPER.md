@@ -225,11 +225,86 @@ SINT does not protect against:
 - Conformance certification program
 - Governance foundation for long-term stewardship
 
-## 8. Conclusion
+## 8. Regulatory Alignment
+
+### 8.1 NIST AI Risk Management Framework
+
+SINT Protocol directly addresses key NIST AI RMF controls:
+
+| NIST Function | NIST Control | SINT Component |
+|---|---|---|
+| GOVERN | GOVERN-1.1 (human oversight policies) | T2/T3 escalation tiers, CircuitBreaker stop mechanism |
+| GOVERN | GOVERN-6.1 (risk tolerance) | Per-deployment SintDeploymentProfile policies |
+| MAP | MAP-1.1 (risk identification) | PolicyGateway tier assignment, CSML risk scoring |
+| MAP | MAP-5.1 (stakeholder impact) | PhysicsConstraints with velocity/force/geofence limits |
+| MEASURE | MEASURE-2.6 (monitoring and feedback) | EvidenceLedger with SIEM export, SHA-256 hash chain |
+| MEASURE | MEASURE-2.8 (AI system operation) | ROS2ControlLoopLatency benchmarks, p99 < 10ms |
+| MANAGE | MANAGE-2.2 (risk treatment) | CapabilityToken attenuation, T0–T3 treatment tiers |
+| MANAGE | MANAGE-4.2 (incident response) | CircuitBreakerPlugin, EvidenceLedger forensic trail |
+
+### 8.2 EU AI Act Alignment
+
+Article 14(4)(e) of the EU AI Act requires that high-risk AI systems include technical measures enabling human oversight and the ability to override, interrupt, or reverse outputs. SINT's CircuitBreaker stop mechanism is designed to satisfy this requirement:
+
+- `CircuitBreaker.trip()` immediately halts all T2/T3 agent actions
+- Manual reset requires explicit human authorization
+- All override events are recorded in the tamper-evident ledger
+
+### 8.3 OWASP Agentic AI Top-10 Coverage
+
+All 10 OWASP Agentic AI (ASI) categories are addressed with dedicated regression tests:
+
+| ASI Category | SINT Control | Test Location |
+|---|---|---|
+| ASI01 Goal Hijacking | GoalHijackPlugin (5-layer heuristics) | conformance-tests/mcp-attack-surface.test.ts |
+| ASI02 Prompt Injection | T3 classification, token scoping | conformance-tests/mcp-attack-surface.test.ts |
+| ASI03 Insecure Output | Transformation constraints | conformance-tests/mcp-attack-surface.test.ts |
+| ASI04 Tool Misuse | PolicyGateway tier assignment | conformance-tests/mcp-attack-surface.test.ts |
+| ASI05 Shell via Tool Calls | T3 CRITICAL classifier | conformance-tests/mcp-attack-surface.test.ts |
+| ASI06 Memory Poisoning | MemoryIntegrityChecker | conformance-tests/mcp-attack-surface.test.ts |
+| ASI07 Excessive Autonomy | T2 escalation threshold | conformance-tests/mcp-attack-surface.test.ts |
+| ASI08 Inadequate Logging | EvidenceLedger mandatory recording | conformance-tests/mcp-attack-surface.test.ts |
+| ASI09 Supply Chain | CapabilityToken chain validation | conformance-tests/mcp-attack-surface.test.ts |
+| ASI10 Rogue Agent | CircuitBreakerPlugin (EU AI Act stop button) | conformance-tests/mcp-attack-surface.test.ts |
+
+---
+
+## 9. Competitive Landscape
+
+### 9.1 Feature Comparison
+
+| Feature | Raw MCP | SROS2 Only | SINT Protocol |
+|---|---|---|---|
+| Authorization layer | ❌ | Partial | ✅ Ed25519 capability tokens |
+| Human-in-the-loop | ❌ | ❌ | ✅ T2/T3 escalation |
+| Tamper-evident audit | ❌ | ❌ | ✅ SHA-256 hash-chained ledger |
+| Physics constraints | ❌ | Partial | ✅ Velocity, force, geofence |
+| LLM agent awareness | ✅ | ❌ | ✅ |
+| MCP protocol support | ✅ | ❌ | ✅ Bridge adapter |
+| ROS 2 support | ❌ | ✅ | ✅ Bridge adapter |
+| MAVLink / drone support | ❌ | ❌ | ✅ Bridge adapter |
+| OWASP ASI coverage | ❌ | ❌ | ✅ 10/10 regression-tested |
+| EU AI Act compliance | ❌ | ❌ | ✅ CircuitBreaker (Art. 14(4)(e)) |
+| NIST AI RMF alignment | ❌ | ❌ | ✅ 8 controls addressed |
+| Economic enforcement | ❌ | ❌ | ✅ Economy bridge with 9 event types |
+| SIEM export | ❌ | ❌ | ✅ Structured event export |
+
+### 9.2 Integration Path
+
+SINT is designed to be adopted incrementally:
+
+1. **Scan** — `npx sint-scan` audits existing MCP server tool definitions in seconds
+2. **Intercept** — Add `MCPInterceptor` or `ROS2Interceptor` as a proxy — no server changes required
+3. **Enforce** — Configure per-server `SintDeploymentProfile` policies for T0–T3 tiers
+4. **Audit** — Export `EvidenceLedger` events to SIEM for compliance reporting
+
+---
+
+## 10. Conclusion
 
 SINT Protocol addresses the critical gap between AI agent capabilities and physical-world safety requirements. By providing a layered, composable security standard with graduated authorization, tamper-evident auditing, and physics-aware constraints, SINT enables organizations to deploy physical AI systems with confidence that no action occurs without appropriate authorization.
 
-The protocol is open-source (Apache-2.0), designed for composability, and built on audited cryptographic primitives. We invite the community to contribute, review, and adopt SINT as the security foundation for the emerging physical AI ecosystem.
+The protocol is open-source (Apache-2.0), designed for composability, and built on audited cryptographic primitives. Regulatory alignment with NIST AI RMF and EU AI Act is built-in, not bolted on. We invite the community to contribute, review, and adopt SINT as the security foundation for the emerging physical AI ecosystem.
 
 ---
 
