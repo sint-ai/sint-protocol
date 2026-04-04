@@ -1,86 +1,120 @@
-# SINT Protocol Roadmap
-
-**Last updated:** March 2026
+# SINT Protocol — Roadmap Q2–Q4 2026
 
 ---
 
-## Phase 1: Foundation (Current)
+## Q2 2026: Foundation & Adoption (April–June)
 
-**Status: Complete**
+### Infrastructure
+- [ ] WebSocket approval streaming (replace SSE polling for lower latency)
+- [ ] PostgreSQL persistence adapter (production-grade, replace in-memory)
+- [ ] Redis persistence adapter (caching layer, session state)
+- [ ] Docker Hub published images (`sintprotocol/gateway`, `sintprotocol/dashboard`)
+- [ ] Pre-configured Docker Compose stacks for common deployments
 
-- Core types, Zod schemas, tier constants (`@sint/core`)
-- Ed25519 capability tokens with delegation and attenuation (`@sint/gate-capability-tokens`)
-- Policy Gateway — single enforcement point with tier assignment, constraints, forbidden combos (`@sint/gate-policy-gateway`)
-- SHA-256 hash-chained evidence ledger (`@sint/gate-evidence-ledger`)
-- MCP bridge adapter — tool call interception and risk classification (`@sint/bridge-mcp`)
-- ROS 2 bridge adapter — topic/service/action interception with physics extraction (`@sint/bridge-ros2`)
-- In-memory persistence implementations (`@sint/persistence`)
-- TypeScript client SDK (`@sint/client`)
-- Conformance test suite — 29 security regression tests (`@sint/conformance-tests`)
-- Gateway HTTP API server with approval routes and metrics (`@sint/gateway-server`)
-- Security-first multi-MCP proxy server (`@sint/mcp`)
-- Real-time approval management dashboard (`@sint/dashboard`)
-- 370+ tests passing across 12 packages
+### SDK & Developer Experience
+- [ ] Python SDK (`sint-python`) — bridge to robotics/ML ecosystem
+- [ ] CLI tool for token management, ledger queries, policy testing
+- [ ] Interactive policy playground (web-based rule testing)
+- [ ] Comprehensive API documentation site
 
----
+### Integration
+- [ ] Gazebo simulation environment integration (ROS 2 bridge validation)
+- [ ] NVIDIA Isaac Sim connector (industrial robotics testing)
+- [ ] Claude Desktop integration guide (MCP proxy setup)
+- [ ] Cursor integration guide
 
-## Phase 2: Production Infrastructure
-
-**Target: Q2 2026**
-
-- [ ] PostgreSQL persistence backend (durable ledger, policy store, approval queue)
-- [ ] Redis persistence backend (caching, session store, rate limiting)
-- [ ] WebSocket approval transport (real-time approval streaming to replace SSE)
-- [ ] gRPC bridge adapter (generic service interception)
-- [ ] Docker Compose production deployment template
-- [ ] Helm chart for Kubernetes deployment
-- [ ] Monitoring and alerting (Prometheus metrics, Grafana dashboards)
-- [ ] Load testing and performance benchmarks
+### Community
+- [ ] Developer documentation site (docs.sint.gg)
+- [ ] Discord community launch
+- [ ] First external contributor onboarding
+- [ ] Monthly "SINT Security Bulletin" — protocol updates + physical AI security news
 
 ---
 
-## Phase 3: Multi-Agent and Economy
+## Q3 2026: Ecosystem & Standards (July–September)
 
-**Target: Q3 2026**
+### Standards & Compliance
+- [ ] Submit SINT to NIST AI Agent Standards Initiative
+- [ ] Conformance test suite as standalone certification tool
+- [ ] EU AI Act compliance mapping document
+- [ ] ISO 13482 (personal care robots) alignment guide
 
-- [ ] Multi-agent orchestration (agent-to-agent delegation, hierarchical policies)
-- [ ] Token economy implementation ($SINT staking, slashing, validator rewards)
-- [ ] Python SDK (`sint-py`)
-- [ ] Go SDK (`sint-go`)
-- [ ] Agent identity federation (cross-organization capability delegation)
-- [ ] Policy language v2 (declarative policy DSL)
-- [ ] Constraint library expansion (domain-specific constraint sets)
+### Protocol Extensions
+- [ ] Plugin system for custom bridge adapters (beyond MCP/ROS 2)
+- [ ] Multi-gateway federation protocol (distributed enforcement across facilities)
+- [ ] Agent reputation system (trust scores based on audit history)
+- [ ] Constraint language specification (formal grammar for physical limits)
 
----
+### Ecosystem
+- [ ] Community policy marketplace — industry-specific rule sets
+  - Manufacturing safety policies
+  - Healthcare robot constraints
+  - Logistics/warehouse automation rules
+  - Drone operation geofence templates
+- [ ] Partner program for robotics companies
+- [ ] Integration with 2+ commercial robot platforms
 
-## Phase 4: Ecosystem and Certification
-
-**Target: Q4 2026 — Q1 2027**
-
-- [ ] Conformance certification program for bridge adapters
-- [ ] Enterprise features (SSO, RBAC, audit export, SLA dashboards)
-- [ ] HTTP/REST bridge adapter
-- [ ] GraphQL bridge adapter
-- [ ] Decentralized evidence ledger (on-chain anchoring)
-- [ ] Insurance pool for T3 incident coverage
-- [ ] Formal verification of core policy engine
-- [ ] Hardware security module (HSM) support for token signing
-
----
-
-## Phase 5: Standards and Adoption
-
-**Target: 2027+**
-
-- [ ] IETF or W3C standards track submission
-- [ ] Reference implementations in Rust, Java
-- [ ] Integration partnerships with major robotics platforms
-- [ ] Integration with major AI agent frameworks (LangChain, CrewAI, AutoGen)
-- [ ] Academic research program and grants
-- [ ] Bug bounty program
+### Security
+- [ ] Third-party security audit of core packages
+- [ ] Bug bounty program launch
+- [ ] Formal threat model publication
 
 ---
 
-## Contributing
+## Q4 2026: Production & Scale (October–December)
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for how to get involved. The best place to start is with issues labeled `good first issue`.
+### Performance & Reliability
+- [ ] Hardware Security Module (HSM) integration for token signing
+- [ ] Sub-millisecond decision latency benchmarks (<1ms p99)
+- [ ] High-availability gateway deployment guide (multi-node)
+- [ ] Load testing suite (10K+ concurrent decisions/sec target)
+
+### Enterprise
+- [ ] Enterprise deployment guides by vertical:
+  - Manufacturing & industrial automation
+  - Logistics & warehouse robotics
+  - Healthcare & personal care robots
+  - Construction & infrastructure inspection
+- [ ] SOC 2 Type II audit preparation
+- [ ] Enterprise support tier launch
+
+### Research & Formal Methods
+- [ ] Formal verification of core policy engine invariants (TLA+ or Alloy)
+- [ ] Academic paper submission (IEEE/ACM security conferences)
+- [ ] Collaboration with university robotics labs
+
+### Token Economics (Conditional)
+- [ ] Community governance vote on tokenization utility
+- [ ] If approved: token economics pilot on testnet
+  - Staking for trust tiers
+  - Audit verification bounties
+  - Policy marketplace payments
+- [ ] If not approved: document decision, continue as pure open-source protocol
+
+---
+
+## Success Metrics
+
+| Metric | Q2 Target | Q3 Target | Q4 Target |
+|--------|-----------|-----------|-----------|
+| GitHub stars | 500 | 2,000 | 5,000 |
+| External contributors | 5 | 20 | 50 |
+| Production deployments | 3 | 15 | 50 |
+| Test count | 500 | 700 | 1,000 |
+| Bridge adapters | 2 (MCP, ROS 2) | 5 | 8 |
+| Policy rule sets | 1 (default) | 5 | 15 |
+| Integration partners | 0 | 3 | 10 |
+
+---
+
+## Non-Goals (2026)
+
+- Building our own agent communication protocol (use MCP/ACP/A2A)
+- Replacing existing robot safety systems (SINT augments, not replaces)
+- General-purpose IAM (SINT is specialized for physical AI)
+- Running an LLM or building agent capabilities (SINT is the security layer, not the agent)
+
+---
+
+*This roadmap is a living document. Updated monthly based on community feedback and market signals.*
+*Contact: i@pshkv.com | GitHub: sint-ai/sint-protocol*
