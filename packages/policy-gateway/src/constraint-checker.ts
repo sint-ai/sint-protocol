@@ -56,7 +56,22 @@ export function extractPhysicalContext(
 }
 
 /**
+ * Dynamic envelope overrides from environment-aware sensors.
+ * These tighten (never loosen) the effective constraint limits from the token.
+ * Used by the DynamicEnvelopePlugin to enforce distance-adaptive velocity caps.
+ */
+export interface EnvelopeOverrides {
+  /** Tighter velocity limit (m/s) derived from obstacle proximity or safety zone. */
+  readonly maxVelocityMps?: number;
+  /** Tighter force limit (N) derived from proximity to fragile objects or humans. */
+  readonly maxForceNewtons?: number;
+}
+
+/**
  * Check all physical constraints for a request against a token.
+ *
+ * @param overrides - Optional dynamic envelope overrides that further tighten
+ *   the effective constraint limits. The effective limit is min(token, override).
  *
  * @example
  * ```ts
@@ -69,35 +84,46 @@ export function extractPhysicalContext(
 export function checkConstraints(
   token: SintCapabilityToken,
   request: SintRequest,
+  overrides?: EnvelopeOverrides,
 ): Result<true, ConstraintViolation[]> {
   const context = extractPhysicalContext(request);
   const violations: ConstraintViolation[] = [];
 
+  // Effective limits: envelope overrides can only tighten token limits
+  const effectiveMaxForce =
+    token.constraints.maxForceNewtons !== undefined && overrides?.maxForceNewtons !== undefined
+      ? Math.min(token.constraints.maxForceNewtons, overrides.maxForceNewtons)
+      : (overrides?.maxForceNewtons ?? token.constraints.maxForceNewtons);
+  const effectiveMaxVelocity =
+    token.constraints.maxVelocityMps !== undefined && overrides?.maxVelocityMps !== undefined
+      ? Math.min(token.constraints.maxVelocityMps, overrides.maxVelocityMps)
+      : (overrides?.maxVelocityMps ?? token.constraints.maxVelocityMps);
+
   // Force check
   if (
-    token.constraints.maxForceNewtons !== undefined &&
+    effectiveMaxForce !== undefined &&
     context.commandedForceNewtons !== undefined &&
-    context.commandedForceNewtons > token.constraints.maxForceNewtons
+    context.commandedForceNewtons > effectiveMaxForce
   ) {
     violations.push({
       constraint: "maxForceNewtons",
-      limit: token.constraints.maxForceNewtons,
+      limit: effectiveMaxForce,
       actual: context.commandedForceNewtons,
-      message: `Force ${context.commandedForceNewtons}N exceeds limit ${token.constraints.maxForceNewtons}N`,
+      message: `Force ${context.commandedForceNewtons}N exceeds limit ${effectiveMaxForce}N${overrides?.maxForceNewtons !== undefined ? " (dynamic envelope)" : ""}`,
     });
   }
 
   // Velocity check
   if (
-    token.constraints.maxVelocityMps !== undefined &&
+    effectiveMaxVelocity !== undefined &&
     context.commandedVelocityMps !== undefined &&
-    context.commandedVelocityMps > token.constraints.maxVelocityMps
+    context.commandedVelocityMps > effectiveMaxVelocity
   ) {
     violations.push({
       constraint: "maxVelocityMps",
-      limit: token.constraints.maxVelocityMps,
+      limit: effectiveMaxVelocity,
       actual: context.commandedVelocityMps,
-      message: `Velocity ${context.commandedVelocityMps}m/s exceeds limit ${token.constraints.maxVelocityMps}m/s`,
+      message: `Velocity ${context.commandedVelocityMps}m/s exceeds limit ${effectiveMaxVelocity}m/s${overrides?.maxVelocityMps !== undefined ? " (dynamic envelope)" : ""}`,
     });
   }
 

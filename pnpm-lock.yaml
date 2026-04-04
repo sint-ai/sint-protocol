@@ -183,6 +183,25 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/avatar:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/bridge-a2a:
     dependencies:
       '@sint/core':
@@ -214,6 +233,25 @@ importers:
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-mavlink:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -255,6 +293,25 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-swarm:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

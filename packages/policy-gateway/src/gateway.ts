@@ -24,7 +24,7 @@ import {
 } from "@sint/gate-capability-tokens";
 import { nowISO8601 } from "@sint/gate-capability-tokens";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
-import { checkConstraints } from "./constraint-checker.js";
+import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
 import { checkForbiddenCombos } from "./forbidden-combos.js";
 import type { AgentTrustLevel } from "@sint/core";
 
@@ -57,6 +57,39 @@ export interface EconomyPluginHooks {
  * CSML escalation hook — called after tier assignment to optionally bump the tier.
  * Provided by @sint/avatar's CsmlEscalator. Decoupled via interface to avoid circular dep.
  */
+/**
+ * Dynamic envelope plugin — environment-adaptive safety constraint tightening.
+ *
+ * Solves the ROSClaw static-envelope gap: token constraints are fixed at issuance
+ * time, but physical safety depends on real-time sensor state (obstacle distance,
+ * human proximity, environmental hazards).
+ *
+ * The plugin receives the request + any physical context and returns tighter limits.
+ * Effective limit = min(token.constraint, envelope.limit).
+ * Fail-open: if the plugin throws, the token's original limits are used.
+ *
+ * @example
+ * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
+ * const envelope: DynamicEnvelopePlugin = {
+ *   computeEnvelope(request) {
+ *     const dist = lidar.nearestObstacleM();
+ *     return { maxVelocityMps: dist * REACTION_FACTOR, reason: `obstacle at ${dist}m` };
+ *   }
+ * };
+ */
+export interface DynamicEnvelopePlugin {
+  /**
+   * Compute environment-aware constraint overrides for this request.
+   * All returned limits MUST be ≤ the corresponding token constraint.
+   * The gateway enforces min(token, override) — returning a looser value is a no-op.
+   */
+  computeEnvelope(request: SintRequest): Promise<{
+    maxVelocityMps?: number;
+    maxForceNewtons?: number;
+    reason?: string;
+  }>;
+}
+
 export interface CsmlEscalationPlugin {
   /**
    * Evaluate whether this agent's CSML score warrants tier escalation.
@@ -88,6 +121,13 @@ export interface PolicyGatewayConfig {
    * exceeds θ, the tier is bumped up by 1. Fail-open: errors do not block.
    */
   readonly csmlEscalation?: CsmlEscalationPlugin;
+  /**
+   * Optional dynamic envelope plugin (ROSClaw gap mitigation).
+   * When provided, called just before physical constraint checking.
+   * Returns environment-adaptive limits that tighten (never loosen) the token's
+   * static constraints. Fail-open: plugin errors fall back to token limits.
+   */
+  readonly dynamicEnvelope?: DynamicEnvelopePlugin;
 }
 
 /**
@@ -255,8 +295,31 @@ export class PolicyGateway {
       }
     }
 
-    // 7. Check physical constraints
-    const constraintResult = checkConstraints(token, request);
+    // 6c. Compute dynamic safety envelope (environment-adaptive constraint tightening)
+    let envelopeOverrides: EnvelopeOverrides | undefined;
+    if (this.config.dynamicEnvelope) {
+      try {
+        const envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
+        if (envelope.maxVelocityMps !== undefined || envelope.maxForceNewtons !== undefined) {
+          envelopeOverrides = {
+            maxVelocityMps: envelope.maxVelocityMps,
+            maxForceNewtons: envelope.maxForceNewtons,
+          };
+          if (envelope.reason) {
+            this.emitEvent("policy.envelope.applied", request.agentId, request.tokenId, {
+              maxVelocityMps: envelope.maxVelocityMps,
+              maxForceNewtons: envelope.maxForceNewtons,
+              reason: envelope.reason,
+            });
+          }
+        }
+      } catch {
+        // Dynamic envelope error → fail-open, use token's original limits
+      }
+    }
+
+    // 7. Check physical constraints (with optional dynamic envelope overrides)
+    const constraintResult = checkConstraints(token, request, envelopeOverrides);
     if (!constraintResult.ok) {
       const violations = constraintResult.error;
       return this.deny(
