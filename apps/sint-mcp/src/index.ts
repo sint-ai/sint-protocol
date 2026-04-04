@@ -21,6 +21,20 @@ import { randomUUID } from "node:crypto";
 import { loadConfig } from "./config.js";
 import { SintMCPServer } from "./server.js";
 
+let activeServer: SintMCPServer | null = null;
+let trajectoryFlushed = false;
+
+async function flushTrajectory(outcome: "success" | "failure" | "partial" | "timeout"): Promise<void> {
+  if (!activeServer || trajectoryFlushed) return;
+  try {
+    const filePath = await activeServer.finalizeTrajectory(outcome);
+    trajectoryFlushed = true;
+    console.error(`  Trajectory: ${filePath}`);
+  } catch (err) {
+    console.error("  Failed to flush trajectory:", err);
+  }
+}
+
 async function main(): Promise<void> {
   const config = loadConfig();
 
@@ -36,6 +50,7 @@ async function main(): Promise<void> {
 
   // Create and initialize server
   const sintMCP = new SintMCPServer(config);
+  activeServer = sintMCP;
   await sintMCP.initialize();
 
   const identity = sintMCP.getIdentity();
@@ -95,17 +110,23 @@ async function main(): Promise<void> {
   // Graceful shutdown
   process.on("SIGINT", async () => {
     console.error("\n  Shutting down...");
+    await flushTrajectory("success");
     await sintMCP.dispose();
     process.exit(0);
   });
 
   process.on("SIGTERM", async () => {
+    await flushTrajectory("success");
     await sintMCP.dispose();
     process.exit(0);
   });
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error("Fatal error:", err);
+  await flushTrajectory("failure");
+  if (activeServer) {
+    await activeServer.dispose();
+  }
   process.exit(1);
 });

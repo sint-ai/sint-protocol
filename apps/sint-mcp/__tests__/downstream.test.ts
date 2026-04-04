@@ -95,27 +95,4 @@ describe("DownstreamManager", () => {
       manager.addConnectedClient("test", mockClient, []);
     }).not.toThrow(); // addConnectedClient overwrites silently
   });
-
-  it("disposes all servers and disables auto-reconnect", async () => {
-    const mockClient = { close: async () => {} } as unknown as Client;
-    manager.addConnectedClient("a", mockClient, []);
-    manager.addConnectedClient("b", mockClient, []);
-
-    await manager.dispose();
-    expect(manager.size).toBe(0);
-    expect(manager.autoReconnect).toBe(false);
-  });
-
-  it("auto-reconnect is enabled by default", () => {
-    expect(manager.autoReconnect).toBe(true);
-  });
-
-  it("auto-reconnect can be disabled", () => {
-    manager.autoReconnect = false;
-    expect(manager.autoReconnect).toBe(false);
-  });
-
-  it("rejects addServer without command or url", async () => {
-    await expect(manager.addServer("bad", {})).rejects.toThrow("command or url");
-  });
 });

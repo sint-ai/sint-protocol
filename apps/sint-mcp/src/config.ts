@@ -70,8 +70,7 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): SintMCPConfi
   let fileConfig: Partial<SintMCPConfig> = {};
   if (configPath && existsSync(configPath)) {
     const raw = readFileSync(configPath, "utf-8");
-    const interpolated = interpolateEnvVars(raw);
-    fileConfig = JSON.parse(interpolated) as Partial<SintMCPConfig>;
+    fileConfig = JSON.parse(raw) as Partial<SintMCPConfig>;
   }
 
   // Merge: defaults < file < env < cli
@@ -124,68 +123,6 @@ interface CliArgs {
   defaultPolicy?: string;
   approvalTimeoutMs?: string;
   agentPrivateKey?: string;
-}
-
-/** Valid policy modes for config validation. */
-const VALID_POLICIES = new Set(["permissive", "cautious", "strict"]);
-
-/** Valid transport modes. */
-const VALID_TRANSPORTS = new Set(["stdio", "sse"]);
-
-/**
- * Interpolate ${VAR} and ${VAR:-default} references with process.env values.
- * Supports:
- *  - ${VAR} — replaced with env value or empty string
- *  - ${VAR:-fallback} — replaced with env value or fallback
- */
-export function interpolateEnvVars(input: string): string {
-  return input.replace(/\$\{([^}]+)\}/g, (_match, expr: string) => {
-    const defaultSep = expr.indexOf(":-");
-    if (defaultSep !== -1) {
-      const varName = expr.slice(0, defaultSep);
-      const fallback = expr.slice(defaultSep + 2);
-      return process.env[varName] ?? fallback;
-    }
-    return process.env[expr] ?? "";
-  });
-}
-
-/**
- * Validate a loaded config and throw helpful errors for invalid values.
- */
-export function validateConfig(config: SintMCPConfig): void {
-  if (!VALID_POLICIES.has(config.defaultPolicy)) {
-    throw new Error(
-      `Invalid policy "${config.defaultPolicy}". Must be one of: ${[...VALID_POLICIES].join(", ")}`,
-    );
-  }
-  if (!VALID_TRANSPORTS.has(config.transport)) {
-    throw new Error(
-      `Invalid transport "${config.transport}". Must be one of: ${[...VALID_TRANSPORTS].join(", ")}`,
-    );
-  }
-  if (config.port < 1 || config.port > 65535 || !Number.isInteger(config.port)) {
-    throw new Error(`Invalid port ${config.port}. Must be an integer between 1 and 65535.`);
-  }
-  if (config.approvalTimeoutMs < 1000) {
-    throw new Error(`Approval timeout must be at least 1000ms, got ${config.approvalTimeoutMs}.`);
-  }
-
-  // Validate per-server configs
-  for (const [name, server] of Object.entries(config.servers)) {
-    if (!server.command && !server.url) {
-      throw new Error(`Server "${name}" must specify either "command" or "url".`);
-    }
-    if (server.command && server.url) {
-      throw new Error(`Server "${name}" cannot specify both "command" and "url".`);
-    }
-    if (server.policy?.maxTier && !["T0_observe", "T1_prepare", "T2_act", "T3_commit"].includes(server.policy.maxTier)) {
-      throw new Error(
-        `Server "${name}" has invalid maxTier "${server.policy.maxTier}". ` +
-        `Must be one of: T0_observe, T1_prepare, T2_act, T3_commit.`,
-      );
-    }
-  }
 }
 
 function parseCliArgs(argv: string[]): CliArgs {
