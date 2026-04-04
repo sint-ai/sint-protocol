@@ -16,6 +16,7 @@ import { toResourceUri, toSintAction } from "@sint/bridge-mcp";
 import type { MCPToolCall } from "@sint/bridge-mcp";
 import type { ParsedNamespace } from "./aggregator.js";
 import type { DownstreamManager } from "./downstream.js";
+import type { TrajectoryRecorder } from "./trajectory.js";
 
 /**
  * Ordered tier values for comparison.
@@ -69,12 +70,8 @@ export interface EnforcementResult {
  * }
  * ```
  */
-/** Default number of recent actions to track for combo detection. */
-const DEFAULT_ACTION_HISTORY_SIZE = 20;
-
 export class PolicyEnforcer {
   private readonly recentActions: string[] = [];
-  private readonly actionHistorySize: number;
 
   constructor(
     private readonly gateway: PolicyGateway,
@@ -82,10 +79,8 @@ export class PolicyEnforcer {
     private readonly downstream: DownstreamManager,
     private readonly agentId: string,
     private readonly tokenId: string,
-    options?: { actionHistorySize?: number },
-  ) {
-    this.actionHistorySize = options?.actionHistorySize ?? DEFAULT_ACTION_HISTORY_SIZE;
-  }
+    private readonly trajectory?: TrajectoryRecorder,
+  ) {}
 
   /**
    * Enforce SINT policy on a tool call.
@@ -101,6 +96,18 @@ export class PolicyEnforcer {
     parsed: ParsedNamespace,
     args: Record<string, unknown>,
   ): Promise<EnforcementResult> {
+    const startedAtMs = Date.now();
+    const parentEventId =
+      typeof args["parentEventId"] === "string"
+        ? args["parentEventId"]
+        : undefined;
+    const tool = `${parsed.serverName}.${parsed.toolName}`;
+    const toolCallEventId = this.trajectory?.recordToolCall({
+      tool,
+      args,
+      parentEventId,
+    });
+
     // Build MCP tool call
     const toolCall: MCPToolCall = {
       callId: generateUUIDv7(),
@@ -124,10 +131,15 @@ export class PolicyEnforcer {
 
     // Route through PolicyGateway
     const decision = await this.gateway.intercept(sintRequest);
+    this.trajectory?.recordDecision(
+      decision.action,
+      tool,
+      toolCallEventId,
+    );
 
     // Record action for combo detection
     this.recentActions.push(`${parsed.serverName}.${parsed.toolName}`);
-    if (this.recentActions.length > this.actionHistorySize) {
+    if (this.recentActions.length > 20) {
       this.recentActions.shift();
     }
 
@@ -145,6 +157,8 @@ export class PolicyEnforcer {
           parsed,
           args,
           `Server "${parsed.serverName}" requires human approval for all non-observe actions`,
+          toolCallEventId,
+          startedAtMs,
         );
       }
     }
@@ -176,11 +190,21 @@ export class PolicyEnforcer {
           parsed.toolName,
           args,
         );
+        this.trajectory?.recordToolResult({
+          tool,
+          result,
+          durationMs: Date.now() - startedAtMs,
+          parentEventId: toolCallEventId,
+        });
+        if (result.isError) {
+          this.trajectory?.recordError("Downstream tool call returned isError=true", tool, toolCallEventId);
+        }
         return { allowed: true, decision, result };
       }
 
       case "deny": {
         const reason = decision.denial?.reason ?? "Denied by SINT policy";
+        this.trajectory?.recordError(reason, tool, toolCallEventId);
         return { allowed: false, decision, denyReason: reason };
       }
 
@@ -191,32 +215,33 @@ export class PolicyEnforcer {
           parsed,
           args,
           decision.escalation?.reason ?? "Requires human approval",
+          toolCallEventId,
+          startedAtMs,
         );
       }
 
       case "transform": {
-        // Transform actions — apply policy transformations before forwarding.
-        // PolicyDecision.transformations contains constraintOverrides and
-        // additionalAuditFields that can modify the call parameters.
-        let transformedArgs = { ...args };
-        if (decision.transformations) {
-          // Apply constraint overrides as parameter restrictions
-          if (decision.transformations.constraintOverrides) {
-            const overrides = decision.transformations.constraintOverrides;
-            // Merge constraint overrides into the args (e.g., maxVelocity, geoFence)
-            transformedArgs = { ...transformedArgs, _sintConstraints: overrides };
-          }
-          // Additional audit fields are recorded but not applied to the call
-        }
+        // Transform actions — apply transformations and forward
         const result = await this.downstream.callTool(
           parsed.serverName,
           parsed.toolName,
-          transformedArgs,
+          args,
         );
+        this.trajectory?.recordToolResult({
+          tool,
+          result,
+          durationMs: Date.now() - startedAtMs,
+          parentEventId: toolCallEventId,
+        });
         return { allowed: true, decision, result };
       }
 
       default: {
+        this.trajectory?.recordError(
+          `Unknown decision action: ${decision.action}`,
+          tool,
+          toolCallEventId,
+        );
         return {
           allowed: false,
           decision,
@@ -235,7 +260,11 @@ export class PolicyEnforcer {
     parsed: ParsedNamespace,
     args: Record<string, unknown>,
     reason: string,
+    toolCallEventId?: string,
+    startedAtMs?: number,
   ): Promise<EnforcementResult> {
+    const tool = `${parsed.serverName}.${parsed.toolName}`;
+    this.trajectory?.recordEscalation(reason, tool, toolCallEventId);
     const approvalReq = this.approvalQueue.enqueue(sintRequest, decision);
 
     // Wait for resolution with timeout
@@ -247,12 +276,24 @@ export class PolicyEnforcer {
         parsed.toolName,
         args,
       );
+      this.trajectory?.recordToolResult({
+        tool,
+        result,
+        durationMs: startedAtMs !== undefined ? Date.now() - startedAtMs : 0,
+        parentEventId: toolCallEventId,
+      });
       return {
         allowed: true,
         decision,
         approvalRequestId: approvalReq.requestId,
         result,
       };
+    }
+
+    if (resolution === "timeout") {
+      this.trajectory?.markOutcome("timeout");
+    } else {
+      this.trajectory?.recordError(`Escalation denied: ${reason}`, tool, toolCallEventId);
     }
 
     return {

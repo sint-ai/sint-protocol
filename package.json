@@ -12,7 +12,10 @@
     "clean": "turbo run clean",
     "demo": "pnpm --filter @sint/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
     "cert:fixtures": "pnpm --filter ./packages/policy-gateway build && pnpm --filter ./packages/conformance-tests run test:fixtures && pnpm --filter ./packages/bridge-iot run test:fixtures && pnpm --filter ./sdks/typescript run test:contracts && pnpm --filter ./packages/persistence-postgres run test:fixtures",
+    "cert:bundle": "node ./scripts/generate-certification-bundle.mjs",
     "benchmark:industrial": "pnpm --filter @sint/conformance-tests exec vitest run src/industrial-interoperability.test.ts src/industrial-benchmark-scenarios.test.ts --reporter=verbose",
+    "benchmark:ros2-loop": "pnpm --filter @sint/conformance-tests exec vitest run src/ros2-control-loop-latency.test.ts --reporter=verbose",
+    "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "bench": "pnpm --filter @sint/gate-policy-gateway bench"
   },

@@ -58,6 +58,7 @@ describe("Canonical Fixture Conformance", () => {
 
   let tokenStore: Map<string, SintCapabilityToken>;
   let gateway: PolicyGateway;
+  let events: Array<{ eventType: string; payload: Record<string, unknown> }>;
 
   function issueAndStore(overrides: Partial<SintCapabilityTokenRequest>): SintCapabilityToken {
     const req: SintCapabilityTokenRequest = {
@@ -82,9 +83,16 @@ describe("Canonical Fixture Conformance", () => {
   beforeEach(() => {
     tokenStore = new Map();
     revocationStore.clear();
+    events = [];
     gateway = new PolicyGateway({
       resolveToken: (tokenId) => tokenStore.get(tokenId),
       revocationStore,
+      emitLedgerEvent: (event) => {
+        events.push({
+          eventType: event.eventType,
+          payload: event.payload,
+        });
+      },
     });
   });
 
@@ -219,6 +227,7 @@ describe("Canonical Fixture Conformance", () => {
     });
 
     for (const scenario of fixture.cases) {
+      const eventsBefore = events.length;
       const executionContext = scenario.request.executionContext
         ? replaceNowPlaceholder(scenario.request.executionContext)
         : undefined;
@@ -240,6 +249,12 @@ describe("Canonical Fixture Conformance", () => {
       }
       if (scenario.expected.policyViolated) {
         expect(decision.denial?.policyViolated).toBe(scenario.expected.policyViolated);
+      }
+      if (scenario.expected.expectedEvidenceEvent) {
+        const emitted = events
+          .slice(eventsBefore)
+          .some((event) => event.eventType === scenario.expected.expectedEvidenceEvent);
+        expect(emitted).toBe(true);
       }
     }
   });

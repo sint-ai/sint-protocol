@@ -284,6 +284,9 @@ describe("PolicyGateway", () => {
 
     expect(decision.action).toBe("deny");
     expect(decision.denial?.policyViolated).toBe("HARDWARE_ESTOP_ACTIVE");
+    expect(
+      emitSpy.mock.calls.some((call) => call[0]?.eventType === "safety.estop.triggered"),
+    ).toBe(true);
   });
 
   it("denies industrial T2 action when hardware safety context is missing", async () => {

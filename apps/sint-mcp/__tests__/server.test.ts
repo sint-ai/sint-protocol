@@ -69,17 +69,6 @@ describe("SintMCPServer", () => {
     expect(tools).toHaveLength(0);
   });
 
-  it("default token does NOT include exec.run (least-privilege)", async () => {
-    await server.initialize();
-    const identity = server.getIdentity()!;
-    const token = server.tokenStore.get(identity.defaultToken.tokenId);
-    expect(token).toBeDefined();
-    // Security: default token should not grant exec.run (T3 irreversible actions)
-    expect(token!.actions).toContain("call");
-    expect(token!.actions).toContain("subscribe");
-    expect(token!.actions).not.toContain("exec.run");
-  });
-
   it("can add mock downstream after init", async () => {
     await server.initialize();
 

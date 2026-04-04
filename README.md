@@ -402,6 +402,7 @@ docker-compose up
 - ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
 - Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)
 - Hardware safety handshake fixture: [`packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json`](packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json)
+- Certification bundle summary: [`docs/reports/certification-bundle-summary.md`](docs/reports/certification-bundle-summary.md)
 
 ## Design Principles
 

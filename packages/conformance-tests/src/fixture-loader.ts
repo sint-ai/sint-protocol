@@ -102,6 +102,7 @@ export interface HardwareSafetyHandshakeFixture {
       readonly decisionAction: DecisionAction;
       readonly assignedTier?: ApprovalTier;
       readonly policyViolated?: string;
+      readonly expectedEvidenceEvent?: string;
     };
   }>;
 }

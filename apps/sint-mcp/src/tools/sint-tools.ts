@@ -8,7 +8,7 @@
  * @module @sint/mcp/tools/sint-tools
  */
 
-import type { SintCapabilityToken, SintEventType } from "@sint/core";
+import type { SintCapabilityToken } from "@sint/core";
 import type { ApprovalQueue } from "@sint/gate-policy-gateway";
 import type { LedgerWriter } from "@sint/gate-evidence-ledger";
 import { issueCapabilityToken, type RevocationStore } from "@sint/gate-capability-tokens";
@@ -79,20 +79,19 @@ export function getSintToolDefinitions(): Array<{
     },
     {
       name: "sint__add_server",
-      description: "Dynamically add a new downstream MCP server at runtime. Specify command (stdio) or url (SSE).",
+      description: "Dynamically add a new downstream MCP server at runtime",
       inputSchema: {
         type: "object",
         properties: {
           name: { type: "string", description: "Unique name for the server" },
-          command: { type: "string", description: "Command to spawn the server (stdio transport)" },
+          command: { type: "string", description: "Command to spawn the server" },
           args: {
             type: "array",
             items: { type: "string" },
             description: "Arguments for the command",
           },
-          url: { type: "string", description: "SSE endpoint URL for the server (SSE transport)" },
         },
-        required: ["name"],
+        required: ["name", "command"],
       },
     },
     {
@@ -304,20 +303,15 @@ async function handleAddServer(args: Record<string, unknown>, ctx: SintToolConte
   const name = args["name"] as string | undefined;
   const command = args["command"] as string | undefined;
   const argsArr = args["args"] as string[] | undefined;
-  const url = args["url"] as string | undefined;
 
-  if (!name) {
-    return text("Error: name is required");
-  }
-  if (!command && !url) {
-    return text("Error: either command (stdio) or url (SSE) is required");
+  if (!name || !command) {
+    return text("Error: name and command are required");
   }
 
   try {
     await ctx.downstream.addServer(name, {
       command,
       args: argsArr,
-      url,
     });
     const info = ctx.downstream.listServers().find((s) => s.name === name);
     return text(`Server "${name}" added successfully with ${info?.toolCount ?? 0} tools`);
@@ -381,7 +375,7 @@ function handleIssueToken(args: Record<string, unknown>, ctx: SintToolContext) {
 
   // Ledger event
   ctx.ledger.append({
-    eventType: "token.issued" satisfies SintEventType,
+    eventType: "token.issued" as any,
     agentId: ctx.agentPublicKey,
     tokenId: result.value.tokenId,
     payload: { subject, resource, actions, expiresAt },
@@ -415,7 +409,7 @@ function handleRevokeToken(args: Record<string, unknown>, ctx: SintToolContext) 
 
   // Ledger event
   ctx.ledger.append({
-    eventType: "token.revoked" satisfies SintEventType,
+    eventType: "token.revoked" as any,
     agentId: ctx.agentPublicKey,
     tokenId,
     payload: { reason },
