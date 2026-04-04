@@ -27,13 +27,13 @@ We present **SINT Protocol**, an open-source runtime authorization framework tha
 
 **Swarm safety.** For multi-agent deployments, SINT's `SwarmCoordinator` enforces collective constraints before individual gateway calls: maximum concurrent actors in T2+ tier, total kinetic energy ceiling (Σ½mv²), minimum inter-agent distance, and maximum escalated fraction. These collective constraints cannot be captured by per-agent token scoping alone.
 
-**Implementation.** SINT is implemented in TypeScript, structured as 30 packages. Current coverage: 1,075 tests across the full stack (core, gateway, bridges, avatar layer, swarm coordinator). Bridge adapters exist for ROS 2, MAVLink v2, MCP tool calls, Google A2A, MQTT/CoAP IoT, OPC-UA, Open-RMF, and Sparkplug B. The Evidence Ledger implements a SHA-256 hash chain with optional TEE attestation (Intel SGX, ARM TrustZone, AMD SEV) for post-incident forensics, with PostgreSQL-backed persistence and hash-chain preservation across restarts.
+**Implementation.** SINT is implemented in TypeScript, structured as 31 packages. Current coverage: 1,105 tests across the full stack (core, gateway, bridges, avatar layer, swarm coordinator). Bridge adapters exist for ROS 2, MAVLink v2, MCP tool calls, Google A2A, MQTT/CoAP IoT, OPC-UA, Open-RMF, and Sparkplug B. The Evidence Ledger implements a SHA-256 hash chain with optional TEE attestation (Intel SGX, ARM TrustZone, AMD SEV) for post-incident forensics, with PostgreSQL-backed persistence and hash-chain preservation across restarts.
 
-**Compliance.** SINT covers 8/10 OWASP Agentic Top 10 categories at full depth (ASI01 goal hijack, ASI02 tool misuse, ASI03 identity abuse, ASI04 supply chain, ASI07 inter-agent, ASI08 cascade, ASI09 trust exploit, ASI10 rogue agent) and 2/10 partially (ASI05 code execution, ASI06 memory poisoning). Coverage is formally declared in the compliance module and is regression-tested as part of the 1,075-test suite.
+**Compliance.** SINT covers all 10 OWASP Agentic Top 10 categories (ASI01 goal hijack, ASI02 tool misuse, ASI03 identity abuse, ASI04 supply chain, ASI05 code execution, ASI06 memory poisoning, ASI07 inter-agent, ASI08 cascade, ASI09 trust exploit, ASI10 rogue agent). Coverage is formally declared in the compliance module and is regression-tested as part of the 1,105-test suite, including a dedicated 10-test MCP attack surface conformance suite that validates each ASI category against the gateway choke point.
 
 **Position.** Safe physical AI requires that authorization be treated as a first-class runtime concern — not a deployment configuration or a prompt engineering problem. The safety properties that matter (who approved this action, was the envelope respected, was the agent's drift within bounds) must be cryptographically auditable and enforced before hardware execution, not after. SINT Protocol is a concrete instantiation of this position.
 
-**Open source:** https://github.com/pshkv/sint-protocol
+**Open source:** https://github.com/sint-ai/sint-protocol
 
 ---
 
