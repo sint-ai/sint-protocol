@@ -11,7 +11,7 @@ SINT is a security enforcement layer for physical AI. It sits between AI agents 
 ```bash
 pnpm install          # Install dependencies
 pnpm run build        # Build all packages (required before test)
-pnpm run test         # Run all tests (currently 815 passing)
+pnpm run test         # Run all tests (currently 1,105 passing)
 pnpm run typecheck    # Type-check without emitting
 pnpm run clean        # Remove build artifacts
 pnpm run bench        # Run PolicyGateway performance benchmarks (p50/p99 latency)
@@ -178,7 +178,7 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
-**815 tests passing across 30 workspace members** (as of 2026-04-04)
+**1,105 tests passing across 30 packages** (as of 2026-04-04)
 
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
