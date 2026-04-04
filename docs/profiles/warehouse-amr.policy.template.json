@@ -1,0 +1,17 @@
+{
+  "profile": "warehouse-amr",
+  "description": "Human-shared AMR warehouse policy baseline",
+  "tierRules": [
+    { "resourcePattern": "ros2:///camera/*", "actions": ["subscribe"], "baseTier": "T0_observe" },
+    { "resourcePattern": "ros2:///cmd_vel", "actions": ["publish"], "baseTier": "T2_act", "escalateOnHumanPresence": true },
+    { "resourcePattern": "open-rmf://*/dispatch", "actions": ["call"], "baseTier": "T2_act" },
+    { "resourcePattern": "mqtt-sparkplug://*/dcmd", "actions": ["call"], "baseTier": "T2_act" }
+  ],
+  "tokenDefaults": {
+    "constraints": {
+      "maxVelocityMps": 0.8,
+      "requiresHumanPresence": true,
+      "rateLimit": { "maxCalls": 30, "windowMs": 60000 }
+    }
+  }
+}

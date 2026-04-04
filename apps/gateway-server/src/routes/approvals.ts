@@ -19,10 +19,30 @@ export function approvalRoutes(ctx: ServerContext): Hono {
     const stream = new ReadableStream({
       start(controller) {
         const encoder = new TextEncoder();
+        let closed = false;
 
         const send = (data: string) => {
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          if (closed) return;
+          try {
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          } catch {
+            closed = true;
+          }
         };
+
+        // Heartbeat every 30s — keeps connection alive through proxies/firewalls
+        const heartbeat = setInterval(() => {
+          if (closed) {
+            clearInterval(heartbeat);
+            return;
+          }
+          try {
+            controller.enqueue(encoder.encode(`: heartbeat\n\n`));
+          } catch {
+            closed = true;
+            clearInterval(heartbeat);
+          }
+        }, 30_000);
 
         // Send initial pending state
         const pending = ctx.approvalQueue.getPending();
@@ -37,6 +57,8 @@ export function approvalRoutes(ctx: ServerContext): Hono {
 
         // Clean up when client disconnects
         c.req.raw.signal.addEventListener("abort", () => {
+          closed = true;
+          clearInterval(heartbeat);
           unsubscribe();
           controller.close();
         });
@@ -48,6 +70,7 @@ export function approvalRoutes(ctx: ServerContext): Hono {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
       },
     });
   });
@@ -65,6 +88,8 @@ export function approvalRoutes(ctx: ServerContext): Hono {
         action: r.request.action,
         agentId: r.request.agentId,
         fallbackAction: r.fallbackAction,
+        approvalQuorum: r.quorum,
+        approvalCount: ctx.approvalQueue.getApprovalCount(r.requestId),
         createdAt: r.createdAt,
         expiresAt: r.expiresAt,
       })),
@@ -89,7 +114,10 @@ export function approvalRoutes(ctx: ServerContext): Hono {
       agentId: request.request.agentId,
       params: request.request.params,
       physicalContext: request.request.physicalContext,
+      executionContext: request.request.executionContext,
       fallbackAction: request.fallbackAction,
+      approvalQuorum: request.quorum,
+      approvalCount: ctx.approvalQueue.getApprovalCount(request.requestId),
       timeoutMs: request.timeoutMs,
       createdAt: request.createdAt,
       expiresAt: request.expiresAt,
@@ -112,6 +140,11 @@ export function approvalRoutes(ctx: ServerContext): Hono {
       return c.json({ error: "Missing 'by' field (reviewer identity)" }, 400);
     }
 
+    const existing = ctx.approvalQueue.get(requestId);
+    if (!existing) {
+      return c.json({ error: "Approval request not found or already resolved" }, 404);
+    }
+
     const resolution = ctx.approvalQueue.resolve(requestId, {
       status: body.status,
       by: body.by,
@@ -119,7 +152,12 @@ export function approvalRoutes(ctx: ServerContext): Hono {
     });
 
     if (!resolution) {
-      return c.json({ error: "Approval request not found or already resolved" }, 404);
+      return c.json({
+        requestId,
+        status: "pending",
+        requiredApprovals: existing.quorum?.required ?? 1,
+        approvalCount: ctx.approvalQueue.getApprovalCount(requestId),
+      }, 202);
     }
 
     ctx.ledger.append({

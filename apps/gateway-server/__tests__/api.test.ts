@@ -60,6 +60,43 @@ describe("Gateway Server API", () => {
     expect(body.protocol).toBe("SINT Gate");
   });
 
+  it("GET /.well-known/sint.json returns discovery metadata", async () => {
+    const res = await app.request("/.well-known/sint.json");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.name).toBe("SINT Protocol");
+    expect(body.version).toBeDefined();
+    expect(Array.isArray(body.supportedBridges)).toBe(true);
+    expect(Array.isArray(body.deploymentProfiles)).toBe(true);
+    expect(body.complianceCrosswalk?.path).toBe("/v1/compliance/tier-crosswalk");
+  });
+
+  it("GET /v1/schemas returns schema catalog", async () => {
+    const res = await app.request("/v1/schemas");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.total).toBeGreaterThan(0);
+    expect(Array.isArray(body.schemas)).toBe(true);
+  });
+
+  it("GET /v1/openapi.json returns OpenAPI document", async () => {
+    const res = await app.request("/v1/openapi.json");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.openapi).toBe("3.1.0");
+    expect(body.paths["/.well-known/sint.json"]).toBeDefined();
+    expect(body.paths["/v1/compliance/tier-crosswalk"]).toBeDefined();
+  });
+
+  it("GET /v1/compliance/tier-crosswalk returns tier mappings", async () => {
+    const res = await app.request("/v1/compliance/tier-crosswalk");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.mappings)).toBe(true);
+    expect(body.mappings.length).toBe(4);
+    expect(body.mappings[0].mappings.length).toBeGreaterThanOrEqual(3);
+  });
+
   // ── Intercept ──
 
   it("POST /v1/intercept with valid request", async () => {
@@ -247,6 +284,19 @@ describe("Gateway Server API", () => {
     });
   }
 
+  function issueT2QuorumToken() {
+    return issueAndStoreToken({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      constraints: {
+        quorum: {
+          required: 2,
+          authorized: ["op-alice", "op-bob", "op-carol"],
+        },
+      },
+    });
+  }
+
   function makeT2Request(tokenId: string) {
     return {
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
@@ -332,6 +382,38 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.resolution.status).toBe("approved");
     expect(body.resolution.by).toBe("operator-1");
+  });
+
+  it("quorum approval returns pending until threshold is reached", async () => {
+    const token = await issueT2QuorumToken();
+    const interceptRes = await app.request("/v1/intercept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(makeT2Request(token.tokenId)),
+    });
+    const { approvalRequestId } = await interceptRes.json();
+
+    const firstVote = await app.request(`/v1/approvals/${approvalRequestId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: "op-alice" }),
+    });
+
+    expect(firstVote.status).toBe(202);
+    const firstBody = await firstVote.json();
+    expect(firstBody.status).toBe("pending");
+    expect(firstBody.requiredApprovals).toBe(2);
+    expect(firstBody.approvalCount).toBe(1);
+
+    const secondVote = await app.request(`/v1/approvals/${approvalRequestId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: "op-bob" }),
+    });
+    expect(secondVote.status).toBe(200);
+    const secondBody = await secondVote.json();
+    expect(secondBody.resolution.status).toBe("approved");
+    expect(secondBody.resolution.approvers).toEqual(["op-alice", "op-bob"]);
   });
 
   it("POST /v1/approvals/:requestId/resolve denies a request", async () => {

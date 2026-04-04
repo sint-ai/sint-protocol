@@ -131,6 +131,11 @@ describe("Authentication Middleware", () => {
       expect(res.status).toBe(200);
     });
 
+    it("exempts /.well-known/sint.json from signature requirement", async () => {
+      const res = await app.request("/.well-known/sint.json");
+      expect(res.status).toBe(200);
+    });
+
     it("exempts /v1/keypair from signature requirement", async () => {
       const res = await app.request("/v1/keypair", { method: "POST" });
       expect(res.status).toBe(200);
@@ -176,6 +181,11 @@ describe("Authentication Middleware", () => {
 
     it("exempts /v1/health from API key requirement", async () => {
       const res = await app.request("/v1/health");
+      expect(res.status).toBe(200);
+    });
+
+    it("exempts /.well-known/sint.json from API key requirement", async () => {
+      const res = await app.request("/.well-known/sint.json");
       expect(res.status).toBe(200);
     });
 

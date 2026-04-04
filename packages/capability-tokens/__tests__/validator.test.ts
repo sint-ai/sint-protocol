@@ -14,7 +14,9 @@ function futureISO(hoursFromNow: number): string {
   return d.toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
 }
 
-function createValidToken(): SintCapabilityToken {
+function createValidToken(
+  overrides?: Partial<SintCapabilityTokenRequest>,
+): SintCapabilityToken {
   const issuer = generateKeypair();
   const subject = generateKeypair();
   const request: SintCapabilityTokenRequest = {
@@ -37,6 +39,7 @@ function createValidToken(): SintCapabilityToken {
     delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
     expiresAt: futureISO(12),
     revocable: true,
+    ...overrides,
   };
   const result = issueCapabilityToken(request, issuer.privateKey);
   if (!result.ok) throw new Error("Failed to create test token");
@@ -110,6 +113,103 @@ describe("Capability Token Validator", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error).toBe("INSUFFICIENT_PERMISSIONS");
+  });
+
+  it("should enforce model ID allowlist when configured", () => {
+    const token = createValidToken({
+      modelConstraints: { allowedModelIds: ["gpt-5.4"] },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: { modelId: "gpt-4.1" },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("should enforce attestation minimum grade when configured", () => {
+    const token = createValidToken({
+      attestationRequirements: { minAttestationGrade: 2 },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: { attestationGrade: 1 },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("should enforce verifiable compute proof metadata when required for assigned tier", () => {
+    const token = createValidToken({
+      verifiableComputeRequirements: {
+        requireForTiers: ["T3_commit"],
+        allowedProofTypes: ["risc0-groth16"],
+        maxProofAgeMs: 30_000,
+      },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: { assignedTier: "T3_commit" },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("should accept valid verifiable compute metadata for required tier", () => {
+    const token = createValidToken({
+      verifiableComputeRequirements: {
+        requireForTiers: ["T2_act"],
+        allowedProofTypes: ["risc0-groth16", "snark"],
+        verifierRefs: ["verifier://warehouse/risc0"],
+        maxProofAgeMs: 60_000,
+        requirePublicInputsHash: true,
+      },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: {
+        assignedTier: "T2_act",
+        verifiableComputeProofType: "risc0-groth16",
+        verifiableComputeProofRef: "proof://receipt/123",
+        verifiableComputeProofHash: "a".repeat(64),
+        verifiableComputePublicInputsHash: "b".repeat(64),
+        verifiableComputeGeneratedAt: new Date().toISOString(),
+        verifiableComputeVerifierRef: "verifier://warehouse/risc0",
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("should reject stale verifiable compute metadata", () => {
+    const token = createValidToken({
+      verifiableComputeRequirements: {
+        requireForTiers: ["T2_act"],
+        allowedProofTypes: ["snark"],
+        maxProofAgeMs: 5_000,
+      },
+    });
+    const oldTimestamp = new Date(Date.now() - 60_000).toISOString();
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: {
+        assignedTier: "T2_act",
+        verifiableComputeProofType: "snark",
+        verifiableComputeProofRef: "proof://receipt/stale",
+        verifiableComputeProofHash: "c".repeat(64),
+        verifiableComputeGeneratedAt: oldTimestamp,
+      },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
   });
 });
 

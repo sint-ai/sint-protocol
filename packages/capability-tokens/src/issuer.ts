@@ -43,16 +43,20 @@ export function computeSigningPayload(
   // Canonical JSON: sorted keys, no whitespace, deterministic
   return JSON.stringify({
     actions: token.actions,
+    attestationRequirements: token.attestationRequirements,
     constraints: token.constraints,
     delegationChain: token.delegationChain,
     expiresAt: token.expiresAt,
+    executionEnvelope: token.executionEnvelope,
     issuedAt: token.issuedAt,
     issuer: token.issuer,
+    modelConstraints: token.modelConstraints,
     resource: token.resource,
     revocable: token.revocable,
     revocationEndpoint: token.revocationEndpoint,
     subject: token.subject,
     tokenId: token.tokenId,
+    verifiableComputeRequirements: token.verifiableComputeRequirements,
   });
 }
 
@@ -114,6 +118,10 @@ export function issueCapabilityToken(
     resource: request.resource,
     actions: request.actions,
     constraints: request.constraints,
+    modelConstraints: request.modelConstraints,
+    attestationRequirements: request.attestationRequirements,
+    verifiableComputeRequirements: request.verifiableComputeRequirements,
+    executionEnvelope: request.executionEnvelope,
     delegationChain: request.delegationChain,
     issuedAt,
     expiresAt: request.expiresAt,

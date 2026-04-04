@@ -90,6 +90,90 @@ describe("assignTier", () => {
     expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
   });
 
+  it("maps Sparkplug command channels to T2_ACT without physical-force fallback", () => {
+    const result = assignTier(makeRequest({
+      resource: "mqtt-sparkplug:///warehouse/edge-01/amr-17/dcmd",
+      action: "call",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.riskTier).toBe(RiskTier.T2_STATEFUL);
+  });
+
+  it("maps MQTT sensor telemetry topics to T0_OBSERVE", () => {
+    const result = assignTier(makeRequest({
+      resource: "mqtt://broker.example.com/factory/zone1/sensor/temperature",
+      action: "publish",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T0_OBSERVE);
+    expect(result.riskTier).toBe(RiskTier.T0_READ);
+  });
+
+  it("maps MQTT actuator command topics to T2_ACT", () => {
+    const result = assignTier(makeRequest({
+      resource: "mqtt://broker.example.com/factory/zone1/cmd/valve/open",
+      action: "publish",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.riskTier).toBe(RiskTier.T2_STATEFUL);
+  });
+
+  it("maps MQTT estop topics to T3_COMMIT", () => {
+    const result = assignTier(makeRequest({
+      resource: "mqtt://broker.example.com/safety/estop/trigger",
+      action: "publish",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.riskTier).toBe(RiskTier.T3_IRREVERSIBLE);
+  });
+
+  it("maps OPC UA read to T0 and write to T2", () => {
+    const readResult = assignTier(makeRequest({
+      resource: "opcua://plc-1/ns=2;s=Line1/Conveyor/Status",
+      action: "read",
+    }));
+    expect(readResult.approvalTier).toBe(ApprovalTier.T0_OBSERVE);
+
+    const writeResult = assignTier(makeRequest({
+      resource: "opcua://plc-1/ns=2;s=Line1/Conveyor/SpeedSetpoint",
+      action: "write",
+    }));
+    expect(writeResult.approvalTier).toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("maps safety-critical OPC UA writes to T3_COMMIT", () => {
+    const result = assignTier(makeRequest({
+      resource: "opcua://plc-1/safety/interlock/reset",
+      action: "write",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.riskTier).toBe(RiskTier.T3_IRREVERSIBLE);
+  });
+
+  it("maps percent-encoded OPC UA safety writes to T3_COMMIT", () => {
+    const result = assignTier(makeRequest({
+      resource: "opcua://plc-1.local:4840/ns%3D2%3Bs%3DLine1%2FSafety%2FInterlock%2FReset",
+      action: "write",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.riskTier).toBe(RiskTier.T3_IRREVERSIBLE);
+  });
+
+  it("maps Open-RMF override to T3_COMMIT", () => {
+    const result = assignTier(makeRequest({
+      resource: "open-rmf://fleet/warehouse-fleet/dispatch",
+      action: "override",
+    }));
+
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.riskTier).toBe(RiskTier.T3_IRREVERSIBLE);
+  });
+
   it("escalates on human presence detection", () => {
     const result = assignTier(makeRequest({
       resource: "ros2:///cmd_vel",

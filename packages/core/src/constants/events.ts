@@ -31,9 +31,68 @@ export const SINT_EVENTS = {
   FORCE_EXCEEDED: "safety.force.exceeded",
   HUMAN_DETECTED: "safety.human.detected",
   ANOMALY_DETECTED: "safety.anomaly.detected",
+  HARDWARE_PERMIT_DENIED: "safety.hardware.permit.denied",
+  HARDWARE_INTERLOCK_OPEN: "safety.hardware.interlock.open",
+  HARDWARE_STATE_STALE: "safety.hardware.state.stale",
+  VERIFIABLE_COMPUTE_VERIFIED: "verifiable.compute.verified",
 
-  // Economic
+  // Engine — System 1
+  SYSTEM1_INFERENCE: "engine.system1.inference",
+  SYSTEM1_ANOMALY: "engine.system1.anomaly",
+
+  // Engine — System 2
+  SYSTEM2_PLAN_CREATED: "engine.system2.plan.created",
+  SYSTEM2_PLAN_VALIDATED: "engine.system2.plan.validated",
+  SYSTEM2_PLAN_STEP_EXECUTED: "engine.system2.plan.step.executed",
+  SYSTEM2_TICK: "engine.system2.tick",
+
+  // Engine — Arbitration
+  ARBITRATION_DECIDED: "engine.arbitration.decided",
+  ARBITRATION_OVERRIDE: "engine.arbitration.override",
+  ARBITRATION_ESCALATED: "engine.arbitration.escalated",
+
+  // Engine — Capsule Sandbox
+  CAPSULE_LOADED: "capsule.loaded",
+  CAPSULE_VALIDATED: "capsule.validated",
+  CAPSULE_EXECUTED: "capsule.executed",
+  CAPSULE_UNLOADED: "capsule.unloaded",
+  CAPSULE_RESOURCE_EXCEEDED: "capsule.resource.exceeded",
+
+  // Engine — HAL
+  HAL_HARDWARE_DETECTED: "hal.hardware.detected",
+  HAL_PROFILE_SELECTED: "hal.profile.selected",
+
+  // Economic — Marketplace
   CAPSULE_PURCHASED: "capsule.purchased",
   TASK_BID_PLACED: "task.bid.placed",
   PAYMENT_SETTLED: "payment.settled",
+
+  // Economic — Balance
+  ECONOMY_BALANCE_CHECKED: "economy.balance.checked",
+  ECONOMY_BALANCE_DEDUCTED: "economy.balance.deducted",
+  ECONOMY_BALANCE_INSUFFICIENT: "economy.balance.insufficient",
+
+  // Economic — Budget
+  ECONOMY_BUDGET_CHECKED: "economy.budget.checked",
+  ECONOMY_BUDGET_EXCEEDED: "economy.budget.exceeded",
+  ECONOMY_BUDGET_ALERT: "economy.budget.alert",
+
+  // Economic — Trust & Billing
+  ECONOMY_TRUST_EVALUATED: "economy.trust.evaluated",
+  ECONOMY_TRUST_BLOCKED: "economy.trust.blocked",
+  ECONOMY_ACTION_BILLED: "economy.action.billed",
+
+  // Economic — SLA
+  SLA_BOND_SLASHED: "sla.bond.slashed",
+
+  // Avatar (Layer 5) — behavioral identity
+  AVATAR_PROFILE_CREATED: "avatar.profile.created",
+  AVATAR_PROFILE_UPDATED: "avatar.profile.updated",
+  AVATAR_CSML_ESCALATED: "avatar.csml.escalated",
+
+  // Risk scoring — emitted after each intercept with riskScore + csml
+  RISK_SCORE_COMPUTED: "risk.score.computed",
+
+  // Ledger management (audit of the auditor)
+  LEDGER_EXPORTED: "ledger.exported",
 } as const;

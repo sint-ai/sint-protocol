@@ -1,6 +1,6 @@
 # SINT Protocol: A Layered Open Standard for Security, Governance, and Economic Enforcement in Physical AI Systems
 
-**Version 0.1.0-concept — March 2026**
+**Version 0.2.0 — April 2026**
 
 ## Abstract
 

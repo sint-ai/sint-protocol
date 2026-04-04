@@ -12,6 +12,7 @@
  */
 
 import type {
+  DurationMs,
   Ed25519PublicKey,
   Ed25519Signature,
   GeoPolygon,
@@ -20,6 +21,7 @@ import type {
   Newtons,
   UUIDv7,
 } from "./primitives.js";
+import type { ApprovalTier } from "./policy.js";
 
 /**
  * Physical safety constraints enforced by the Policy Gateway
@@ -57,6 +59,126 @@ export interface SintPhysicalConstraints {
 
   /** If true, agent must detect human presence before acting. */
   readonly requiresHumanPresence?: boolean;
+
+  /**
+   * Rate limit: maximum number of calls allowed within a rolling time window.
+   * Enforced by the Policy Gateway using a sliding-window counter.
+   *
+   * @example
+   * ```ts
+   * // No more than 10 tool calls per minute
+   * rateLimit: { maxCalls: 10, windowMs: 60_000 }
+   * ```
+   */
+  readonly rateLimit?: {
+    readonly maxCalls: number;
+    readonly windowMs: DurationMs;
+  };
+
+  /**
+   * Multi-party approval quorum: how many authorised operators must approve
+   * before a T2/T3 escalation is resolved.  K-of-N model.
+   *
+   * @example
+   * ```ts
+   * // Require any 2 of 3 named operators to approve
+   * quorum: { required: 2, authorized: ["op-alice", "op-bob", "op-carol"] }
+   * ```
+   */
+  readonly quorum?: {
+    readonly required: number;
+    readonly authorized: readonly string[];
+  };
+
+  /** Maximum torque the agent may command, in Newton-metres. */
+  readonly maxTorqueNm?: number;
+
+  /** Maximum jerk the agent may command, in m/s³ (rate of acceleration change). */
+  readonly maxJerkMps3?: number;
+
+  /** Maximum angular velocity the agent may command, in rad/s. */
+  readonly maxAngularVelocityRps?: number;
+
+  /** Force threshold above which contact is detected, in Newtons. */
+  readonly contactForceThresholdN?: number;
+}
+
+/**
+ * Constraints that bind a capability token to specific model identities.
+ * Used to prevent silent model swaps in high-risk physical deployments.
+ */
+export interface SintModelConstraints {
+  /** Allowlist of model IDs (e.g. "gpt-5.4", "gemini-robotics"). */
+  readonly allowedModelIds?: readonly string[];
+  /** Optional semver ceiling for model version (inclusive). */
+  readonly maxModelVersion?: string;
+  /** Optional SHA-256 fingerprint of model/runtime bundle. */
+  readonly modelFingerprintHash?: string;
+}
+
+/** Attestation backends supported by SINT enforcement and evidence flows. */
+export type SintAttestationBackend =
+  | "intel-sgx"
+  | "arm-trustzone"
+  | "amd-sev"
+  | "tpm2"
+  | "none";
+
+/** Verifiable compute proof families supported by SINT metadata contracts. */
+export type SintVerifiableComputeProofType =
+  | "risc0-groth16"
+  | "sp1-groth16"
+  | "snark"
+  | "stark"
+  | "tee-attested";
+
+/**
+ * Requirements for runtime attestation attached to token usage.
+ * Enforcement is optional and controlled by gateway policy.
+ */
+export interface SintAttestationRequirements {
+  /** Minimum attestation grade (0..3). */
+  readonly minAttestationGrade?: 0 | 1 | 2 | 3;
+  /** Allowlist of accepted TEE/attestation backends. */
+  readonly allowedTeeBackends?: readonly SintAttestationBackend[];
+  /** Tiers for which attestation is required. */
+  readonly requireForTiers?: readonly ApprovalTier[];
+}
+
+/**
+ * Requirements for verifiable-compute proofs attached to token usage.
+ * Enables provable execution metadata checks for high-consequence actions.
+ */
+export interface SintVerifiableComputeRequirements {
+  /** Tiers that require proof material to be attached at request time. */
+  readonly requireForTiers?: readonly ApprovalTier[];
+  /** Optional allowlist of proof families accepted for this token. */
+  readonly allowedProofTypes?: readonly SintVerifiableComputeProofType[];
+  /** Optional allowlist of verifier IDs/URIs trusted for this token. */
+  readonly verifierRefs?: readonly string[];
+  /** Optional max age (ms) for proof freshness checks. */
+  readonly maxProofAgeMs?: DurationMs;
+  /** Require `publicInputsHash` to be present in runtime proof metadata. */
+  readonly requirePublicInputsHash?: boolean;
+}
+
+/**
+ * Optional pre-approved execution corridor for low-latency physical control loops.
+ * Requests inside the corridor can proceed without per-step reapproval.
+ */
+export interface SintExecutionEnvelope {
+  /** Logical corridor identifier for traceability. */
+  readonly corridorId?: string;
+  /** Corridor expiry in ISO8601 UTC format. */
+  readonly expiresAt?: ISO8601;
+  /** Maximum allowed lateral deviation from corridor centerline (meters). */
+  readonly maxDeviationMeters?: number;
+  /** Maximum allowed heading deviation from corridor heading (degrees). */
+  readonly maxHeadingDeviationDeg?: number;
+  /** Optional corridor-specific velocity cap (m/s). */
+  readonly maxVelocityMps?: MetersPerSecond;
+  /** Optional corridor-specific force cap (N). */
+  readonly maxForceNewtons?: Newtons;
 }
 
 /**
@@ -110,6 +232,14 @@ export interface SintCapabilityToken {
   readonly actions: readonly string[];
   /** Physical safety constraints — enforced, not advisory. */
   readonly constraints: SintPhysicalConstraints;
+  /** Optional model identity restrictions for runtime use of this token. */
+  readonly modelConstraints?: SintModelConstraints;
+  /** Optional attestation requirements for this token. */
+  readonly attestationRequirements?: SintAttestationRequirements;
+  /** Optional verifiable-compute proof requirements for this token. */
+  readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
+  /** Optional pre-approved execution envelope for low-latency control. */
+  readonly executionEnvelope?: SintExecutionEnvelope;
 
   // --- Delegation ---
   readonly delegationChain: SintDelegationChain;
@@ -131,6 +261,10 @@ export interface SintCapabilityTokenRequest {
   readonly resource: string;
   readonly actions: readonly string[];
   readonly constraints: SintPhysicalConstraints;
+  readonly modelConstraints?: SintModelConstraints;
+  readonly attestationRequirements?: SintAttestationRequirements;
+  readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
+  readonly executionEnvelope?: SintExecutionEnvelope;
   readonly delegationChain: SintDelegationChain;
   readonly expiresAt: ISO8601;
   readonly revocable: boolean;

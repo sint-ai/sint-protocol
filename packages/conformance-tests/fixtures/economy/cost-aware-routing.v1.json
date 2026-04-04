@@ -1,0 +1,105 @@
+{
+  "fixtureId": "sint.economy.cost-aware-routing.v1",
+  "schemaVersion": "1.0.0",
+  "description": "Canonical deterministic route selection for Economic Layer v1, including optional x402 quoting.",
+  "cases": [
+    {
+      "name": "budget and latency constraints select deterministic non-x402 route",
+      "input": {
+        "request": {
+          "requestId": "0196f4d0-e1d4-7c20-b86f-c7d8bd6f3001",
+          "resource": "open-rmf:///fleets/alpha/tasks/dispatch",
+          "action": "dispatch",
+          "params": {
+            "taskType": "move",
+            "from": "A1",
+            "to": "B7"
+          }
+        },
+        "candidates": [
+          {
+            "routeId": "rmf-primary",
+            "resource": "open-rmf:///fleets/alpha/tasks/dispatch",
+            "action": "dispatch",
+            "costMultiplier": 1,
+            "latencyMs": 22,
+            "reliability": 0.99
+          },
+          {
+            "routeId": "sparkplug-edge",
+            "resource": "mqtt+sparkplug:///siteA/line1/nbirth",
+            "action": "publish",
+            "costMultiplier": 1.1,
+            "latencyMs": 7,
+            "reliability": 0.94
+          },
+          {
+            "routeId": "opcua-cell",
+            "resource": "opcua://plc.example.local:4840/ns=2;s=CellA.Start",
+            "action": "write",
+            "costMultiplier": 1.2,
+            "latencyMs": 12,
+            "reliability": 0.97
+          }
+        ],
+        "budgetRemainingTokens": 120,
+        "maxLatencyMs": 15,
+        "latencyWeight": 0.03
+      },
+      "expected": {
+        "routeId": "sparkplug-edge",
+        "viaX402": false
+      }
+    },
+    {
+      "name": "x402 quote enrichment makes pay-per-call route best",
+      "input": {
+        "request": {
+          "requestId": "0196f4d0-e1d4-7c20-b86f-c7d8bd6f3002",
+          "resource": "ros2:///amr/dispatch",
+          "action": "publish",
+          "params": {
+            "goal": "dock-2"
+          }
+        },
+        "candidates": [
+          {
+            "routeId": "ros2-direct",
+            "resource": "ros2:///amr/dispatch",
+            "action": "publish",
+            "costMultiplier": 1,
+            "latencyMs": 9,
+            "reliability": 0.95
+          },
+          {
+            "routeId": "x402-premium",
+            "resource": "https://agent-commerce.example/dispatch",
+            "action": "call",
+            "costMultiplier": 1.6,
+            "latencyMs": 4,
+            "reliability": 0.99,
+            "x402": {
+              "enabled": true,
+              "endpoint": "https://x402.example/quote"
+            }
+          }
+        ],
+        "budgetRemainingTokens": 300,
+        "maxLatencyMs": 20,
+        "latencyWeight": 0.04
+      },
+      "x402Quotes": [
+        {
+          "routeId": "x402-premium",
+          "endpoint": "https://x402.example/quote",
+          "priceUsd": 0.001,
+          "currency": "USD"
+        }
+      ],
+      "expected": {
+        "routeId": "x402-premium",
+        "viaX402": true
+      }
+    }
+  ]
+}

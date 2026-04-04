@@ -6,6 +6,7 @@ import { Hono } from "hono";
 import type { SintRequest } from "@sint/core";
 import { sintRequestSchema } from "@sint/core";
 import type { ServerContext } from "../server.js";
+import { globalRiskBus, computeRiskScore } from "./risk-stream.js";
 
 export function interceptRoutes(ctx: ServerContext): Hono {
   const app = new Hono();
@@ -32,14 +33,36 @@ export function interceptRoutes(ctx: ServerContext): Hono {
         resource: parsed.data.resource,
         action: parsed.data.action,
         decision: decision.action,
+        executionContext: parsed.data.executionContext,
       },
     });
 
+    // Emit real-time risk score to SSE subscribers
+    const csml = (decision as any).csml ?? null;
+    const riskScore = computeRiskScore(decision.assignedTier, csml);
+    const riskUpdate = {
+      agentId: parsed.data.agentId,
+      resource: parsed.data.resource,
+      tier: decision.assignedTier,
+      riskScore,
+      csml,
+      timestamp: new Date().toISOString(),
+    };
+    ctx.ledger.append({
+      eventType: "risk.score.computed",
+      agentId: parsed.data.agentId,
+      tokenId: parsed.data.tokenId,
+      payload: riskUpdate,
+    });
+    globalRiskBus.emit(riskUpdate);
+
     // If escalated, enqueue for human approval
     if (decision.action === "escalate") {
+      const quorum = decision.escalation?.approvalQuorum;
       const approvalRequest = ctx.approvalQueue.enqueue(
         parsed.data as SintRequest,
         decision,
+        quorum,
       );
       return c.json({ ...decision, approvalRequestId: approvalRequest.requestId });
     }
@@ -79,13 +102,16 @@ export function interceptRoutes(ctx: ServerContext): Hono {
           resource: parsed.data.resource,
           action: parsed.data.action,
           decision: decision.action,
+          executionContext: parsed.data.executionContext,
         },
       });
 
       if (decision.action === "escalate") {
+        const quorum = decision.escalation?.approvalQuorum;
         const approvalRequest = ctx.approvalQueue.enqueue(
           parsed.data as SintRequest,
           decision,
+          quorum,
         );
         return { status: 202, decision, approvalRequestId: approvalRequest.requestId };
       }

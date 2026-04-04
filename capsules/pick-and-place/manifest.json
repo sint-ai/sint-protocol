@@ -1,0 +1,22 @@
+{
+  "capsuleId": "01905f7c-0003-7000-8000-000000000003",
+  "version": "1.0.0",
+  "name": "pick-and-place",
+  "author": "sint-labs",
+  "description": "Gripper control for pick-and-place tasks — uses camera for object detection and force/torque for grip control",
+  "sensors": ["camera_rgb", "force_torque"],
+  "actuators": ["ros2:///gripper/open", "ros2:///gripper/close", "ros2:///joint_commands"],
+  "safetyDeclarations": {
+    "maxForceNewtons": 50,
+    "requiresHumanPresence": false,
+    "canTriggerEstop": true
+  },
+  "resourceLimits": {
+    "maxMemoryMB": 256,
+    "maxCpuTimeMs": 3000,
+    "maxStorageMB": 30
+  },
+  "runtime": "typescript",
+  "entryPoint": "src/index.ts",
+  "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+}

@@ -19,6 +19,21 @@ import type { RevocationStore } from "@sint/gate-capability-tokens";
 import type { PolicyGateway } from "@sint/gate-policy-gateway";
 
 /**
+ * MCP tool annotations as defined in the MCP specification §tool-annotations.
+ * These provide semantic hints about tool behavior used for tier classification.
+ */
+export interface MCPToolAnnotations {
+  /** If true, the tool only reads data and has no side effects → T0_OBSERVE */
+  readonly readOnlyHint?: boolean;
+  /** If true, the tool may perform destructive operations → T3_COMMIT */
+  readonly destructiveHint?: boolean;
+  /** If true, the tool can interact with external systems → T1_PREPARE (minimum) */
+  readonly openWorldHint?: boolean;
+  /** If true, repeated calls with the same arguments have the same effect → lower risk */
+  readonly idempotentHint?: boolean;
+}
+
+/**
  * An MCP tool call entering the SINT bridge for interception.
  */
 export interface MCPToolCall {
@@ -32,6 +47,8 @@ export interface MCPToolCall {
   readonly arguments: Record<string, unknown>;
   /** Timestamp of the call. */
   readonly timestamp: ISO8601;
+  /** Optional MCP tool annotations providing semantic hints for tier classification. */
+  readonly annotations?: MCPToolAnnotations;
 }
 
 /**

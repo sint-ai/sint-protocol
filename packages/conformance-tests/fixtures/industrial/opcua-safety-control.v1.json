@@ -1,0 +1,45 @@
+{
+  "fixtureId": "opcua-safety-control-v1",
+  "schemaVersion": "2026-04-04",
+  "description": "Canonical OPC UA fixture for industrial-cell control behavior: read, normal write, and safety-critical write paths.",
+  "token": {
+    "resource": "opcua://*",
+    "actions": ["read", "write", "call", "observe"]
+  },
+  "endpoint": "opc.tcp://plc-1.local:4840",
+  "cases": [
+    {
+      "name": "status read remains observe tier",
+      "operation": "read",
+      "nodeId": "ns=2;s=Line1/Conveyor/Status",
+      "expectedResource": "opcua://plc-1.local:4840/ns%3D2%3Bs%3DLine1%2FConveyor%2FStatus",
+      "expectedAction": "read",
+      "expected": {
+        "assignedTier": "T0_observe",
+        "decisionAction": "allow"
+      }
+    },
+    {
+      "name": "speed setpoint write escalates to act tier",
+      "operation": "write",
+      "nodeId": "ns=2;s=Line1/Conveyor/SpeedSetpoint",
+      "expectedResource": "opcua://plc-1.local:4840/ns%3D2%3Bs%3DLine1%2FConveyor%2FSpeedSetpoint",
+      "expectedAction": "write",
+      "expected": {
+        "assignedTier": "T2_act",
+        "decisionAction": "escalate"
+      }
+    },
+    {
+      "name": "safety interlock reset write escalates to commit tier",
+      "operation": "write",
+      "nodeId": "ns=2;s=Line1/Safety/Interlock/Reset",
+      "expectedResource": "opcua://plc-1.local:4840/ns%3D2%3Bs%3DLine1%2FSafety%2FInterlock%2FReset",
+      "expectedAction": "write",
+      "expected": {
+        "assignedTier": "T3_commit",
+        "decisionAction": "escalate"
+      }
+    }
+  ]
+}

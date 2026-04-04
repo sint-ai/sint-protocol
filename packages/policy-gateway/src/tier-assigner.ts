@@ -86,6 +86,55 @@ function matchesPattern(pattern: string, resource: string): boolean {
 }
 
 /**
+ * Decode URI path fragments when resources are percent-encoded by bridges.
+ *
+ * Example:
+ *   opcua://plc-1/ns%3D2%3Bs%3DLine1%2FSafety%2FInterlock
+ * becomes:
+ *   opcua://plc-1/ns=2;s=Line1/Safety/Interlock
+ */
+function decodeResource(resource: string): string {
+  const schemeIdx = resource.indexOf("://");
+  if (schemeIdx < 0) {
+    return resource;
+  }
+
+  const prefix = resource.slice(0, schemeIdx + 3);
+  const remainder = resource.slice(schemeIdx + 3);
+
+  try {
+    return `${prefix}${decodeURIComponent(remainder)}`;
+  } catch {
+    return resource;
+  }
+}
+
+/** Match a resource against a rule using raw + decoded + case-insensitive forms. */
+function matchesRuleResource(pattern: string, resource: string): boolean {
+  if (matchesPattern(pattern, resource)) {
+    return true;
+  }
+
+  const decoded = decodeResource(resource);
+  if (decoded !== resource && matchesPattern(pattern, decoded)) {
+    return true;
+  }
+
+  const loweredPattern = pattern.toLowerCase();
+  const loweredResource = resource.toLowerCase();
+  if (matchesPattern(loweredPattern, loweredResource)) {
+    return true;
+  }
+
+  const loweredDecoded = decoded.toLowerCase();
+  if (loweredDecoded !== loweredResource && matchesPattern(loweredPattern, loweredDecoded)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Assign an approval tier to a request.
  *
  * This is a pure function — deterministic for the same inputs.
@@ -120,7 +169,7 @@ export function assignTier(
 
   for (const rule of rules) {
     if (
-      matchesPattern(rule.resourcePattern, request.resource) &&
+      matchesRuleResource(rule.resourcePattern, request.resource) &&
       rule.actions.includes(request.action)
     ) {
       // More specific patterns (longer, fewer wildcards) win

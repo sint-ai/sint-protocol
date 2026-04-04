@@ -1,0 +1,24 @@
+{
+  "$schema": "./apps/sint-mcp/config.schema.json",
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp/sint-sandbox"],
+      "policy": {
+        "maxTier": "T1_prepare"
+      }
+    },
+    "shell": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-shell"],
+      "policy": {
+        "maxTier": "T3_commit",
+        "requireApproval": true
+      }
+    }
+  },
+  "defaultPolicy": "cautious",
+  "approvalTimeoutMs": 120000,
+  "transport": "stdio",
+  "port": 3200
+}

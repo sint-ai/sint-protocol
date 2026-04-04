@@ -1,0 +1,34 @@
+{
+  "name": "@sint/persistence-postgres",
+  "version": "0.1.0",
+  "description": "SINT Persistence — production PostgreSQL backend for EvidenceLedger and RevocationStore",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:fixtures": "vitest run src/__tests__/certification-fixtures.test.ts"
+  },
+  "dependencies": {
+    "@sint/core": "workspace:*",
+    "@sint/gate-evidence-ledger": "workspace:*",
+    "@sint/persistence": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "pg": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": { "optional": true }
+  }
+}

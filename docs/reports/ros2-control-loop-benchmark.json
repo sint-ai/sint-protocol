@@ -1,0 +1,12 @@
+{
+  "benchmark": "ros2-control-loop",
+  "generatedAt": "2026-04-04T22:08:58.327Z",
+  "iterations": 600,
+  "p50": 1.5617079999999532,
+  "p95": 1.8627500000000055,
+  "p99": 2.074583000000075,
+  "steadyP99": 2.0672080000000506,
+  "worstBatchP99": 2.0970420000001013,
+  "slaTargetMs": 10,
+  "status": "PASS"
+}

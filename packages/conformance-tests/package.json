@@ -6,7 +6,9 @@
   "scripts": {
     "build": "echo 'no build needed'",
     "test": "vitest run",
-    "test:watch": "vitest watch"
+    "test:watch": "vitest watch",
+    "test:fixtures": "vitest run src/canonical-fixtures-conformance.test.ts src/security-iot-fixtures-conformance.test.ts src/economy-fixtures-conformance.test.ts",
+    "test:ros2-loop": "vitest run src/ros2-control-loop-latency.test.ts"
   },
   "devDependencies": {
     "@sint/core": "workspace:*",
@@ -15,6 +17,13 @@
     "@sint/gate-evidence-ledger": "workspace:*",
     "@sint/bridge-mcp": "workspace:*",
     "@sint/bridge-ros2": "workspace:*",
+    "@sint/bridge-mqtt-sparkplug": "workspace:*",
+    "@sint/bridge-opcua": "workspace:*",
+    "@sint/bridge-open-rmf": "workspace:*",
+    "@sint/bridge-economy": "workspace:*",
+    "@sint/bridge-a2a": "workspace:*",
+    "@sint/bridge-iot": "workspace:*",
+    "@sint/persistence": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }

@@ -1,0 +1,16 @@
+{
+  "profile": "edge-gateway",
+  "description": "Local T0/T1 enforcement with central escalation for T2/T3",
+  "edgeMode": {
+    "localAutoApprovalTiers": ["T0_observe", "T1_prepare"],
+    "centralEscalationTiers": ["T2_act", "T3_commit"],
+    "revocationRelay": true,
+    "evidenceReplication": "async"
+  },
+  "tierRules": [
+    { "resourcePattern": "mqtt-sparkplug://*/ndata", "actions": ["publish"], "baseTier": "T0_observe" },
+    { "resourcePattern": "mqtt-sparkplug://*/dcmd", "actions": ["call"], "baseTier": "T2_act" },
+    { "resourcePattern": "opcua://*/**", "actions": ["read"], "baseTier": "T0_observe" },
+    { "resourcePattern": "opcua://*/**", "actions": ["write", "call"], "baseTier": "T2_act" }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "capsuleId": "01905f7c-0002-7000-8000-000000000002",
+  "version": "1.0.0",
+  "name": "waypoint-navigation",
+  "author": "sint-labs",
+  "description": "Waypoint following navigation — reads GPS/IMU and commands velocity to follow a path",
+  "sensors": ["gps", "imu"],
+  "actuators": ["ros2:///cmd_vel"],
+  "safetyDeclarations": {
+    "maxVelocityMps": 1.5,
+    "requiresHumanPresence": false,
+    "canTriggerEstop": true
+  },
+  "resourceLimits": {
+    "maxMemoryMB": 128,
+    "maxCpuTimeMs": 2000,
+    "maxStorageMB": 20
+  },
+  "runtime": "typescript",
+  "entryPoint": "src/index.ts",
+  "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+}

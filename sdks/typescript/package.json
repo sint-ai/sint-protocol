@@ -1,0 +1,21 @@
+{
+  "name": "@sint/sdk",
+  "version": "0.2.0",
+  "description": "SINT Protocol TypeScript/Node.js SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:contracts": "vitest run src/__tests__/client.test.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  }
+}

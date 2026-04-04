@@ -10,7 +10,21 @@
  */
 
 import { ApprovalTier } from "@sint/core";
-import type { MCPRiskHint, MCPToolCall } from "./types.js";
+import type { MCPRiskHint, MCPToolAnnotations, MCPToolCall } from "./types.js";
+
+export type { MCPToolAnnotations };
+
+/**
+ * Resolve SINT approval tier from MCP tool annotations (MCP spec §tool-annotations).
+ * Annotations take precedence over keyword-based risk hints when present.
+ */
+export function tierFromAnnotations(annotations: MCPToolAnnotations): ApprovalTier | undefined {
+  if (annotations.readOnlyHint === true) return ApprovalTier.T0_OBSERVE;
+  if (annotations.destructiveHint === true) return ApprovalTier.T3_COMMIT;
+  // openWorldHint = tool can interact with external systems (at least T1)
+  if (annotations.openWorldHint === true) return ApprovalTier.T1_PREPARE;
+  return undefined; // fall through to keyword-based classification
+}
 
 /**
  * Well-known tool categories and their risk classifications.
@@ -338,6 +352,61 @@ const DEFAULT_RISK_HINT: MCPRiskHint = {
   escalateOnHumanPresence: false,
 };
 
+// ASI05: shell/code execution → T3_COMMIT
+// Tool names that indicate shell or code execution and must be classified T3_COMMIT.
+const SHELL_EXEC_TOOL_KEYWORDS: readonly string[] = [
+  "execute",
+  "exec",
+  "shell",
+  "bash",
+  "sh",
+  "cmd",
+  "powershell",
+  "run_command",
+  "system",
+  "eval",
+  "subprocess",
+];
+
+// ASI05: servers known to provide shell/code execution capabilities → T3_COMMIT
+const SHELL_EXEC_SERVER_NAMES: readonly string[] = [
+  "shell",
+  "terminal",
+  "bash",
+  "exec",
+  "code-interpreter",
+];
+
+/**
+ * Risk hint for shell/exec tools classified by keyword (ASI05).
+ * Uses "call" (not "exec.run") so standard capability tokens (which permit "call")
+ * still validate. The elevated tier (T3_COMMIT) provides the security enforcement.
+ */
+const SHELL_EXEC_RISK_HINT: MCPRiskHint = {
+  suggestedTier: ApprovalTier.T3_COMMIT,
+  action: "call",
+  hasPhysicalEffect: false,
+  escalateOnHumanPresence: false,
+};
+
+/**
+ * Returns true if the tool call is a shell/code execution tool (ASI05).
+ * Checks tool name keywords and known shell server names.
+ */
+export function isShellExecTool(toolCall: MCPToolCall): boolean {
+  const toolNameLower = toolCall.toolName.toLowerCase();
+  const serverNameLower = toolCall.serverName.toLowerCase();
+  // Check if tool name exactly matches or contains any shell keyword
+  if (SHELL_EXEC_TOOL_KEYWORDS.some((kw) => toolNameLower === kw || toolNameLower.includes(kw))) {
+    return true;
+  }
+  // Check if server name is a known shell server
+  if (SHELL_EXEC_SERVER_NAMES.some((s) => serverNameLower === s || serverNameLower.includes(s))) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Map an MCP tool call to a SINT resource URI.
  *
@@ -366,11 +435,37 @@ export function toToolId(serverName: string, toolName: string): string {
 
 /**
  * Get the risk hint for a given MCP tool call.
- * Falls back to T1_PREPARE for unknown tools.
+ * Priority order:
+ *   1. MCP tool annotations (if present) — override everything
+ *   2. Explicit TOOL_RISK_MAP entries
+ *   3. ASI05 shell/exec keyword detection → T3_COMMIT
+ *   4. Default T1_PREPARE for unknown tools
  */
 export function getRiskHint(toolCall: MCPToolCall): MCPRiskHint {
+  // Annotations take precedence when present (MCP spec §tool-annotations)
+  if (toolCall.annotations) {
+    const annotationTier = tierFromAnnotations(toolCall.annotations);
+    if (annotationTier !== undefined) {
+      return {
+        suggestedTier: annotationTier,
+        action: annotationTier === ApprovalTier.T3_COMMIT ? "exec.run" : "call",
+        hasPhysicalEffect: false,
+        escalateOnHumanPresence: false,
+      };
+    }
+  }
+
+  // Explicit map (preserves existing exact-match behaviour).
   const toolId = toToolId(toolCall.serverName, toolCall.toolName);
-  return TOOL_RISK_MAP.get(toolId) ?? DEFAULT_RISK_HINT;
+  const explicit = TOOL_RISK_MAP.get(toolId);
+  if (explicit) return explicit;
+
+  // ASI05: if tool name or server name indicates shell/code execution → T3_COMMIT
+  if (isShellExecTool(toolCall)) {
+    return SHELL_EXEC_RISK_HINT;
+  }
+
+  return DEFAULT_RISK_HINT;
 }
 
 /**

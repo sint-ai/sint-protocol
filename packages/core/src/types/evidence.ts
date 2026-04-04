@@ -43,10 +43,62 @@ export type SintEventType =
   | "safety.force.exceeded"
   | "safety.human.detected"
   | "safety.anomaly.detected"
-  // Economic (Layer 4)
+  | "safety.hardware.permit.denied"
+  | "safety.hardware.interlock.open"
+  | "safety.hardware.state.stale"
+  // Verifiable compute / provable execution
+  | "verifiable.compute.verified"
+  // Token management
+  | "token.issued"
+  | "token.revoked"
+  | "token.delegated"
+  // Engine — System 1 (Neural Perception)
+  | "engine.system1.inference"
+  | "engine.system1.anomaly"
+  // Engine — System 2 (Symbolic Reasoning)
+  | "engine.system2.plan.created"
+  | "engine.system2.plan.validated"
+  | "engine.system2.plan.step.executed"
+  | "engine.system2.tick"
+  // Engine — Arbitration
+  | "engine.arbitration.decided"
+  | "engine.arbitration.override"
+  | "engine.arbitration.escalated"
+  // Engine — Capsule Sandbox
+  | "capsule.loaded"
+  | "capsule.validated"
+  | "capsule.executed"
+  | "capsule.unloaded"
+  | "capsule.resource.exceeded"
+  // Engine — Hardware Abstraction Layer
+  | "hal.hardware.detected"
+  | "hal.profile.selected"
+  // Economic (Layer 4) — Marketplace
   | "capsule.purchased"
   | "task.bid.placed"
-  | "payment.settled";
+  | "payment.settled"
+  // Economic (Layer 4) — Balance
+  | "economy.balance.checked"
+  | "economy.balance.deducted"
+  | "economy.balance.insufficient"
+  // Economic (Layer 4) — Budget
+  | "economy.budget.checked"
+  | "economy.budget.exceeded"
+  | "economy.budget.alert"
+  // Economic (Layer 4) — Trust & Billing
+  | "economy.trust.evaluated"
+  | "economy.trust.blocked"
+  | "economy.action.billed"
+  // Economic (Layer 4) — SLA
+  | "sla.bond.slashed"
+  // Avatar (Layer 5) — behavioral identity
+  | "avatar.profile.created"
+  | "avatar.profile.updated"
+  | "avatar.csml.escalated"
+  // Risk scoring — emitted after each intercept with riskScore + csml
+  | "risk.score.computed"
+  // Ledger management (audit of the auditor)
+  | "ledger.exported";
 
 /**
  * A single immutable event in the Evidence Ledger.
@@ -96,6 +148,14 @@ export interface SintLedgerEvent {
 
   /** SHA-256 hash of this event (computed over all fields above). */
   readonly hash: SHA256;
+
+  // ROSClaw integration fields — enables cross-system CSML computation
+  /** Cross-reference to ROSClaw audit log entry (arXiv:2603.26997). */
+  readonly rosclaw_audit_ref?: string;
+  /** ROSClaw failure mode if applicable: malformed_params | wrong_action_type | replan_loop */
+  readonly rosclaw_failure_mode?: "malformed_params" | "wrong_action_type" | "replan_loop";
+  /** Foundation model backend identifier (for CSML per-model behavioral tracking). */
+  readonly foundation_model_id?: string;
 }
 
 /**
@@ -120,7 +180,86 @@ export interface SintProofReceipt {
 
   /** Public key of the signing authority. */
   readonly signerPublicKey: Ed25519PublicKey;
+
+  /**
+   * Optional TEE attestation for regulatory-grade proof (required for T2/T3 events).
+   * Ensures the event was written within a secure enclave at the stated timestamp,
+   * preventing post-hoc insertion or backdating.
+   */
+  readonly teeAttestation?: {
+    readonly teeBackend: "intel-sgx" | "arm-trustzone" | "amd-sev";
+    /** TEE-signed attestation quote over the event hash. */
+    readonly attestationQuote: string;
+    readonly timestamp: ISO8601;
+  };
 }
+
+/**
+ * Formal DFA states for the SINT request lifecycle.
+ *
+ * Models physical consequence severity of every request through a deterministic
+ * finite automaton. The ACTING state is only reachable via POLICY_EVAL with a valid
+ * token (invariant I-G1: No Bypass). The ESTOP transition is universal across all
+ * non-terminal states (invariant I-G2: E-stop Universality).
+ */
+export type RequestLifecycleState =
+  | "IDLE"           // Awaiting request
+  | "PENDING"        // Request received, validating token
+  | "POLICY_EVAL"    // Token valid, evaluating tiers and constraints
+  | "ESCALATING"     // T2/T3 tier — awaiting human/operator approval
+  | "PLANNING"       // Approved, constructing action plan
+  | "OBSERVING"      // Executing T0 observe action (read-only)
+  | "PREPARING"      // Executing T1 prepare action (idempotent writes)
+  | "ACTING"         // Executing T2 act action (physical state change)
+  | "COMMITTING"     // Executing T3 commit action, writing to ledger
+  | "COMPLETED"      // Action completed and ledger record confirmed
+  | "FAILED"         // Token invalid, approval denied, or execution failure
+  | "ROLLEDBACK";    // E-stop or execution failure — returned to safe state
+
+/**
+ * SINT Bridge per-topic/per-resource authorization state machine.
+ *
+ * Each external protocol surface (ROS 2 topic, MCP server, A2A agent) maintains
+ * an independent state. Only the ACTIVE state allows messages to traverse the bridge.
+ * Revocation immediately transitions ACTIVE → SUSPENDED without node restart.
+ */
+export type BridgeAdapterState =
+  | "UNREGISTERED"   // No active authorization
+  | "PENDING_AUTH"   // Capability token presented, validation in progress
+  | "AUTHORIZED"     // Token valid, not yet receiving messages
+  | "ACTIVE"         // Token valid, messages flowing (only state that forwards)
+  | "SUSPENDED";     // Revocation event received — messages blocked, re-auth possible
+
+/**
+ * CSML (Composite Safety-Model Latency) metric coefficients.
+ *
+ * Quantifies the interaction between model behavioral safety and physical
+ * authorization layers into a single auditable score per deployment.
+ * Computed from Evidence Ledger data + ROSClaw audit cross-references.
+ *
+ * Lower CSML is better. Above threshold θ → automatic tier escalation.
+ */
+export interface CsmlCoefficients {
+  /** Weight for Attempt Rate AR_m ∈ [0,1]: fraction of adversarial prompts eliciting ≥1 validator block */
+  readonly alpha: number;
+  /** Weight for mean Blocks Per prompt BP_m ≥ 0 */
+  readonly beta: number;
+  /** Weight for median overspeed Severity SV_m ≥ 1 */
+  readonly gamma: number;
+  /** Weight (negated) for task Completion Rate CR_m ∈ [0,1] */
+  readonly delta: number;
+  /** Weight for ledger_intact indicator: 1 if Evidence Ledger hash chain verified intact */
+  readonly epsilon: number;
+}
+
+/** Default CSML coefficients per the SINT formal specification. */
+export const DEFAULT_CSML_COEFFICIENTS: CsmlCoefficients = {
+  alpha: 0.4,
+  beta: 0.2,
+  gamma: 0.2,
+  delta: 0.1,
+  epsilon: 0.1,
+} as const;
 
 /**
  * Query parameters for reading from the Evidence Ledger.

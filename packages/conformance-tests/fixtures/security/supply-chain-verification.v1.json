@@ -1,0 +1,76 @@
+{
+  "fixtureId": "supply-chain-verification-v1",
+  "schemaVersion": "2026-04-04",
+  "description": "Canonical ASI04 fixture for runtime supply-chain checks: model fingerprint pinning, model allowlist, and bridge protocol consistency.",
+  "token": {
+    "resource": "mcp://filesystem/readFile",
+    "actions": ["call"],
+    "modelConstraints": {
+      "allowedModelIds": ["gpt-5.4-robotics-safe"],
+      "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  },
+  "cases": [
+    {
+      "name": "matching model and bridge is allowed",
+      "request": {
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": {
+          "bridgeProtocol": "mcp"
+        },
+        "executionContext": {
+          "model": {
+            "modelId": "gpt-5.4-robotics-safe",
+            "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "allow"
+      }
+    },
+    {
+      "name": "fingerprint mismatch is denied pre-execution",
+      "request": {
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": {
+          "bridgeProtocol": "mcp"
+        },
+        "executionContext": {
+          "model": {
+            "modelId": "gpt-5.4-robotics-safe",
+            "modelFingerprintHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "CONSTRAINT_VIOLATION",
+        "severity": "high"
+      }
+    },
+    {
+      "name": "bridge protocol mismatch emits warning but does not deny",
+      "request": {
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": {
+          "bridgeProtocol": "ros2"
+        },
+        "executionContext": {
+          "model": {
+            "modelId": "gpt-5.4-robotics-safe",
+            "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "allow",
+        "warningEvent": "agent.supply_chain.warning",
+        "severity": "medium"
+      }
+    }
+  ]
+}

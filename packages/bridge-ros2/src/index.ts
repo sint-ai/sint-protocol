@@ -37,3 +37,10 @@ export type {
   ROS2ActionGoal,
   ROS2InterceptResult,
 } from "./types.js";
+export {
+  discoverSros2Enclaves,
+  checkSros2Permission,
+  sros2ToSintConstraints,
+  matchTopicPattern,
+} from "./sros2-enclave.js";
+export type { Sros2Enclave, Sros2Discovery } from "./sros2-enclave.js";

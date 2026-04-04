@@ -80,7 +80,14 @@ export function tokenRoutes(ctx: ServerContext): Hono {
       );
     }
 
+    // Revoke locally
     ctx.revocationStore.revoke(tokenId, reason, revokedBy);
+
+    // Broadcast to all nodes via revocation bus (Redis pub/sub in production)
+    await ctx.revocationBus.publish(tokenId, reason, revokedBy);
+
+    // Invalidate cache entry
+    await ctx.cache.delete(`token:${tokenId}`);
 
     const token = await ctx.tokenStore.get(tokenId);
     ctx.ledger.append({
