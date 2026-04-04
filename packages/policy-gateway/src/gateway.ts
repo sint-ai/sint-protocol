@@ -26,6 +26,7 @@ import { nowISO8601 } from "@sint/gate-capability-tokens";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
 import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
 import { checkForbiddenCombos } from "./forbidden-combos.js";
+import type { CircuitBreakerPlugin, CircuitState } from "./circuit-breaker.js";
 import type { AgentTrustLevel } from "@sint/core";
 
 /** Token resolver — looks up a capability token by ID (sync or async). */
@@ -122,6 +123,16 @@ export interface PolicyGatewayConfig {
    */
   readonly csmlEscalation?: CsmlEscalationPlugin;
   /**
+   * Optional circuit breaker plugin (ASI10 / EU AI Act Article 14(4)(e)).
+   * Provides the operator "stop button" and automatic rogue-agent containment.
+   *
+   * State machine: CLOSED → OPEN (N denials) → HALF_OPEN (after timeout) → CLOSED
+   * Operators can force OPEN via trip() or force CLOSED via reset().
+   * CSML anomalous persona auto-trips the circuit.
+   * Fail-open: plugin errors do not block requests.
+   */
+  readonly circuitBreaker?: CircuitBreakerPlugin;
+  /**
    * Optional dynamic envelope plugin (ROSClaw gap mitigation).
    * When provided, called just before physical constraint checking.
    * Returns environment-adaptive limits that tighten (never loosen) the token's
@@ -176,6 +187,26 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, "MALFORMED_REQUEST", "Request failed schema validation");
     }
 
+    // 1b. Circuit breaker check (ASI10 / EU AI Act Art. 14(4)(e) stop button)
+    // Checked after schema validation (so we have agentId) but before any other work.
+    // OPEN → instant deny. HALF_OPEN → allow probe through, record result.
+    let circuitState: CircuitState = "CLOSED";
+    if (this.config.circuitBreaker) {
+      try {
+        circuitState = await this.config.circuitBreaker.getState(request.agentId);
+        if (circuitState === "OPEN") {
+          this.emitEvent("agent.circuit.blocked", request.agentId, request.tokenId, {
+            circuitState,
+          });
+          return this.deny(requestId, timestamp, "CIRCUIT_OPEN",
+            "Agent circuit is OPEN — all actions blocked. Operator reset required.");
+        }
+      } catch {
+        // Circuit breaker error → fail-open, proceed as CLOSED
+        circuitState = "CLOSED";
+      }
+    }
+
     // 2. Resolve the capability token
     const token = await this.config.resolveToken(request.tokenId);
     if (!token) {
@@ -194,6 +225,13 @@ export class PolicyGateway {
     const tokenValidation = validateCapabilityToken(token, {
       resource: request.resource,
       action: request.action,
+      modelContext: {
+        modelId: request.executionContext?.model?.modelId,
+        modelVersion: request.executionContext?.model?.modelVersion,
+        modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
+        attestationGrade: request.executionContext?.attestation?.grade,
+        teeBackend: request.executionContext?.attestation?.teeBackend,
+      },
       physicalContext: request.physicalContext
         ? {
             commandedForceNewtons: request.physicalContext.currentForceNewtons,
@@ -212,6 +250,39 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, tokenValidation.error, `Token validation failed: ${tokenValidation.error}`);
     }
 
+    // 4d. Execution envelope corridor checks (optional, additive guardrail).
+    if (token.executionEnvelope?.corridorId) {
+      const reqCorridor = request.executionContext?.preapprovedCorridor;
+      if (!reqCorridor || reqCorridor.corridorId !== token.executionEnvelope.corridorId) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "CONSTRAINT_VIOLATION",
+          `Missing or mismatched preapproved corridor (expected ${token.executionEnvelope.corridorId})`,
+        );
+      }
+      const tokenExp = token.executionEnvelope.expiresAt
+        ? new Date(token.executionEnvelope.expiresAt).getTime()
+        : undefined;
+      const reqExp = new Date(reqCorridor.expiresAt).getTime();
+      if (Number.isFinite(reqExp) && reqExp <= Date.now()) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "CONSTRAINT_VIOLATION",
+          "Preapproved corridor has expired",
+        );
+      }
+      if (tokenExp !== undefined && Number.isFinite(tokenExp) && reqExp > tokenExp) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "CONSTRAINT_VIOLATION",
+          "Preapproved corridor exceeds token execution envelope expiry",
+        );
+      }
+    }
+
     // 4b. Rate-limit check (per-token sliding window)
     if (this.config.rateLimitStore && token.constraints.rateLimit) {
       const { maxCalls, windowMs } = token.constraints.rateLimit;
@@ -220,6 +291,19 @@ export class PolicyGateway {
       try {
         const count = await this.config.rateLimitStore.increment(key, windowMs);
         if (count > maxCalls) {
+          if (this.config.circuitBreaker) {
+            try {
+              const newState = await this.config.circuitBreaker.recordDenial(
+                request.agentId, "RATE_LIMIT_EXCEEDED",
+              );
+              if (newState === "OPEN") {
+                this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
+                  triggeredBy: "RATE_LIMIT_EXCEEDED",
+                  previousState: circuitState as string,
+                });
+              }
+            } catch { /* fail-open */ }
+          }
           return this.deny(requestId, timestamp, "RATE_LIMIT_EXCEEDED",
             `Token rate limit exceeded: ${count}/${maxCalls} calls in ${windowMs}ms window`);
         }
@@ -275,8 +359,42 @@ export class PolicyGateway {
             ],
           };
         }
+
+        // 5c. CSML anomalous persona → auto-trip circuit breaker (ASI10)
+        // If CSML reports "anomalous" (safety events detected), trip immediately.
+        if (
+          this.config.circuitBreaker &&
+          csmlDecision.reason.toLowerCase().includes("anomalous")
+        ) {
+          try {
+            await this.config.circuitBreaker.trip(
+              request.agentId,
+              `CSML anomalous persona: ${csmlDecision.reason}`,
+            );
+            this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
+              triggeredBy: "CSML_ANOMALOUS",
+              csmlScore: csmlDecision.csmlScore,
+              reason: csmlDecision.reason,
+            });
+          } catch {
+            // fail-open
+          }
+        }
       } catch {
         // CSML escalation error → fail-open, continue with base tier
+      }
+    }
+
+    // 5d. Tier-gated attestation requirement checks.
+    const requiredTiers = token.attestationRequirements?.requireForTiers;
+    if (requiredTiers && requiredTiers.includes(tierAssignment.approvalTier)) {
+      if (request.executionContext?.attestation?.grade === undefined) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "CONSTRAINT_VIOLATION",
+          `Attestation grade is required for tier ${tierAssignment.approvalTier}`,
+        );
       }
     }
 
@@ -295,15 +413,30 @@ export class PolicyGateway {
       }
     }
 
-    // 6c. Compute dynamic safety envelope (environment-adaptive constraint tightening)
-    let envelopeOverrides: EnvelopeOverrides | undefined;
+    // 6c. Compute effective safety envelope (token execution envelope + dynamic envelope).
+    let envelopeOverrides: EnvelopeOverrides | undefined =
+      token.executionEnvelope?.maxVelocityMps !== undefined
+      || token.executionEnvelope?.maxForceNewtons !== undefined
+        ? {
+            maxVelocityMps: token.executionEnvelope.maxVelocityMps,
+            maxForceNewtons: token.executionEnvelope.maxForceNewtons,
+          }
+        : undefined;
+
+    // 6d. Dynamic envelope can tighten the existing envelope further.
     if (this.config.dynamicEnvelope) {
       try {
         const envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
         if (envelope.maxVelocityMps !== undefined || envelope.maxForceNewtons !== undefined) {
           envelopeOverrides = {
-            maxVelocityMps: envelope.maxVelocityMps,
-            maxForceNewtons: envelope.maxForceNewtons,
+            maxVelocityMps:
+              envelopeOverrides?.maxVelocityMps !== undefined && envelope.maxVelocityMps !== undefined
+                ? Math.min(envelopeOverrides.maxVelocityMps, envelope.maxVelocityMps)
+                : (envelope.maxVelocityMps ?? envelopeOverrides?.maxVelocityMps),
+            maxForceNewtons:
+              envelopeOverrides?.maxForceNewtons !== undefined && envelope.maxForceNewtons !== undefined
+                ? Math.min(envelopeOverrides.maxForceNewtons, envelope.maxForceNewtons)
+                : (envelope.maxForceNewtons ?? envelopeOverrides?.maxForceNewtons),
           };
           if (envelope.reason) {
             this.emitEvent("policy.envelope.applied", request.agentId, request.tokenId, {
@@ -336,6 +469,33 @@ export class PolicyGateway {
       timestamp,
       tierAssignment,
     );
+
+    // 8b. Record circuit breaker outcome — must happen BEFORE returning
+    if (this.config.circuitBreaker) {
+      try {
+        if (decision.action === "allow") {
+          const newState = await this.config.circuitBreaker.recordSuccess(request.agentId);
+          if (circuitState === "HALF_OPEN" && newState === "CLOSED") {
+            this.emitEvent("agent.circuit.closed", request.agentId, request.tokenId, {
+              recoveredFrom: "HALF_OPEN",
+            });
+          }
+        } else if (decision.action === "deny") {
+          const newState = await this.config.circuitBreaker.recordDenial(
+            request.agentId,
+            decision.denial?.policyViolated ?? "POLICY_VIOLATION",
+          );
+          if (newState === "OPEN") {
+            this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
+              triggeredBy: decision.denial?.policyViolated,
+              previousState: circuitState as string,
+            });
+          }
+        }
+      } catch {
+        // Circuit breaker record error → fail-open, decision stands
+      }
+    }
 
     // 9. Emit ledger event
     this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {

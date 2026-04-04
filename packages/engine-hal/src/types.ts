@@ -8,7 +8,7 @@
  * @module @sint/engine-hal/types
  */
 
-import type { ISO8601, SintDeploymentProfile } from "@sint/core";
+import type { ISO8601, SintHardwareDeploymentProfile } from "@sint/core";
 
 /**
  * A point-in-time snapshot of system resource utilization.
@@ -74,7 +74,7 @@ export const DEFAULT_THRESHOLDS: ResourceThresholds = {
  * ```
  */
 export interface EngineConfig {
-  readonly deploymentProfile?: SintDeploymentProfile;
+  readonly deploymentProfile?: SintHardwareDeploymentProfile;
   readonly resourceThresholds?: Partial<ResourceThresholds>;
   readonly samplingIntervalMs?: number;
 }

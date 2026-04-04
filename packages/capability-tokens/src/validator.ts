@@ -37,6 +37,18 @@ export interface PhysicalActionContext {
 }
 
 /**
+ * Runtime model/attestation context supplied by the caller for token-bound checks.
+ */
+export interface ModelRuntimeContext {
+  readonly modelId?: string;
+  readonly modelVersion?: string;
+  readonly modelFingerprintHash?: string;
+  readonly attestationGrade?: 0 | 1 | 2 | 3;
+  readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
+  readonly assignedTier?: "T0_observe" | "T1_prepare" | "T2_act" | "T3_commit";
+}
+
+/**
  * Validate a capability token's structure and schema.
  * Pure function — no I/O, no side effects.
  *
@@ -259,6 +271,73 @@ function matchesResourcePattern(pattern: string, resource: string): boolean {
   return pattern === resource;
 }
 
+function normalizeSemver(input: string): [number, number, number] | null {
+  const m = input.trim().match(/^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
+  if (!m) return null;
+  return [Number(m[1] ?? "0"), Number(m[2] ?? "0"), Number(m[3] ?? "0")];
+}
+
+function semverGt(a: string, b: string): boolean {
+  const av = normalizeSemver(a);
+  const bv = normalizeSemver(b);
+  if (!av || !bv) return false;
+  if (av[0] !== bv[0]) return av[0] > bv[0];
+  if (av[1] !== bv[1]) return av[1] > bv[1];
+  return av[2] > bv[2];
+}
+
+/**
+ * Validate model identity and attestation requirements when present.
+ */
+export function validateModelAndAttestation(
+  token: SintCapabilityToken,
+  runtime?: ModelRuntimeContext,
+): Result<true, CapabilityTokenError> {
+  const mc = token.modelConstraints;
+  const ar = token.attestationRequirements;
+
+  if (mc?.allowedModelIds && mc.allowedModelIds.length > 0) {
+    if (!runtime?.modelId || !mc.allowedModelIds.includes(runtime.modelId)) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  if (mc?.maxModelVersion && runtime?.modelVersion) {
+    if (semverGt(runtime.modelVersion, mc.maxModelVersion)) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  if (mc?.modelFingerprintHash) {
+    if (!runtime?.modelFingerprintHash || runtime.modelFingerprintHash !== mc.modelFingerprintHash) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  if (ar?.minAttestationGrade !== undefined) {
+    if (runtime?.attestationGrade === undefined || runtime.attestationGrade < ar.minAttestationGrade) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  if (ar?.allowedTeeBackends && ar.allowedTeeBackends.length > 0) {
+    if (!runtime?.teeBackend || !ar.allowedTeeBackends.includes(runtime.teeBackend)) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  if (ar?.requireForTiers && ar.requireForTiers.length > 0) {
+    const tier = runtime?.assignedTier;
+    if (tier && (ar.requireForTiers as string[]).includes(tier as string)) {
+      if (runtime.attestationGrade === undefined) {
+        return err("CONSTRAINT_VIOLATION");
+      }
+    }
+  }
+
+  return ok(true);
+}
+
 /**
  * Full token validation — runs ALL checks in sequence.
  * This is the primary entry point for token validation.
@@ -279,6 +358,7 @@ export function validateCapabilityToken(
     resource: string;
     action: string;
     physicalContext?: PhysicalActionContext;
+    modelContext?: ModelRuntimeContext;
     now?: Date;
     maxDelegationDepth?: number;
   },
@@ -306,7 +386,11 @@ export function validateCapabilityToken(
   const permResult = validatePermissions(token, params.resource, params.action);
   if (!permResult.ok) return permResult;
 
-  // 6. Physical constraint check (if context provided)
+  // 6. Model/attestation bound checks (if token carries those constraints)
+  const modelResult = validateModelAndAttestation(token, params.modelContext);
+  if (!modelResult.ok) return modelResult;
+
+  // 7. Physical constraint check (if context provided)
   if (params.physicalContext) {
     const constraintResult = validatePhysicalConstraints(
       token.constraints,

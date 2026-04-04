@@ -9,14 +9,14 @@
  * @module @sint/engine-system1/onnx-executor
  */
 
-import type { Result, SintDeploymentProfile } from "@sint/core";
+import type { Result, SintHardwareDeploymentProfile } from "@sint/core";
 import { err, ok } from "@sint/core";
 import type { OnnxModelExecutor } from "./types.js";
 
 /**
  * Maps deployment profiles to ONNX execution provider names.
  */
-const PROVIDER_MAP: Record<SintDeploymentProfile, string> = {
+const PROVIDER_MAP: Record<SintHardwareDeploymentProfile, string> = {
   full: "cuda",
   edge: "cpu",
   split: "cpu",
@@ -44,7 +44,7 @@ const PROVIDER_MAP: Record<SintDeploymentProfile, string> = {
  * ```
  */
 export class OnnxExecutor implements OnnxModelExecutor {
-  private readonly deploymentProfile: SintDeploymentProfile;
+  private readonly deploymentProfile: SintHardwareDeploymentProfile;
   private readonly provider: string;
   private session: unknown | null = null;
   private _modelLoaded = false;
@@ -59,9 +59,9 @@ export class OnnxExecutor implements OnnxModelExecutor {
    * const executor = new OnnxExecutor("full");
    * ```
    */
-  constructor(deploymentProfile: SintDeploymentProfile) {
+  constructor(deploymentProfile: SintHardwareDeploymentProfile) {
     this.deploymentProfile = deploymentProfile;
-    this.provider = PROVIDER_MAP[deploymentProfile];
+    this.provider = PROVIDER_MAP[deploymentProfile]!;
   }
 
   /**
@@ -90,7 +90,7 @@ export class OnnxExecutor implements OnnxModelExecutor {
    * console.log(executor.getDeploymentProfile()); // "edge"
    * ```
    */
-  getDeploymentProfile(): SintDeploymentProfile {
+  getDeploymentProfile(): SintHardwareDeploymentProfile {
     return this.deploymentProfile;
   }
 

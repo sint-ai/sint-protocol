@@ -241,7 +241,7 @@ export interface SintArbitrationDecision {
 // ---------------------------------------------------------------------------
 
 /** Deployment profiles for different hardware targets. */
-export type SintDeploymentProfile = "full" | "edge" | "split" | "lite";
+export type SintHardwareDeploymentProfile = "full" | "edge" | "split" | "lite";
 
 /**
  * Hardware profile detected by the HAL.
@@ -274,7 +274,7 @@ export interface SintHardwareProfile {
     readonly memoryMB?: number;
   } | null;
   /** Selected deployment profile based on hardware capabilities. */
-  readonly deploymentProfile: SintDeploymentProfile;
+  readonly deploymentProfile: SintHardwareDeploymentProfile;
 }
 
 // ---------------------------------------------------------------------------

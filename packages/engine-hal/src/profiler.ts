@@ -7,7 +7,7 @@
  * @module @sint/engine-hal/profiler
  */
 
-import type { SintDeploymentProfile } from "@sint/core";
+import type { SintHardwareDeploymentProfile } from "@sint/core";
 
 /**
  * Hardware specifications used for deployment profile selection.
@@ -48,7 +48,7 @@ export interface HardwareSpecs {
  * // profile === "full"
  * ```
  */
-export function selectDeploymentProfile(specs: HardwareSpecs): SintDeploymentProfile {
+export function selectDeploymentProfile(specs: HardwareSpecs): SintHardwareDeploymentProfile {
   // darwin (macOS) is always treated as a development machine
   if (specs.platform === "darwin") {
     return "edge";
@@ -96,6 +96,6 @@ export function selectDeploymentProfile(specs: HardwareSpecs): SintDeploymentPro
  * canRunOnnx("lite");  // false
  * ```
  */
-export function canRunOnnx(profile: SintDeploymentProfile): boolean {
+export function canRunOnnx(profile: SintHardwareDeploymentProfile): boolean {
   return profile === "full" || profile === "edge";
 }
