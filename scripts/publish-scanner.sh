@@ -18,8 +18,8 @@ if [[ "$1" == "--dry-run" ]]; then
 fi
 
 echo "Building @sint/mcp-scanner..."
-cd "$REPO_ROOT"
-pnpm --filter @sint/mcp-scanner build
+cd "$SCANNER_DIR"
+pnpm run build
 
 echo "Verifying CLI works..."
 node "$SCANNER_DIR/dist/cli.js" --server test --tools '[{"name":"readFile","description":"reads a file"}]' > /dev/null
