@@ -584,19 +584,6 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
-  packages/mcp-scanner:
-    dependencies:
-      '@sint/core':
-        specifier: workspace:*
-        version: link:../core
-      '@sint/gate-policy-gateway':
-        specifier: workspace:*
-        version: link:../policy-gateway
-    devDependencies:
-      typescript:
-        specifier: ^5.4.0
-        version: 5.9.3
-
   packages/persistence:
     dependencies:
       '@sint/core':
