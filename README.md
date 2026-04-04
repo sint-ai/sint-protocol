@@ -1,4 +1,8 @@
 # SINT Protocol
+[![CI](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/sint-ai/sint-protocol/blob/main/LICENSE)
+![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)
+![Tests](https://img.shields.io/badge/tests-370-brightgreen)
 
 ![Tests](https://img.shields.io/badge/tests-815%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
