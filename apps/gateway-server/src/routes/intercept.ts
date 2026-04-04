@@ -32,6 +32,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
         resource: parsed.data.resource,
         action: parsed.data.action,
         decision: decision.action,
+        executionContext: parsed.data.executionContext,
       },
     });
 
@@ -79,6 +80,7 @@ export function interceptRoutes(ctx: ServerContext): Hono {
           resource: parsed.data.resource,
           action: parsed.data.action,
           decision: decision.action,
+          executionContext: parsed.data.executionContext,
         },
       });
 

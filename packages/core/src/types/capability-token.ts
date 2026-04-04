@@ -21,6 +21,7 @@ import type {
   Newtons,
   UUIDv7,
 } from "./primitives.js";
+import type { ApprovalTier } from "./policy.js";
 
 /**
  * Physical safety constraints enforced by the Policy Gateway
@@ -91,6 +92,59 @@ export interface SintPhysicalConstraints {
 }
 
 /**
+ * Constraints that bind a capability token to specific model identities.
+ * Used to prevent silent model swaps in high-risk physical deployments.
+ */
+export interface SintModelConstraints {
+  /** Allowlist of model IDs (e.g. "gpt-5.4", "gemini-robotics"). */
+  readonly allowedModelIds?: readonly string[];
+  /** Optional semver ceiling for model version (inclusive). */
+  readonly maxModelVersion?: string;
+  /** Optional SHA-256 fingerprint of model/runtime bundle. */
+  readonly modelFingerprintHash?: string;
+}
+
+/** Attestation backends supported by SINT enforcement and evidence flows. */
+export type SintAttestationBackend =
+  | "intel-sgx"
+  | "arm-trustzone"
+  | "amd-sev"
+  | "tpm2"
+  | "none";
+
+/**
+ * Requirements for runtime attestation attached to token usage.
+ * Enforcement is optional and controlled by gateway policy.
+ */
+export interface SintAttestationRequirements {
+  /** Minimum attestation grade (0..3). */
+  readonly minAttestationGrade?: 0 | 1 | 2 | 3;
+  /** Allowlist of accepted TEE/attestation backends. */
+  readonly allowedTeeBackends?: readonly SintAttestationBackend[];
+  /** Tiers for which attestation is required. */
+  readonly requireForTiers?: readonly ApprovalTier[];
+}
+
+/**
+ * Optional pre-approved execution corridor for low-latency physical control loops.
+ * Requests inside the corridor can proceed without per-step reapproval.
+ */
+export interface SintExecutionEnvelope {
+  /** Logical corridor identifier for traceability. */
+  readonly corridorId?: string;
+  /** Corridor expiry in ISO8601 UTC format. */
+  readonly expiresAt?: ISO8601;
+  /** Maximum allowed lateral deviation from corridor centerline (meters). */
+  readonly maxDeviationMeters?: number;
+  /** Maximum allowed heading deviation from corridor heading (degrees). */
+  readonly maxHeadingDeviationDeg?: number;
+  /** Optional corridor-specific velocity cap (m/s). */
+  readonly maxVelocityMps?: MetersPerSecond;
+  /** Optional corridor-specific force cap (N). */
+  readonly maxForceNewtons?: Newtons;
+}
+
+/**
  * Delegation chain tracking — who authorized this token, all the way up.
  * Maximum delegation depth is enforced by policy (default: 3 hops).
  */
@@ -141,6 +195,12 @@ export interface SintCapabilityToken {
   readonly actions: readonly string[];
   /** Physical safety constraints — enforced, not advisory. */
   readonly constraints: SintPhysicalConstraints;
+  /** Optional model identity restrictions for runtime use of this token. */
+  readonly modelConstraints?: SintModelConstraints;
+  /** Optional attestation requirements for this token. */
+  readonly attestationRequirements?: SintAttestationRequirements;
+  /** Optional pre-approved execution envelope for low-latency control. */
+  readonly executionEnvelope?: SintExecutionEnvelope;
 
   // --- Delegation ---
   readonly delegationChain: SintDelegationChain;
@@ -162,6 +222,9 @@ export interface SintCapabilityTokenRequest {
   readonly resource: string;
   readonly actions: readonly string[];
   readonly constraints: SintPhysicalConstraints;
+  readonly modelConstraints?: SintModelConstraints;
+  readonly attestationRequirements?: SintAttestationRequirements;
+  readonly executionEnvelope?: SintExecutionEnvelope;
   readonly delegationChain: SintDelegationChain;
   readonly expiresAt: ISO8601;
   readonly revocable: boolean;

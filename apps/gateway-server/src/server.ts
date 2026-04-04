@@ -35,6 +35,7 @@ import { interceptRoutes } from "./routes/intercept.js";
 import { tokenRoutes } from "./routes/tokens.js";
 import { ledgerRoutes } from "./routes/ledger.js";
 import { approvalRoutes } from "./routes/approvals.js";
+import { discoveryRoutes } from "./routes/discovery.js";
 import { economyRoutes, type EconomyRouteContext } from "./routes/economy.js";
 import { a2aRoutes, type A2ARouteContext } from "./routes/a2a.js";
 import type { SintConfig } from "./config.js";
@@ -209,6 +210,7 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   app.route("", tokenRoutes(context));
   app.route("", ledgerRoutes(context));
   app.route("", approvalRoutes(context));
+  app.route("", discoveryRoutes());
   app.route("", metricsRoutes());
 
   // Economy routes (optional — only when economy context is configured)

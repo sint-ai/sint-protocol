@@ -278,6 +278,45 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/bridge-mqtt-sparkplug:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-opcua:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-open-rmf:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/bridge-ros2:
     dependencies:
       '@sint/core':
@@ -374,6 +413,15 @@ importers:
       '@sint/bridge-mcp':
         specifier: workspace:*
         version: link:../bridge-mcp
+      '@sint/bridge-mqtt-sparkplug':
+        specifier: workspace:*
+        version: link:../bridge-mqtt-sparkplug
+      '@sint/bridge-opcua':
+        specifier: workspace:*
+        version: link:../bridge-opcua
+      '@sint/bridge-open-rmf':
+        specifier: workspace:*
+        version: link:../bridge-open-rmf
       '@sint/bridge-ros2':
         specifier: workspace:*
         version: link:../bridge-ros2

@@ -46,6 +46,55 @@ export enum RiskTier {
   T3_IRREVERSIBLE = "T3_irreversible",
 }
 
+/** Well-known deployment profiles for industrial SINT rollouts. */
+export type SintSiteDeploymentProfile =
+  | "warehouse-amr"
+  | "industrial-cell"
+  | "edge-gateway"
+  | string;
+
+/** Runtime identity metadata for the executor handling the request. */
+export interface SintExecutorIdentity {
+  readonly runtimeId?: string;
+  readonly nodeId?: string;
+  readonly did?: string;
+  readonly host?: string;
+}
+
+/** Model runtime metadata attached to a request. */
+export interface SintModelRuntimeContext {
+  readonly modelId?: string;
+  readonly modelVersion?: string;
+  readonly modelFingerprintHash?: string;
+}
+
+/** Attestation metadata attached to a request. */
+export interface SintAttestationContext {
+  readonly grade?: 0 | 1 | 2 | 3;
+  readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
+  readonly quoteRef?: string;
+}
+
+/** Pre-approved execution corridor metadata attached to a request. */
+export interface SintPreapprovedCorridor {
+  readonly corridorId: string;
+  readonly expiresAt: ISO8601;
+  readonly maxDeviationMeters?: number;
+  readonly maxHeadingDeviationDeg?: number;
+}
+
+/** Execution context metadata for cross-bridge/audit interoperability. */
+export interface SintExecutionContext {
+  readonly deploymentProfile?: SintSiteDeploymentProfile;
+  readonly siteId?: string;
+  readonly bridgeId?: string;
+  readonly bridgeProtocol?: string;
+  readonly executor?: SintExecutorIdentity;
+  readonly model?: SintModelRuntimeContext;
+  readonly attestation?: SintAttestationContext;
+  readonly preapprovedCorridor?: SintPreapprovedCorridor;
+}
+
 /**
  * A request entering the Policy Gateway for evaluation.
  */
@@ -78,6 +127,9 @@ export interface SintRequest {
 
   /** Sequence of recent actions by this agent (for combo detection). */
   readonly recentActions?: readonly string[];
+
+  /** Optional execution/deployment metadata for policy and audit correlation. */
+  readonly executionContext?: SintExecutionContext;
 }
 
 /**

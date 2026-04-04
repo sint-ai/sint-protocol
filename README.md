@@ -82,9 +82,13 @@ where each Δ ∈ {0, +1}: human presence detected, trust score below threshold,
 ┌──────────────────▼───────────────────────────────────────────┐
 │  SINT Bridge Layer (L1)                                      │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌──────────┐  │
-│  │ bridge-mcp │ │ bridge-ros2│ │ bridge-a2a │ │ (future) │  │
-│  │ MCP tools  │ │ ROS topics │ │ Google A2A │ │ OPC-UA   │  │
+│  │ bridge-mcp │ │ bridge-ros2│ │ bridge-a2a │ │ bridge-  │  │
+│  │ MCP tools  │ │ ROS topics │ │ Google A2A │ │ open-rmf │  │
 │  └────────────┘ └────────────┘ └────────────┘ └──────────┘  │
+│  ┌──────────────────────┐ ┌───────────────────────────────┐  │
+│  │ bridge-mqtt-sparkplug│ │ bridge-opcua                  │  │
+│  │ Industrial IoT       │ │ PLC / OT control plane bridge │  │
+│  └──────────────────────┘ └───────────────────────────────┘  │
 │  Per-resource state: UNREGISTERED→PENDING_AUTH→AUTHORIZED    │
 │  →ACTIVE→SUSPENDED (real-time revocation without restart)    │
 └──────────────────┬───────────────────────────────────────────┘
@@ -120,14 +124,17 @@ where each Δ ∈ {0, +1}: human presence detected, trust score below threshold,
 | [`@sint/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 43 |
 | [`@sint/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 20 |
 | [`@sint/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 24 |
+| [`@sint/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
+| [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
+| [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
 | [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 55 |
 | [`@sint/persistence`](packages/persistence) | Storage interfaces + in-memory/PG/Redis implementations | 26 |
 | [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | 12 |
-| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | 57 |
+| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | 77 |
 | [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | 57 |
 | [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | 90 |
 | [`@sint/dashboard`](apps/dashboard) | Real-time approval dashboard with operator auth | 29 |
-| **Total** | **14 packages** | **815+** |
+| **Total** | **17 packages** | **Workspace-wide conformance suite** |
 
 ## Quick Start
 
@@ -135,7 +142,7 @@ where each Δ ∈ {0, +1}: human presence detected, trust score below threshold,
 # Prerequisites: Node.js >= 22, pnpm >= 9
 pnpm install
 pnpm run build
-pnpm run test        # 815+ tests
+pnpm run test        # full workspace regression suite
 ```
 
 ### Start the Gateway Server
@@ -144,6 +151,28 @@ pnpm run test        # 815+ tests
 pnpm --filter @sint/gateway-server dev
 # → http://localhost:3100/v1/health
 ```
+
+### Standardization and Deployment Artifacts
+
+- v0.2 protocol surface spec: [`docs/SINT_v0.2_SPEC.md`](docs/SINT_v0.2_SPEC.md)
+- SIP governance track: [`docs/SIPS.md`](docs/SIPS.md)
+- Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
+- Conformance/certification matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
+- Deployment profile templates:
+  - [`docs/profiles/warehouse-amr.policy.template.json`](docs/profiles/warehouse-amr.policy.template.json)
+  - [`docs/profiles/industrial-cell.policy.template.json`](docs/profiles/industrial-cell.policy.template.json)
+  - [`docs/profiles/edge-gateway.policy.template.json`](docs/profiles/edge-gateway.policy.template.json)
+- Runnable demos:
+  - [`examples/hello-world/README.md`](examples/hello-world/README.md)
+  - [`examples/warehouse-amr/README.md`](examples/warehouse-amr/README.md)
+  - [`examples/industrial-cell/README.md`](examples/industrial-cell/README.md)
+- Multi-language SDK starters:
+  - [`sdks/python/sint_client.py`](sdks/python/sint_client.py)
+  - [`sdks/go/sintclient/client.go`](sdks/go/sintclient/client.go)
+- Benchmark report automation:
+  - Script: [`scripts/generate-industrial-benchmark-report.mjs`](scripts/generate-industrial-benchmark-report.mjs)
+  - CI workflow: [`.github/workflows/industrial-benchmark-report.yml`](.github/workflows/industrial-benchmark-report.yml)
+  - Generated artifacts: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
 
 ## Approval Tiers
 
@@ -242,7 +271,11 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| `GET` | `/.well-known/sint.json` | Public protocol discovery (version, bridges, profiles, schemas) |
 | `GET` | `/v1/health` | Health check |
+| `GET` | `/v1/schemas` | List machine-readable public schemas |
+| `GET` | `/v1/schemas/:name` | Fetch schema by name |
+| `GET` | `/v1/openapi.json` | OpenAPI surface for gateway integration |
 | `POST` | `/v1/intercept` | Evaluate a single request |
 | `POST` | `/v1/intercept/batch` | Evaluate multiple requests (207 Multi-Status) |
 | `POST` | `/v1/tokens` | Issue a capability token |
@@ -254,7 +287,7 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 | `GET` | `/v1/approvals/events` | SSE stream for real-time approval events |
 | `POST` | `/v1/a2a` | JSON-RPC 2.0 A2A protocol endpoint |
 | `GET/POST` | `/v1/a2a/agents` | Agent Card registration |
-| `GET` | `/metrics` | Prometheus metrics |
+| `GET` | `/v1/metrics` | Prometheus metrics |
 
 ## Development Phases
 
@@ -264,7 +297,7 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 | **Phase 2** (complete) | Engine Core — bridge-mcp, bridge-ros2, engine packages, persistence, gateway-server | +221 (646) |
 | **Phase 3** (complete) | Economy Bridge — @sint/bridge-economy with port/adapter pattern, EconomyPlugin | +91 (737) |
 | **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 (815) |
-| **Phase 5** (planned) | Avatar Layer — trust interface, dynamic consent, CSML-driven tier escalation | — |
+| **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles, token execution metadata | shipped |
 
 ## Tech Stack
 

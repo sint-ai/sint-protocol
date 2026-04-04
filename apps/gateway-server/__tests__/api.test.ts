@@ -60,6 +60,32 @@ describe("Gateway Server API", () => {
     expect(body.protocol).toBe("SINT Gate");
   });
 
+  it("GET /.well-known/sint.json returns discovery metadata", async () => {
+    const res = await app.request("/.well-known/sint.json");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.name).toBe("SINT Protocol");
+    expect(body.version).toBeDefined();
+    expect(Array.isArray(body.supportedBridges)).toBe(true);
+    expect(Array.isArray(body.deploymentProfiles)).toBe(true);
+  });
+
+  it("GET /v1/schemas returns schema catalog", async () => {
+    const res = await app.request("/v1/schemas");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.total).toBeGreaterThan(0);
+    expect(Array.isArray(body.schemas)).toBe(true);
+  });
+
+  it("GET /v1/openapi.json returns OpenAPI document", async () => {
+    const res = await app.request("/v1/openapi.json");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.openapi).toBe("3.1.0");
+    expect(body.paths["/.well-known/sint.json"]).toBeDefined();
+  });
+
   // ── Intercept ──
 
   it("POST /v1/intercept with valid request", async () => {

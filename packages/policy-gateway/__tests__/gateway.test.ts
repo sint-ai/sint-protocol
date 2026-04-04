@@ -234,6 +234,33 @@ describe("PolicyGateway", () => {
     expect(decision.action).toBe("deny");
   });
 
+  it("denies request when preapproved corridor does not match token execution envelope", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "corridor-a",
+        expiresAt: futureISO(1),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "corridor-b",
+            expiresAt: futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+  });
+
   // ── Forbidden combo → escalate ──
 
   it("escalates on forbidden tool combination", async () => {

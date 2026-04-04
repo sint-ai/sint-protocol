@@ -50,6 +50,31 @@ export const physicalConstraintsSchema = z.object({
   }).optional(),
 }).strict();
 
+export const modelConstraintsSchema = z.object({
+  allowedModelIds: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
+  maxModelVersion: z.string().min(1).max(64).optional(),
+  modelFingerprintHash: sha256Schema.optional(),
+}).strict();
+
+export const attestationRequirementsSchema = z.object({
+  minAttestationGrade: z.number().int().min(0).max(3).optional(),
+  allowedTeeBackends: z.array(
+    z.enum(["intel-sgx", "arm-trustzone", "amd-sev", "tpm2", "none"]),
+  ).min(1).max(8).optional(),
+  requireForTiers: z.array(
+    z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]),
+  ).min(1).max(4).optional(),
+}).strict();
+
+export const executionEnvelopeSchema = z.object({
+  corridorId: z.string().min(1).max(128).optional(),
+  expiresAt: iso8601Schema.optional(),
+  maxDeviationMeters: z.number().min(0).optional(),
+  maxHeadingDeviationDeg: z.number().min(0).max(180).optional(),
+  maxVelocityMps: z.number().positive().optional(),
+  maxForceNewtons: z.number().positive().optional(),
+}).strict();
+
 export const delegationChainSchema = z.object({
   parentTokenId: uuidV7Schema.nullable(),
   depth: z.number().int().min(0).max(10),
@@ -64,6 +89,9 @@ export const capabilityTokenSchema = z.object({
   resource: z.string().min(1).max(512),
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
+  modelConstraints: modelConstraintsSchema.optional(),
+  attestationRequirements: attestationRequirementsSchema.optional(),
+  executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   issuedAt: iso8601Schema,
   expiresAt: iso8601Schema,
@@ -79,6 +107,9 @@ export const capabilityTokenRequestSchema = z.object({
   resource: z.string().min(1).max(512),
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
+  modelConstraints: modelConstraintsSchema.optional(),
+  attestationRequirements: attestationRequirementsSchema.optional(),
+  executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   expiresAt: iso8601Schema,
   revocable: z.boolean(),

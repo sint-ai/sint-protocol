@@ -112,6 +112,7 @@ export function approvalRoutes(ctx: ServerContext): Hono {
       agentId: request.request.agentId,
       params: request.request.params,
       physicalContext: request.request.physicalContext,
+      executionContext: request.request.executionContext,
       fallbackAction: request.fallbackAction,
       timeoutMs: request.timeoutMs,
       createdAt: request.createdAt,

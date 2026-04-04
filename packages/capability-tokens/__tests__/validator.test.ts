@@ -14,7 +14,9 @@ function futureISO(hoursFromNow: number): string {
   return d.toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
 }
 
-function createValidToken(): SintCapabilityToken {
+function createValidToken(
+  overrides?: Partial<SintCapabilityTokenRequest>,
+): SintCapabilityToken {
   const issuer = generateKeypair();
   const subject = generateKeypair();
   const request: SintCapabilityTokenRequest = {
@@ -37,6 +39,7 @@ function createValidToken(): SintCapabilityToken {
     delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
     expiresAt: futureISO(12),
     revocable: true,
+    ...overrides,
   };
   const result = issueCapabilityToken(request, issuer.privateKey);
   if (!result.ok) throw new Error("Failed to create test token");
@@ -110,6 +113,34 @@ describe("Capability Token Validator", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error).toBe("INSUFFICIENT_PERMISSIONS");
+  });
+
+  it("should enforce model ID allowlist when configured", () => {
+    const token = createValidToken({
+      modelConstraints: { allowedModelIds: ["gpt-5.4"] },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: { modelId: "gpt-4.1" },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("should enforce attestation minimum grade when configured", () => {
+    const token = createValidToken({
+      attestationRequirements: { minAttestationGrade: 2 },
+    });
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      modelContext: { attestationGrade: 1 },
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("CONSTRAINT_VIOLATION");
   });
 });
 

@@ -10,7 +10,9 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
-    "demo": "pnpm --filter @sint/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose"
+    "demo": "pnpm --filter @sint/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
+    "benchmark:industrial": "pnpm --filter @sint/conformance-tests exec vitest run src/industrial-interoperability.test.ts src/industrial-benchmark-scenarios.test.ts --reporter=verbose",
+    "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
