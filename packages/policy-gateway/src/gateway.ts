@@ -28,6 +28,8 @@ import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.j
 import { checkForbiddenCombos } from "./forbidden-combos.js";
 import type { CircuitBreakerPlugin, CircuitState } from "./circuit-breaker.js";
 import type { AgentTrustLevel } from "@sint/core";
+import type { GoalHijackPlugin } from "./goal-hijack.js";
+import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 
 /** Token resolver — looks up a capability token by ID (sync or async). */
 export type TokenResolver = (tokenId: string) => SintCapabilityToken | undefined | Promise<SintCapabilityToken | undefined>;
@@ -104,6 +106,49 @@ export interface CsmlEscalationPlugin {
   }>;
 }
 
+/**
+ * Edge-mode control-plane hooks for split deployments.
+ *
+ * T0/T1 can be handled locally. T2/T3 escalations must verify central
+ * authority availability before continuing.
+ */
+export interface EdgeControlPlanePlugin {
+  /**
+   * Gate T2/T3 escalations in edge deployments.
+   * Return `allowed: false` to fail-closed while central authority is unavailable.
+   */
+  checkCentralEscalation(
+    request: SintRequest,
+    decision: PolicyDecision,
+  ): Promise<{ readonly allowed: boolean; readonly reason?: string }> | { readonly allowed: boolean; readonly reason?: string };
+
+  /**
+   * Best-effort revocation relay hook used by edge gateways to fan out or
+   * reconcile revocations across disconnected peers.
+   */
+  relayRevocation?(
+    event: {
+      readonly requestId: string;
+      readonly agentId: string;
+      readonly tokenId: string;
+      readonly reason?: string;
+      readonly revokedBy?: string;
+    },
+  ): Promise<void> | void;
+
+  /**
+   * Best-effort evidence replication hook for edge-to-central ledger sync.
+   */
+  replicateEvidenceEvent?(
+    event: {
+      readonly eventType: string;
+      readonly agentId: string;
+      readonly tokenId?: string;
+      readonly payload: Record<string, unknown>;
+    },
+  ): Promise<void> | void;
+}
+
 export interface PolicyGatewayConfig {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
@@ -139,6 +184,23 @@ export interface PolicyGatewayConfig {
    * static constraints. Fail-open: plugin errors fall back to token limits.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
+  /**
+   * Optional goal hijack detector (ASI01).
+   * Scans request params for prompt injection, role override, escalation
+   * attempts, exfil probes, and cross-agent injection. Fail-open on errors.
+   */
+  readonly goalHijackDetector?: GoalHijackPlugin;
+  /**
+   * Optional memory integrity checker (ASI06).
+   * Checks recentActions history for repetition, privilege claims, and
+   * history overflow anomalies. High severity → deny; others → warn.
+   * Fail-open on errors.
+   */
+  readonly memoryIntegrity?: MemoryIntegrityPlugin;
+  /**
+   * Optional edge-mode control-plane hooks.
+   */
+  readonly edgeControlPlane?: EdgeControlPlanePlugin;
 }
 
 /**
@@ -187,6 +249,53 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, "MALFORMED_REQUEST", "Request failed schema validation");
     }
 
+    // 1a. ASI01 Goal Hijack detection — scan params for prompt injection / semantic override
+    if (this.config.goalHijackDetector) {
+      try {
+        const hijackResult = this.config.goalHijackDetector.analyze(
+          request.params,
+          request.resource,
+          request.action,
+        );
+        if (hijackResult.hijackDetected && hijackResult.confidence >= 0.6) {
+          this.emitEvent("agent.goal.hijack_detected", request.agentId, request.tokenId, {
+            confidence: hijackResult.confidence,
+            patterns: hijackResult.patterns,
+            reason: hijackResult.reason,
+          });
+          return this.deny(requestId, timestamp, "GOAL_HIJACK",
+            hijackResult.reason ?? "Goal hijack attempt detected in request params");
+        }
+      } catch {
+        // Goal hijack detector error → fail-open, continue
+      }
+    }
+
+    // 1b-pre. ASI06 Memory Integrity check — detect poisoned history
+    if (this.config.memoryIntegrity) {
+      try {
+        const memResult = this.config.memoryIntegrity.check(request);
+        if (memResult.poisoned) {
+          if (memResult.severity === "high") {
+            this.emitEvent("agent.memory.integrity_violation", request.agentId, request.tokenId, {
+              anomalies: memResult.anomalies,
+              severity: memResult.severity,
+            });
+            return this.deny(requestId, timestamp, "MEMORY_POISONING",
+              `Memory integrity violation (high severity): ${memResult.anomalies.join("; ")}`);
+          } else {
+            // Medium / low: warn but allow
+            this.emitEvent("agent.memory.integrity_warning", request.agentId, request.tokenId, {
+              anomalies: memResult.anomalies,
+              severity: memResult.severity,
+            });
+          }
+        }
+      } catch {
+        // Memory integrity error → fail-open, continue
+      }
+    }
+
     // 1b. Circuit breaker check (ASI10 / EU AI Act Art. 14(4)(e) stop button)
     // Checked after schema validation (so we have agentId) but before any other work.
     // OPEN → instant deny. HALF_OPEN → allow probe through, record result.
@@ -217,6 +326,18 @@ export class PolicyGateway {
     if (this.config.revocationStore) {
       const revocationResult = this.config.revocationStore.checkRevocation(token.tokenId);
       if (!revocationResult.ok) {
+        const revocationRecord = this.config.revocationStore.getRevocationRecord(token.tokenId);
+        if (this.config.edgeControlPlane?.relayRevocation) {
+          this.runBestEffort(
+            this.config.edgeControlPlane.relayRevocation({
+              requestId,
+              agentId: request.agentId,
+              tokenId: token.tokenId,
+              reason: revocationRecord?.reason,
+              revokedBy: revocationRecord?.revokedBy,
+            }),
+          );
+        }
         return this.deny(requestId, timestamp, "TOKEN_REVOKED", "Capability token has been revoked");
       }
     }
@@ -464,11 +585,36 @@ export class PolicyGateway {
     }
 
     // 8. Determine action based on tier
-    const decision = this.decideBytier(
+    let decision = this.decideBytier(
       requestId,
       timestamp,
       tierAssignment,
     );
+
+    // 8a. Attach token-defined approval quorum to escalations.
+    decision = this.attachApprovalQuorum(decision, token);
+
+    // 8aa. Edge mode: T2/T3 escalations fail-closed when central approval is unavailable.
+    if (decision.action === "escalate" && this.config.edgeControlPlane) {
+      try {
+        const gate = await this.config.edgeControlPlane.checkCentralEscalation(request, decision);
+        if (!gate.allowed) {
+          return this.deny(
+            requestId,
+            timestamp,
+            "EDGE_CENTRAL_UNAVAILABLE",
+            gate.reason ?? "Edge mode requires central approval plane for T2/T3 escalation",
+          );
+        }
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "EDGE_CENTRAL_UNAVAILABLE",
+          "Edge mode central-approval check failed; fail-closed for T2/T3 actions",
+        );
+      }
+    }
 
     // 8b. Record circuit breaker outcome — must happen BEFORE returning
     if (this.config.circuitBreaker) {
@@ -617,12 +763,41 @@ export class PolicyGateway {
     };
   }
 
+  private attachApprovalQuorum(
+    decision: PolicyDecision,
+    token: SintCapabilityToken,
+  ): PolicyDecision {
+    const quorum = token.constraints.quorum;
+    if (!quorum || decision.action !== "escalate" || !decision.escalation) {
+      return decision;
+    }
+    return {
+      ...decision,
+      escalation: {
+        ...decision.escalation,
+        approvalQuorum: {
+          required: quorum.required,
+          authorized: [...quorum.authorized],
+        },
+      },
+    };
+  }
+
   private emitEvent(
     eventType: string,
     agentId: string,
     tokenId: string | undefined,
     payload: Record<string, unknown>,
   ): void {
-    this.config.emitLedgerEvent?.({ eventType, agentId, tokenId, payload });
+    const event = { eventType, agentId, tokenId, payload };
+    this.config.emitLedgerEvent?.(event);
+    if (this.config.edgeControlPlane?.replicateEvidenceEvent) {
+      this.runBestEffort(this.config.edgeControlPlane.replicateEvidenceEvent(event));
+    }
+  }
+
+  private runBestEffort(promiseOrVoid: Promise<void> | void): void {
+    if (!promiseOrVoid) return;
+    void Promise.resolve(promiseOrVoid).catch(() => {});
   }
 }

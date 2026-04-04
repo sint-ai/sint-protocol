@@ -13,25 +13,25 @@ import { OwaspAsi, type OwaspCoverageEntry } from "../types/compliance.js";
  * SINT Protocol OWASP Agentic Top 10 coverage.
  *
  * Coverage summary:
- *   Full    (7/10): ASI02, ASI03, ASI04, ASI07, ASI08, ASI09, ASI10
- *   Partial (2/10): ASI01, ASI05
- *   None    (1/10): ASI06
+ *   Full    (8/10): ASI01, ASI02, ASI03, ASI04, ASI07, ASI08, ASI09, ASI10
+ *   Partial (2/10): ASI05, ASI06
+ *   None    (0/10)
  */
 export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
   {
     category: OwaspAsi.ASI01_GOAL_HIJACK,
-    level: "partial",
+    level: "full",
     implementedBy: [
       "@sint/gate-policy-gateway (forbidden-combos)",
       "@sint/avatar (CSML drift detection)",
+      "@sint/gate-policy-gateway (GoalHijackPlugin)",
     ],
     description:
       "Forbidden action-sequence detection catches known goal-hijack patterns " +
       "(e.g., read + exfiltrate combo). CSML drift score detects anomalous " +
-      "action-frequency shifts that may indicate injected objectives.",
-    gaps:
-      "No semantic analysis of request parameters for prompt injection strings. " +
-      "A GoalHijackPlugin interface is planned.",
+      "action-frequency shifts that may indicate injected objectives. " +
+      "GoalHijackPlugin provides 5-layer heuristic detection of prompt injection, " +
+      "role override, semantic escalation, exfiltration probes, and cross-agent injection.",
   },
   {
     category: OwaspAsi.ASI02_TOOL_MISUSE,
@@ -90,12 +90,20 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
   },
   {
     category: OwaspAsi.ASI06_MEMORY_POISONING,
-    level: "none",
-    implementedBy: [],
-    description: "Not currently addressed.",
+    level: "partial",
+    implementedBy: [
+      "@sint/gate-policy-gateway (DefaultMemoryIntegrityChecker)",
+    ],
+    description:
+      "DefaultMemoryIntegrityChecker detects history anomalies: suspicious " +
+      "repetition (replay attack), unauthorized privilege claims in recentActions, " +
+      "history length overflow, and UUIDv7 timestamp monotonicity violations. " +
+      "High-severity anomalies (privilege claims, timestamp rollback) → deny. " +
+      "Medium/low → warn-and-allow with audit event.",
     gaps:
-      "SINT enforces at the action boundary, not the context/memory layer. " +
-      "A MemoryIntegrityPlugin interface is on the roadmap.",
+      "Memory store not yet persisted — checker state is per-gateway-instance only. " +
+      "No semantic analysis of memory embedding space for vector poisoning. " +
+      "Cross-session memory continuity not yet verified.",
   },
   {
     category: OwaspAsi.ASI07_INTER_AGENT,

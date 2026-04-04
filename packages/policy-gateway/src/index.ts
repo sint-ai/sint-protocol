@@ -6,7 +6,15 @@ export type {
   EconomyPluginHooks,
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
+  EdgeControlPlanePlugin,
 } from "./gateway.js";
+export { DefaultGoalHijackDetector } from "./goal-hijack.js";
+export type { GoalHijackPlugin, GoalHijackResult } from "./goal-hijack.js";
+export { DefaultMemoryIntegrityChecker } from "./memory-integrity.js";
+export type {
+  MemoryIntegrityPlugin,
+  MemoryIntegrityResult,
+} from "./memory-integrity.js";
 export { InMemoryCircuitBreaker } from "./circuit-breaker.js";
 export type { CircuitBreakerPlugin, CircuitBreakerConfig, CircuitState } from "./circuit-breaker.js";
 export { assignTier } from "./tier-assigner.js";
