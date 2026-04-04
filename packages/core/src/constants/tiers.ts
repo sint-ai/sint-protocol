@@ -294,4 +294,119 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     baseTier: ApprovalTier.T3_COMMIT,
     baseRisk: RiskTier.T3_IRREVERSIBLE,
   },
+
+  // ── MAVLink (bridge-mavlink) — UAV/drone commands ─────────────────────────
+  //
+  // Resource format: mavlink://<system_id>/<command_path>
+  // Safety rationale: propulsion commands directly affect physical safety of
+  // drone in flight. The critical invariant: ARM must NEVER be T0/T1 auto-allow.
+
+  // ARM / DISARM — COMMIT (arming/disarming propulsion is irreversible mid-flight)
+  {
+    resourcePattern: "mavlink://*/cmd/arm",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
+  // Mission start — COMMIT (begins autonomous BVLOS operation)
+  {
+    resourcePattern: "mavlink://*/cmd/mission",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
+  // Mode changes (OFFBOARD, MANUAL, AUTO) — COMMIT (irreversible behavior change)
+  {
+    resourcePattern: "mavlink://*/cmd/mode",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
+  // Geofence disable — COMMIT (removes safety boundary)
+  {
+    resourcePattern: "mavlink://*/cmd/fence",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
+  // Navigation (takeoff, land, waypoint, RTL, loiter) — ACT (physical movement)
+  {
+    resourcePattern: "mavlink://*/cmd/takeoff",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "mavlink://*/cmd/land",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "mavlink://*/cmd/nav",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "mavlink://*/cmd/rtl",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+
+  // Velocity / attitude control — ACT (continuous physical control)
+  {
+    resourcePattern: "mavlink://*/cmd_vel",
+    actions: ["publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "mavlink://*/cmd_att",
+    actions: ["publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+
+  // Speed change — ACT
+  {
+    resourcePattern: "mavlink://*/cmd/speed",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+
+  // Gimbal control — ACT (physical actuator)
+  {
+    resourcePattern: "mavlink://*/cmd/gimbal",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+
+  // Camera/imaging — OBSERVE (no physical side effects)
+  {
+    resourcePattern: "mavlink://*/cmd/camera",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+
+  // Unknown MAVLink commands — ACT (conservative fallback; never auto-allow)
+  {
+    resourcePattern: "mavlink://*",
+    actions: ["call", "publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
 ] as const;
