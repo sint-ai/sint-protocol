@@ -63,7 +63,83 @@ const REQUEST_SCHEMA: JsonSchemaDoc = {
     params: { type: "object" },
     physicalContext: { type: "object" },
     recentActions: { type: "array", items: { type: "string" } },
-    executionContext: { type: "object" },
+    executionContext: {
+      type: "object",
+      properties: {
+        deploymentProfile: { type: "string" },
+        siteId: { type: "string" },
+        bridgeId: { type: "string" },
+        bridgeProtocol: { type: "string" },
+        executor: {
+          type: "object",
+          properties: {
+            runtimeId: { type: "string" },
+            nodeId: { type: "string" },
+            did: { type: "string" },
+            host: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+        model: {
+          type: "object",
+          properties: {
+            modelId: { type: "string" },
+            modelVersion: { type: "string" },
+            modelFingerprintHash: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+        attestation: {
+          type: "object",
+          properties: {
+            grade: { type: "integer", minimum: 0, maximum: 3 },
+            teeBackend: {
+              type: "string",
+              enum: ["intel-sgx", "arm-trustzone", "amd-sev", "tpm2", "none"],
+            },
+            quoteRef: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+        verifiableCompute: {
+          type: "object",
+          properties: {
+            proofType: {
+              type: "string",
+              enum: ["risc0-groth16", "sp1-groth16", "snark", "stark", "tee-attested"],
+            },
+            proofRef: { type: "string" },
+            proofHash: { type: "string" },
+            publicInputsHash: { type: "string" },
+            generatedAt: { type: "string", format: "date-time" },
+            verifierRef: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+        hardwareSafety: {
+          type: "object",
+          properties: {
+            permitState: { type: "string", enum: ["granted", "denied", "unknown", "stale"] },
+            interlockState: { type: "string", enum: ["closed", "open", "fault", "unknown"] },
+            estopState: { type: "string", enum: ["clear", "triggered", "unknown"] },
+            observedAt: { type: "string", format: "date-time" },
+            controllerId: { type: "string" },
+          },
+          additionalProperties: false,
+        },
+        preapprovedCorridor: {
+          type: "object",
+          properties: {
+            corridorId: { type: "string" },
+            expiresAt: { type: "string", format: "date-time" },
+            maxDeviationMeters: { type: "number", minimum: 0 },
+            maxHeadingDeviationDeg: { type: "number", minimum: 0, maximum: 180 },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
 };

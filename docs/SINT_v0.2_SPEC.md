@@ -103,6 +103,13 @@ optional `executionContext.hardwareSafety` metadata with fail-closed behavior:
   hardware permit is not granted.
 - Interlock states other than `closed` SHOULD be treated as fail-closed.
 - Safety controller state SHOULD be fresh (non-stale) at decision time.
+- Gateways SHOULD emit safety evidence events for estop/permit/interlock
+  failures to preserve incident replay fidelity.
+- Recommended event taxonomy:
+  - `safety.estop.triggered`
+  - `safety.hardware.permit.denied`
+  - `safety.hardware.interlock.open`
+  - `safety.hardware.state.stale`
 
 ## Compatibility Rules
 

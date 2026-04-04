@@ -579,6 +579,8 @@ export class PolicyGateway {
       tierAssignment.approvalTier,
       requestId,
       timestamp,
+      request.agentId,
+      request.tokenId,
     );
     if (hardwareSafetyDecision) {
       return hardwareSafetyDecision;
@@ -967,11 +969,19 @@ export class PolicyGateway {
     assignedTier: ApprovalTier,
     requestId: string,
     timestamp: string,
+    agentId: string,
+    tokenId: string,
   ): PolicyDecision | undefined {
     const safety = request.executionContext?.hardwareSafety;
 
     // E-stop preempts everything, including low-tier actions.
     if (safety?.estopState === "triggered") {
+      this.emitEvent("safety.estop.triggered", agentId, tokenId, {
+        source: "hardware_safety_context",
+        controllerId: safety.controllerId,
+        observedAt: safety.observedAt,
+        deploymentProfile: request.executionContext?.deploymentProfile,
+      });
       return this.deny(
         requestId,
         timestamp,
@@ -997,6 +1007,12 @@ export class PolicyGateway {
     }
 
     if (!safety) {
+      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+        anomalyType: "hardware_safety_context_missing",
+        severity: "high",
+        assignedTier,
+        deploymentProfile,
+      });
       return this.deny(
         requestId,
         timestamp,
@@ -1008,6 +1024,12 @@ export class PolicyGateway {
     if (safety.observedAt) {
       const observedAtMs = new Date(safety.observedAt).getTime();
       if (!Number.isFinite(observedAtMs) || Date.now() - observedAtMs > MAX_HARDWARE_SAFETY_STALENESS_MS) {
+        this.emitEvent("safety.hardware.state.stale", agentId, tokenId, {
+          anomalyType: "hardware_state_stale",
+          severity: "high",
+          observedAt: safety.observedAt,
+          maxStalenessMs: MAX_HARDWARE_SAFETY_STALENESS_MS,
+        });
         return this.deny(
           requestId,
           timestamp,
@@ -1018,6 +1040,12 @@ export class PolicyGateway {
     }
 
     if (requiresIndustrialHandshake && safety.permitState !== "granted") {
+      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+        anomalyType: "hardware_permit_not_granted",
+        severity: "high",
+        permitState: safety.permitState ?? "missing",
+        interlockState: safety.interlockState,
+      });
       return this.deny(
         requestId,
         timestamp,
@@ -1027,6 +1055,11 @@ export class PolicyGateway {
     }
 
     if (safety.permitState && safety.permitState !== "granted") {
+      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+        anomalyType: "hardware_permit_not_granted",
+        severity: "high",
+        permitState: safety.permitState,
+      });
       return this.deny(
         requestId,
         timestamp,
@@ -1036,6 +1069,11 @@ export class PolicyGateway {
     }
 
     if (safety.interlockState && safety.interlockState !== "closed") {
+      this.emitEvent("safety.hardware.interlock.open", agentId, tokenId, {
+        anomalyType: "hardware_interlock_not_closed",
+        severity: "high",
+        interlockState: safety.interlockState,
+      });
       return this.deny(
         requestId,
         timestamp,

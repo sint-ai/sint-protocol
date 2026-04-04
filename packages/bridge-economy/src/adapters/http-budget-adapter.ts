@@ -17,7 +17,7 @@ import { HttpClient, type HttpClientConfig } from "./http-client.js";
  * @example
  * ```ts
  * const adapter = new HttpBudgetAdapter({
- *   baseUrl: "https://api.sint.ai",
+ *   baseUrl: "https://api.sint.gg",
  *   authToken: keycloakToken,
  * });
  * const result = await adapter.checkBudget({ userId: "u1", estimatedCost: 9, ... });

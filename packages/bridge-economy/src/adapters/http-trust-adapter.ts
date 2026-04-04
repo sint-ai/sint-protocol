@@ -17,7 +17,7 @@ import { HttpClient, type HttpClientConfig } from "./http-client.js";
  * @example
  * ```ts
  * const adapter = new HttpTrustAdapter({
- *   baseUrl: "https://api.sint.ai",
+ *   baseUrl: "https://api.sint.gg",
  *   authToken: keycloakToken,
  * });
  * const result = await adapter.evaluateTrust({ userId: "u1", agentId: "a1", ... });

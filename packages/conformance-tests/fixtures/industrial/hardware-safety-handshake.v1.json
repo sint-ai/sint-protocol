@@ -21,7 +21,8 @@
       },
       "expected": {
         "decisionAction": "deny",
-        "policyViolated": "HARDWARE_PERMIT_REQUIRED"
+        "policyViolated": "HARDWARE_PERMIT_REQUIRED",
+        "expectedEvidenceEvent": "safety.hardware.permit.denied"
       }
     },
     {
@@ -43,7 +44,8 @@
       },
       "expected": {
         "decisionAction": "deny",
-        "policyViolated": "HARDWARE_PERMIT_REQUIRED"
+        "policyViolated": "HARDWARE_PERMIT_REQUIRED",
+        "expectedEvidenceEvent": "safety.hardware.permit.denied"
       }
     },
     {
@@ -63,7 +65,8 @@
       },
       "expected": {
         "decisionAction": "deny",
-        "policyViolated": "HARDWARE_ESTOP_ACTIVE"
+        "policyViolated": "HARDWARE_ESTOP_ACTIVE",
+        "expectedEvidenceEvent": "safety.estop.triggered"
       }
     },
     {

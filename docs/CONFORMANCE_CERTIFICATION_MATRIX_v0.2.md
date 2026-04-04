@@ -10,7 +10,7 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
 | MQTT Sparkplug command path | `@sint/bridge-mqtt-sparkplug` + gateway | `packages/conformance-tests/fixtures/industrial/warehouse-move-equivalence.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts` | Equivalent approval behavior vs ROS2/RMF route |
 | OPC UA control path | `@sint/bridge-opcua` + gateway | `packages/conformance-tests/fixtures/industrial/opcua-safety-control.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts` | Safety-critical writes/calls elevated |
 | Open-RMF dispatch path | `@sint/bridge-open-rmf` + gateway | `packages/conformance-tests/fixtures/industrial/warehouse-move-equivalence.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts` | Dispatch actions mapped to T2 escalation |
-| Hardware safety-controller handshake | gateway + industrial execution metadata | `packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts`, `packages/policy-gateway/__tests__/gateway.test.ts` | Industrial T2/T3 paths fail-closed on missing/denied permit; estop preempts execution |
+| Hardware safety-controller handshake | gateway + industrial execution metadata | `packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts`, `packages/policy-gateway/__tests__/gateway.test.ts` | Industrial T2/T3 paths fail-closed on missing/denied permit; estop preempts execution; safety anomalies are evidence-visible |
 | Revocation under load | token store + gateway | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | No T2/T3 fail-open after revocation |
 | Stale corridor envelope | gateway execution envelope checks | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | Deterministic deny on stale/mismatch corridor |
 | Safety-zone breach | geofence + constraint checker | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | `packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts` | Deterministic deny when crossing safety boundary |
@@ -63,3 +63,8 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
   - `pnpm --filter @sint/bridge-iot run test:fixtures`
   - `pnpm --filter @sint/sdk run test:contracts`
   - `pnpm --filter @sint/persistence-postgres run test:fixtures`
+- Certification bundle generator:
+  - `pnpm run cert:bundle`
+  - outputs:
+    - `docs/reports/certification-bundle-summary.json`
+    - `docs/reports/certification-bundle-summary.md`
