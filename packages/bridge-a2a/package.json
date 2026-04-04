@@ -1,0 +1,30 @@
+{
+  "name": "@sint/bridge-a2a",
+  "version": "0.1.0",
+  "description": "SINT Bridge — Google A2A adapter: secures agent-to-agent task delegation through the policy gateway",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@sint/core": "workspace:*",
+    "@sint/gate-capability-tokens": "workspace:*",
+    "@sint/gate-policy-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

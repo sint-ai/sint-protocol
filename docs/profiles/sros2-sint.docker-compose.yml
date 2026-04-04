@@ -1,0 +1,52 @@
+# SINT + SROS2 one-click Docker Compose preset
+# Runs SINT Gateway alongside a ROS2 Humble container with SROS2 enabled
+#
+# Usage:
+#   docker compose -f docs/profiles/sros2-sint.docker-compose.yml up
+#
+# Environment:
+#   SINT_AGENT_PUBLIC_KEY   Ed25519 public key for the ROS2 agent
+#   SROS2_KEYSTORE_PATH     Path to SROS2 keystore (mounted into ros2 container)
+
+version: "3.9"
+
+services:
+  sint-gateway:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ../../:/app:ro
+    command: >
+      sh -c "npm install -g pnpm &&
+             pnpm install --frozen-lockfile &&
+             pnpm --filter @sint/gateway-server build &&
+             node apps/gateway-server/dist/index.js"
+    environment:
+      - SINT_STORE=memory
+      - PORT=3100
+      - SINT_AGENT_PUBLIC_KEY=${SINT_AGENT_PUBLIC_KEY:-}
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ros2-agent:
+    image: ros:humble
+    environment:
+      - ROS_SECURITY_ENABLE=true
+      - ROS_SECURITY_STRATEGY=Enforce
+      - ROS_SECURITY_KEYSTORE=/sros2_keystore
+      - SROS2_SECURITY_KEYSTORE=/sros2_keystore
+      - SINT_GATEWAY_URL=http://sint-gateway:3100
+    volumes:
+      - "${SROS2_KEYSTORE_PATH:-./sros2_keystore}:/sros2_keystore:ro"
+    depends_on:
+      sint-gateway:
+        condition: service_healthy
+    command: >
+      bash -c "source /opt/ros/humble/setup.bash &&
+               ros2 run demo_nodes_py talker"

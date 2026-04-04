@@ -1,0 +1,21 @@
+{
+  "capsuleId": "01905f7c-0001-7000-8000-000000000001",
+  "version": "1.0.0",
+  "name": "visual-inspection",
+  "author": "sint-labs",
+  "description": "Visual anomaly detection for manufacturing QA — observes camera feed and classifies defects",
+  "sensors": ["camera_rgb"],
+  "actuators": [],
+  "safetyDeclarations": {
+    "requiresHumanPresence": false,
+    "canTriggerEstop": false
+  },
+  "resourceLimits": {
+    "maxMemoryMB": 256,
+    "maxCpuTimeMs": 5000,
+    "maxStorageMB": 50
+  },
+  "runtime": "typescript",
+  "entryPoint": "src/index.ts",
+  "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"
+}

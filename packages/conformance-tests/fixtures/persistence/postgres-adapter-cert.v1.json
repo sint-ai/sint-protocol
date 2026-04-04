@@ -1,0 +1,51 @@
+{
+  "fixtureId": "postgres-adapter-cert-v1",
+  "schemaVersion": "2026-04-04",
+  "description": "Canonical fixture for PostgreSQL persistence adapter behavior.",
+  "ledgerRows": [
+    {
+      "id": 1,
+      "event_id": "01950000-0000-7000-8000-000000000001",
+      "sequence_number": "1",
+      "agent_id": "agent-pub-key-hex",
+      "token_id": "tok-uuid-1",
+      "event_type": "request.received",
+      "payload": { "decision": "allow" },
+      "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "hash-1",
+      "created_at": "2026-04-04T10:00:00.000000Z"
+    },
+    {
+      "id": 2,
+      "event_id": "01950000-0000-7000-8000-000000000002",
+      "sequence_number": "2",
+      "agent_id": "agent-pub-key-hex",
+      "token_id": "tok-uuid-1",
+      "event_type": "policy.evaluated",
+      "payload": { "decision": "escalate", "tier": "T2_act" },
+      "prev_hash": "hash-1",
+      "hash": "hash-2",
+      "created_at": "2026-04-04T10:00:01.000000Z"
+    }
+  ],
+  "revocationRow": {
+    "token_id": "tok-revoked",
+    "reason": "compromised",
+    "revoked_by": "safety-supervisor",
+    "revoked_at": "2026-04-04T10:10:00.000000Z"
+  },
+  "rateLimitRow": {
+    "count": "3"
+  },
+  "expected": {
+    "ledgerCount": 2,
+    "headSequence": "2",
+    "chainIntegrity": true,
+    "revokedTokenResult": {
+      "ok": false,
+      "reason": "compromised",
+      "revokedBy": "safety-supervisor"
+    },
+    "incrementCount": 3
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "fixtureId": "verifiable-compute-critical-actions-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Canonical fixture for tier-gated verifiable compute enforcement on critical physical actions.",
+  "token": {
+    "resource": "ros2:///cmd_vel",
+    "actions": ["publish"],
+    "verifiableComputeRequirements": {
+      "requireForTiers": ["T2_act", "T3_commit"],
+      "allowedProofTypes": ["risc0-groth16", "snark"],
+      "verifierRefs": ["verifier://warehouse/risc0"],
+      "maxProofAgeMs": 30000,
+      "requirePublicInputsHash": true
+    }
+  },
+  "cases": [
+    {
+      "name": "missing proof metadata denies",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": { "linear": { "x": 0.2 } }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "CONSTRAINT_VIOLATION"
+      }
+    },
+    {
+      "name": "stale proof denies",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": { "linear": { "x": 0.2 } },
+        "executionContext": {
+          "verifiableCompute": {
+            "proofType": "risc0-groth16",
+            "proofRef": "proof://warehouse/stale-receipt",
+            "proofHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "publicInputsHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "generatedAt": "2020-01-01T00:00:00.000000Z",
+            "verifierRef": "verifier://warehouse/risc0"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "CONSTRAINT_VIOLATION"
+      }
+    },
+    {
+      "name": "fresh allowlisted proof metadata passes gate",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": { "linear": { "x": 0.2 } },
+        "executionContext": {
+          "verifiableCompute": {
+            "proofType": "risc0-groth16",
+            "proofRef": "proof://warehouse/fresh-receipt",
+            "proofHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "publicInputsHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "generatedAt": "__NOW__",
+            "verifierRef": "verifier://warehouse/risc0"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T2_act"
+      }
+    }
+  ]
+}

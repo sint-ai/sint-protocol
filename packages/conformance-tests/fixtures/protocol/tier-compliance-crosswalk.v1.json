@@ -1,0 +1,44 @@
+{
+  "fixtureId": "tier-compliance-crosswalk-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Canonical SINT tier crosswalk for NIST AI RMF, ISO/IEC 42001, and EU AI Act mappings.",
+  "frameworks": ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"],
+  "tiers": [
+    {
+      "tier": "T0_observe",
+      "consequenceClass": "monitoring",
+      "requiredReferences": [
+        "MAP + MEASURE + MANAGE (low-consequence monitoring path)",
+        "Clause 9 (performance evaluation) + Clause 8 (operational controls)",
+        "Article 12 (record-keeping) + Article 13 (transparency)"
+      ]
+    },
+    {
+      "tier": "T1_prepare",
+      "consequenceClass": "bounded-write",
+      "requiredReferences": [
+        "GOVERN + MANAGE (controlled low-impact action path)",
+        "Clause 8.1/8.2 (operational planning and AI risk treatment)",
+        "Article 9 (risk management) + Article 12 (logging)"
+      ]
+    },
+    {
+      "tier": "T2_act",
+      "consequenceClass": "physical-state-change",
+      "requiredReferences": [
+        "MANAGE (risk response) + GOVERN (accountability for high-impact operation)",
+        "Clause 8 (operational control) + Clause 6 (risk planning)",
+        "Article 14 (human oversight) + Article 15 (accuracy/robustness/cybersecurity)"
+      ]
+    },
+    {
+      "tier": "T3_commit",
+      "consequenceClass": "irreversible-commit",
+      "requiredReferences": [
+        "GOVERN + MANAGE (highest-consequence decision authority)",
+        "Clause 8.3 (risk treatment implementation) + Clause 10 (continual improvement)",
+        "Article 14(4)(e) (human override/stop) + Articles 9/12/15"
+      ]
+    }
+  ]
+}

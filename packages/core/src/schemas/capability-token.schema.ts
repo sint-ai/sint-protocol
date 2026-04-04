@@ -38,6 +38,61 @@ export const physicalConstraintsSchema = z.object({
   }).optional(),
   maxRepetitions: z.number().int().positive().optional(),
   requiresHumanPresence: z.boolean().optional(),
+  /** Per-token rate limit: maximum calls within a sliding window. */
+  rateLimit: z.object({
+    maxCalls: z.number().int().positive(),
+    windowMs: z.number().int().positive(),
+  }).optional(),
+  /** Multi-party quorum for T2/T3 approval resolutions. */
+  quorum: z.object({
+    required: z.number().int().positive(),
+    authorized: z.array(z.string().min(1)),
+  }).optional(),
+  /** Maximum torque in Newton-metres. */
+  maxTorqueNm: z.number().positive().optional(),
+  /** Maximum jerk in m/s³. */
+  maxJerkMps3: z.number().positive().optional(),
+  /** Maximum angular velocity in rad/s. */
+  maxAngularVelocityRps: z.number().positive().optional(),
+  /** Contact force detection threshold in Newtons. */
+  contactForceThresholdN: z.number().positive().optional(),
+}).strict();
+
+export const modelConstraintsSchema = z.object({
+  allowedModelIds: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
+  maxModelVersion: z.string().min(1).max(64).optional(),
+  modelFingerprintHash: sha256Schema.optional(),
+}).strict();
+
+export const attestationRequirementsSchema = z.object({
+  minAttestationGrade: z.number().int().min(0).max(3).optional(),
+  allowedTeeBackends: z.array(
+    z.enum(["intel-sgx", "arm-trustzone", "amd-sev", "tpm2", "none"]),
+  ).min(1).max(8).optional(),
+  requireForTiers: z.array(
+    z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]),
+  ).min(1).max(4).optional(),
+}).strict();
+
+export const verifiableComputeRequirementsSchema = z.object({
+  requireForTiers: z.array(
+    z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]),
+  ).min(1).max(4).optional(),
+  allowedProofTypes: z.array(
+    z.enum(["risc0-groth16", "sp1-groth16", "snark", "stark", "tee-attested"]),
+  ).min(1).max(8).optional(),
+  verifierRefs: z.array(z.string().min(1).max(512)).min(1).max(16).optional(),
+  maxProofAgeMs: z.number().int().positive().optional(),
+  requirePublicInputsHash: z.boolean().optional(),
+}).strict();
+
+export const executionEnvelopeSchema = z.object({
+  corridorId: z.string().min(1).max(128).optional(),
+  expiresAt: iso8601Schema.optional(),
+  maxDeviationMeters: z.number().min(0).optional(),
+  maxHeadingDeviationDeg: z.number().min(0).max(180).optional(),
+  maxVelocityMps: z.number().positive().optional(),
+  maxForceNewtons: z.number().positive().optional(),
 }).strict();
 
 export const delegationChainSchema = z.object({
@@ -54,6 +109,10 @@ export const capabilityTokenSchema = z.object({
   resource: z.string().min(1).max(512),
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
+  modelConstraints: modelConstraintsSchema.optional(),
+  attestationRequirements: attestationRequirementsSchema.optional(),
+  verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
+  executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   issuedAt: iso8601Schema,
   expiresAt: iso8601Schema,
@@ -69,6 +128,10 @@ export const capabilityTokenRequestSchema = z.object({
   resource: z.string().min(1).max(512),
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
+  modelConstraints: modelConstraintsSchema.optional(),
+  attestationRequirements: attestationRequirementsSchema.optional(),
+  verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
+  executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   expiresAt: iso8601Schema,
   revocable: z.boolean(),

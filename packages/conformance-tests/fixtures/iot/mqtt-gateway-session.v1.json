@@ -1,0 +1,55 @@
+{
+  "fixtureId": "mqtt-gateway-session-v1",
+  "schemaVersion": "2026-04-04",
+  "description": "Canonical fixture for MQTT session interception semantics: tier assignment and fail-closed forwarding behavior.",
+  "broker": "mqtt://broker.example.com",
+  "token": {
+    "resource": "mqtt://*",
+    "actions": ["publish", "subscribe"]
+  },
+  "cases": [
+    {
+      "name": "sensor telemetry publish remains observe and is forwarded",
+      "mode": "publish",
+      "topic": "factory/zone1/sensor/temperature",
+      "payload": "22.5",
+      "expected": {
+        "assignedTier": "T0_observe",
+        "gatewayAction": "allow",
+        "forwarded": true
+      }
+    },
+    {
+      "name": "actuator command publish escalates and is not forwarded pre-approval",
+      "mode": "publish",
+      "topic": "factory/zone1/cmd/valve/open",
+      "payload": "open",
+      "expected": {
+        "assignedTier": "T2_act",
+        "gatewayAction": "escalate",
+        "forwarded": false
+      }
+    },
+    {
+      "name": "safety estop publish escalates to commit and is not forwarded pre-approval",
+      "mode": "publish",
+      "topic": "safety/estop/trigger",
+      "payload": "1",
+      "expected": {
+        "assignedTier": "T3_commit",
+        "gatewayAction": "escalate",
+        "forwarded": false
+      }
+    },
+    {
+      "name": "sensor subscribe remains observe and is forwarded",
+      "mode": "subscribe",
+      "topic": "factory/zone1/sensor/#",
+      "expected": {
+        "assignedTier": "T0_observe",
+        "gatewayAction": "allow",
+        "forwarded": true
+      }
+    }
+  ]
+}

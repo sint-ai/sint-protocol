@@ -234,6 +234,230 @@ describe("PolicyGateway", () => {
     expect(decision.action).toBe("deny");
   });
 
+  it("denies request when preapproved corridor does not match token execution envelope", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "corridor-a",
+        expiresAt: futureISO(1),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "corridor-b",
+            expiresAt: futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("denies immediately when hardware emergency-stop is triggered", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///plan",
+      actions: ["publish"],
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        resource: "ros2:///plan",
+        action: "publish",
+        executionContext: {
+          hardwareSafety: {
+            estopState: "triggered",
+            observedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("HARDWARE_ESTOP_ACTIVE");
+    expect(
+      emitSpy.mock.calls.some((call) => call[0]?.eventType === "safety.estop.triggered"),
+    ).toBe(true);
+  });
+
+  it("denies industrial T2 action when hardware safety context is missing", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          deploymentProfile: "industrial-cell",
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("HARDWARE_PERMIT_REQUIRED");
+  });
+
+  it("denies industrial T2 action when permit is not granted", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          deploymentProfile: "warehouse-amr",
+          hardwareSafety: {
+            permitState: "denied",
+            interlockState: "closed",
+            observedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("HARDWARE_PERMIT_REQUIRED");
+  });
+
+  it("allows normal escalation when industrial hardware permit/interlock are healthy", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          deploymentProfile: "industrial-cell",
+          hardwareSafety: {
+            permitState: "granted",
+            interlockState: "closed",
+            observedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("denies T2 action when verifiable compute proof is required but missing", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      verifiableComputeRequirements: {
+        requireForTiers: [ApprovalTier.T2_ACT],
+        allowedProofTypes: ["risc0-groth16"],
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("allows normal T2 escalation when required verifiable compute proof metadata is present", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      verifiableComputeRequirements: {
+        requireForTiers: [ApprovalTier.T2_ACT],
+        allowedProofTypes: ["risc0-groth16"],
+        maxProofAgeMs: 60_000,
+        requirePublicInputsHash: true,
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          verifiableCompute: {
+            proofType: "risc0-groth16",
+            proofRef: "proof://robotics/receipt-001",
+            proofHash: "a".repeat(64),
+            publicInputsHash: "b".repeat(64),
+            generatedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+    expect(
+      emitSpy.mock.calls.some(
+        (call) => call[0]?.eventType === "verifiable.compute.verified",
+      ),
+    ).toBe(true);
+  });
+
+  it("denies when verifiable compute proof exceeds maxProofAgeMs", async () => {
+    const verifier = vi.fn().mockResolvedValue({ verified: true as const });
+    gateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      verifiableCompute: { verify: verifier },
+    });
+
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      verifiableComputeRequirements: {
+        requireForTiers: [ApprovalTier.T2_ACT],
+        allowedProofTypes: ["snark"],
+        maxProofAgeMs: 5_000,
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          verifiableCompute: {
+            proofType: "snark",
+            proofRef: "proof://robotics/stale",
+            proofHash: "c".repeat(64),
+            generatedAt: new Date(Date.now() - 60_000)
+              .toISOString()
+              .replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+    expect(verifier).not.toHaveBeenCalled();
+  });
+
   // ── Forbidden combo → escalate ──
 
   it("escalates on forbidden tool combination", async () => {

@@ -8,7 +8,10 @@
  * @module @sint/core/types/policy
  */
 
-import type { SintPhysicalConstraints } from "./capability-token.js";
+import type {
+  SintPhysicalConstraints,
+  SintVerifiableComputeProofType,
+} from "./capability-token.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -46,6 +49,90 @@ export enum RiskTier {
   T3_IRREVERSIBLE = "T3_irreversible",
 }
 
+/** K-of-N approval quorum attached to escalated requests. */
+export interface SintApprovalQuorum {
+  readonly required: number;
+  readonly authorized: readonly string[];
+}
+
+/** Well-known deployment profiles for industrial SINT rollouts. */
+export type SintSiteDeploymentProfile =
+  | "warehouse-amr"
+  | "industrial-cell"
+  | "edge-gateway"
+  | string;
+
+/** Runtime identity metadata for the executor handling the request. */
+export interface SintExecutorIdentity {
+  readonly runtimeId?: string;
+  readonly nodeId?: string;
+  readonly did?: string;
+  readonly host?: string;
+}
+
+/** Model runtime metadata attached to a request. */
+export interface SintModelRuntimeContext {
+  readonly modelId?: string;
+  readonly modelVersion?: string;
+  readonly modelFingerprintHash?: string;
+}
+
+/** Attestation metadata attached to a request. */
+export interface SintAttestationContext {
+  readonly grade?: 0 | 1 | 2 | 3;
+  readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
+  readonly quoteRef?: string;
+}
+
+/** Verifiable compute proof metadata attached to a request. */
+export interface SintVerifiableComputeContext {
+  readonly proofType?: SintVerifiableComputeProofType;
+  readonly proofRef?: string;
+  readonly proofHash?: string;
+  readonly publicInputsHash?: string;
+  readonly generatedAt?: ISO8601;
+  readonly verifierRef?: string;
+}
+
+/** Hardware safety-controller handshake metadata attached to a request. */
+export interface SintHardwareSafetyContext {
+  /**
+   * Permit state from the safety controller.
+   * T2/T3 industrial actions are expected to run only when this is "granted".
+   */
+  readonly permitState?: "granted" | "denied" | "unknown" | "stale";
+  /** Safety interlock state for the executing zone/cell. */
+  readonly interlockState?: "closed" | "open" | "fault" | "unknown";
+  /** Emergency-stop state observed by the bridge/controller. */
+  readonly estopState?: "clear" | "triggered" | "unknown";
+  /** Time the safety controller state was observed. */
+  readonly observedAt?: ISO8601;
+  /** Optional controller identifier (PLC / relay / safety I/O gateway). */
+  readonly controllerId?: string;
+}
+
+/** Pre-approved execution corridor metadata attached to a request. */
+export interface SintPreapprovedCorridor {
+  readonly corridorId: string;
+  readonly expiresAt: ISO8601;
+  readonly maxDeviationMeters?: number;
+  readonly maxHeadingDeviationDeg?: number;
+}
+
+/** Execution context metadata for cross-bridge/audit interoperability. */
+export interface SintExecutionContext {
+  readonly deploymentProfile?: SintSiteDeploymentProfile;
+  readonly siteId?: string;
+  readonly bridgeId?: string;
+  readonly bridgeProtocol?: string;
+  readonly executor?: SintExecutorIdentity;
+  readonly model?: SintModelRuntimeContext;
+  readonly attestation?: SintAttestationContext;
+  readonly verifiableCompute?: SintVerifiableComputeContext;
+  readonly hardwareSafety?: SintHardwareSafetyContext;
+  readonly preapprovedCorridor?: SintPreapprovedCorridor;
+}
+
 /**
  * A request entering the Policy Gateway for evaluation.
  */
@@ -78,6 +165,9 @@ export interface SintRequest {
 
   /** Sequence of recent actions by this agent (for combo detection). */
   readonly recentActions?: readonly string[];
+
+  /** Optional execution/deployment metadata for policy and audit correlation. */
+  readonly executionContext?: SintExecutionContext;
 }
 
 /**
@@ -103,6 +193,7 @@ export interface PolicyDecision {
     readonly reason: string;
     readonly timeoutMs: DurationMs;
     readonly fallbackAction: "deny" | "safe-stop";
+    readonly approvalQuorum?: SintApprovalQuorum;
   };
 
   /** Present when action is "deny". */
@@ -172,6 +263,19 @@ export type ApprovalRequestStatus =
  */
 export interface BatchInterceptRequest {
   readonly requests: readonly SintRequest[];
+}
+
+/**
+ * Rate-limit store — sliding-window counter per token.
+ *
+ * Implemented by CacheStore adapters.  The key is typically
+ * `sint:rate:<tokenId>:<windowBucket>`.
+ */
+export interface RateLimitStore {
+  /** Increment the call count for a key and return the new count. */
+  increment(key: string, windowMs: number): Promise<number>;
+  /** Get the current call count for a key (0 if not set). */
+  getCount(key: string): Promise<number>;
 }
 
 /**

@@ -1,0 +1,44 @@
+{
+  "name": "SINT Protocol",
+  "version": "0.2.0",
+  "boundary": "SINT is the governance and runtime enforcement layer for digital-to-physical execution.",
+  "identityMethods": ["ed25519", "did:key"],
+  "attestationModes": ["intel-sgx", "arm-trustzone", "amd-sev", "tpm2", "none"],
+  "deploymentProfiles": [
+    {
+      "siteId": "warehouse-amr",
+      "deploymentProfile": "warehouse-amr",
+      "bridges": ["mcp", "a2a", "ros2", "mqtt-sparkplug", "open-rmf"]
+    },
+    {
+      "siteId": "industrial-cell",
+      "deploymentProfile": "industrial-cell",
+      "bridges": ["mcp", "a2a", "ros2", "opcua", "mqtt-sparkplug"]
+    },
+    {
+      "siteId": "edge-gateway",
+      "deploymentProfile": "edge-gateway",
+      "bridges": ["mqtt-sparkplug", "opcua", "open-rmf"]
+    }
+  ],
+  "supportedBridges": [
+    { "bridgeId": "mcp", "protocol": "mcp", "version": "1.x", "resourcePattern": "mcp://*/**" },
+    { "bridgeId": "a2a", "protocol": "a2a", "version": "0.x", "resourcePattern": "a2a://*/**" },
+    { "bridgeId": "ros2", "protocol": "ros2", "version": "jazzy+", "resourcePattern": "ros2:///**" },
+    { "bridgeId": "mavlink", "protocol": "mavlink", "version": "v2", "resourcePattern": "mavlink://*/**" },
+    { "bridgeId": "mqtt-sparkplug", "protocol": "mqtt", "version": "sparkplug-b-v3", "resourcePattern": "mqtt-sparkplug:///**" },
+    { "bridgeId": "opcua", "protocol": "opcua", "version": "1.05+", "resourcePattern": "opcua://*/**" },
+    { "bridgeId": "open-rmf", "protocol": "open-rmf", "version": "2.x", "resourcePattern": "open-rmf://*/**" }
+  ],
+  "schemaCatalog": [
+    { "name": "capability-token", "path": "/v1/schemas/capability-token" },
+    { "name": "request", "path": "/v1/schemas/request" },
+    { "name": "policy-decision", "path": "/v1/schemas/policy-decision" },
+    { "name": "tier-compliance-crosswalk", "path": "/v1/schemas/tier-compliance-crosswalk" }
+  ],
+  "complianceCrosswalk": {
+    "path": "/v1/compliance/tier-crosswalk",
+    "frameworks": ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"]
+  },
+  "openapi": "/v1/openapi.json"
+}

@@ -11,6 +11,9 @@ importers:
       '@types/node':
         specifier: ^22.13.0
         version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
       turbo:
         specifier: ^2.4.0
         version: 2.8.17
@@ -63,6 +66,15 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.0
         version: 1.19.11(hono@4.12.8)
+      '@sint/avatar':
+        specifier: workspace:*
+        version: link:../../packages/avatar
+      '@sint/bridge-a2a':
+        specifier: workspace:*
+        version: link:../../packages/bridge-a2a
+      '@sint/bridge-economy':
+        specifier: workspace:*
+        version: link:../../packages/bridge-economy
       '@sint/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -85,6 +97,12 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
+      ioredis:
+        specifier: ^5.4.0
+        version: 5.10.0
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
@@ -129,6 +147,134 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  capsules/inspection:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  capsules/navigation:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  capsules/pick-and-place:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/avatar:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-a2a:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-economy:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-iot:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-mavlink:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/bridge-mcp:
     dependencies:
       '@sint/core':
@@ -140,6 +286,45 @@ importers:
       '@sint/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-mqtt-sparkplug:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-opcua:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-open-rmf:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^5.7.0
@@ -163,6 +348,25 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/bridge-swarm:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
+    devDependencies:
+      '@sint/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -216,9 +420,27 @@ importers:
 
   packages/conformance-tests:
     devDependencies:
+      '@sint/bridge-a2a':
+        specifier: workspace:*
+        version: link:../bridge-a2a
+      '@sint/bridge-economy':
+        specifier: workspace:*
+        version: link:../bridge-economy
+      '@sint/bridge-iot':
+        specifier: workspace:*
+        version: link:../bridge-iot
       '@sint/bridge-mcp':
         specifier: workspace:*
         version: link:../bridge-mcp
+      '@sint/bridge-mqtt-sparkplug':
+        specifier: workspace:*
+        version: link:../bridge-mqtt-sparkplug
+      '@sint/bridge-opcua':
+        specifier: workspace:*
+        version: link:../bridge-opcua
+      '@sint/bridge-open-rmf':
+        specifier: workspace:*
+        version: link:../bridge-open-rmf
       '@sint/bridge-ros2':
         specifier: workspace:*
         version: link:../bridge-ros2
@@ -234,6 +456,9 @@ importers:
       '@sint/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
+      '@sint/persistence':
+        specifier: workspace:*
+        version: link:../persistence
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -246,6 +471,64 @@ importers:
       zod:
         specifier: ^3.24.0
         version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/engine-capsule-sandbox:
+    dependencies:
+      '@noble/hashes':
+        specifier: ^1.7.0
+        version: 1.8.0
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/engine-hal:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/engine-system1:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/engine-system2:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       typescript:
         specifier: ^5.7.0
@@ -295,6 +578,28 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/persistence-postgres:
+    dependencies:
+      '@sint/core':
+        specifier: workspace:*
+        version: link:../core
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
+      '@sint/persistence':
+        specifier: workspace:*
+        version: link:../persistence
+      pg:
+        specifier: ^8.0.0
+        version: 8.20.0
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/policy-gateway:
     dependencies:
       '@sint/core':
@@ -310,8 +615,20 @@ importers:
       '@sint/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
+      '@sint/persistence':
+        specifier: workspace:*
+        version: link:../persistence
       typescript:
         specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  sdks/typescript:
+    devDependencies:
+      typescript:
+        specifier: ^5.0.0
         version: 5.9.3
       vitest:
         specifier: ^3.0.0

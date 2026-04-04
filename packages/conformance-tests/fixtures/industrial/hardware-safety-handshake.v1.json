@@ -1,0 +1,97 @@
+{
+  "fixtureId": "hardware-safety-handshake-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Canonical fixture for hardware safety-controller handshake behavior in industrial profiles.",
+  "token": {
+    "resource": "*",
+    "actions": ["publish"]
+  },
+  "cases": [
+    {
+      "name": "industrial T2 action without hardware safety context is fail-closed",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear": { "x": 0.12 }
+        },
+        "executionContext": {
+          "deploymentProfile": "industrial-cell"
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "HARDWARE_PERMIT_REQUIRED",
+        "expectedEvidenceEvent": "safety.hardware.permit.denied"
+      }
+    },
+    {
+      "name": "industrial T2 action with denied permit is fail-closed",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear": { "x": 0.12 }
+        },
+        "executionContext": {
+          "deploymentProfile": "warehouse-amr",
+          "hardwareSafety": {
+            "permitState": "denied",
+            "interlockState": "closed",
+            "observedAt": "__NOW__"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "HARDWARE_PERMIT_REQUIRED",
+        "expectedEvidenceEvent": "safety.hardware.permit.denied"
+      }
+    },
+    {
+      "name": "hardware estop preempts lower-tier request",
+      "request": {
+        "resource": "ros2:///plan",
+        "action": "publish",
+        "params": {
+          "waypoint": "A-12"
+        },
+        "executionContext": {
+          "hardwareSafety": {
+            "estopState": "triggered",
+            "observedAt": "__NOW__"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "HARDWARE_ESTOP_ACTIVE",
+        "expectedEvidenceEvent": "safety.estop.triggered"
+      }
+    },
+    {
+      "name": "industrial T2 action with granted permit and closed interlock escalates normally",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear": { "x": 0.12 }
+        },
+        "executionContext": {
+          "deploymentProfile": "industrial-cell",
+          "hardwareSafety": {
+            "permitState": "granted",
+            "interlockState": "closed",
+            "estopState": "clear",
+            "observedAt": "__NOW__",
+            "controllerId": "plc-cell-a"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T2_act"
+      }
+    }
+  ]
+}

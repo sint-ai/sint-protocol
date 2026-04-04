@@ -1,0 +1,29 @@
+{
+  "name": "@sint/mcp-scanner",
+  "version": "0.1.0",
+  "description": "SINT MCP Security Scanner — analyze MCP server tool definitions for risk",
+  "type": "module",
+  "main": "./dist/scanner.js",
+  "bin": { "sint-scan": "./dist/cli.js" },
+  "exports": {
+    ".": {
+      "types": "./dist/scanner.d.ts",
+      "import": "./dist/scanner.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@sint/bridge-mcp": "workspace:*",
+    "@sint/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

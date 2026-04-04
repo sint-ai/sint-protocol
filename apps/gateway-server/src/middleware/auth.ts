@@ -12,7 +12,13 @@ import type { Context, Next } from "hono";
 import { verify } from "@sint/gate-capability-tokens";
 
 /** Paths exempt from all authentication. */
-const EXEMPT_PATHS = new Set(["/v1/health", "/v1/keypair"]);
+const EXEMPT_PATHS = new Set([
+  "/v1/health",
+  "/v1/keypair",
+  "/.well-known/sint.json",
+  "/v1/openapi.json",
+  "/v1/schemas",
+]);
 
 /** Paths that require admin API key (not agent signature). */
 const ADMIN_PATHS = [

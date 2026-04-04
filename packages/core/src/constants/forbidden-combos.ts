@@ -52,4 +52,20 @@ export const DEFAULT_FORBIDDEN_COMBOS: readonly ForbiddenCombination[] = [
     requiredTier: ApprovalTier.T3_COMMIT,
     reason: "Safety bypass: e-stop override followed by movement is always dangerous",
   },
+
+  // Engine — anomaly detected then plan step executed is suspicious
+  {
+    sequence: ["engine.system1.anomaly", "engine.system2.plan.step.executed"],
+    windowMs: 5_000,
+    requiredTier: ApprovalTier.T3_COMMIT,
+    reason: "Anomaly-then-act: executing a plan step during anomaly requires human approval",
+  },
+
+  // Engine — newly loaded capsule immediately publishing cmd_vel
+  {
+    sequence: ["capsule.loaded", "ros2.cmd_vel.publish"],
+    windowMs: 10_000,
+    requiredTier: ApprovalTier.T2_ACT,
+    reason: "Capsule cold-start movement: newly loaded capsule should not immediately command motion",
+  },
 ] as const;

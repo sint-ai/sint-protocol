@@ -60,6 +60,8 @@ function attenuateConstraints(
     maxRepetitions: minOptional(parent.maxRepetitions, tighten.maxRepetitions),
     requiresHumanPresence:
       parent.requiresHumanPresence === true ? true : tighten.requiresHumanPresence,
+    rateLimit: parent.rateLimit,
+    quorum: parent.quorum,
   };
 }
 
@@ -154,6 +156,10 @@ export function delegateCapabilityToken(
       resource: parentToken.resource,
       actions: delegatedActions,
       constraints,
+      modelConstraints: parentToken.modelConstraints,
+      attestationRequirements: parentToken.attestationRequirements,
+      verifiableComputeRequirements: parentToken.verifiableComputeRequirements,
+      executionEnvelope: parentToken.executionEnvelope,
       delegationChain: {
         parentTokenId: parentToken.tokenId,
         depth: newDepth,

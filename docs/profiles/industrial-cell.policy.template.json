@@ -1,0 +1,22 @@
+{
+  "profile": "industrial-cell",
+  "description": "Manipulator/PLC cell baseline with strict commit controls",
+  "tierRules": [
+    { "resourcePattern": "opcua://*/**", "actions": ["read", "observe"], "baseTier": "T0_observe" },
+    { "resourcePattern": "opcua://*/**", "actions": ["write", "call"], "baseTier": "T2_act" },
+    { "resourcePattern": "opcua://*/**Safety**", "actions": ["write", "call"], "baseTier": "T3_commit" },
+    { "resourcePattern": "ros2:///cell/*", "actions": ["publish", "call"], "baseTier": "T2_act" }
+  ],
+  "tokenDefaults": {
+    "constraints": {
+      "maxForceNewtons": 60,
+      "maxVelocityMps": 0.4,
+      "rateLimit": { "maxCalls": 20, "windowMs": 60000 }
+    },
+    "attestationRequirements": {
+      "minAttestationGrade": 2,
+      "allowedTeeBackends": ["intel-sgx", "amd-sev", "tpm2"],
+      "requireForTiers": ["T2_act", "T3_commit"]
+    }
+  }
+}

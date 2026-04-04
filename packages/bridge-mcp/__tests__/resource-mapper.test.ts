@@ -11,6 +11,7 @@ import {
   toSintAction,
   isReadOnly,
   isDangerous,
+  isShellExecTool,
 } from "../src/mcp-resource-mapper.js";
 import type { MCPToolCall } from "../src/types.js";
 
@@ -114,5 +115,29 @@ describe("isDangerous", () => {
 
   it("false for unknown tools", () => {
     expect(isDangerous(makeToolCall("custom", "whatever"))).toBe(false);
+  });
+});
+
+// ASI05: shell/code execution → T3_COMMIT
+describe("ASI05 shell/exec classification", () => {
+  it("bash tool → T3_COMMIT (isShellExecTool = true)", () => {
+    const call = makeToolCall("any-server", "bash");
+    expect(isShellExecTool(call)).toBe(true);
+    const hint = getRiskHint(call);
+    expect(hint.suggestedTier).toBe(ApprovalTier.T3_COMMIT);
+  });
+
+  it("run_command tool → T3_COMMIT (isShellExecTool = true)", () => {
+    const call = makeToolCall("any-server", "run_command");
+    expect(isShellExecTool(call)).toBe(true);
+    const hint = getRiskHint(call);
+    expect(hint.suggestedTier).toBe(ApprovalTier.T3_COMMIT);
+  });
+
+  it("execute tool on any server → T3_COMMIT", () => {
+    const call = makeToolCall("my-custom-server", "execute");
+    expect(isShellExecTool(call)).toBe(true);
+    const hint = getRiskHint(call);
+    expect(hint.suggestedTier).toBe(ApprovalTier.T3_COMMIT);
   });
 });

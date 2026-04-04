@@ -1,0 +1,45 @@
+name: Industrial Benchmark Report
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  generate-benchmark-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace
+        run: pnpm run build
+
+      - name: Generate industrial benchmark report
+        run: pnpm run benchmark:report
+
+      - name: Publish report summary
+        run: cat docs/reports/industrial-benchmark-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: industrial-benchmark-report
+          path: |
+            docs/reports/industrial-benchmark-vitest.json
+            docs/reports/industrial-benchmark-report.json
+            docs/reports/industrial-benchmark-report.md

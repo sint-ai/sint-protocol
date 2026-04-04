@@ -1,0 +1,66 @@
+{
+  "fixtureId": "warehouse-move-equivalence-v1",
+  "schemaVersion": "2026-04-04",
+  "description": "Canonical interoperability fixture for the same warehouse move intent across ROS2, MQTT/Sparkplug, and Open-RMF ingress paths.",
+  "tokens": {
+    "ros2": {
+      "resource": "ros2://*",
+      "actions": ["publish"]
+    },
+    "sparkplug": {
+      "resource": "mqtt-sparkplug://*",
+      "actions": ["call"]
+    },
+    "openRmf": {
+      "resource": "open-rmf://*",
+      "actions": ["call"]
+    }
+  },
+  "requests": {
+    "ros2": {
+      "resource": "ros2:///cmd_vel",
+      "action": "publish",
+      "params": {
+        "command": "move_to_aisle",
+        "destination": "A-17"
+      },
+      "physicalContext": {
+        "currentForceNewtons": 18,
+        "currentVelocityMps": 0.45
+      },
+      "recentActions": ["open-rmf.dispatch"]
+    },
+    "sparkplug": {
+      "topic": "spBv1.0/warehouse/DCMD/edge-gateway-1/amr-17",
+      "messageType": "DCMD",
+      "expectedResource": "mqtt-sparkplug:///warehouse/edge-gateway-1/amr-17/dcmd",
+      "expectedAction": "call",
+      "params": {
+        "command": "move_to_aisle",
+        "destination": "A-17"
+      },
+      "physicalContext": {
+        "currentForceNewtons": 18,
+        "currentVelocityMps": 0.45
+      },
+      "recentActions": ["sparkplug.dispatch"]
+    },
+    "openRmf": {
+      "fleetName": "warehouse-fleet",
+      "operation": "task.dispatch",
+      "expectedResource": "open-rmf://fleet/warehouse-fleet/dispatch",
+      "expectedAction": "call",
+      "params": {
+        "source": "a2a://dispatcher.example.com/navigate",
+        "taskId": "task-warehouse-001"
+      },
+      "physicalContext": {
+        "currentForceNewtons": 16
+      }
+    }
+  },
+  "expected": {
+    "assignedTier": "T2_act",
+    "decisionAction": "escalate"
+  }
+}

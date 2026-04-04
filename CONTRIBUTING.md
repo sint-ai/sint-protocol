@@ -1,101 +1,94 @@
 # Contributing to SINT Protocol
 
-Thank you for your interest in SINT Protocol! This document provides guidelines for contributing to the project.
+Thank you for helping make physical AI safer.
 
-## Getting Started
+## Ways to Contribute
 
-1. **Fork the repository** and clone your fork locally
-2. **Install dependencies**: `pnpm install` (requires Node.js >= 22, pnpm >= 9)
-3. **Build**: `pnpm run build`
-4. **Run tests**: `pnpm run test` to verify everything works
+### 1. Implement a bridge adapter
 
-## Development Workflow
+New bridge = new protocol integration. See `packages/bridge-iot/` as a minimal template.
 
-1. Create a feature branch from `main`:
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
-2. Make your changes, following the code style and design principles below
-3. Add or update tests for your changes
-4. Ensure all tests pass: `pnpm run test`
-5. Ensure types check: `pnpm run typecheck`
-6. Open a pull request against `main`
+**High-value bridges not yet built:**
+- PROFINET / EtherCAT / CANopen / Modbus TCP (industrial fieldbus)
+- DDS / RTPS (ROS 2 native transport layer)
+- MQTT 5 with shared subscriptions (fleet telemetry)
+- WebRTC data channels (browser-based operator consoles)
 
-## Code Style & Design Principles
+Each bridge needs:
+- `src/<protocol>-resource-mapper.ts` — URI + action mapping
+- `src/<protocol>-interceptor.ts` — session + intercept logic
+- `__tests__/<protocol>.test.ts` — ≥15 tests covering allow/deny/escalate paths
 
-SINT Protocol follows strict conventions. Please review these before contributing:
+### 2. Add conformance tests
 
-- **TypeScript strict mode** — all code must pass strict type checking
-- **Result\<T, E\> over exceptions** — fallible operations return discriminated unions, never throw
-- **Interface-first persistence** — storage adapters implement clean interfaces
-- **Single choke point** — every agent action flows through `PolicyGateway.intercept()`
-- **Append-only audit** — the evidence ledger is INSERT-only with hash chain integrity
-- **Attenuation only** — delegated tokens can only reduce permissions, never escalate
-- **Physical safety first** — velocity, force, and geofence constraints are first-class
+Every new security invariant needs a test in `packages/conformance-tests/src/`.
+Canonical fixtures (JSON) live in `packages/conformance-tests/fixtures/`.
 
-## Project Structure
+Use the [bridge conformance issue template](.github/ISSUE_TEMPLATE/bridge_conformance.md) to report results.
 
-The monorepo uses pnpm workspaces + Turborepo:
+### 3. Port an SDK
 
-- `packages/` — core libraries (core, policy-gateway, capability-tokens, evidence-ledger, etc.)
-- `apps/` — runnable applications (gateway-server, sint-mcp, dashboard)
-- `packages/conformance-tests/` — security regression suite
+| Language | Status | Issue |
+|---|---|---|
+| TypeScript | ✅ `sdks/typescript/` | — |
+| Python | stub at `sdks/python/` | [#4](https://github.com/pshkv/sint-protocol/issues/4) |
+| Go | stub at `sdks/go/` | — |
+| Rust | not started | open an issue |
 
-## Types of Contributions
+### 4. Report a security vulnerability
 
-### Bug Reports
+See [SECURITY.md](SECURITY.md).
 
-Open an issue with:
-- A clear description of the bug
-- Steps to reproduce
-- Expected vs. actual behavior
-- Environment details (Node version, OS, etc.)
+### 5. Submit a SINT Improvement Proposal (SIP)
 
-### Feature Requests
+See [docs/SIPS.md](docs/SIPS.md) and use the template at [docs/sips/0000-template.md](docs/sips/0000-template.md).
 
-Use [GitHub Discussions → Ideas](https://github.com/sint-ai/sint-protocol/discussions/categories/ideas) to propose new features. Include:
-- The problem you're trying to solve
-- Your proposed solution
-- Any alternatives you've considered
+---
 
-### Integration Proposals
-
-Building a bridge to a new platform (ROS 2, MQTT, gRPC, etc.)? Start a discussion in the [Integrations](https://github.com/sint-ai/sint-protocol/discussions/categories/integrations) category first to align on the approach.
-
-### Pull Requests
-
-- Keep PRs focused — one feature or fix per PR
-- Include tests for new functionality
-- Update documentation if your change affects the public API
-- Reference any related issues in the PR description
-
-## Testing
+## Development Setup
 
 ```bash
-# Run all tests
-pnpm run test
-
-# Run tests for a specific package
-pnpm --filter @sint/policy-gateway test
-pnpm --filter @sint/mcp test
-
-# Type-check without emitting
-pnpm run typecheck
+git clone https://github.com/pshkv/sint-protocol
+cd sint-protocol
+pnpm install
+pnpm run build
+pnpm run test        # Must be 0 failures before and after your change
 ```
 
-All PRs must pass the full test suite and type checking before merge.
+**Node.js ≥ 22 and pnpm ≥ 9.15 required.**
 
-## Security
+## Before Submitting a PR
 
-If you discover a security vulnerability, **do not open a public issue**. Instead, email security@sint.ai with details. We take security seriously and will respond promptly.
+1. `pnpm run build` — zero TypeScript errors
+2. `pnpm run test` — all 1,105+ existing tests pass
+3. New functionality has unit tests in its own package
+4. New security-relevant behaviour has a test in `@sint/conformance-tests`
+5. New bridge adapter exports types from its `src/index.ts`
 
-## License
+## Code Style
 
-By contributing, you agree that your contributions will be licensed under the Apache-2.0 License.
+- **TypeScript strict mode** — `noUncheckedIndexedAccess`, `noUnusedLocals`
+- **`Result<T, E>` pattern** — never throw for control flow; use `ok()` / `err()` from `@sint/core`
+- **Readonly interfaces** by default
+- **Zod schemas** at system boundaries (external input, API surface)
+- **`@noble/ed25519`** for all Ed25519 operations (audited, zero-dep)
+- **UUID v7** for all IDs — use `generateUUIDv7()` from `@sint/gate-capability-tokens`, never `crypto.randomUUID()` (that gives v4)
 
-## Community
+## Multi-Agent / AI Pair Programming
 
-- [GitHub Discussions](https://github.com/sint-ai/sint-protocol/discussions) — questions, ideas, and general chat
-- [Issues](https://github.com/sint-ai/sint-protocol/issues) — bug reports and tracked work
+This repo is designed for parallel human + AI development. See [AGENTS.md](AGENTS.md) for AI-specific guidance and [CLAUDE.md](CLAUDE.md) for implementation details and common pitfalls.
 
-We welcome contributors of all experience levels. If you're unsure about anything, open a discussion — we're happy to help.
+**Package ownership by focus area** (to avoid conflicts):
+
+| Area | Packages |
+|---|---|
+| Security core | `@sint/core`, `@sint/gate-*` |
+| Bridges | `@sint/bridge-*` — each is independent |
+| Engine | `@sint/engine-*` |
+| Server / client | `@sint/gateway-server`, `@sint/client` |
+| Conformance | `@sint/conformance-tests` |
+
+## Questions?
+
+Open an [issue](https://github.com/pshkv/sint-protocol/issues) or comment on an existing one.
+For real-time discussion, reference the [A2A #1713](https://github.com/a2aproject/A2A/issues/1713) thread where SINT and APS are coordinating on joint physical AI governance.

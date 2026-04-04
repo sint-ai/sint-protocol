@@ -11,9 +11,10 @@ SINT is a security enforcement layer for physical AI. It sits between AI agents 
 ```bash
 pnpm install          # Install dependencies
 pnpm run build        # Build all packages (required before test)
-pnpm run test         # Run all 222 tests
+pnpm run test         # Run all tests (currently 1,105 passing)
 pnpm run typecheck    # Type-check without emitting
 pnpm run clean        # Remove build artifacts
+pnpm run bench        # Run PolicyGateway performance benchmarks (p50/p99 latency)
 ```
 
 Run a single package:
@@ -177,6 +178,38 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
+**1,105 tests passing across 30 packages** (as of 2026-04-04)
+
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
-- **Phase 2** (complete): Bridge adapters, approval flow, persistence interfaces, server refactor
-- **Phase 3** (planned): WebSocket approvals, PostgreSQL/Redis adapters, Docker, SDK
+- **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
+- **Phase 3** (complete): EconomyPlugin, CircuitBreakerPlugin, CSML escalation, DynamicEnvelopePlugin, OWASP ASI coverage map
+- **Phase 4** (next): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
+
+## Multi-Agent Coordination
+
+Multiple agents and developers may work on this repo concurrently. Follow these rules to avoid conflicts:
+
+### Package Ownership (by focus area)
+| Area | Packages | Notes |
+|------|----------|-------|
+| Security core | `@sint/core`, `@sint/gate-capability-tokens`, `@sint/gate-policy-gateway` | High churn — check latest commit before modifying |
+| Bridges | `@sint/bridge-*` | Each bridge is independent — parallel work safe |
+| Engine | `@sint/engine-*` | AI execution layer — coordinate on `engine.ts` types |
+| Server/client | `@sint/gateway-server`, `@sint/client` | API surface — check for route conflicts |
+| Conformance | `@sint/conformance-tests` | Add tests here for any new security invariant |
+
+### Before Starting Work
+1. **Pull latest** — `git pull --rebase`
+2. **Run build** — `pnpm run build` — if it fails, fix before adding features
+3. **Run tests** — `pnpm run test` — must be 0 failures before and after your change
+
+### Common Name Collision Risks
+- `SintDeploymentProfile` exists in both `policy.ts` (site profiles) and was renamed in `engine.ts` to `SintHardwareDeploymentProfile`. Do not re-add generic names in engine packages.
+- UUID format: requestId MUST be UUID v7 (version digit `7` at position 14) — `crypto.randomUUID()` produces v4 and will fail schema validation. Use the `generateUUIDv7()` helper from `@sint/gate-capability-tokens`.
+- `CircuitBreakerPlugin.trip()` sets `manualTrip=true` — this permanently prevents auto-HALF_OPEN. Tests that want to test the auto-recovery path must open the circuit via `recordDenial`, not `trip()`.
+
+### What's In Progress
+Check `git log --oneline -10` to see what landed recently. Key invariants to respect:
+- `PolicyGateway.intercept()` is the single choke point — every authorization decision must flow through it
+- Evidence ledger events are append-only and hash-chained — never modify emitted events
+- Circuit breaker fail-open: if plugin throws, treat circuit as CLOSED

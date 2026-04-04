@@ -60,6 +60,9 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Fixture Certification Gate
+        run: pnpm run cert:fixtures
+
       - name: Typecheck
         run: pnpm run typecheck
 

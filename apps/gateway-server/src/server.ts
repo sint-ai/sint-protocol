@@ -9,17 +9,24 @@
  */
 
 import { Hono } from "hono";
+import { CsmlEscalator } from "@sint/avatar";
 import { RevocationStore } from "@sint/gate-capability-tokens";
 import { PolicyGateway, ApprovalQueue } from "@sint/gate-policy-gateway";
 import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import type { TokenStore, LedgerStore } from "@sint/persistence";
+import type { TokenStore, LedgerStore, CacheStore, RevocationBus } from "@sint/persistence";
 import {
   InMemoryTokenStore,
   InMemoryLedgerStore,
+  InMemoryCache,
+  InMemoryRevocationBus,
   PgTokenStore,
   PgLedgerStore,
   getPool,
+  RedisCache,
+  RedisRevocationBus,
 } from "@sint/persistence";
+import type { SintCapabilityToken, SintEventType } from "@sint/core";
+import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
 import { structuredLogging } from "./middleware/logging.js";
@@ -29,6 +36,10 @@ import { interceptRoutes } from "./routes/intercept.js";
 import { tokenRoutes } from "./routes/tokens.js";
 import { ledgerRoutes } from "./routes/ledger.js";
 import { approvalRoutes } from "./routes/approvals.js";
+import { discoveryRoutes } from "./routes/discovery.js";
+import { economyRoutes, type EconomyRouteContext } from "./routes/economy.js";
+import { a2aRoutes, type A2ARouteContext } from "./routes/a2a.js";
+import { riskStreamRoutes, globalRiskBus } from "./routes/risk-stream.js";
 import type { SintConfig } from "./config.js";
 
 /** Shared server state — injectable for testing. */
@@ -39,6 +50,17 @@ export interface ServerContext {
   readonly ledgerStore: LedgerStore;
   readonly gateway: PolicyGateway;
   readonly approvalQueue: ApprovalQueue;
+  readonly cache: CacheStore;
+  readonly revocationBus: RevocationBus;
+}
+
+function createDefaultCsmlEscalator(ledger: LedgerWriter): CsmlEscalator {
+  return new CsmlEscalator({
+    queryEvents: async (agentId, windowSize) => {
+      const byAgent = ledger.getAll().filter((event) => event.agentId === agentId);
+      return byAgent.slice(Math.max(0, byAgent.length - windowSize));
+    },
+  });
 }
 
 /** Create a default server context with in-memory stores (testing/dev). */
@@ -48,33 +70,50 @@ export function createContext(): ServerContext {
   const ledgerStore = new InMemoryLedgerStore();
   const ledger = new LedgerWriter();
   const approvalQueue = new ApprovalQueue();
+  const cache = new InMemoryCache();
+  const revocationBus = new InMemoryRevocationBus();
 
   const gateway = new PolicyGateway({
     resolveToken: async (id) => tokenStore.get(id),
     revocationStore,
+    csmlEscalation: createDefaultCsmlEscalator(ledger),
     emitLedgerEvent: (event) => {
       const written = ledger.append({
-        eventType: event.eventType as any,
+        eventType: event.eventType as SintEventType,
         agentId: event.agentId,
         tokenId: event.tokenId,
         payload: event.payload,
       });
-      // Also persist to backing store (fire-and-forget)
-      ledgerStore.append(written).catch(() => {});
+      // Also persist to backing store
+      ledgerStore.append(written).catch((err) => {
+        console.error("[SINT] Failed to persist ledger event:", err);
+      });
     },
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue };
+  // Wire revocation bus → local store sync
+  revocationBus.subscribe((event) => {
+    revocationStore.revoke(event.tokenId, event.reason, event.revokedBy);
+  });
+
+  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
 }
 
 /**
  * Create a server context backed by PostgreSQL and optionally Redis.
  * Falls back to in-memory stores for any unconfigured backends.
+ *
+ * Redis integration:
+ * - RedisCache: Distributed TTL cache for hot token lookups
+ * - RedisRevocationBus: Pub/sub for <1s revocation propagation across nodes
  */
 export function createPersistentContext(config: SintConfig): ServerContext {
   let tokenStore: TokenStore;
   let ledgerStore: LedgerStore;
+  let cache: CacheStore;
+  let revocationBus: RevocationBus;
 
+  // ── Storage backend ──
   if (config.store === "postgres" && config.databaseUrl) {
     const pool = getPool({ connectionString: config.databaseUrl });
     tokenStore = new PgTokenStore(pool);
@@ -84,16 +123,43 @@ export function createPersistentContext(config: SintConfig): ServerContext {
     ledgerStore = new InMemoryLedgerStore();
   }
 
+  // ── Cache + revocation bus backend ──
+  if (config.cache === "redis" && config.redisUrl) {
+    const redisPublisher = createRedisClient(config.redisUrl);
+    const redisCacheClient = createRedisClient(config.redisUrl);
+    cache = new RedisCache(redisCacheClient);
+    const redisUrl = config.redisUrl;
+    revocationBus = new RedisRevocationBus(
+      redisPublisher,
+      () => createRedisClient(redisUrl), // Subscriber needs its own connection
+    );
+    console.log("[SINT] Redis cache + revocation bus connected");
+  } else {
+    cache = new InMemoryCache();
+    revocationBus = new InMemoryRevocationBus();
+  }
+
   const revocationStore = new RevocationStore();
   const ledger = new LedgerWriter();
   const approvalQueue = new ApprovalQueue();
 
   const gateway = new PolicyGateway({
-    resolveToken: async (id) => tokenStore.get(id),
+    resolveToken: async (id) => {
+      // Check cache first for hot token lookups
+      const cached = await cache.get<SintCapabilityToken>(`token:${id}`);
+      if (cached) return cached;
+      const token = await tokenStore.get(id);
+      if (token) {
+        // Cache for 60s — tokens are validated every request anyway
+        await cache.set(`token:${id}`, token, 60_000);
+      }
+      return token;
+    },
     revocationStore,
+    csmlEscalation: createDefaultCsmlEscalator(ledger),
     emitLedgerEvent: (event) => {
       const written = ledger.append({
-        eventType: event.eventType as any,
+        eventType: event.eventType as SintEventType,
         agentId: event.agentId,
         tokenId: event.tokenId,
         payload: event.payload,
@@ -105,7 +171,14 @@ export function createPersistentContext(config: SintConfig): ServerContext {
     },
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue };
+  // Wire revocation bus: when any node revokes a token, all nodes update their local store
+  revocationBus.subscribe((event) => {
+    revocationStore.revoke(event.tokenId, event.reason, event.revokedBy);
+    // Invalidate cached token on revocation
+    cache.delete(`token:${event.tokenId}`).catch(() => {});
+  });
+
+  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
 }
 
 /** Server configuration options. */
@@ -118,6 +191,10 @@ export interface ServerOptions {
   rateLimitMax?: number;
   /** Rate limit: window duration in ms. Default: 60000. */
   rateLimitWindowMs?: number;
+  /** Optional economy route context for balance/budget/trust endpoints. */
+  economyContext?: EconomyRouteContext;
+  /** Optional A2A route context — mounts /v1/a2a when configured. */
+  a2aContext?: A2ARouteContext;
 }
 
 /** Create a fully configured Hono app. */
@@ -146,7 +223,19 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   app.route("", tokenRoutes(context));
   app.route("", ledgerRoutes(context));
   app.route("", approvalRoutes(context));
+  app.route("", discoveryRoutes());
   app.route("", metricsRoutes());
+  app.route("", riskStreamRoutes(context, globalRiskBus));
+
+  // Economy routes (optional — only when economy context is configured)
+  if (options.economyContext) {
+    app.route("", economyRoutes(options.economyContext));
+  }
+
+  // A2A routes (optional — only when A2A context is configured)
+  if (options.a2aContext) {
+    app.route("", a2aRoutes(options.a2aContext));
+  }
 
   return app;
 }
