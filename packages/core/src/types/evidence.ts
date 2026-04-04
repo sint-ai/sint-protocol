@@ -89,7 +89,11 @@ export type SintEventType =
   // Avatar (Layer 5) — behavioral identity
   | "avatar.profile.created"
   | "avatar.profile.updated"
-  | "avatar.csml.escalated";
+  | "avatar.csml.escalated"
+  // Risk scoring — emitted after each intercept with riskScore + csml
+  | "risk.score.computed"
+  // Ledger management (audit of the auditor)
+  | "ledger.exported";
 
 /**
  * A single immutable event in the Evidence Ledger.

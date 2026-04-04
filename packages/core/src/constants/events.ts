@@ -85,4 +85,10 @@ export const SINT_EVENTS = {
   AVATAR_PROFILE_CREATED: "avatar.profile.created",
   AVATAR_PROFILE_UPDATED: "avatar.profile.updated",
   AVATAR_CSML_ESCALATED: "avatar.csml.escalated",
+
+  // Risk scoring — emitted after each intercept with riskScore + csml
+  RISK_SCORE_COMPUTED: "risk.score.computed",
+
+  // Ledger management (audit of the auditor)
+  LEDGER_EXPORTED: "ledger.exported",
 } as const;
