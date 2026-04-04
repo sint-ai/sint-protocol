@@ -18,6 +18,7 @@ import {
   type Result,
   type SintCapabilityToken,
   type SintPhysicalConstraints,
+  type SintVerifiableComputeProofType,
   capabilityTokenSchema,
   err,
   ok,
@@ -45,6 +46,12 @@ export interface ModelRuntimeContext {
   readonly modelFingerprintHash?: string;
   readonly attestationGrade?: 0 | 1 | 2 | 3;
   readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
+  readonly verifiableComputeProofType?: SintVerifiableComputeProofType;
+  readonly verifiableComputeProofRef?: string;
+  readonly verifiableComputeProofHash?: string;
+  readonly verifiableComputePublicInputsHash?: string;
+  readonly verifiableComputeGeneratedAt?: string;
+  readonly verifiableComputeVerifierRef?: string;
   readonly assignedTier?: "T0_observe" | "T1_prepare" | "T2_act" | "T3_commit";
 }
 
@@ -332,6 +339,62 @@ export function validateModelAndAttestation(
       if (runtime.attestationGrade === undefined) {
         return err("CONSTRAINT_VIOLATION");
       }
+    }
+  }
+
+  const vc = token.verifiableComputeRequirements;
+  if (vc) {
+    const tier = runtime?.assignedTier;
+    const requiresProofForTier =
+      vc.requireForTiers === undefined
+      || vc.requireForTiers.length === 0
+      || (tier !== undefined && (vc.requireForTiers as string[]).includes(tier));
+
+    if (requiresProofForTier) {
+      if (
+        !runtime?.verifiableComputeProofType
+        || !runtime.verifiableComputeProofRef
+        || !runtime.verifiableComputeProofHash
+      ) {
+        return err("CONSTRAINT_VIOLATION");
+      }
+      if (
+        vc.allowedProofTypes
+        && vc.allowedProofTypes.length > 0
+        && !vc.allowedProofTypes.includes(runtime.verifiableComputeProofType)
+      ) {
+        return err("CONSTRAINT_VIOLATION");
+      }
+      if (
+        vc.verifierRefs
+        && vc.verifierRefs.length > 0
+        && (!runtime.verifiableComputeVerifierRef || !vc.verifierRefs.includes(runtime.verifiableComputeVerifierRef))
+      ) {
+        return err("CONSTRAINT_VIOLATION");
+      }
+      if (vc.requirePublicInputsHash && !runtime.verifiableComputePublicInputsHash) {
+        return err("CONSTRAINT_VIOLATION");
+      }
+      if (vc.maxProofAgeMs !== undefined) {
+        if (!runtime.verifiableComputeGeneratedAt) {
+          return err("CONSTRAINT_VIOLATION");
+        }
+        const generatedAt = new Date(runtime.verifiableComputeGeneratedAt).getTime();
+        if (!Number.isFinite(generatedAt)) {
+          return err("CONSTRAINT_VIOLATION");
+        }
+        if (Date.now() - generatedAt > vc.maxProofAgeMs) {
+          return err("CONSTRAINT_VIOLATION");
+        }
+      }
+    } else if (
+      runtime?.verifiableComputeProofType
+      && vc.allowedProofTypes
+      && vc.allowedProofTypes.length > 0
+      && !vc.allowedProofTypes.includes(runtime.verifiableComputeProofType)
+    ) {
+      // If proof metadata is present on non-required tiers, still enforce allowlist.
+      return err("CONSTRAINT_VIOLATION");
     }
   }
 

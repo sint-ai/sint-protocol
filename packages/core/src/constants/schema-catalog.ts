@@ -35,6 +35,7 @@ const CAPABILITY_TOKEN_SCHEMA: JsonSchemaDoc = {
     constraints: { type: "object" },
     modelConstraints: { type: "object" },
     attestationRequirements: { type: "object" },
+    verifiableComputeRequirements: { type: "object" },
     executionEnvelope: { type: "object" },
     delegationChain: { type: "object" },
     issuedAt: { type: "string", format: "date-time" },
@@ -227,6 +228,40 @@ const REVOCATION_SCHEMA: JsonSchemaDoc = {
   additionalProperties: false,
 };
 
+const TIER_COMPLIANCE_CROSSWALK_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/tier-compliance-crosswalk.schema.json",
+  title: "SINT Tier Compliance Crosswalk",
+  type: "object",
+  required: ["tier", "consequenceClass", "mappings"],
+  properties: {
+    tier: { type: "string", enum: ["T0_observe", "T1_prepare", "T2_act", "T3_commit"] },
+    consequenceClass: {
+      type: "string",
+      enum: ["monitoring", "bounded-write", "physical-state-change", "irreversible-commit"],
+    },
+    mappings: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["framework", "reference", "requirement", "sintEnforcement"],
+        properties: {
+          framework: {
+            type: "string",
+            enum: ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"],
+          },
+          reference: { type: "string" },
+          requirement: { type: "string" },
+          sintEnforcement: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+      minItems: 1,
+    },
+  },
+  additionalProperties: false,
+};
+
 export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "capability-token": CAPABILITY_TOKEN_SCHEMA,
   request: REQUEST_SCHEMA,
@@ -238,4 +273,5 @@ export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "bridge-profile": BRIDGE_PROFILE_SCHEMA,
   "site-profile": SITE_PROFILE_SCHEMA,
   revocation: REVOCATION_SCHEMA,
+  "tier-compliance-crosswalk": TIER_COMPLIANCE_CROSSWALK_SCHEMA,
 } as const;

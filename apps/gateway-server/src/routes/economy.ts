@@ -5,6 +5,7 @@
  * - GET  /v1/economy/balance/:agentId  → balance check
  * - GET  /v1/economy/budget/:agentId   → budget status
  * - POST /v1/economy/quote             → cost estimate (non-billing)
+ * - POST /v1/economy/route             → cost-aware route decision
  * - GET  /v1/economy/events            → economic ledger events
  *
  * These routes are only available when an economy plugin is configured.
@@ -15,6 +16,7 @@
 import { Hono } from "hono";
 import type { ServerContext } from "../server.js";
 import type { EconomyPluginHooks } from "@sint/gate-policy-gateway";
+import type { IX402Port } from "@sint/bridge-economy";
 
 /** Extended context with optional economy plugin. */
 export interface EconomyRouteContext {
@@ -26,6 +28,8 @@ export interface EconomyRouteContext {
   readonly budgetPort?: {
     checkBudget(params: { userId: string; action: string; resource: string; estimatedCost: number }): Promise<{ ok: true; value: { allowed: boolean; remainingBudget: number; totalBudget: number; usagePercent: number; isAlert: boolean } } | { ok: false; error: Error }>;
   };
+  /** Optional x402 quote provider for pay-per-call route pricing. */
+  readonly x402Port?: IX402Port;
 }
 
 const ECONOMY_EVENT_TYPES = [
@@ -150,6 +154,68 @@ export function economyRoutes(econCtx: EconomyRouteContext): Hono {
       total: economyEvents.length,
       limit,
       offset,
+    });
+  });
+
+  // ── POST /v1/economy/route ──
+
+  app.post("/v1/economy/route", async (c) => {
+    const body = await c.req.json<{
+      request?: {
+        requestId?: string;
+        resource?: string;
+        action?: string;
+        params?: Record<string, unknown>;
+      };
+      candidates?: Array<{
+        routeId: string;
+        action: string;
+        resource: string;
+        costMultiplier?: number;
+        latencyMs?: number;
+        reliability?: number;
+        x402?: { enabled: boolean; endpoint?: string; quotedUsd?: number };
+      }>;
+      budgetRemainingTokens?: number;
+      maxLatencyMs?: number;
+      latencyWeight?: number;
+    }>();
+
+    if (!body.request?.resource || !body.request?.action || !body.candidates?.length) {
+      return c.json(
+        { error: "Missing required fields: request.resource, request.action, candidates[]" },
+        400,
+      );
+    }
+
+    const { applyX402Quotes, selectCostAwareRoute } = await import("@sint/bridge-economy");
+
+    const candidates = await applyX402Quotes(body.candidates, econCtx.x402Port);
+    const decision = selectCostAwareRoute({
+      request: {
+        requestId: body.request.requestId ?? "route-quote",
+        resource: body.request.resource,
+        action: body.request.action,
+        params: body.request.params ?? {},
+      },
+      candidates,
+      budgetRemainingTokens: body.budgetRemainingTokens,
+      maxLatencyMs: body.maxLatencyMs,
+      latencyWeight: body.latencyWeight,
+    });
+
+    if (!decision) {
+      return c.json(
+        {
+          error: "No candidate route satisfies budget/latency constraints",
+        },
+        409,
+      );
+    }
+
+    return c.json({
+      request: body.request,
+      decision,
     });
   });
 

@@ -16,6 +16,7 @@ Gateways implementing v0.2 MUST expose:
 - `GET /v1/schemas`
 - `GET /v1/schemas/:name`
 - `GET /v1/openapi.json`
+- `GET /v1/compliance/tier-crosswalk`
 
 `/.well-known/sint.json` advertises:
 
@@ -25,6 +26,7 @@ Gateways implementing v0.2 MUST expose:
 - identity methods
 - attestation modes
 - schema catalog pointers
+- compliance crosswalk pointer + framework identifiers
 
 ## Stable Public Nouns
 
@@ -46,6 +48,7 @@ The following nouns are frozen for v0.2 protocol surface compatibility:
 
 - `modelConstraints`
 - `attestationRequirements`
+- `verifiableComputeRequirements`
 - `executionEnvelope`
 - `constraints.quorum`
 
@@ -60,9 +63,20 @@ These fields are optional and backward-compatible. Clients that do not send them
 - executor runtime identity
 - model runtime metadata
 - attestation metadata
+- verifiable compute proof metadata
+- hardware safety-controller handshake metadata (`permit`, `interlock`, `estop`)
 - preapproved corridor metadata
 
 Gateway evidence payloads may include this context for audit and conformance correlation.
+
+## Verifiable Compute Hooks
+
+SINT v0.2 includes tier-gated proof hooks for critical actions:
+
+- Tokens MAY require proof metadata through `verifiableComputeRequirements`.
+- Requests MAY attach proof metadata through `executionContext.verifiableCompute`.
+- Gateways MUST fail-closed on required tiers when required proof metadata is absent, stale, or not allowlisted.
+- Deployments MAY provide a backend-specific verifier plugin (e.g., zkVM receipt verification).
 
 ## Avatar/CSML Runtime
 
@@ -78,6 +92,17 @@ For `edge-gateway` deployments, v0.2 defines fail-closed semantics for high-cons
 - `T2_act` and `T3_commit` actions MUST require a reachable central approval authority.
 - If central approval is unavailable, edge gateways MUST deny (never fail-open) T2/T3 escalations.
 - Revocation observations and evidence events SHOULD be relayed/replicated to central control planes when connectivity permits.
+
+## Hardware Safety Handshake Contract
+
+For industrial deployment profiles (`warehouse-amr`, `industrial-cell`), v0.2 supports
+optional `executionContext.hardwareSafety` metadata with fail-closed behavior:
+
+- `estopState=triggered` MUST block execution immediately.
+- `T2_act`/`T3_commit` requests in industrial profiles MUST be denied when
+  hardware permit is not granted.
+- Interlock states other than `closed` SHOULD be treated as fail-closed.
+- Safety controller state SHOULD be fresh (non-stale) at decision time.
 
 ## Compatibility Rules
 

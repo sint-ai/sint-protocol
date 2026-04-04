@@ -41,6 +41,23 @@ export const attestationContextSchema = z.object({
   quoteRef: z.string().min(1).max(512).optional(),
 }).strict();
 
+export const verifiableComputeContextSchema = z.object({
+  proofType: z.enum(["risc0-groth16", "sp1-groth16", "snark", "stark", "tee-attested"]).optional(),
+  proofRef: z.string().min(1).max(512).optional(),
+  proofHash: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  publicInputsHash: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  generatedAt: iso8601Schema.optional(),
+  verifierRef: z.string().min(1).max(512).optional(),
+}).strict();
+
+export const hardwareSafetyContextSchema = z.object({
+  permitState: z.enum(["granted", "denied", "unknown", "stale"]).optional(),
+  interlockState: z.enum(["closed", "open", "fault", "unknown"]).optional(),
+  estopState: z.enum(["clear", "triggered", "unknown"]).optional(),
+  observedAt: iso8601Schema.optional(),
+  controllerId: z.string().min(1).max(128).optional(),
+}).strict();
+
 export const preapprovedCorridorSchema = z.object({
   corridorId: z.string().min(1).max(128),
   expiresAt: iso8601Schema,
@@ -56,6 +73,8 @@ export const executionContextSchema = z.object({
   executor: executorIdentitySchema.optional(),
   model: modelRuntimeContextSchema.optional(),
   attestation: attestationContextSchema.optional(),
+  verifiableCompute: verifiableComputeContextSchema.optional(),
+  hardwareSafety: hardwareSafetyContextSchema.optional(),
   preapprovedCorridor: preapprovedCorridorSchema.optional(),
 }).strict();
 

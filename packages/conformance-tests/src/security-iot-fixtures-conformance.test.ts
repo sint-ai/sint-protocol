@@ -7,7 +7,11 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
+import type {
+  SintCapabilityToken,
+  SintCapabilityTokenRequest,
+  SintRequest,
+} from "@sint/core";
 import {
   generateKeypair,
   generateUUIDv7,
@@ -24,6 +28,7 @@ import {
 import {
   loadMqttGatewaySessionFixture,
   loadSupplyChainVerificationFixture,
+  loadVerifiableComputeCriticalActionsFixture,
 } from "./fixture-loader.js";
 
 function futureISO(hoursFromNow: number): string {
@@ -177,6 +182,49 @@ describe("Security and IoT Fixture Conformance", () => {
           await expect(op).rejects.toThrow(MqttAuthorizationError);
           expect(mqttClient.subscribe.mock.calls.length).toBe(before);
         }
+      }
+    }
+  });
+
+  it("verifiable compute fixture enforces proof metadata on critical actions", async () => {
+    const fixture = loadVerifiableComputeCriticalActionsFixture();
+    const gateway = new PolicyGateway({
+      resolveToken: (tokenId) => tokenStore.get(tokenId),
+    });
+    const token = issueAndStore({
+      resource: fixture.token.resource,
+      actions: [...fixture.token.actions],
+      verifiableComputeRequirements: fixture.token.verifiableComputeRequirements,
+    });
+
+    for (const scenario of fixture.cases) {
+      const executionContextRaw = scenario.request.executionContext as
+        | Record<string, unknown>
+        | undefined;
+      const executionContext = executionContextRaw
+        ? JSON.parse(JSON.stringify(executionContextRaw).replace(
+            /\"__NOW__\"/g,
+            JSON.stringify(nowISO8601()),
+          ))
+        : undefined;
+
+      const decision = await gateway.intercept({
+        requestId: generateUUIDv7(),
+        timestamp: nowISO8601(),
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        resource: scenario.request.resource,
+        action: scenario.request.action,
+        params: scenario.request.params ?? {},
+        executionContext: executionContext as SintRequest["executionContext"],
+      });
+
+      expect(decision.action).toBe(scenario.expected.decisionAction);
+      if (scenario.expected.assignedTier) {
+        expect(decision.assignedTier).toBe(scenario.expected.assignedTier);
+      }
+      if (scenario.expected.policyViolated) {
+        expect(decision.denial?.policyViolated).toBe(scenario.expected.policyViolated);
       }
     }
   });

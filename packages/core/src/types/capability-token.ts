@@ -124,6 +124,14 @@ export type SintAttestationBackend =
   | "tpm2"
   | "none";
 
+/** Verifiable compute proof families supported by SINT metadata contracts. */
+export type SintVerifiableComputeProofType =
+  | "risc0-groth16"
+  | "sp1-groth16"
+  | "snark"
+  | "stark"
+  | "tee-attested";
+
 /**
  * Requirements for runtime attestation attached to token usage.
  * Enforcement is optional and controlled by gateway policy.
@@ -135,6 +143,23 @@ export interface SintAttestationRequirements {
   readonly allowedTeeBackends?: readonly SintAttestationBackend[];
   /** Tiers for which attestation is required. */
   readonly requireForTiers?: readonly ApprovalTier[];
+}
+
+/**
+ * Requirements for verifiable-compute proofs attached to token usage.
+ * Enables provable execution metadata checks for high-consequence actions.
+ */
+export interface SintVerifiableComputeRequirements {
+  /** Tiers that require proof material to be attached at request time. */
+  readonly requireForTiers?: readonly ApprovalTier[];
+  /** Optional allowlist of proof families accepted for this token. */
+  readonly allowedProofTypes?: readonly SintVerifiableComputeProofType[];
+  /** Optional allowlist of verifier IDs/URIs trusted for this token. */
+  readonly verifierRefs?: readonly string[];
+  /** Optional max age (ms) for proof freshness checks. */
+  readonly maxProofAgeMs?: DurationMs;
+  /** Require `publicInputsHash` to be present in runtime proof metadata. */
+  readonly requirePublicInputsHash?: boolean;
 }
 
 /**
@@ -211,6 +236,8 @@ export interface SintCapabilityToken {
   readonly modelConstraints?: SintModelConstraints;
   /** Optional attestation requirements for this token. */
   readonly attestationRequirements?: SintAttestationRequirements;
+  /** Optional verifiable-compute proof requirements for this token. */
+  readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   /** Optional pre-approved execution envelope for low-latency control. */
   readonly executionEnvelope?: SintExecutionEnvelope;
 
@@ -236,6 +263,7 @@ export interface SintCapabilityTokenRequest {
   readonly constraints: SintPhysicalConstraints;
   readonly modelConstraints?: SintModelConstraints;
   readonly attestationRequirements?: SintAttestationRequirements;
+  readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   readonly executionEnvelope?: SintExecutionEnvelope;
   readonly delegationChain: SintDelegationChain;
   readonly expiresAt: ISO8601;

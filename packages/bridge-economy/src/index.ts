@@ -21,6 +21,11 @@ export type {
   IPricingPort,
   PricingContext,
   PricingInfo,
+  RouteCandidate,
+  X402Quote,
+  IX402Port,
+  CostAwareRoutingInput,
+  CostAwareRoutingDecision,
 } from "./interfaces.js";
 
 // ─── Economy Plugin ──────────────────────────────────────────
@@ -39,6 +44,12 @@ export {
   TOKENS_PER_DOLLAR,
   INITIAL_USER_BALANCE,
 } from "./pricing-calculator.js";
+
+// ─── Cost-Aware Routing ──────────────────────────────────────
+export {
+  selectCostAwareRoute,
+  applyX402Quotes,
+} from "./cost-aware-routing.js";
 
 // ─── Trust/Tier Mapping ──────────────────────────────────────
 export {

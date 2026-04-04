@@ -225,3 +225,74 @@ export interface IPricingPort {
    */
   getPrice(context: PricingContext): Promise<Result<PricingInfo, Error>>;
 }
+
+// ─── Cost-Aware Routing + x402 (Optional) ────────────────────
+
+/** Candidate execution route for a given action. */
+export interface RouteCandidate {
+  /** Stable route identifier (e.g. "rmf-primary", "sparkplug-edge"). */
+  readonly routeId: string;
+  /** Action to execute on this route. */
+  readonly action: string;
+  /** Resource URI targeted by this route. */
+  readonly resource: string;
+  /** Optional pricing multiplier override for this route. */
+  readonly costMultiplier?: number;
+  /** Expected p95 end-to-end latency in milliseconds. */
+  readonly latencyMs?: number;
+  /** Optional route reliability score (0..1, higher is better). */
+  readonly reliability?: number;
+  /** Optional x402 pay-per-call metadata for this route. */
+  readonly x402?: {
+    readonly enabled: boolean;
+    readonly endpoint?: string;
+    /** Optional direct quote if already fetched externally. */
+    readonly quotedUsd?: number;
+  };
+}
+
+/** Optional x402 quote response for pay-per-call route pricing. */
+export interface X402Quote {
+  readonly routeId: string;
+  readonly endpoint: string;
+  readonly priceUsd: number;
+  readonly currency: "USD";
+  readonly quoteId?: string;
+  readonly expiresAt?: string;
+}
+
+/** Optional x402 port for route-level pay-per-call quoting/settlement. */
+export interface IX402Port {
+  /** Fetch a pay-per-call quote for a route candidate. */
+  getQuote(candidate: RouteCandidate): Promise<Result<X402Quote, Error>>;
+}
+
+/** Input for cost-aware route selection. */
+export interface CostAwareRoutingInput {
+  readonly request: {
+    readonly requestId: string;
+    readonly resource: string;
+    readonly action: string;
+    readonly params: Record<string, unknown>;
+  };
+  readonly candidates: readonly RouteCandidate[];
+  /** Optional remaining budget in tokens to enforce hard cutoff. */
+  readonly budgetRemainingTokens?: number;
+  /** Optional max acceptable route latency (ms). */
+  readonly maxLatencyMs?: number;
+  /**
+   * How strongly latency contributes to the score.
+   * Higher means lower-latency routes are preferred more aggressively.
+   */
+  readonly latencyWeight?: number;
+}
+
+/** Chosen route and scoring breakdown. */
+export interface CostAwareRoutingDecision {
+  readonly routeId: string;
+  readonly totalCostTokens: number;
+  readonly estimatedLatencyMs: number;
+  readonly score: number;
+  readonly reason: string;
+  readonly viaX402: boolean;
+}

@@ -74,6 +74,18 @@ export const attestationRequirementsSchema = z.object({
   ).min(1).max(4).optional(),
 }).strict();
 
+export const verifiableComputeRequirementsSchema = z.object({
+  requireForTiers: z.array(
+    z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]),
+  ).min(1).max(4).optional(),
+  allowedProofTypes: z.array(
+    z.enum(["risc0-groth16", "sp1-groth16", "snark", "stark", "tee-attested"]),
+  ).min(1).max(8).optional(),
+  verifierRefs: z.array(z.string().min(1).max(512)).min(1).max(16).optional(),
+  maxProofAgeMs: z.number().int().positive().optional(),
+  requirePublicInputsHash: z.boolean().optional(),
+}).strict();
+
 export const executionEnvelopeSchema = z.object({
   corridorId: z.string().min(1).max(128).optional(),
   expiresAt: iso8601Schema.optional(),
@@ -99,6 +111,7 @@ export const capabilityTokenSchema = z.object({
   constraints: physicalConstraintsSchema,
   modelConstraints: modelConstraintsSchema.optional(),
   attestationRequirements: attestationRequirementsSchema.optional(),
+  verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   issuedAt: iso8601Schema,
@@ -117,6 +130,7 @@ export const capabilityTokenRequestSchema = z.object({
   constraints: physicalConstraintsSchema,
   modelConstraints: modelConstraintsSchema.optional(),
   attestationRequirements: attestationRequirementsSchema.optional(),
+  verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
   delegationChain: delegationChainSchema,
   expiresAt: iso8601Schema,

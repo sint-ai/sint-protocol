@@ -19,6 +19,7 @@ import {
   SINT_BRIDGE_PROFILES,
   SINT_SITE_PROFILES,
   SINT_SCHEMA_CATALOG,
+  SINT_TIER_COMPLIANCE_CROSSWALK,
 } from "@sint/core";
 
 export function discoveryRoutes(): Hono {
@@ -46,6 +47,10 @@ export function discoveryRoutes(): Hono {
         name,
         path: `/v1/schemas/${name}`,
       })),
+      complianceCrosswalk: {
+        path: "/v1/compliance/tier-crosswalk",
+        frameworks: ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"],
+      },
       openapi: "/v1/openapi.json",
     });
   });
@@ -72,6 +77,15 @@ export function discoveryRoutes(): Hono {
     return c.json(schema);
   });
 
+  app.get("/v1/compliance/tier-crosswalk", (c) => {
+    return c.json({
+      version: SINT_PROTOCOL_VERSION,
+      mappings: SINT_TIER_COMPLIANCE_CROSSWALK,
+      disclaimer:
+        "Crosswalk is implementation guidance, not legal advice. Validate obligations for your jurisdiction and sector.",
+    });
+  });
+
   app.get("/v1/openapi.json", (c) => {
     return c.json({
       openapi: "3.1.0",
@@ -94,8 +108,16 @@ export function discoveryRoutes(): Hono {
         "/v1/approvals/{requestId}/resolve": { post: { summary: "Resolve approval" } },
         "/v1/a2a": { post: { summary: "A2A JSON-RPC endpoint" } },
         "/v1/a2a/agents": { get: { summary: "List A2A agents" }, post: { summary: "Register A2A agent" } },
+        "/v1/economy/balance/{agentId}": { get: { summary: "Get agent balance (if economy plugin configured)" } },
+        "/v1/economy/budget/{agentId}": { get: { summary: "Get agent budget status (if economy plugin configured)" } },
+        "/v1/economy/quote": { post: { summary: "Quote action cost (non-billing)" } },
+        "/v1/economy/route": { post: { summary: "Cost-aware route selection with optional x402 quotes" } },
+        "/v1/economy/events": { get: { summary: "List economy-related ledger events" } },
         "/v1/schemas": { get: { summary: "List public JSON schemas" } },
         "/v1/schemas/{name}": { get: { summary: "Fetch schema by name" } },
+        "/v1/compliance/tier-crosswalk": {
+          get: { summary: "SINT tier mapping to NIST AI RMF, ISO/IEC 42001, and EU AI Act controls" },
+        },
       },
       components: {
         schemas: SINT_SCHEMA_CATALOG,

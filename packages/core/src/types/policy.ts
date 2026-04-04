@@ -8,7 +8,10 @@
  * @module @sint/core/types/policy
  */
 
-import type { SintPhysicalConstraints } from "./capability-token.js";
+import type {
+  SintPhysicalConstraints,
+  SintVerifiableComputeProofType,
+} from "./capability-token.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -81,6 +84,33 @@ export interface SintAttestationContext {
   readonly quoteRef?: string;
 }
 
+/** Verifiable compute proof metadata attached to a request. */
+export interface SintVerifiableComputeContext {
+  readonly proofType?: SintVerifiableComputeProofType;
+  readonly proofRef?: string;
+  readonly proofHash?: string;
+  readonly publicInputsHash?: string;
+  readonly generatedAt?: ISO8601;
+  readonly verifierRef?: string;
+}
+
+/** Hardware safety-controller handshake metadata attached to a request. */
+export interface SintHardwareSafetyContext {
+  /**
+   * Permit state from the safety controller.
+   * T2/T3 industrial actions are expected to run only when this is "granted".
+   */
+  readonly permitState?: "granted" | "denied" | "unknown" | "stale";
+  /** Safety interlock state for the executing zone/cell. */
+  readonly interlockState?: "closed" | "open" | "fault" | "unknown";
+  /** Emergency-stop state observed by the bridge/controller. */
+  readonly estopState?: "clear" | "triggered" | "unknown";
+  /** Time the safety controller state was observed. */
+  readonly observedAt?: ISO8601;
+  /** Optional controller identifier (PLC / relay / safety I/O gateway). */
+  readonly controllerId?: string;
+}
+
 /** Pre-approved execution corridor metadata attached to a request. */
 export interface SintPreapprovedCorridor {
   readonly corridorId: string;
@@ -98,6 +128,8 @@ export interface SintExecutionContext {
   readonly executor?: SintExecutorIdentity;
   readonly model?: SintModelRuntimeContext;
   readonly attestation?: SintAttestationContext;
+  readonly verifiableCompute?: SintVerifiableComputeContext;
+  readonly hardwareSafety?: SintHardwareSafetyContext;
   readonly preapprovedCorridor?: SintPreapprovedCorridor;
 }
 

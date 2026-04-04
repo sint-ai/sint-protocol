@@ -7,6 +7,7 @@ export type {
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
   EdgeControlPlanePlugin,
+  VerifiableComputePlugin,
 } from "./gateway.js";
 export { DefaultSupplyChainVerifier } from "./supply-chain.js";
 export type {

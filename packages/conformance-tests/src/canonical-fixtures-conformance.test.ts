@@ -6,7 +6,12 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
+import {
+  SINT_TIER_COMPLIANCE_CROSSWALK,
+  type SintCapabilityToken,
+  type SintCapabilityTokenRequest,
+  type SintRequest,
+} from "@sint/core";
 import {
   generateKeypair,
   generateUUIDv7,
@@ -25,7 +30,9 @@ import {
 } from "@sint/bridge-open-rmf";
 import { opcUaNodeToResourceUri, opcUaOperationToAction } from "@sint/bridge-opcua";
 import {
+  loadHardwareSafetyHandshakeFixture,
   loadOpcUaSafetyControlFixture,
+  loadTierComplianceCrosswalkFixture,
   loadWellKnownDiscoveryFixture,
   loadWarehouseMoveEquivalenceFixture,
 } from "./fixture-loader.js";
@@ -33,6 +40,15 @@ import {
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);
   return d.toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
+}
+
+function replaceNowPlaceholder<T>(value: T): T {
+  return JSON.parse(
+    JSON.stringify(value).replace(
+      /\"__NOW__\"/g,
+      JSON.stringify(nowISO8601()),
+    ),
+  ) as T;
 }
 
 describe("Canonical Fixture Conformance", () => {
@@ -80,6 +96,22 @@ describe("Canonical Fixture Conformance", () => {
     expect(fixture.identityMethods).toContain("ed25519");
     expect(fixture.openapi).toBe("/v1/openapi.json");
     expect(fixture.supportedBridges.length).toBeGreaterThan(0);
+    expect(fixture.complianceCrosswalk?.path).toBe("/v1/compliance/tier-crosswalk");
+  });
+
+  it("tier compliance crosswalk fixture stays aligned with exported core mapping", () => {
+    const fixture = loadTierComplianceCrosswalkFixture();
+    expect(SINT_TIER_COMPLIANCE_CROSSWALK.length).toBe(fixture.tiers.length);
+
+    for (const tierFixture of fixture.tiers) {
+      const mapped = SINT_TIER_COMPLIANCE_CROSSWALK.find((entry) => entry.tier === tierFixture.tier);
+      expect(mapped).toBeDefined();
+      expect(mapped?.consequenceClass).toBe(tierFixture.consequenceClass);
+
+      for (const requiredReference of tierFixture.requiredReferences) {
+        expect(mapped?.mappings.some((m) => m.reference === requiredReference)).toBe(true);
+      }
+    }
   });
 
   it("warehouse move fixture yields equivalent escalation semantics across ROS2, Sparkplug, and Open-RMF", async () => {
@@ -176,6 +208,39 @@ describe("Canonical Fixture Conformance", () => {
 
       expect(decision.assignedTier).toBe(scenario.expected.assignedTier);
       expect(decision.action).toBe(scenario.expected.decisionAction);
+    }
+  });
+
+  it("hardware safety handshake fixture enforces fail-closed industrial permit behavior", async () => {
+    const fixture = loadHardwareSafetyHandshakeFixture();
+    const token = issueAndStore({
+      resource: fixture.token.resource,
+      actions: [...fixture.token.actions],
+    });
+
+    for (const scenario of fixture.cases) {
+      const executionContext = scenario.request.executionContext
+        ? replaceNowPlaceholder(scenario.request.executionContext)
+        : undefined;
+
+      const decision = await gateway.intercept({
+        requestId: generateUUIDv7(),
+        timestamp: nowISO8601(),
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        resource: scenario.request.resource,
+        action: scenario.request.action,
+        params: scenario.request.params ?? {},
+        executionContext: executionContext as SintRequest["executionContext"],
+      });
+
+      expect(decision.action).toBe(scenario.expected.decisionAction);
+      if (scenario.expected.assignedTier) {
+        expect(decision.assignedTier).toBe(scenario.expected.assignedTier);
+      }
+      if (scenario.expected.policyViolated) {
+        expect(decision.denial?.policyViolated).toBe(scenario.expected.policyViolated);
+      }
     }
   });
 });

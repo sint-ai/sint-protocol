@@ -119,6 +119,19 @@ shortfall produces a `deny` — not an escalation. The ledger receives
 Both the budget check and balance check are fail-open: if the port is
 unreachable, the request proceeds through normal gateway logic.
 
+### Cost-aware route selection (Economic Layer v1)
+
+`@sint/bridge-economy` now includes route scoring helpers for multi-bridge
+execution choices:
+
+- `selectCostAwareRoute(input)` scores candidates using cost + latency + reliability.
+- `applyX402Quotes(candidates, x402Port)` can enrich candidates with optional
+  x402 pay-per-call USD quotes.
+- `POST /v1/economy/route` exposes this behavior through the gateway API.
+
+The route API is additive and optional. Existing billing/budget integrations
+continue to work unchanged when route selection is not used.
+
 ---
 
 ## 6. Fraud Prevention

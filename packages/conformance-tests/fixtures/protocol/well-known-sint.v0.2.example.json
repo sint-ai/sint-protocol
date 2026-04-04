@@ -33,7 +33,12 @@
   "schemaCatalog": [
     { "name": "capability-token", "path": "/v1/schemas/capability-token" },
     { "name": "request", "path": "/v1/schemas/request" },
-    { "name": "policy-decision", "path": "/v1/schemas/policy-decision" }
+    { "name": "policy-decision", "path": "/v1/schemas/policy-decision" },
+    { "name": "tier-compliance-crosswalk", "path": "/v1/schemas/tier-compliance-crosswalk" }
   ],
+  "complianceCrosswalk": {
+    "path": "/v1/compliance/tier-crosswalk",
+    "frameworks": ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"]
+  },
   "openapi": "/v1/openapi.json"
 }

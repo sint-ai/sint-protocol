@@ -68,6 +68,7 @@ describe("Gateway Server API", () => {
     expect(body.version).toBeDefined();
     expect(Array.isArray(body.supportedBridges)).toBe(true);
     expect(Array.isArray(body.deploymentProfiles)).toBe(true);
+    expect(body.complianceCrosswalk?.path).toBe("/v1/compliance/tier-crosswalk");
   });
 
   it("GET /v1/schemas returns schema catalog", async () => {
@@ -84,6 +85,16 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.openapi).toBe("3.1.0");
     expect(body.paths["/.well-known/sint.json"]).toBeDefined();
+    expect(body.paths["/v1/compliance/tier-crosswalk"]).toBeDefined();
+  });
+
+  it("GET /v1/compliance/tier-crosswalk returns tier mappings", async () => {
+    const res = await app.request("/v1/compliance/tier-crosswalk");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body.mappings)).toBe(true);
+    expect(body.mappings.length).toBe(4);
+    expect(body.mappings[0].mappings.length).toBeGreaterThanOrEqual(3);
   });
 
   // ── Intercept ──

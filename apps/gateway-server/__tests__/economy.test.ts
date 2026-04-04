@@ -11,7 +11,7 @@ import type { EconomyRouteContext } from "../src/routes/economy.js";
 import {
   InMemoryBalanceAdapter,
   InMemoryBudgetAdapter,
-  computeActionCost,
+  type IX402Port,
 } from "@sint/bridge-economy";
 
 describe("Gateway Server — Economy Routes", () => {
@@ -19,16 +19,31 @@ describe("Gateway Server — Economy Routes", () => {
   let app: Hono;
   let balanceAdapter: InMemoryBalanceAdapter;
   let budgetAdapter: InMemoryBudgetAdapter;
+  let x402Port: IX402Port;
 
   beforeEach(() => {
     ctx = createContext();
     balanceAdapter = new InMemoryBalanceAdapter(250);
     budgetAdapter = new InMemoryBudgetAdapter(1000);
+    x402Port = {
+      async getQuote(candidate) {
+        return {
+          ok: true,
+          value: {
+            routeId: candidate.routeId,
+            endpoint: candidate.x402?.endpoint ?? "https://x402.example/quote",
+            priceUsd: 0.02,
+            currency: "USD",
+          },
+        };
+      },
+    };
 
     const econCtx: EconomyRouteContext = {
       serverContext: ctx,
       balancePort: balanceAdapter,
       budgetPort: budgetAdapter,
+      x402Port,
     };
 
     app = createApp(ctx, { economyContext: econCtx });
@@ -105,6 +120,101 @@ describe("Gateway Server — Economy Routes", () => {
     const body = await res.json();
     expect(body.baseCost).toBe(12);
     expect(body.totalCost).toBe(18); // ceil(12 × 1.0 × 1.5)
+  });
+
+  it("POST /v1/economy/route selects a cost-aware route", async () => {
+    const res = await app.request("/v1/economy/route", {
+      method: "POST",
+      body: JSON.stringify({
+        request: {
+          requestId: "route-001",
+          resource: "mcp://dispatch/tool",
+          action: "call",
+          params: {},
+        },
+        candidates: [
+          {
+            routeId: "rmf-primary",
+            action: "call",
+            resource: "open-rmf://fleet-a/dispatch",
+            costMultiplier: 1.4,
+            latencyMs: 18,
+            reliability: 0.95,
+          },
+          {
+            routeId: "sparkplug-edge",
+            action: "publish",
+            resource: "mqtt-sparkplug://broker/ns/group/node/cmd",
+            costMultiplier: 0.8,
+            latencyMs: 9,
+            reliability: 0.9,
+          },
+        ],
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.decision.routeId).toBe("sparkplug-edge");
+    expect(body.decision.totalCostTokens).toBeGreaterThan(0);
+  });
+
+  it("POST /v1/economy/route applies x402 quote and returns viaX402=true", async () => {
+    const res = await app.request("/v1/economy/route", {
+      method: "POST",
+      body: JSON.stringify({
+        request: {
+          requestId: "route-002",
+          resource: "mcp://premium/tool",
+          action: "call",
+          params: {},
+        },
+        candidates: [
+          {
+            routeId: "x402-premium",
+            action: "call",
+            resource: "mcp://premium/tool",
+            latencyMs: 6,
+            x402: {
+              enabled: true,
+              endpoint: "https://x402.example/quote",
+            },
+          },
+        ],
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.decision.routeId).toBe("x402-premium");
+    expect(body.decision.viaX402).toBe(true);
+  });
+
+  it("POST /v1/economy/route returns 409 when no candidate satisfies constraints", async () => {
+    const res = await app.request("/v1/economy/route", {
+      method: "POST",
+      body: JSON.stringify({
+        request: {
+          requestId: "route-003",
+          resource: "mcp://dispatch/tool",
+          action: "call",
+          params: {},
+        },
+        budgetRemainingTokens: 1,
+        candidates: [
+          {
+            routeId: "expensive-route",
+            action: "call",
+            resource: "mcp://expensive/tool",
+            costMultiplier: 10,
+            latencyMs: 2,
+          },
+        ],
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect(res.status).toBe(409);
   });
 
   // ── Events ──

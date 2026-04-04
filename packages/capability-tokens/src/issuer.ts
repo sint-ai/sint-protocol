@@ -56,6 +56,7 @@ export function computeSigningPayload(
     revocationEndpoint: token.revocationEndpoint,
     subject: token.subject,
     tokenId: token.tokenId,
+    verifiableComputeRequirements: token.verifiableComputeRequirements,
   });
 }
 
@@ -119,6 +120,7 @@ export function issueCapabilityToken(
     constraints: request.constraints,
     modelConstraints: request.modelConstraints,
     attestationRequirements: request.attestationRequirements,
+    verifiableComputeRequirements: request.verifiableComputeRequirements,
     executionEnvelope: request.executionEnvelope,
     delegationChain: request.delegationChain,
     issuedAt,

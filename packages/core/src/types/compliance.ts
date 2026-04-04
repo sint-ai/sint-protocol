@@ -13,6 +13,8 @@
  * @module @sint/core/types/compliance
  */
 
+import type { ApprovalTier } from "./policy.js";
+
 /**
  * OWASP Agentic Security Issue (ASI) categories.
  * Each maps to one of the ten OWASP Agentic Top 10 risks.
@@ -56,4 +58,30 @@ export interface OwaspCoverageEntry {
   readonly description: string;
   /** Gaps — what SINT does NOT cover in this category. */
   readonly gaps?: string;
+}
+
+/** Compliance frameworks used for SINT tier crosswalk mapping. */
+export type SintComplianceFramework =
+  | "nist-ai-rmf-1.0"
+  | "iso-iec-42001-2023"
+  | "eu-ai-act-2024-1689";
+
+/** Mapping row for a single framework reference at a given SINT tier. */
+export interface SintTierComplianceReference {
+  readonly framework: SintComplianceFramework;
+  /** Canonical control/article/clause identifier. */
+  readonly reference: string;
+  /** What this reference means operationally for this tier. */
+  readonly requirement: string;
+  /** How SINT enforces the requirement for this tier. */
+  readonly sintEnforcement: string;
+}
+
+/** Full crosswalk entry for one SINT approval tier. */
+export interface SintTierComplianceCrosswalkEntry {
+  readonly tier: ApprovalTier;
+  /** Human-readable severity posture for this tier. */
+  readonly consequenceClass: "monitoring" | "bounded-write" | "physical-state-change" | "irreversible-commit";
+  /** Framework mappings that apply at this tier. */
+  readonly mappings: readonly SintTierComplianceReference[];
 }

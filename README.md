@@ -33,6 +33,7 @@ AI agents can now control robots, execute code, move money, and operate machiner
 - No agent action ever bypasses the Policy Gateway (invariant I-G1: No Bypass)
 - Every decision is recorded in a tamper-evident SHA-256 hash-chained ledger (invariant I-G3: Ledger Primacy)
 - Physical constraints (velocity, force, geofence) are enforced at the protocol level — in the token, not in config
+- Tier-gated verifiable compute hooks support provable-execution evidence on critical actions
 - E-stop is universal across all non-terminal DFA states (invariant I-G2: E-stop Universality)
 - Per-agent capability tokens with real-time revocation
 
@@ -244,6 +245,12 @@ PolicyGateway latency (measured on M3 MacBook Pro, pnpm run bench):
 
 The gateway adds sub-3ms overhead at p99 for all tiers. Run benchmarks: `pnpm run bench`.
 
+ROS2 control-loop target benchmark:
+
+| Path | SLA Target | Command |
+|------|------------|---------|
+| ROS2 command path (`/cmd_vel`) | `p99 < 10ms` | `pnpm run benchmark:ros2-loop` |
+
 ## Key Concepts
 
 ### Capability Tokens
@@ -254,6 +261,7 @@ Token fields:
 - **Resource scoping** — what the agent can access (`ros2:///cmd_vel`, `mcp://filesystem/*`, `a2a://agents.example.com/*`)
 - **Action restriction** — what operations are allowed (`publish`, `call`, `subscribe`, `a2a.send`)
 - **Physical constraints** — max velocity (m/s), max force (N), geofence polygon, time window, rate limit
+- **Verifiable compute requirements** — optional proof type/verifier/freshness/public-input constraints for T2/T3 actions
 - **Delegation chains** — max 3 hops, attenuation only (invariant I-T1)
 - **Revocation** — instant invalidation via revocation store (ConsentPass endpoint)
 - **W3C DID identity** — `did:key:z6Mk...` format for agent portability
@@ -303,6 +311,17 @@ CSML above a deployment threshold θ automatically escalates all subsequent requ
 | Human oversight | Dynamic Consent + T3 approval gate — T3 actions cannot execute without recorded human approval |
 | Risk management | Tier escalation based on real-time physical context (Δ_human, Δ_env, Δ_novelty) |
 
+### Tier Crosswalk (NIST AI RMF / ISO 42001 / EU AI Act)
+
+| SINT Tier | NIST AI RMF | ISO/IEC 42001 | EU AI Act |
+|-----------|-------------|---------------|------------|
+| T0 Observe | MAP + MEASURE + MANAGE monitoring controls | Clause 9 + Clause 8 controls | Article 12 + Article 13 |
+| T1 Prepare | GOVERN + MANAGE controlled write path | Clause 8.1/8.2 operational risk treatment | Article 9 + Article 12 |
+| T2 Act | MANAGE risk response with accountable oversight | Clause 8 + Clause 6 operational controls | Article 14 + Article 15 |
+| T3 Commit | Highest-consequence GOVERN + MANAGE controls | Clause 8.3 + Clause 10 corrective governance | Article 14(4)(e) + Articles 9/12/15 |
+
+Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
@@ -321,6 +340,8 @@ CSML above a deployment threshold θ automatically escalates all subsequent requ
 | `POST` | `/v1/a2a` | JSON-RPC 2.0 A2A protocol endpoint |
 | `GET` | `/v1/metrics` | Prometheus metrics |
 | `GET` | `/v1/openapi.json` | OpenAPI surface for gateway integration |
+| `GET` | `/v1/compliance/tier-crosswalk` | SINT tier mapping to NIST AI RMF / ISO 42001 / EU AI Act controls |
+| `POST` | `/v1/economy/route` | Cost-aware route selection with optional x402 pay-per-call quotes |
 
 ## Development Phases
 
@@ -378,6 +399,9 @@ docker-compose up
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
 - Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
 - Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
+- ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
+- Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)
+- Hardware safety handshake fixture: [`packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json`](packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json)
 
 ## Design Principles
 

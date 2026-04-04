@@ -7,7 +7,12 @@
  * @module @sint/core/constants/compliance
  */
 
-import { OwaspAsi, type OwaspCoverageEntry } from "../types/compliance.js";
+import { ApprovalTier } from "../types/policy.js";
+import {
+  OwaspAsi,
+  type OwaspCoverageEntry,
+  type SintTierComplianceCrosswalkEntry,
+} from "../types/compliance.js";
 
 /**
  * SINT Protocol OWASP Agentic Top 10 coverage.
@@ -163,5 +168,111 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
       "from an agent. CSML anomalous persona auto-trips the circuit when safety events " +
       "are detected. DynamicEnvelopePlugin enforces environment-adaptive physical limits " +
       "even when the agent presents a valid token.",
+  },
+] as const;
+
+/**
+ * SINT approval-tier mapping to NIST AI RMF / ISO 42001 / EU AI Act obligations.
+ *
+ * This is an implementation-focused crosswalk for agentic/physical AI deployments.
+ * It is not legal advice; organizations should still validate obligations against
+ * their sector and deployment context.
+ */
+export const SINT_TIER_COMPLIANCE_CROSSWALK: readonly SintTierComplianceCrosswalkEntry[] = [
+  {
+    tier: ApprovalTier.T0_OBSERVE,
+    consequenceClass: "monitoring",
+    mappings: [
+      {
+        framework: "nist-ai-rmf-1.0",
+        reference: "MAP + MEASURE + MANAGE (low-consequence monitoring path)",
+        requirement: "Continuously monitor model behavior and retain traceable records.",
+        sintEnforcement: "Auto-approved T0 requests are still ledgered with immutable evidence events.",
+      },
+      {
+        framework: "iso-iec-42001-2023",
+        reference: "Clause 9 (performance evaluation) + Clause 8 (operational controls)",
+        requirement: "Monitor AI system performance and keep auditable operational controls.",
+        sintEnforcement: "Per-request policy decisions and evidence telemetry provide operational monitoring baselines.",
+      },
+      {
+        framework: "eu-ai-act-2024-1689",
+        reference: "Article 12 (record-keeping) + Article 13 (transparency)",
+        requirement: "Maintain logs and transparent technical documentation for AI behavior.",
+        sintEnforcement: "Read-path decisions are hash-chained and queryable via ledger/discovery endpoints.",
+      },
+    ],
+  },
+  {
+    tier: ApprovalTier.T1_PREPARE,
+    consequenceClass: "bounded-write",
+    mappings: [
+      {
+        framework: "nist-ai-rmf-1.0",
+        reference: "GOVERN + MANAGE (controlled low-impact action path)",
+        requirement: "Apply governance controls before low-impact state mutation.",
+        sintEnforcement: "Capability tokens, scoped actions, and rate limits gate bounded write operations.",
+      },
+      {
+        framework: "iso-iec-42001-2023",
+        reference: "Clause 8.1/8.2 (operational planning and AI risk treatment)",
+        requirement: "Treat operational AI risk before deployment-stage actions.",
+        sintEnforcement: "Tier assignment and constraints are evaluated before every write-style request.",
+      },
+      {
+        framework: "eu-ai-act-2024-1689",
+        reference: "Article 9 (risk management) + Article 12 (logging)",
+        requirement: "Keep risk controls active and auditable during operation.",
+        sintEnforcement: "Gateway policy checks and ledger evidence enforce and document bounded action controls.",
+      },
+    ],
+  },
+  {
+    tier: ApprovalTier.T2_ACT,
+    consequenceClass: "physical-state-change",
+    mappings: [
+      {
+        framework: "nist-ai-rmf-1.0",
+        reference: "MANAGE (risk response) + GOVERN (accountability for high-impact operation)",
+        requirement: "Escalate and govern physical-impact actions with human accountability.",
+        sintEnforcement: "T2 actions require escalation to approval flow; optional quorum and attestation are enforced.",
+      },
+      {
+        framework: "iso-iec-42001-2023",
+        reference: "Clause 8 (operational control) + Clause 6 (risk planning)",
+        requirement: "Apply explicit controls for AI operations that alter physical state.",
+        sintEnforcement: "Physical constraints (force/velocity/geofence) are enforced at token and gateway levels.",
+      },
+      {
+        framework: "eu-ai-act-2024-1689",
+        reference: "Article 14 (human oversight) + Article 15 (accuracy/robustness/cybersecurity)",
+        requirement: "Maintain effective human oversight and robust behavior for high-impact AI actions.",
+        sintEnforcement: "T2 escalation, dynamic envelopes, and deterministic deny paths enforce fail-safe oversight.",
+      },
+    ],
+  },
+  {
+    tier: ApprovalTier.T3_COMMIT,
+    consequenceClass: "irreversible-commit",
+    mappings: [
+      {
+        framework: "nist-ai-rmf-1.0",
+        reference: "GOVERN + MANAGE (highest-consequence decision authority)",
+        requirement: "Apply strongest accountability and control to irreversible actions.",
+        sintEnforcement: "T3 requires explicit human sign-off (with optional M-of-N quorum) before commit.",
+      },
+      {
+        framework: "iso-iec-42001-2023",
+        reference: "Clause 8.3 (risk treatment implementation) + Clause 10 (continual improvement)",
+        requirement: "Execute highest-severity controls and corrective feedback loops.",
+        sintEnforcement: "Commit-tier actions require evidence-backed approvals and post-incident traceability.",
+      },
+      {
+        framework: "eu-ai-act-2024-1689",
+        reference: "Article 14(4)(e) (human override/stop) + Articles 9/12/15",
+        requirement: "Support immediate human intervention with rigorous logging and safety robustness.",
+        sintEnforcement: "Circuit-breaker stop control, T3 approval gates, and tamper-evident ledger receipts are mandatory controls.",
+      },
+    ],
   },
 ] as const;

@@ -32,6 +32,9 @@ import type { GoalHijackPlugin } from "./goal-hijack.js";
 import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 import type { SupplyChainVerifierPlugin } from "./supply-chain.js";
 
+const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
+const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
+
 /** Token resolver — looks up a capability token by ID (sync or async). */
 export type TokenResolver = (tokenId: string) => SintCapabilityToken | undefined | Promise<SintCapabilityToken | undefined>;
 
@@ -150,6 +153,25 @@ export interface EdgeControlPlanePlugin {
   ): Promise<void> | void;
 }
 
+/**
+ * Optional verifier hook for verifiable-compute proof metadata.
+ *
+ * The gateway enforces structural proof requirements itself (presence, type,
+ * freshness, hash fields). This hook allows deployments to run backend-specific
+ * verification logic (e.g., zkVM receipt verification).
+ */
+export interface VerifiableComputePlugin {
+  verify(
+    request: SintRequest,
+    token: SintCapabilityToken,
+    assignedTier: ApprovalTier,
+  ): Promise<{
+    readonly verified: boolean;
+    readonly reason?: string;
+    readonly verifierRef?: string;
+  }>;
+}
+
 export interface PolicyGatewayConfig {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
@@ -205,6 +227,11 @@ export interface PolicyGatewayConfig {
    * Fail-open: plugin errors do not block requests.
    */
   readonly supplyChainVerifier?: SupplyChainVerifierPlugin;
+  /**
+   * Optional verifiable-compute proof verifier.
+   * Used to validate runtime proof material for high-consequence actions.
+   */
+  readonly verifiableCompute?: VerifiableComputePlugin;
   /**
    * Optional edge-mode control-plane hooks.
    */
@@ -360,6 +387,12 @@ export class PolicyGateway {
         modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
         attestationGrade: request.executionContext?.attestation?.grade,
         teeBackend: request.executionContext?.attestation?.teeBackend,
+        verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
+        verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
+        verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,
+        verifiableComputePublicInputsHash: request.executionContext?.verifiableCompute?.publicInputsHash,
+        verifiableComputeGeneratedAt: request.executionContext?.verifiableCompute?.generatedAt,
+        verifiableComputeVerifierRef: request.executionContext?.verifiableCompute?.verifierRef,
       },
       physicalContext: request.physicalContext
         ? {
@@ -540,6 +573,17 @@ export class PolicyGateway {
       }
     }
 
+    // 5f. Hardware safety-controller handshake checks.
+    const hardwareSafetyDecision = this.evaluateHardwareSafetyHandshake(
+      request,
+      tierAssignment.approvalTier,
+      requestId,
+      timestamp,
+    );
+    if (hardwareSafetyDecision) {
+      return hardwareSafetyDecision;
+    }
+
     // 5d. Tier-gated attestation requirement checks.
     const requiredTiers = token.attestationRequirements?.requireForTiers;
     if (requiredTiers && requiredTiers.includes(tierAssignment.approvalTier)) {
@@ -550,6 +594,107 @@ export class PolicyGateway {
           "CONSTRAINT_VIOLATION",
           `Attestation grade is required for tier ${tierAssignment.approvalTier}`,
         );
+      }
+    }
+
+    // 5e. Tier-gated verifiable compute proof checks.
+    const vc = token.verifiableComputeRequirements;
+    if (vc) {
+      const shouldEnforce =
+        vc.requireForTiers === undefined
+        || vc.requireForTiers.length === 0
+        || vc.requireForTiers.includes(tierAssignment.approvalTier);
+
+      if (shouldEnforce) {
+        const proof = request.executionContext?.verifiableCompute;
+        if (!proof?.proofType || !proof.proofRef || !proof.proofHash) {
+          return this.deny(
+            requestId,
+            timestamp,
+            "CONSTRAINT_VIOLATION",
+            `Verifiable compute proof metadata is required for tier ${tierAssignment.approvalTier}`,
+          );
+        }
+        if (vc.allowedProofTypes?.length && !vc.allowedProofTypes.includes(proof.proofType)) {
+          return this.deny(
+            requestId,
+            timestamp,
+            "CONSTRAINT_VIOLATION",
+            `Proof type ${proof.proofType} is not allowed for this token`,
+          );
+        }
+        if (vc.verifierRefs?.length && (!proof.verifierRef || !vc.verifierRefs.includes(proof.verifierRef))) {
+          return this.deny(
+            requestId,
+            timestamp,
+            "CONSTRAINT_VIOLATION",
+            "Verifier reference is missing or not allowlisted for this token",
+          );
+        }
+        if (vc.requirePublicInputsHash && !proof.publicInputsHash) {
+          return this.deny(
+            requestId,
+            timestamp,
+            "CONSTRAINT_VIOLATION",
+            "Verifiable compute proof is missing required publicInputsHash",
+          );
+        }
+        if (vc.maxProofAgeMs !== undefined) {
+          if (!proof.generatedAt) {
+            return this.deny(
+              requestId,
+              timestamp,
+              "CONSTRAINT_VIOLATION",
+              "Verifiable compute proof is missing generatedAt for freshness checks",
+            );
+          }
+          const generatedAt = new Date(proof.generatedAt).getTime();
+          if (!Number.isFinite(generatedAt) || Date.now() - generatedAt > vc.maxProofAgeMs) {
+            return this.deny(
+              requestId,
+              timestamp,
+              "CONSTRAINT_VIOLATION",
+              "Verifiable compute proof exceeded maxProofAgeMs",
+            );
+          }
+        }
+        if (this.config.verifiableCompute) {
+          try {
+            const verification = await this.config.verifiableCompute.verify(
+              request,
+              token,
+              tierAssignment.approvalTier,
+            );
+            if (!verification.verified) {
+              return this.deny(
+                requestId,
+                timestamp,
+                "CONSTRAINT_VIOLATION",
+                verification.reason ?? "Verifiable compute proof verification failed",
+              );
+            }
+            this.emitEvent("verifiable.compute.verified", request.agentId, request.tokenId, {
+              tier: tierAssignment.approvalTier,
+              proofType: proof.proofType,
+              proofRef: proof.proofRef,
+              verifierRef: verification.verifierRef ?? proof.verifierRef,
+            });
+          } catch {
+            return this.deny(
+              requestId,
+              timestamp,
+              "CONSTRAINT_VIOLATION",
+              "Verifiable compute verifier plugin failed",
+            );
+          }
+        } else {
+          this.emitEvent("verifiable.compute.verified", request.agentId, request.tokenId, {
+            tier: tierAssignment.approvalTier,
+            proofType: proof.proofType,
+            proofRef: proof.proofRef,
+            verifierRef: proof.verifierRef,
+          });
+        }
       }
     }
 
@@ -815,6 +960,91 @@ export class PolicyGateway {
         },
       },
     };
+  }
+
+  private evaluateHardwareSafetyHandshake(
+    request: SintRequest,
+    assignedTier: ApprovalTier,
+    requestId: string,
+    timestamp: string,
+  ): PolicyDecision | undefined {
+    const safety = request.executionContext?.hardwareSafety;
+
+    // E-stop preempts everything, including low-tier actions.
+    if (safety?.estopState === "triggered") {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HARDWARE_ESTOP_ACTIVE",
+        "Hardware emergency-stop is active; execution is blocked",
+      );
+    }
+
+    const isHighConsequenceTier = assignedTier === "T2_act" || assignedTier === "T3_commit";
+    if (!isHighConsequenceTier) {
+      return undefined;
+    }
+
+    const deploymentProfile = request.executionContext?.deploymentProfile;
+    const requiresIndustrialHandshake =
+      typeof deploymentProfile === "string"
+      && INDUSTRIAL_DEPLOYMENT_PROFILES.has(deploymentProfile);
+
+    // Keep backward compatibility for older clients unless an industrial profile
+    // explicitly declares hardware-safety handshake expectations.
+    if (!requiresIndustrialHandshake && !safety) {
+      return undefined;
+    }
+
+    if (!safety) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HARDWARE_PERMIT_REQUIRED",
+        `Missing hardware safety context for ${assignedTier} action in profile ${deploymentProfile}`,
+      );
+    }
+
+    if (safety.observedAt) {
+      const observedAtMs = new Date(safety.observedAt).getTime();
+      if (!Number.isFinite(observedAtMs) || Date.now() - observedAtMs > MAX_HARDWARE_SAFETY_STALENESS_MS) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "HARDWARE_STATE_STALE",
+          "Hardware safety state is stale or invalid; fail-closed for high-consequence action",
+        );
+      }
+    }
+
+    if (requiresIndustrialHandshake && safety.permitState !== "granted") {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HARDWARE_PERMIT_REQUIRED",
+        `Hardware permit is not granted (${safety.permitState ?? "missing"})`,
+      );
+    }
+
+    if (safety.permitState && safety.permitState !== "granted") {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HARDWARE_PERMIT_REQUIRED",
+        `Hardware permit is not granted (${safety.permitState})`,
+      );
+    }
+
+    if (safety.interlockState && safety.interlockState !== "closed") {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HARDWARE_INTERLOCK_OPEN",
+        `Hardware interlock state is ${safety.interlockState}; must be closed`,
+      );
+    }
+
+    return undefined;
   }
 
   private emitEvent(
