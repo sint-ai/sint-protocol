@@ -82,7 +82,7 @@
 2. **Create `docs/guides/secure-mcp-deployments.md`** — the shareable guide
 3. **Open GitHub Discussions** — "RFC: SINT v0.3 roadmap" with community input
 4. **Update README** — add OATR badge, shields for 114 tests, ASI coverage
-5. **Deploy gateway-server** to sint.ai for OATR domain verification
+5. **Deploy gateway-server** to sint.gg/protocol for OATR domain verification
 
 ---
 
@@ -91,5 +91,5 @@
 - GitHub stars (current: check)
 - PR opened to modelcontextprotocol/servers (target: April 2026)
 - SPAI 2026 abstract submitted (deadline: May 7, 2026)
-- OATR domain_verified: true (target: after sint.ai deployment)
+- OATR domain_verified: true (target: after sint.gg/protocol deployment)
 - ROSCon 2026 talk accepted

@@ -19,7 +19,7 @@ import { HttpClient, type HttpClientConfig } from "./http-client.js";
  * @example
  * ```ts
  * const adapter = new HttpBalanceAdapter({
- *   baseUrl: "https://api.sint.ai",
+ *   baseUrl: "https://api.sint.gg",
  *   authToken: keycloakToken,
  * });
  * const result = await adapter.getBalance("user1");

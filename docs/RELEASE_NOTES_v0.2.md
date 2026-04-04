@@ -26,6 +26,11 @@
   - request metadata: `executionContext.hardwareSafety`
   - industrial profile fail-closed checks for permit/interlock freshness
   - estop preemption for all tiers
+  - safety evidence emission on estop/permit/interlock anomaly paths
+  - explicit safety evidence taxonomy:
+    - `safety.hardware.permit.denied`
+    - `safety.hardware.interlock.open`
+    - `safety.hardware.state.stale`
 - Economic Layer v1 routing upgrades:
   - `selectCostAwareRoute()` and optional `applyX402Quotes()` in `@sint/bridge-economy`
   - `POST /v1/economy/route` endpoint for budget/latency-aware path selection
@@ -71,6 +76,10 @@
 - Added benchmark report generation and CI artifact workflow:
   - `scripts/generate-industrial-benchmark-report.mjs`
   - `.github/workflows/industrial-benchmark-report.yml`
+- Added one-command certification bundle generator:
+  - `scripts/generate-certification-bundle.mjs`
+  - `pnpm run cert:bundle`
+  - outputs `docs/reports/certification-bundle-summary.{json,md}`
 - Added ROS2 control-loop SLA benchmark tooling:
   - `packages/conformance-tests/src/ros2-control-loop-latency.test.ts`
   - `scripts/generate-ros2-control-loop-report.mjs`

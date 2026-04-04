@@ -18,7 +18,7 @@ import { BASE_TOOL_CALL_COST, GLOBAL_MARKUP_MULTIPLIER } from "../pricing-calcul
  * @example
  * ```ts
  * const adapter = new HttpPricingAdapter({
- *   baseUrl: "https://api.sint.ai",
+ *   baseUrl: "https://api.sint.gg",
  *   authToken: keycloakToken,
  * });
  * const result = await adapter.getPrice({ actionType: "call", resource: "my-mcp" });

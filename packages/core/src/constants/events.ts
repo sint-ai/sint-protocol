@@ -31,6 +31,9 @@ export const SINT_EVENTS = {
   FORCE_EXCEEDED: "safety.force.exceeded",
   HUMAN_DETECTED: "safety.human.detected",
   ANOMALY_DETECTED: "safety.anomaly.detected",
+  HARDWARE_PERMIT_DENIED: "safety.hardware.permit.denied",
+  HARDWARE_INTERLOCK_OPEN: "safety.hardware.interlock.open",
+  HARDWARE_STATE_STALE: "safety.hardware.state.stale",
   VERIFIABLE_COMPUTE_VERIFIED: "verifiable.compute.verified",
 
   // Engine — System 1
