@@ -1,0 +1,70 @@
+name: Protocol Proposal
+description: Propose a change to the SINT Protocol specification
+labels: ["protocol", "rfc"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Protocol proposals affect the core specification — heartbeat semantics, task lifecycle, delegation model, governance tiers, or evidence ledger format. For smaller feature requests, use the Feature Request template instead.
+
+        Consider starting a [Discussion](https://github.com/sint-ai/sint-protocol/discussions/categories/rfc) first to gather feedback before filing a formal proposal.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One-paragraph summary of the proposed protocol change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this change needed? What use case or gap does it address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: specification
+    attributes:
+      label: Specification
+      description: |
+        Describe the proposed change in enough detail for another implementer to build it.
+        Include new message types, state transitions, validation rules, or data structures as applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: backward_compat
+    attributes:
+      label: Backward Compatibility
+      description: Does this break existing implementations? How should existing deployments migrate?
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security Considerations
+      description: Does this change affect the threat model? Any new attack surfaces or mitigations?
+
+  - type: dropdown
+    id: protocol_area
+    attributes:
+      label: Protocol Area
+      description: Which part of the protocol spec does this affect?
+      options:
+        - "Heartbeat procedure"
+        - "Task lifecycle / state machine"
+        - "Checkout / concurrency control"
+        - "Delegation model"
+        - "Governance / approval tiers"
+        - "Capability tokens"
+        - "Evidence ledger"
+        - "Forbidden combinations"
+        - "Physical safety constraints"
+        - "New protocol primitive"
+        - "Multiple areas"
+    validations:
+      required: true

@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "notes": {
+      "command": "npx",
+      "args": ["tsx", "./examples/notes-server/server.ts"],
+      "policy": {
+        "maxTier": "T2_act"
+      }
+    }
+  },
+  "defaultPolicy": "cautious",
+  "approvalTimeoutMs": 60000
+}
