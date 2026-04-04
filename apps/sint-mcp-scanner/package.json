@@ -4,26 +4,57 @@
   "description": "SINT MCP Security Scanner — analyze MCP server tool definitions for risk",
   "type": "module",
   "main": "./dist/scanner.js",
-  "bin": { "sint-scan": "./dist/cli.js" },
+  "bin": {
+    "sint-scan": "dist/cli.js",
+    "mcp-scanner": "dist/cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/scanner.d.ts",
       "import": "./dist/scanner.js"
     }
   },
+  "files": [
+    "dist/cli.js",
+    "dist/scanner.js",
+    "dist/scanner.d.ts",
+    "dist/scanner.d.ts.map",
+    "dist/cli.d.ts",
+    "dist/cli.d.ts.map",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && node build.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "dependencies": {
+  "keywords": [
+    "mcp",
+    "security",
+    "ai-safety",
+    "llm",
+    "policy-gateway",
+    "sint",
+    "owasp",
+    "agent-security"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sint-ai/sint-protocol.git",
+    "directory": "apps/sint-mcp-scanner"
+  },
+  "homepage": "https://github.com/sint-ai/sint-protocol#mcp-scanner",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0",
     "@sint/bridge-mcp": "workspace:*",
     "@sint/core": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
   }
 }
