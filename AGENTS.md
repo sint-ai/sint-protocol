@@ -84,9 +84,11 @@ Several agents may work on this repo concurrently. Follow these rules:
 1. **Before starting**: `git pull --rebase && pnpm run build && pnpm run test` — must be 0 failures
 2. **Package ownership**: see CLAUDE.md for the package ownership table
 3. **Never amend published commits** — always create new commits
-4. **Test gate**: your PR/commit must maintain 0 failures on all 815+ tests
-5. **Branch naming**: `feat/<topic>` or `fix/<topic>` — describe what changes, not who made it
-6. **No force-push to main/master** — create a PR instead
+4. **Test gate**: your PR/commit must maintain 0 failures on the full workspace suite (currently 1100+ tests)
+5. **Base branch policy**: new PRs should target `main` unless an active release train explicitly says otherwise
+6. **Branch naming**: `feat/<topic>` or `fix/<topic>` — describe what changes, not who made it
+7. **No force-push to main/master** — create a PR instead
+8. **PR health check**: run `gh pr list --state open` and confirm CI status before stacking related PRs
 
 ## Common Mistakes
 
