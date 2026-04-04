@@ -1,5 +1,10 @@
 # SINT Protocol
 
+![Tests](https://img.shields.io/badge/tests-815%20passing-brightgreen)
+![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+
 **Formally specified security, permission, and economic enforcement layer for physical AI.**
 
 SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
@@ -19,9 +24,9 @@ Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Es
 AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
 
 **The empirical case for SINT:**
-- **ROSClaw (IROS 2026):** Up to 4.8× spread in out-of-policy LLM action proposals across frontier models under identical safety envelopes. The 3.4× divergence between frontier backends is measurable, reproducible, and persistent — an adversary who can influence model selection can systematically increase the burden on physical safety layers.
-- **MCP security (arXiv:2601.17549):** 10 documented real-world MCP breaches in under 8 months, including a CVSS 9.6 command injection affecting 437,000 downloads. MCP's security weaknesses are architectural, not implementation-specific.
-- **SROS2:** Formally demonstrated to contain 4 critical vulnerabilities at ACM CCS 2022, including access-control bypasses permitting arbitrary command injection across robot networks.
+- **ROSClaw (IROS 2026):** Up to 4.8× spread in out-of-policy LLM action proposals across frontier models under identical safety envelopes. The 3.4× divergence between frontier backends is measurable, reproducible, and persistent.
+- **MCP security (arXiv:2601.17549):** 10 documented real-world MCP breaches in under 8 months, including a CVSS 9.6 command injection affecting 437,000 downloads.
+- **SROS2:** Formally demonstrated to contain 4 critical vulnerabilities at ACM CCS 2022, including access-control bypasses permitting arbitrary command injection.
 - **Unitree BLE worm (September 2025):** Hardcoded crypto keys enabled wormable BLE/Wi-Fi command injection across robot fleets — precisely the scenario SINT's per-agent token scoping and real-time revocation prevent.
 
 **Core guarantees:**
@@ -29,48 +34,34 @@ AI agents can now control robots, execute code, move money, and operate machiner
 - Every decision is recorded in a tamper-evident SHA-256 hash-chained ledger (invariant I-G3: Ledger Primacy)
 - Physical constraints (velocity, force, geofence) are enforced at the protocol level — in the token, not in config
 - E-stop is universal across all non-terminal DFA states (invariant I-G2: E-stop Universality)
-- Graduated approval tiers match authorization to physical consequence severity
-- Avatar/CSML tier escalation is enabled by default in gateway server contexts
-- Per-agent capability tokens with real-time revocation (ConsentPass endpoint)
-- W3C DID identity (`did:key:z6Mk...` Ed25519 keys)
-- Google A2A Protocol bridge for multi-agent physical AI coordination
-- Per-token rate limiting via sliding window counter
-- M-of-N multi-party approval quorum for irreversible physical actions
+- Per-agent capability tokens with real-time revocation
 
-## Formal Specification
+## Quick Start
 
-### Request Lifecycle DFA
-
-SINT models every request as a deterministic finite automaton with 12 states:
-
-```
-IDLE → PENDING → POLICY_EVAL → PLANNING → OBSERVING/PREPARING/ACTING → COMMITTING → COMPLETED
-                     ↓                              ↓
-                ESCALATING                      ROLLEDBACK  (estop, execution failure)
-                     ↓
-                  FAILED     (approval denied, timeout)
+```bash
+# Prerequisites: Node.js >= 22, pnpm >= 9
+pnpm install
+pnpm run build
+pnpm run test        # 815 passing tests across 30 workspace members
 ```
 
-The **ACTING** state is only reachable via POLICY_EVAL with a valid token. Physical actuation is structurally impossible without a valid capability token — it cannot be circumvented even by a compromised model backend.
+### Start the Gateway Server
 
-### Tier Assignment Function
-
+```bash
+pnpm --filter @sint/gateway-server dev
+# → http://localhost:3100/v1/health
 ```
-Tier(r) = max(BaseTier(r), Δ_human(r), Δ_trust(r), Δ_env(r), Δ_novelty(r))
+
+### Run a Single Package
+
+```bash
+pnpm --filter @sint/gate-policy-gateway test
+pnpm --filter @sint/bridge-mcp test
 ```
 
-where each Δ ∈ {0, +1}: human presence detected, trust score below threshold, near physical boundary, or action outside validated distribution.
+## For AI Agents
 
-### Formal Invariants
-
-| Invariant | Description |
-|-----------|-------------|
-| **I-T1** (Attenuation) | `scope(child_token) ⊆ scope(parent_token)` — delegation can only reduce permissions |
-| **I-T2** (Unforgeability) | Capability tokens are Ed25519-signed; valid tokens are computationally unforgeable |
-| **I-T3** (Physical Constraint Primacy) | Physical constraints (velocity, force, geofence) in a token cannot be weakened by any downstream layer |
-| **I-G1** (No Bypass) | Physical actuation is only reachable from the ACTING DFA state, which is only reachable via POLICY_EVAL |
-| **I-G2** (E-stop Universality) | The `estop` event transitions any non-terminal state to ROLLEDBACK unconditionally |
-| **I-G3** (Ledger Primacy) | COMMITTING → COMPLETED requires `ledger_committed`; no action completes without a ledger record |
+If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo, read **[AGENTS.md](AGENTS.md)** first. It covers key invariants, common mistakes, and entry points for the most common tasks. For deeper implementation details, see **[CLAUDE.md](CLAUDE.md)**.
 
 ## Architecture
 
@@ -114,83 +105,81 @@ where each Δ ∈ {0, +1}: human presence detected, trust score below threshold,
 └──────────────────────────────────────────────────────────────┘
 ```
 
+### APS vs SINT Primitives
+
+| APS Concept | SINT Implementation |
+|-------------|-------------------|
+| Principal | `agentId` (Ed25519 public key) + W3C DID identity |
+| Capability | `SintCapabilityToken` (Ed25519-signed, scoped, attenuatable) |
+| Authority | `PolicyGateway.intercept()` — single choke point |
+| Confinement | Per-token resource scope + physical constraints (velocity, force, geofence) |
+| Revocation | `RevocationStore` + ConsentPass endpoint (real-time) |
+| Audit | `EvidenceLedger` — append-only, SHA-256 hash-chained |
+
 ## Packages
+
+### Gate (Security Core)
 
 | Package | Description | Tests |
 |---------|-------------|-------|
 | [`@sint/core`](packages/core) | Types, Zod schemas, tier constants, formal DFA states | — |
-| [`@sint/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 39 |
-| [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 57 |
-| [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with TEE attestation | 29 |
-| [`@sint/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 43 |
+| [`@sint/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 55 |
+| [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 152 |
+| [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with TEE attestation | 45 |
+
+### Bridges (11 bridges)
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 66 |
 | [`@sint/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 20 |
-| [`@sint/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 24 |
-| [`@sint/bridge-iot`](packages/bridge-iot) | Generic MQTT/CoAP edge IoT bridge with gateway session interception | 9 |
+| [`@sint/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 38 |
+| [`@sint/bridge-iot`](packages/bridge-iot) | Generic MQTT/CoAP edge IoT bridge with gateway session interception | 21 |
 | [`@sint/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
 | [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
 | [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
-| [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 55 |
+| [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
+| [`@sint/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 15 |
+| [`@sint/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
+| [`@sint/bridge-economy`](packages/bridge-economy) | Economy enforcement: balance, budget, trust, billing | 47 |
+
+### Engine (AI Execution Layer)
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/engine-system1`](packages/engine-system1) | Neural perception: sensor fusion, ONNX inference, anomaly detection | 42 |
+| [`@sint/engine-system2`](packages/engine-system2) | Symbolic reasoning: behavior trees, task planning, System 1/2 arbitration | 86 |
+| [`@sint/engine-hal`](packages/engine-hal) | Hardware Abstraction Layer: auto-detect hardware, select deployment profile | 26 |
+| [`@sint/engine-capsule-sandbox`](packages/engine-capsule-sandbox) | WASM/TS capsule loading, validation, and sandboxed execution | 36 |
+| [`@sint/avatar`](packages/avatar) | Avatar Layer (L5): behavioral identity profiles, CSML-driven tier escalation | 25 |
+
+### Reference Capsules
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/capsule-navigation`](capsules/navigation) | Waypoint following navigation reference capsule | 11 |
+| [`@sint/capsule-inspection`](capsules/inspection) | Visual anomaly detection for manufacturing QA | 8 |
+| [`@sint/capsule-pick-and-place`](capsules/pick-and-place) | Gripper control for pick-and-place tasks | 12 |
+
+### Persistence
+
+| Package | Description | Tests |
+|---------|-------------|-------|
 | [`@sint/persistence`](packages/persistence) | Storage interfaces + in-memory/PG/Redis implementations | 26 |
-| [`@sint/persistence-postgres`](packages/persistence-postgres) | Production PostgreSQL adapters for ledger, revocation, and rate-limit durability | 13 |
-| [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | 12 |
-| [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 10 |
-| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | 77 |
-| [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | 57 |
-| [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | 90 |
+| [`@sint/persistence-postgres`](packages/persistence-postgres) | Production PostgreSQL adapters for ledger, revocation, and rate-limit durability | 14 |
+
+### Apps & SDKs
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | — |
+| [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | — |
 | [`@sint/dashboard`](apps/dashboard) | Real-time approval dashboard with operator auth | 29 |
-| **Total** | **20 packages** | **Workspace-wide conformance suite** |
+| [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | — |
+| [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
+| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
 
-## Quick Start
-
-```bash
-# Prerequisites: Node.js >= 22, pnpm >= 9
-pnpm install
-pnpm run build
-pnpm run test        # full workspace regression suite
-```
-
-### Start the Gateway Server
-
-```bash
-pnpm --filter @sint/gateway-server dev
-# → http://localhost:3100/v1/health
-```
-
-### Standardization and Deployment Artifacts
-
-- v0.2 protocol surface spec: [`docs/SINT_v0.2_SPEC.md`](docs/SINT_v0.2_SPEC.md)
-- SIP governance track: [`docs/SIPS.md`](docs/SIPS.md)
-- Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
-- Conformance/certification matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
-- Deployment profile templates:
-  - [`docs/profiles/warehouse-amr.policy.template.json`](docs/profiles/warehouse-amr.policy.template.json)
-  - [`docs/profiles/industrial-cell.policy.template.json`](docs/profiles/industrial-cell.policy.template.json)
-  - [`docs/profiles/edge-gateway.policy.template.json`](docs/profiles/edge-gateway.policy.template.json)
-- Runnable demos:
-  - [`examples/hello-world/README.md`](examples/hello-world/README.md)
-  - [`examples/warehouse-amr/README.md`](examples/warehouse-amr/README.md)
-  - [`examples/industrial-cell/README.md`](examples/industrial-cell/README.md)
-- Multi-language SDK starters:
-  - [`sdks/python/sint_client.py`](sdks/python/sint_client.py)
-  - [`sdks/go/sintclient/client.go`](sdks/go/sintclient/client.go)
-  - [`sdks/typescript`](sdks/typescript)
-- Benchmark report automation:
-  - Script: [`scripts/generate-industrial-benchmark-report.mjs`](scripts/generate-industrial-benchmark-report.mjs)
-  - CI workflow: [`.github/workflows/industrial-benchmark-report.yml`](.github/workflows/industrial-benchmark-report.yml)
-  - Generated artifacts: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
-- Canonical conformance fixtures (for external interop/certification):
-  - [`packages/conformance-tests/fixtures/industrial/warehouse-move-equivalence.v1.json`](packages/conformance-tests/fixtures/industrial/warehouse-move-equivalence.v1.json)
-  - [`packages/conformance-tests/fixtures/industrial/opcua-safety-control.v1.json`](packages/conformance-tests/fixtures/industrial/opcua-safety-control.v1.json)
-  - [`packages/conformance-tests/fixtures/protocol/well-known-sint.v0.2.example.json`](packages/conformance-tests/fixtures/protocol/well-known-sint.v0.2.example.json)
-  - [`packages/conformance-tests/fixtures/persistence/postgres-adapter-cert.v1.json`](packages/conformance-tests/fixtures/persistence/postgres-adapter-cert.v1.json)
-  - [`packages/conformance-tests/fixtures/security/supply-chain-verification.v1.json`](packages/conformance-tests/fixtures/security/supply-chain-verification.v1.json)
-  - [`packages/conformance-tests/fixtures/iot/mqtt-gateway-session.v1.json`](packages/conformance-tests/fixtures/iot/mqtt-gateway-session.v1.json)
-  - Fixture gates:
-    - `pnpm --filter @sint/conformance-tests run test:fixtures`
-    - `pnpm --filter @sint/bridge-iot run test:fixtures`
-    - `pnpm --filter @sint/sdk run test:contracts`
-    - `pnpm --filter @sint/persistence-postgres run test:fixtures`
-    - `pnpm run cert:fixtures`
+**Total: 30 workspace members, 815 passing tests**
 
 ## Approval Tiers
 
@@ -209,11 +198,57 @@ Tier escalation triggers (Δ factors):
 - `Δ_env`: Robot near physical boundary or unstructured environment → +1 tier
 - `Δ_novelty`: Action outside validated distribution (novelty detector) → +1 tier
 
+## Formal Specification
+
+### Request Lifecycle DFA
+
+SINT models every request as a deterministic finite automaton with 12 states:
+
+```
+IDLE → PENDING → POLICY_EVAL → PLANNING → OBSERVING/PREPARING/ACTING → COMMITTING → COMPLETED
+                     ↓                              ↓
+                ESCALATING                      ROLLEDBACK  (estop, execution failure)
+                     ↓
+                  FAILED     (approval denied, timeout)
+```
+
+The **ACTING** state is only reachable via POLICY_EVAL with a valid token. Physical actuation is structurally impossible without a valid capability token.
+
+### Tier Assignment Function
+
+```
+Tier(r) = max(BaseTier(r), Δ_human(r), Δ_trust(r), Δ_env(r), Δ_novelty(r))
+```
+
+### Formal Invariants
+
+| Invariant | Description |
+|-----------|-------------|
+| **I-T1** (Attenuation) | `scope(child_token) ⊆ scope(parent_token)` — delegation can only reduce permissions |
+| **I-T2** (Unforgeability) | Capability tokens are Ed25519-signed; valid tokens are computationally unforgeable |
+| **I-T3** (Physical Constraint Primacy) | Physical constraints (velocity, force, geofence) in a token cannot be weakened by any downstream layer |
+| **I-G1** (No Bypass) | Physical actuation is only reachable from the ACTING DFA state, which is only reachable via POLICY_EVAL |
+| **I-G2** (E-stop Universality) | The `estop` event transitions any non-terminal state to ROLLEDBACK unconditionally |
+| **I-G3** (Ledger Primacy) | COMMITTING → COMPLETED requires `ledger_committed`; no action completes without a ledger record |
+
+## Benchmark Results
+
+PolicyGateway latency (measured on M3 MacBook Pro, pnpm run bench):
+
+| Tier | p50 | p99 |
+|------|-----|-----|
+| T0 (OBSERVE) | ~1ms | ~3ms |
+| T1 (PREPARE) | ~1ms | ~3ms |
+| T2 (ACT) | ~1ms | ~3ms |
+| T3 (COMMIT) | ~1ms | ~3ms |
+
+The gateway adds sub-3ms overhead at p99 for all tiers. Run benchmarks: `pnpm run bench`.
+
 ## Key Concepts
 
 ### Capability Tokens
 
-Ed25519-signed capability tokens — the *only* authorization primitive. Unlike RBAC (ambient authority to principals), OCap requires explicit token presentation for every operation. This is what prevented the Unitree BLE worm from propagating: a compromised robot cannot reuse another robot's token.
+Ed25519-signed capability tokens — the *only* authorization primitive. Unlike RBAC (ambient authority to principals), OCap requires explicit token presentation for every operation.
 
 Token fields:
 - **Resource scoping** — what the agent can access (`ros2:///cmd_vel`, `mcp://filesystem/*`, `a2a://agents.example.com/*`)
@@ -221,13 +256,14 @@ Token fields:
 - **Physical constraints** — max velocity (m/s), max force (N), geofence polygon, time window, rate limit
 - **Delegation chains** — max 3 hops, attenuation only (invariant I-T1)
 - **Revocation** — instant invalidation via revocation store (ConsentPass endpoint)
-- **W3C DID identity** — `did:key:z6Mk...` format for agent portability across systems
+- **W3C DID identity** — `did:key:z6Mk...` format for agent portability
 
 ### Evidence Ledger
 
-Every policy decision is recorded in a SHA-256 hash-chained append-only log. Chain integrity: `ℓ_k.previousHash = SHA256(canonical(ℓ_{k-1}))` for all k. A gap (missing sequence number) or hash mismatch constitutes tamper evidence.
+Every policy decision is recorded in a SHA-256 hash-chained append-only log. Chain integrity: `ℓ_k.previousHash = SHA256(canonical(ℓ_{k-1}))`. A gap or hash mismatch constitutes tamper evidence.
 
-**Retention policy** (per formal specification):
+**Retention policy:**
+
 | Tier | Retention |
 |------|-----------|
 | T0 (OBSERVE) | 30 days |
@@ -235,33 +271,15 @@ Every policy decision is recorded in a SHA-256 hash-chained append-only log. Cha
 | T2 (ACT) | 180 days |
 | T3 (COMMIT) | 365 days (indefinite if legal hold) |
 
-**Event taxonomy:**
-- **Agent lifecycle:** `agent.registered`, `agent.capability.granted`, `agent.capability.revoked`
-- **Request/response:** `request.received`, `policy.evaluated`, `approval.requested/granted/denied/timeout`
-- **Execution:** `action.started`, `action.completed`, `action.failed`, `action.rolledback`
-- **Physical safety (unique to SINT):** `safety.estop.triggered`, `safety.geofence.violation`, `safety.force.exceeded`, `safety.human.detected`, `safety.anomaly.detected`
-- **Economic:** `economy.balance.*`, `economy.budget.*`, `economy.trust.*`, `sla.bond.slashed`
-
 ### CSML: Composite Safety-Model Latency
 
-A deployment metric that fuses behavioral and physical safety dimensions into one auditable score:
+A deployment metric that fuses behavioral and physical safety dimensions:
 
 ```
 CSML(m, p, t) = α·AR_m + β·BP_m + γ·SV_m - δ·CR_m + ε·𝟙[ledger_intact(t)]
 ```
 
-Where: AR_m = adversarial attempt rate, BP_m = mean blocked calls per prompt (from ROSClaw), SV_m = median overspeed severity, CR_m = task completion rate, with default coefficients α=0.4, β=0.2, γ=0.2, δ=0.1, ε=0.1.
-
-CSML above a deployment threshold θ automatically escalates all subsequent requests from that model backend to the next tier — making Evidence Ledger behavioral data feed back into authorization policy.
-
-### Google A2A Protocol Bridge
-
-The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protocol as a SINT bridge, enabling secure multi-agent physical AI coordination:
-
-- `A2AInterceptor` wraps PolicyGateway for JSON-RPC 2.0 A2A task calls
-- `AgentCardRegistry` manages A2A Agent Card registration
-- `/v1/a2a` endpoint in gateway-server for JSON-RPC 2.0 protocol
-- A2A actions map to SINT tiers: navigate/move→T2_act, report/status→T0_observe, configure→T3_commit
+CSML above a deployment threshold θ automatically escalates all subsequent requests from that model backend to the next tier.
 
 ## Compliance Mapping
 
@@ -277,7 +295,7 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 | FR6 | Timely Response | `safety.estop.triggered` event; E-stop universality invariant I-G2 |
 | FR7 | Resource Availability | Per-token rate limiting; `maxRepetitions`; budget enforcement in capsule sandbox |
 
-### EU AI Act Article 13 Alignment
+### EU AI Act Article 13
 
 | Requirement | SINT Approach |
 |-------------|---------------|
@@ -291,9 +309,6 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 |--------|----------|-------------|
 | `GET` | `/.well-known/sint.json` | Public protocol discovery (version, bridges, profiles, schemas) |
 | `GET` | `/v1/health` | Health check |
-| `GET` | `/v1/schemas` | List machine-readable public schemas |
-| `GET` | `/v1/schemas/:name` | Fetch schema by name |
-| `GET` | `/v1/openapi.json` | OpenAPI surface for gateway integration |
 | `POST` | `/v1/intercept` | Evaluate a single request |
 | `POST` | `/v1/intercept/batch` | Evaluate multiple requests (207 Multi-Status) |
 | `POST` | `/v1/tokens` | Issue a capability token |
@@ -304,8 +319,8 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 | `POST` | `/v1/approvals/:id/resolve` | Approve or deny a request (M-of-N quorum) |
 | `GET` | `/v1/approvals/events` | SSE stream for real-time approval events |
 | `POST` | `/v1/a2a` | JSON-RPC 2.0 A2A protocol endpoint |
-| `GET/POST` | `/v1/a2a/agents` | Agent Card registration |
 | `GET` | `/v1/metrics` | Prometheus metrics |
+| `GET` | `/v1/openapi.json` | OpenAPI surface for gateway integration |
 
 ## Development Phases
 
@@ -315,20 +330,8 @@ The `@sint/bridge-a2a` package implements the Google Agent-to-Agent (A2A) protoc
 | **Phase 2** (complete) | Engine Core — bridge-mcp, bridge-ros2, engine packages, persistence, gateway-server | +221 (646) |
 | **Phase 3** (complete) | Economy Bridge — @sint/bridge-economy with port/adapter pattern, EconomyPlugin | +91 (737) |
 | **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 (815) |
-| **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles, token execution metadata | shipped |
-
-## Tech Stack
-
-- **Runtime:** Node.js 22+
-- **Language:** TypeScript 5.7 (strict mode)
-- **Monorepo:** pnpm workspaces + Turborepo
-- **HTTP:** Hono
-- **Validation:** Zod
-- **Crypto:** @noble/ed25519, @noble/hashes (audited, zero-dependency)
-- **MCP SDK:** @modelcontextprotocol/sdk
-- **Dashboard:** React 19, Vite 6, CSS custom properties
-- **Testing:** Vitest (815+ tests)
-- **Infra:** Docker, PostgreSQL 16+, Redis 7, GitHub Actions CI, Railway
+| **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles | shipped |
+| **Phase 6** (complete) | Engine layer — System1/2 engines, HAL, capsule sandbox, Avatar/CSML, reference capsules | shipped |
 
 ## Deployment
 
@@ -352,6 +355,30 @@ docker-compose up
 # Redis:     localhost:6379
 ```
 
+## Tech Stack
+
+- **Runtime:** Node.js 22+
+- **Language:** TypeScript 5.7 (strict mode)
+- **Monorepo:** pnpm workspaces + Turborepo
+- **HTTP:** Hono
+- **Validation:** Zod
+- **Crypto:** @noble/ed25519, @noble/hashes (audited, zero-dependency)
+- **MCP SDK:** @modelcontextprotocol/sdk
+- **Dashboard:** React 19, Vite 6
+- **Testing:** Vitest (815 passing tests)
+- **Infra:** Docker, PostgreSQL 16+, Redis 7, GitHub Actions CI, Railway
+
+## Docs & Artifacts
+
+- Protocol spec: [`docs/SINT_v0.2_SPEC.md`](docs/SINT_v0.2_SPEC.md)
+- SIP governance: [`docs/SIPS.md`](docs/SIPS.md)
+- Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
+- Conformance matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
+- Deployment profiles: [`docs/profiles/`](docs/profiles/)
+- Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
+- Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
+- Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
+
 ## Design Principles
 
 1. **Single choke point** — Every agent action flows through `PolicyGateway.intercept()`; no bridge adapter makes authorization decisions independently
@@ -367,9 +394,9 @@ docker-compose up
 
 - ROSClaw: Empirical safety analysis of LLM-controlled physical AI — [arXiv:2603.26997](https://arxiv.org/abs/2603.26997) (IROS 2026)
 - MCP Security Analysis: Architectural vulnerabilities in the Model Context Protocol — [arXiv:2601.17549](https://arxiv.org/abs/2601.17549)
-- IEC 62443: Industrial automation and control systems cybersecurity standard (December 2025 update)
+- IEC 62443: Industrial automation and control systems cybersecurity standard
 - EU AI Act Article 13: Transparency requirements for AI systems
-- NIST AI RMF: AI Risk Management Framework (GOVERN / MAP / MEASURE / MANAGE)
+- NIST AI RMF: AI Risk Management Framework
 - W3C DID Core: Decentralized Identifiers specification
 
 ## License
