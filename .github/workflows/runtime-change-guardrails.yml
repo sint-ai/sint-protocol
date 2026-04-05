@@ -1,0 +1,64 @@
+name: Runtime Change Guardrails
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  guardrails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check protocol/runtime change requirements
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_REF="origin/${{ github.base_ref }}"
+          git fetch origin "${{ github.base_ref }}"
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_REF...HEAD")"
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          RUNTIME_REGEX='^(PROTOCOL\.md|apps/gateway-server/|packages/(policy-gateway|capability-tokens|evidence-ledger|avatar|persistence|persistence-postgres|bridge-[^/]+)/)'
+          HAS_RUNTIME_CHANGE=0
+          if echo "$CHANGED_FILES" | grep -Eq "$RUNTIME_REGEX"; then
+            HAS_RUNTIME_CHANGE=1
+          fi
+
+          if [[ "$HAS_RUNTIME_CHANGE" -eq 0 ]]; then
+            echo "No protocol/runtime changes detected. Guardrail passed."
+            exit 0
+          fi
+
+          HAS_DOCS_UPDATE=0
+          if echo "$CHANGED_FILES" | grep -Eq '^(README\.md|ARCHITECTURE\.md|docs/|PROTOCOL\.md|WHITEPAPER\.md)'; then
+            HAS_DOCS_UPDATE=1
+          fi
+
+          HAS_CONFORMANCE_UPDATE=0
+          if echo "$CHANGED_FILES" | grep -Eq '^packages/conformance-tests/'; then
+            HAS_CONFORMANCE_UPDATE=1
+          fi
+
+          HAS_TEST_UPDATE=0
+          if echo "$CHANGED_FILES" | grep -Eq '(__tests__/|\.test\.)'; then
+            HAS_TEST_UPDATE=1
+          fi
+
+          if [[ "$HAS_DOCS_UPDATE" -ne 1 ]]; then
+            echo "ERROR: Protocol/runtime changes require docs updates (README/docs/PROTOCOL/WHITEPAPER)."
+            exit 1
+          fi
+
+          if [[ "$HAS_CONFORMANCE_UPDATE" -ne 1 && "$HAS_TEST_UPDATE" -ne 1 ]]; then
+            echo "ERROR: Protocol/runtime changes require conformance fixture updates or test updates."
+            exit 1
+          fi
+
+          echo "Guardrail passed: runtime change includes docs and tests/conformance updates."
