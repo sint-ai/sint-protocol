@@ -27,5 +27,23 @@
     "@types/pg": "^8.11.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/persistence"
+  },
+  "homepage": "https://github.com/sint-ai/sint-protocol#readme",
+  "bugs": {
+    "url": "https://github.com/sint-ai/sint-protocol/issues"
+  },
+  "license": "Apache-2.0"
 }

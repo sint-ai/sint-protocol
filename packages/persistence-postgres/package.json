@@ -6,7 +6,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc --build",
@@ -29,6 +32,9 @@
     "pg": "^8.0.0"
   },
   "peerDependenciesMeta": {
-    "pg": { "optional": true }
-  }
+    "pg": {
+      "optional": true
+    }
+  },
+  "private": true
 }
