@@ -5,22 +5,22 @@
 ## Q2 2026: Foundation & Adoption (April–June)
 
 ### Infrastructure
-- [ ] WebSocket approval streaming (replace SSE polling for lower latency)
-- [ ] PostgreSQL persistence adapter (production-grade, replace in-memory)
-- [ ] Redis persistence adapter (caching layer, session state)
-- [ ] Docker Hub published images (`sintprotocol/gateway`, `sintprotocol/dashboard`)
-- [ ] Pre-configured Docker Compose stacks for common deployments
+- [x] WebSocket approval streaming (replace SSE polling for lower latency)
+- [x] PostgreSQL persistence adapter (production-grade, replace in-memory)
+- [x] Redis persistence adapter (caching layer, session state)
+- [x] Docker Hub published images (`sintprotocol/gateway`, `sintprotocol/dashboard`)
+- [x] Pre-configured Docker Compose stacks for common deployments
 
 ### SDK & Developer Experience
-- [ ] Python SDK (`sint-python`) — bridge to robotics/ML ecosystem
-- [ ] CLI tool for token management, ledger queries, policy testing
+- [x] Python SDK (`sint-python`) — bridge to robotics/ML ecosystem
+- [x] CLI tool for token management, ledger queries, policy testing
 - [ ] Interactive policy playground (web-based rule testing)
 - [ ] Comprehensive API documentation site
 
 ### Integration
 - [ ] Gazebo simulation environment integration (ROS 2 bridge validation)
 - [ ] NVIDIA Isaac Sim connector (industrial robotics testing)
-- [ ] Claude Desktop integration guide (MCP proxy setup)
+- [x] Claude Desktop integration guide (MCP proxy setup)
 - [ ] Cursor integration guide
 
 ### Community

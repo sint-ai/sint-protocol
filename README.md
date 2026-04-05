@@ -424,6 +424,7 @@ docker-compose up
 - Deployment profiles: [`docs/profiles/`](docs/profiles/)
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
 - Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
+- Operator CLI: [`apps/sintctl/README.md`](apps/sintctl/README.md)
 - Persistence baseline guide: [`docs/guides/persistence-baseline.md`](docs/guides/persistence-baseline.md)
 - WebSocket approvals guide: [`docs/guides/websocket-approvals.md`](docs/guides/websocket-approvals.md)
 - gRPC bridge guide: [`docs/guides/grpc-bridge-skeleton.md`](docs/guides/grpc-bridge-skeleton.md)

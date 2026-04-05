@@ -1,0 +1,37 @@
+{
+  "name": "@sint/sintctl",
+  "version": "0.1.0",
+  "description": "SINT operator CLI for token, approval, ledger, and intercept workflows",
+  "type": "module",
+  "bin": {
+    "sintctl": "dist/cli.js"
+  },
+  "files": [
+    "dist/cli.js",
+    "dist/cli.d.ts",
+    "dist/cli.d.ts.map",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc --build && node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sint-ai/sint-protocol.git",
+    "directory": "apps/sintctl"
+  },
+  "homepage": "https://github.com/sint-ai/sint-protocol#sintctl",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
