@@ -18,6 +18,7 @@
     "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "bench": "pnpm --filter @sint/gate-policy-gateway bench",
+    "sintctl": "pnpm --filter @sint/sintctl exec sintctl --help",
     "stack:dev": "bash ./scripts/stack-up.sh dev",
     "stack:edge": "bash ./scripts/stack-up.sh edge",
     "stack:prod-lite": "bash ./scripts/stack-up.sh prod-lite"
