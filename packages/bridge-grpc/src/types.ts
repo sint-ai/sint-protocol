@@ -13,3 +13,20 @@ export interface GrpcBridgeProfile extends BridgeProfile {
   readonly protocol: "grpc";
 }
 
+export interface GrpcInvocation extends GrpcMethodDescriptor {
+  readonly requestId: string;
+  readonly agentId: string;
+  readonly tokenId: string;
+  readonly params?: Record<string, unknown>;
+  readonly timestamp?: string;
+}
+
+export interface GrpcMappedRequest {
+  readonly requestId: string;
+  readonly agentId: string;
+  readonly tokenId: string;
+  readonly resource: string;
+  readonly action: "observe" | "call" | "write";
+  readonly params: Record<string, unknown>;
+  readonly timestamp: string;
+}

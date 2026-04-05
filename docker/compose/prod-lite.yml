@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  gateway:
+    image: ${SINT_GATEWAY_IMAGE:-sintprotocol/gateway:latest}
+    ports:
+      - "3100:3100"
+    environment:
+      SINT_PORT: "3100"
+      SINT_STORE: postgres
+      SINT_CACHE: redis
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      SINT_LOG_LEVEL: ${SINT_LOG_LEVEL:-warn}
+      SINT_API_KEY: ${SINT_API_KEY}
+      SINT_REQUIRE_SIGNATURES: ${SINT_REQUIRE_SIGNATURES:-true}
+      SINT_WS_ALLOW_QUERY_API_KEY: ${SINT_WS_ALLOW_QUERY_API_KEY:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  dashboard:
+    image: ${SINT_DASHBOARD_IMAGE:-sintprotocol/dashboard:latest}
+    ports:
+      - "3201:3201"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3201/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sint}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-sint}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sint} -d ${POSTGRES_DB:-sint}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:

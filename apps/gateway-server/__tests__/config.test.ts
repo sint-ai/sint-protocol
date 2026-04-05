@@ -18,6 +18,7 @@ describe("Configuration", () => {
     delete process.env.SINT_API_KEY;
     delete process.env.SINT_REQUIRE_SIGNATURES;
     delete process.env.SINT_RATE_LIMIT;
+    delete process.env.SINT_WS_ALLOW_QUERY_API_KEY;
   });
 
   afterEach(() => {
@@ -31,6 +32,7 @@ describe("Configuration", () => {
     expect(config.cache).toBe("memory");
     expect(config.requireSignatures).toBe(false);
     expect(config.rateLimitMax).toBe(100);
+    expect(config.wsAllowQueryApiKey).toBe(true);
     expect(config.apiKey).toBeUndefined();
   });
 
@@ -39,12 +41,14 @@ describe("Configuration", () => {
     process.env.SINT_API_KEY = "my-key";
     process.env.SINT_REQUIRE_SIGNATURES = "true";
     process.env.SINT_RATE_LIMIT = "50";
+    process.env.SINT_WS_ALLOW_QUERY_API_KEY = "false";
 
     const config = loadConfig();
     expect(config.port).toBe(8080);
     expect(config.apiKey).toBe("my-key");
     expect(config.requireSignatures).toBe(true);
     expect(config.rateLimitMax).toBe(50);
+    expect(config.wsAllowQueryApiKey).toBe(false);
   });
 
   it("throws when SINT_STORE=postgres without DATABASE_URL", () => {

@@ -101,6 +101,7 @@ export function discoveryRoutes(): Hono {
       paths: {
         "/.well-known/sint.json": { get: { summary: "Protocol discovery document" } },
         "/v1/health": { get: { summary: "Health status" } },
+        "/v1/ready": { get: { summary: "Readiness checks for configured store/cache backends" } },
         "/v1/metrics": { get: { summary: "Prometheus metrics" } },
         "/v1/intercept": { post: { summary: "Intercept one request" } },
         "/v1/intercept/batch": { post: { summary: "Intercept a batch of requests" } },
@@ -110,7 +111,12 @@ export function discoveryRoutes(): Hono {
         "/v1/ledger": { get: { summary: "Query evidence ledger" } },
         "/v1/approvals/pending": { get: { summary: "List pending approvals" } },
         "/v1/approvals/events": { get: { summary: "SSE approval stream" } },
-        "/v1/approvals/ws": { get: { summary: "WebSocket approval stream (Upgrade)" } },
+        "/v1/approvals/ws": {
+          get: {
+            summary:
+              "WebSocket approval stream (Upgrade). Supports replay cursors via ?cursor=<seq> or ?since=<iso>",
+          },
+        },
         "/v1/approvals/{requestId}/resolve": { post: { summary: "Resolve approval" } },
         "/v1/a2a": { post: { summary: "A2A JSON-RPC endpoint" } },
         "/v1/a2a/agents": { get: { summary: "List A2A agents" }, post: { summary: "Register A2A agent" } },

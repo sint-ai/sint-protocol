@@ -18,7 +18,18 @@ export function healthRoutes(ctx: ServerContext): Hono {
       tokens: tokenCount,
       ledgerEvents: ctx.ledger.length,
       revokedTokens: ctx.revocationStore.size,
+      backend: ctx.backend,
     });
+  });
+
+  app.get("/v1/ready", async (c) => {
+    const readiness = await ctx.readinessProbe();
+    const status = readiness.ok ? 200 : 503;
+    return c.json({
+      status: readiness.ok ? "ready" : "degraded",
+      backend: ctx.backend,
+      checks: readiness.checks,
+    }, status);
   });
 
   return app;

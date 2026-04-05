@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      context: ../..
+      dockerfile: apps/gateway-server/Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      SINT_PORT: "3100"
+      SINT_STORE: postgres
+      SINT_CACHE: redis
+      DATABASE_URL: postgresql://sint:${POSTGRES_PASSWORD:-sint}@postgres:5432/sint
+      REDIS_URL: redis://redis:6379
+      SINT_LOG_LEVEL: info
+      SINT_API_KEY: ${SINT_API_KEY:-edge-dev-key}
+      SINT_REQUIRE_SIGNATURES: ${SINT_REQUIRE_SIGNATURES:-true}
+      SINT_WS_ALLOW_QUERY_API_KEY: ${SINT_WS_ALLOW_QUERY_API_KEY:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sint
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sint}
+      POSTGRES_DB: sint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sint -d sint"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:

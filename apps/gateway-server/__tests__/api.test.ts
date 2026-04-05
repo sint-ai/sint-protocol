@@ -58,6 +58,17 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.status).toBe("ok");
     expect(body.protocol).toBe("SINT Gate");
+    expect(body.backend.store).toBeDefined();
+    expect(body.backend.cache).toBeDefined();
+  });
+
+  it("GET /v1/ready returns readiness checks", async () => {
+    const res = await app.request("/v1/ready");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("ready");
+    expect(body.checks.store.ok).toBe(true);
+    expect(body.checks.cache.ok).toBe(true);
   });
 
   it("GET /.well-known/sint.json returns discovery metadata", async () => {
@@ -386,6 +397,36 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.resolution.status).toBe("approved");
     expect(body.resolution.by).toBe("operator-1");
+  });
+
+  it("POST /v1/approvals/:requestId/resolve fail-closes revoked token approvals", async () => {
+    const token = await issueT2Token();
+    const interceptRes = await app.request("/v1/intercept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(makeT2Request(token.tokenId)),
+    });
+    const { approvalRequestId } = await interceptRes.json();
+
+    await app.request("/v1/tokens/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tokenId: token.tokenId,
+        reason: "security incident",
+        revokedBy: "ops",
+      }),
+    });
+
+    const res = await app.request(`/v1/approvals/${approvalRequestId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: "operator-1" }),
+    });
+
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toBe("Stale approval request");
   });
 
   it("quorum approval returns pending until threshold is reached", async () => {

@@ -38,7 +38,10 @@ async function main(): Promise<void> {
   });
 
   // WebSocket approval transport (Issue #2): low-latency queue updates.
-  attachApprovalsWebSocket(server as any, ctx, { apiKey: config.apiKey });
+  attachApprovalsWebSocket(server as any, ctx, {
+    apiKey: config.apiKey,
+    allowQueryApiKey: config.wsAllowQueryApiKey,
+  });
 }
 
 void main().catch((err) => {

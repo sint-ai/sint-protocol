@@ -53,6 +53,17 @@ export interface ServerContext {
   readonly approvalQueue: ApprovalQueue;
   readonly cache: CacheStore;
   readonly revocationBus: RevocationBus;
+  readonly backend: {
+    readonly store: "memory" | "postgres";
+    readonly cache: "memory" | "redis";
+  };
+  readonly readinessProbe: () => Promise<{
+    ok: boolean;
+    checks: {
+      store: { ok: boolean; detail: string };
+      cache: { ok: boolean; detail: string };
+    };
+  }>;
 }
 
 function createDefaultCsmlEscalator(ledger: LedgerWriter): CsmlEscalator {
@@ -97,7 +108,24 @@ export function createContext(): ServerContext {
     revocationStore.revoke(event.tokenId, event.reason, event.revokedBy);
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
+  return {
+    tokenStore,
+    revocationStore,
+    ledger,
+    ledgerStore,
+    gateway,
+    approvalQueue,
+    cache,
+    revocationBus,
+    backend: { store: "memory", cache: "memory" },
+    readinessProbe: async () => ({
+      ok: true,
+      checks: {
+        store: { ok: true, detail: "in-memory store" },
+        cache: { ok: true, detail: "in-memory cache" },
+      },
+    }),
+  };
 }
 
 /**
@@ -113,6 +141,14 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
   let ledgerStore: LedgerStore;
   let cache: CacheStore;
   let revocationBus: RevocationBus;
+  let storeProbe: () => Promise<{ ok: boolean; detail: string }> = async () => ({
+    ok: true,
+    detail: "in-memory store",
+  });
+  let cacheProbe: () => Promise<{ ok: boolean; detail: string }> = async () => ({
+    ok: true,
+    detail: "in-memory cache",
+  });
 
   // ── Storage backend ──
   if (config.store === "postgres" && config.databaseUrl) {
@@ -120,6 +156,15 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     await ensurePgSchema(pool);
     tokenStore = new PgTokenStore(pool);
     ledgerStore = new PgLedgerStore(pool);
+    storeProbe = async () => {
+      try {
+        await pool.query("SELECT 1");
+        return { ok: true, detail: "postgres reachable" };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return { ok: false, detail: `postgres probe failed: ${message}` };
+      }
+    };
     console.log("[SINT] PostgreSQL schema verified");
   } else {
     tokenStore = new InMemoryTokenStore();
@@ -139,6 +184,15 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
       redisPublisher,
       () => createRedisClient(redisUrl), // Subscriber needs its own connection
     );
+    cacheProbe = async () => {
+      try {
+        await redisCacheClient.ping();
+        return { ok: true, detail: "redis reachable" };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return { ok: false, detail: `redis probe failed: ${message}` };
+      }
+    };
     console.log("[SINT] Redis cache + revocation bus connected");
   } else {
     cache = new InMemoryCache();
@@ -184,7 +238,27 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     cache.delete(`token:${event.tokenId}`).catch(() => {});
   });
 
-  return { tokenStore, revocationStore, ledger, ledgerStore, gateway, approvalQueue, cache, revocationBus };
+  return {
+    tokenStore,
+    revocationStore,
+    ledger,
+    ledgerStore,
+    gateway,
+    approvalQueue,
+    cache,
+    revocationBus,
+    backend: { store: config.store, cache: config.cache },
+    readinessProbe: async () => {
+      const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);
+      return {
+        ok: storeCheck.ok && cacheCheck.ok,
+        checks: {
+          store: storeCheck,
+          cache: cacheCheck,
+        },
+      };
+    },
+  };
 }
 
 /** Server configuration options. */

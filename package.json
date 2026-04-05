@@ -17,7 +17,10 @@
     "benchmark:ros2-loop": "pnpm --filter @sint/conformance-tests exec vitest run src/ros2-control-loop-latency.test.ts --reporter=verbose",
     "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
-    "bench": "pnpm --filter @sint/gate-policy-gateway bench"
+    "bench": "pnpm --filter @sint/gate-policy-gateway bench",
+    "stack:dev": "bash ./scripts/stack-up.sh dev",
+    "stack:edge": "bash ./scripts/stack-up.sh edge",
+    "stack:prod-lite": "bash ./scripts/stack-up.sh prod-lite"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
