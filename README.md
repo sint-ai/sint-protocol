@@ -428,6 +428,7 @@ docker-compose up
 - Persistence baseline guide: [`docs/guides/persistence-baseline.md`](docs/guides/persistence-baseline.md)
 - WebSocket approvals guide: [`docs/guides/websocket-approvals.md`](docs/guides/websocket-approvals.md)
 - gRPC bridge guide: [`docs/guides/grpc-bridge-skeleton.md`](docs/guides/grpc-bridge-skeleton.md)
+- Cursor integration guide: [`docs/guides/cursor-integration.md`](docs/guides/cursor-integration.md)
 - Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
 - ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
 - Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)
