@@ -60,6 +60,26 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # ── SINT Operator Interface (Voice HUD via nginx) ─────────────────────────
+  sint-interface:
+    build:
+      context: .
+      dockerfile: apps/sint-interface/Dockerfile
+    ports:
+      - "3202:3202"
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: http://gateway:3100
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3202/"]
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
+
   # ── PostgreSQL 16 ──────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
