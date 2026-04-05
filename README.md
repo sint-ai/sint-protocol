@@ -55,7 +55,21 @@ pnpm run test        # 815 passing tests across 30 workspace members
 ```bash
 pnpm --filter @sint/gateway-server dev
 # → http://localhost:3100/v1/health
+# → http://localhost:3100/v1/ready
 ```
+
+### Start Production-Like Stacks (One Command)
+
+```bash
+pnpm run stack:dev
+pnpm run stack:edge
+pnpm run stack:prod-lite
+```
+
+Compose profiles:
+- [`docker/compose/dev.yml`](docker/compose/dev.yml)
+- [`docker/compose/edge.yml`](docker/compose/edge.yml)
+- [`docker/compose/prod-lite.yml`](docker/compose/prod-lite.yml)
 
 ### Run a Single Package
 
@@ -254,6 +268,13 @@ ROS2 control-loop target benchmark:
 | Path | SLA Target | Command |
 |------|------------|---------|
 | ROS2 command path (`/cmd_vel`) | `p99 < 10ms` | `pnpm run benchmark:ros2-loop` |
+
+Industrial benchmark artifacts:
+- [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
+- [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
+
+Compliance mapping assets:
+- [`docs/compliance/tier-crosswalk-pack.md`](docs/compliance/tier-crosswalk-pack.md)
 
 ## Key Concepts
 

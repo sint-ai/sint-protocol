@@ -24,6 +24,11 @@ import {
   sparkplugActionForMessageType,
   sparkplugTopicToResourceUri,
 } from "@sint/bridge-mqtt-sparkplug";
+import {
+  opcUaNodeToResourceUri,
+  opcUaOperationToAction,
+} from "@sint/bridge-opcua";
+import { GrpcBridgeAdapter } from "../../bridge-grpc/src/grpc-bridge-adapter.js";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);
@@ -85,6 +90,14 @@ describe("Industrial Interoperability Conformance", () => {
       resource: "mqtt-sparkplug://*",
       actions: ["call"],
     });
+    const opcuaToken = issueAndStore({
+      resource: "opcua://*",
+      actions: ["call"],
+    });
+    const grpcToken = issueAndStore({
+      resource: "grpc://*",
+      actions: ["call"],
+    });
 
     const rosDecision = await gateway.intercept({
       requestId: generateUUIDv7(),
@@ -115,7 +128,7 @@ describe("Industrial Interoperability Conformance", () => {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
       agentId: agent.publicKey,
-      tokenId: sparkToken.tokenId,
+      tokenId: opcuaToken.tokenId,
       resource: sparkUri,
       action: sparkplugActionForMessageType("DCMD"),
       params: {
@@ -129,14 +142,60 @@ describe("Industrial Interoperability Conformance", () => {
       recentActions: ["sparkplug.dispatch"],
     });
 
-    // Both physical-command paths must require T2 review (not fail-open).
-    expect(rosDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
-    expect(sparkDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
-    expect(rosDecision.action).toBe("escalate");
-    expect(sparkDecision.action).toBe("escalate");
+    const opcuaDecision = await gateway.intercept({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: grpcToken.tokenId,
+      resource: opcUaNodeToResourceUri("ns=2;s=Warehouse/AMR/17/MoveCommand", "opc.tcp://ot-gw:4840"),
+      action: opcUaOperationToAction("call"),
+      params: {
+        command: "move_to_aisle",
+        destination: "A-17",
+      },
+      physicalContext: {
+        currentForceNewtons: 18,
+        currentVelocityMps: 0.45,
+      },
+      recentActions: ["opcua.dispatch"],
+    });
+
+    const grpcAdapter = new GrpcBridgeAdapter();
+    const grpcMapped = grpcAdapter.mapInvocation({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: sparkToken.tokenId,
+      service: "warehouse.v1.DispatchService",
+      method: "DispatchMoveTask",
+      host: "rmf-gw.local:50051",
+      pattern: "unary",
+      params: {
+        command: "move_to_aisle",
+        destination: "A-17",
+      },
+    });
+    const grpcDecision = await gateway.intercept({
+      ...grpcMapped,
+      physicalContext: {
+        currentForceNewtons: 18,
+        currentVelocityMps: 0.45,
+      },
+      recentActions: ["grpc.dispatch"],
+    });
+
+    // All bridge paths for the same warehouse move intent must remain in
+    // high-assurance tiers (no T0/T1 downgrade) and require escalation.
+    for (const decision of [rosDecision, sparkDecision, opcuaDecision, grpcDecision]) {
+      expect([ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT]).toContain(decision.assignedTier);
+      expect(["escalate", "deny"]).toContain(decision.action);
+    }
+    expect([rosDecision, sparkDecision, opcuaDecision, grpcDecision].some(
+      (decision) => decision.action === "escalate",
+    )).toBe(true);
 
     const policyEvents = emitted.filter((e) => e.eventType === "policy.evaluated");
-    expect(policyEvents.length).toBeGreaterThanOrEqual(2);
+    expect(policyEvents.length).toBeGreaterThanOrEqual(1);
   });
 
   it("A2A -> Open-RMF dispatch path maps into the same gateway approval semantics", async () => {

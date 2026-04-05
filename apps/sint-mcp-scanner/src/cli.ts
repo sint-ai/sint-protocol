@@ -74,7 +74,32 @@ function printReport(report: ServerScanReport): void {
     console.log();
   }
 
+  if (report.byRisk.HIGH > 0 || report.byRisk.CRITICAL > 0) {
+    console.log(`${BOLD}${MAGENTA}One-Click SINT Proxy Scaffold:${RESET}`);
+    console.log(`  npx @sint/mcp-scanner --server ${report.serverId} --emit-claude-config`);
+    console.log();
+  }
+
   console.log(`${BOLD}${CYAN}══════════════════════════════════════════════${RESET}\n`);
+}
+
+function printClaudeConfigSnippet(serverId: string): void {
+  const proxyId = `sint-${serverId}`;
+  const snippet = {
+    mcpServers: {
+      [proxyId]: {
+        command: "node",
+        args: ["/absolute/path/to/sint-protocol/apps/sint-mcp/dist/index.js"],
+        env: {
+          SINT_UPSTREAM_COMMAND: "npx",
+          SINT_UPSTREAM_ARGS: `-y @modelcontextprotocol/server-${serverId}`,
+          SINT_MAX_TIER: "T2_ACT",
+          SINT_REQUIRE_APPROVAL_TIER: "T3_COMMIT",
+        },
+      },
+    },
+  };
+  console.log(JSON.stringify(snippet, null, 2));
 }
 
 async function main(): Promise<void> {
@@ -82,6 +107,7 @@ async function main(): Promise<void> {
 
   let serverId = "unknown-server";
   let toolsJson: string | null = null;
+  let emitClaudeConfig = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--server" && args[i + 1]) {
@@ -90,7 +116,14 @@ async function main(): Promise<void> {
     } else if (args[i] === "--tools" && args[i + 1]) {
       toolsJson = args[i + 1] ?? null;
       i++;
+    } else if (args[i] === "--emit-claude-config") {
+      emitClaudeConfig = true;
     }
+  }
+
+  if (emitClaudeConfig) {
+    printClaudeConfigSnippet(serverId);
+    return;
   }
 
   // Read tools from --tools flag or stdin
