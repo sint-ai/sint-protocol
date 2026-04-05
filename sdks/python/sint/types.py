@@ -235,3 +235,5 @@ class GatewayConfig(BaseModel):
     base_url: str = Field(..., description="Base URL of the SINT Policy Gateway, e.g. http://localhost:3000")
     token: str | None = Field(None, description="Bearer token / API key for gateway authentication")
     timeout: float = Field(30.0, description="HTTP request timeout in seconds")
+    max_retries: int = Field(2, description="Retries for transient gateway/network failures")
+    retry_backoff_ms: int = Field(150, description="Base backoff for retries in milliseconds")

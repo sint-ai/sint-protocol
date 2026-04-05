@@ -36,6 +36,8 @@ async def main():
     config = GatewayConfig(
         base_url="http://localhost:3000",
         token="my-api-key",   # optional
+        max_retries=2,
+        retry_backoff_ms=150,
     )
 
     async with GatewayClient(config) as client:
@@ -175,3 +177,7 @@ cd sdks/python
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
+
+## Examples
+
+- Warehouse AMR flow: [`examples/warehouse_amr_flow.py`](examples/warehouse_amr_flow.py)

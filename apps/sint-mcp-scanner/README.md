@@ -6,6 +6,12 @@
 npx sint-scan --server myserver --tools '[{"name":"bash","description":"runs shell commands"}]'
 ```
 
+Or directly by package name:
+
+```bash
+npx @sint/mcp-scanner --server myserver --tools '[{"name":"bash","description":"runs shell commands"}]'
+```
+
 ## What it does
 
 Maps every MCP tool to a SINT approval tier:
@@ -47,6 +53,15 @@ npx sint-scan --server myserver --tools '[
   {"name":"queryDB","description":"queries database","annotations":{"readOnlyHint":true}}
 ]'
 ```
+
+### Generate a SINT proxy config scaffold
+
+```bash
+npx @sint/mcp-scanner --server filesystem --emit-claude-config
+```
+
+This prints a `claude_desktop_config.json` snippet with a `sint-<server>` proxy entry
+so operators can wire SINT as the authorization layer in one step.
 
 ## Output
 

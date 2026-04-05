@@ -2,6 +2,21 @@
 
 This guide covers running the full SINT stack (gateway, dashboard, PostgreSQL, Redis) with Docker Compose.
 
+## Deployment Profiles
+
+Use one command per profile:
+
+```bash
+pnpm run stack:dev
+pnpm run stack:edge
+pnpm run stack:prod-lite
+```
+
+These commands map to:
+- `docker/compose/dev.yml`
+- `docker/compose/edge.yml`
+- `docker/compose/prod-lite.yml`
+
 ## Quick Start
 
 ```bash
@@ -22,6 +37,7 @@ Services will be available at:
 |-----------|------------------------------|--------------------------------|
 | Gateway   | http://localhost:3100        | Policy gateway HTTP API        |
 | Health    | http://localhost:3100/v1/health | Returns `{"status":"ok"}`   |
+| Ready     | http://localhost:3100/v1/ready  | Verifies Postgres + Redis connectivity |
 | Dashboard | http://localhost:3201        | React approval dashboard       |
 | Postgres  | localhost:5432               | Direct access (dev only)       |
 | Redis     | localhost:6379               | Direct access (dev only)       |
@@ -54,6 +70,7 @@ SQL migration files in `packages/persistence/migrations/` are applied automatica
 | `SINT_MAX_TIER`           | `T3_COMMIT`     | Maximum approval tier the gateway will accept             |
 | `SINT_REQUIRE_SIGNATURES` | `false`         | Require Ed25519-signed requests                           |
 | `SINT_RATE_LIMIT`         | `100`           | Max requests per minute per client                        |
+| `SINT_WS_ALLOW_QUERY_API_KEY` | `true` (dev) / `false` (prod recommended) | Allow `?apiKey=` auth on `/v1/approvals/ws` |
 
 ### Dashboard (`dashboard` service)
 

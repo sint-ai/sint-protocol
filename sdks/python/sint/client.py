@@ -16,6 +16,7 @@ this client is purely a transport layer.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -30,6 +31,10 @@ class GatewayError(Exception):
         super().__init__(f"Gateway error {status_code}: {detail}")
         self.status_code = status_code
         self.detail = detail
+
+    @property
+    def retryable(self) -> bool:
+        return self.status_code == 429 or self.status_code >= 500
 
 
 class GatewayClient:
@@ -61,6 +66,8 @@ class GatewayClient:
             headers=headers,
             timeout=config.timeout,
         )
+        self._max_retries = max(0, config.max_retries)
+        self._retry_backoff_ms = max(1, config.retry_backoff_ms)
 
     # ------------------------------------------------------------------
     # Context manager
@@ -80,15 +87,30 @@ class GatewayClient:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
+        attempts = self._max_retries + 1
+        last_error: Exception | None = None
+        for attempt in range(attempts):
+            try:
+                resp = await self._client.request(method, path, **kwargs)
+                self._raise_for_status(resp)
+                return resp.json()
+            except GatewayError as err:
+                last_error = err
+                if not err.retryable or attempt >= attempts - 1:
+                    raise
+            except (httpx.TransportError, httpx.TimeoutException) as err:
+                last_error = err
+                if attempt >= attempts - 1:
+                    raise
+            await asyncio.sleep((self._retry_backoff_ms * (attempt + 1)) / 1000.0)
+        raise last_error or RuntimeError("gateway request failed without explicit error")
+
     async def _get(self, path: str, **params: Any) -> Any:
-        resp = await self._client.get(path, params=params or None)
-        self._raise_for_status(resp)
-        return resp.json()
+        return await self._request("GET", path, params=params or None)
 
     async def _post(self, path: str, body: Any) -> Any:
-        resp = await self._client.post(path, json=body)
-        self._raise_for_status(resp)
-        return resp.json()
+        return await self._request("POST", path, json=body)
 
     @staticmethod
     def _raise_for_status(resp: httpx.Response) -> None:

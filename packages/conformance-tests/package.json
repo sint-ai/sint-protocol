@@ -20,6 +20,7 @@
     "@sint/bridge-mqtt-sparkplug": "workspace:*",
     "@sint/bridge-opcua": "workspace:*",
     "@sint/bridge-open-rmf": "workspace:*",
+    "@sint/bridge-grpc": "workspace:*",
     "@sint/bridge-economy": "workspace:*",
     "@sint/bridge-a2a": "workspace:*",
     "@sint/bridge-iot": "workspace:*",
