@@ -10,7 +10,9 @@
     { "path": "../../packages/policy-gateway" },
     { "path": "../../packages/evidence-ledger" },
     { "path": "../../packages/bridge-economy" },
-    { "path": "../../packages/bridge-a2a" }
+    { "path": "../../packages/bridge-a2a" },
+    { "path": "../../packages/memory" },
+    { "path": "../../packages/interface-bridge" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
