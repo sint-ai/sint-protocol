@@ -95,6 +95,14 @@ export type SintEventType =
   | "avatar.profile.created"
   | "avatar.profile.updated"
   | "avatar.csml.escalated"
+  // Operator (Layer 5) — memory, voice, HUD, notifications, mode
+  | "operator.memory.stored"
+  | "operator.memory.recalled"
+  | "operator.memory.deleted"
+  | "operator.voice.output"
+  | "operator.hud.updated"
+  | "operator.notification.sent"
+  | "operator.mode.changed"
   // Risk scoring — emitted after each intercept with riskScore + csml
   | "risk.score.computed"
   // Ledger management (audit of the auditor)
