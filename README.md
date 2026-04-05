@@ -88,6 +88,24 @@ pnpm --filter @sint/gate-policy-gateway test
 pnpm --filter @sint/bridge-mcp test
 ```
 
+## SINT Operator Interface
+
+A voice-first, HUD-based control surface for SINT operators. Every command flows through the Policy Gateway.
+
+```bash
+pnpm run stack:interface  # starts gateway + interface + postgres + redis
+# Opens: http://localhost:3202
+```
+
+Features:
+- 🎙️ **Voice input** — Web Speech API (zero external deps), real-time transcript
+- 🖥️ **Command HUD** — 3-panel grid: approvals | action stream | context
+- 💾 **Operator memory** — ledger-backed persistent context (`@sint/memory`)
+- 🔔 **Proactive notifications** — `sint__notify` (T2 tier, requires confirmation)
+- ✅ **T2/T3 approvals** — one-click approve/deny with timeout countdown
+
+See [docs/guides/sint-interface.md](docs/guides/sint-interface.md) for full setup and usage.
+
 ## For AI Agents
 
 If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo, read **[AGENTS.md](AGENTS.md)** first. It covers key invariants, common mistakes, and entry points for the most common tasks. For deeper implementation details, see **[CLAUDE.md](CLAUDE.md)**.
