@@ -4,7 +4,7 @@
  * Maps tool annotations and descriptions to SINT approval tiers and
  * produces structured risk reports for MCP server auditing.
  *
- * @module @sint/mcp-scanner/scanner
+ * @module @pshkv/mcp-scanner/scanner
  */
 
 import { ApprovalTier } from "@sint/core";

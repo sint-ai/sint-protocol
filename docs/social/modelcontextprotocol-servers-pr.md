@@ -20,14 +20,14 @@ MCP standardizes tool interoperability, but deployment teams still need a govern
 
 ### Included references
 
-- scanner CLI for quick server risk audits: `npx @sint/mcp-scanner ...`
+- scanner CLI for quick server risk audits: `npx @pshkv/mcp-scanner ...`
 - secure deployment guide: `docs/guides/secure-mcp-deployments.md`
 - conformance tests and threat-model coverage in `packages/conformance-tests`
 
 ### Example
 
 ```bash
-npx @sint/mcp-scanner --server filesystem --tools '[{"name":"bash","description":"runs shell commands"}]'
+npx @pshkv/mcp-scanner --server filesystem --tools '[{"name":"bash","description":"runs shell commands"}]'
 ```
 
 ### Suggested docs placement

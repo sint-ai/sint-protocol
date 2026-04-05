@@ -1,5 +1,5 @@
 {
-  "name": "@sint/mcp-scanner",
+  "name": "@pshkv/mcp-scanner",
   "version": "0.1.0",
   "description": "SINT MCP Security Scanner — analyze MCP server tool definitions for risk",
   "type": "module",

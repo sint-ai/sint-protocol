@@ -1,4 +1,4 @@
-# @sint/mcp-scanner
+# @pshkv/mcp-scanner
 
 **Scan any MCP server's tool definitions for security risk** — instantly see which tools need human approval, which are shell-exec risks (OWASP ASI05), and what tier each tool maps to in the SINT authorization model.
 
@@ -9,7 +9,7 @@ npx sint-scan --server myserver --tools '[{"name":"bash","description":"runs she
 Or directly by package name:
 
 ```bash
-npx @sint/mcp-scanner --server myserver --tools '[{"name":"bash","description":"runs shell commands"}]'
+npx @pshkv/mcp-scanner --server myserver --tools '[{"name":"bash","description":"runs shell commands"}]'
 ```
 
 ## What it does
@@ -57,7 +57,7 @@ npx sint-scan --server myserver --tools '[
 ### Generate a SINT proxy config scaffold
 
 ```bash
-npx @sint/mcp-scanner --server filesystem --emit-claude-config
+npx @pshkv/mcp-scanner --server filesystem --emit-claude-config
 ```
 
 This prints a `claude_desktop_config.json` snippet with a `sint-<server>` proxy entry
@@ -118,7 +118,7 @@ Full guide: [docs/guides/secure-mcp-deployments.md](https://github.com/sint-ai/s
 ## Install
 
 ```bash
-npm install -g @sint/mcp-scanner
+npm install -g @pshkv/mcp-scanner
 # then: sint-scan --help
 ```
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Publish @sint/mcp-scanner to npm.
+# Publish @pshkv/mcp-scanner to npm.
 # Prerequisites: npm login (as sint-ai org or personal account with access to @sint scope)
 #
 # Usage:
@@ -17,7 +17,7 @@ if [[ "$1" == "--dry-run" ]]; then
   echo "--- DRY RUN MODE ---"
 fi
 
-echo "Building @sint/mcp-scanner..."
+echo "Building @pshkv/mcp-scanner..."
 cd "$SCANNER_DIR"
 pnpm run build
 
@@ -32,6 +32,6 @@ npm publish --access public $DRY_RUN
 if [[ -z "$DRY_RUN" ]]; then
   echo ""
   echo "Published! Verify with:"
-  echo "  npx @sint/mcp-scanner --server myserver --tools '[{\"name\":\"bash\",\"description\":\"runs shell\"}]'"
+  echo "  npx @pshkv/mcp-scanner --server myserver --tools '[{\"name\":\"bash\",\"description\":\"runs shell\"}]'"
   echo "  npx sint-scan --help"
 fi

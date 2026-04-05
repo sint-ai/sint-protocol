@@ -13,7 +13,7 @@ pnpm run build
 ## 2) Scan MCP tools first (recommended)
 
 ```bash
-npx @sint/mcp-scanner --server filesystem --tools '[
+npx @pshkv/mcp-scanner --server filesystem --tools '[
   {"name":"read_file","description":"reads files"},
   {"name":"write_file","description":"writes files"},
   {"name":"run_terminal_cmd","description":"runs shell commands"}

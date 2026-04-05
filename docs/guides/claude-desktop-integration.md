@@ -42,7 +42,7 @@ T0/T1 tools auto-approve and log. T2 tools require escalation. T3 tools (shell e
 - **Node.js 18+** (`node --version`)
 - Either:
   - The `sint-protocol` repo cloned: `git clone https://github.com/sint-ai/sint-protocol`
-  - Or `npx` access to `@sint/mcp-scanner` (no install required for scanning)
+  - Or `npx` access to `@pshkv/mcp-scanner` (no install required for scanning)
 
 ---
 

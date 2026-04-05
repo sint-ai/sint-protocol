@@ -78,7 +78,7 @@
 
 ## Immediate Next Steps (this week)
 
-1. **Ship `@sint/mcp-scanner`** (PR #32) — the concrete artifact for MCP outreach
+1. **Ship `@pshkv/mcp-scanner`** (PR #32) — the concrete artifact for MCP outreach
 2. **Create `docs/guides/secure-mcp-deployments.md`** — the shareable guide
 3. **Open GitHub Discussions** — "RFC: SINT v0.3 roadmap" with community input
 4. **Update README** — add OATR badge, shields for 114 tests, ASI coverage

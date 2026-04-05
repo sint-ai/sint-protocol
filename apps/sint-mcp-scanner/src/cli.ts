@@ -76,7 +76,7 @@ function printReport(report: ServerScanReport): void {
 
   if (report.byRisk.HIGH > 0 || report.byRisk.CRITICAL > 0) {
     console.log(`${BOLD}${MAGENTA}One-Click SINT Proxy Scaffold:${RESET}`);
-    console.log(`  npx @sint/mcp-scanner --server ${report.serverId} --emit-claude-config`);
+    console.log(`  npx @pshkv/mcp-scanner --server ${report.serverId} --emit-claude-config`);
     console.log();
   }
 

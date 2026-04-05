@@ -12,7 +12,7 @@ Day-of sequence. Work top to bottom — each step depends on the previous.
 
 ---
 
-## Step 1 — Publish @sint/mcp-scanner to npm
+## Step 1 — Publish @pshkv/mcp-scanner to npm
 
 ```bash
 npm login  # log in as sint-ai org or personal account with @sint scope access
@@ -22,12 +22,12 @@ bash scripts/publish-scanner.sh            # publish
 
 Verify:
 ```bash
-npx @sint/mcp-scanner --server test --tools '[{"name":"bash","description":"runs shell"}]'
+npx @pshkv/mcp-scanner --server test --tools '[{"name":"bash","description":"runs shell"}]'
 npx sint-scan --help
 ```
 
 - [ ] `npx sint-scan` works from a fresh directory (no local install)
-- [ ] npm page at npmjs.com/package/@sint/mcp-scanner shows correct README and version
+- [ ] npm page at npmjs.com/package/@pshkv/mcp-scanner shows correct README and version
 
 ---
 
@@ -36,10 +36,10 @@ npx sint-scan --help
 After npm publish, update the npm badge in README.md to the real registry link:
 
 ```
-![npm](https://img.shields.io/npm/v/@sint/mcp-scanner?label=npm%3A%40sint%2Fmcp-scanner)
+![npm](https://img.shields.io/npm/v/@pshkv/mcp-scanner?label=npm%3A%40sint%2Fmcp-scanner)
 ```
 
-Commit: `docs(readme): add live npm badge for @sint/mcp-scanner`
+Commit: `docs(readme): add live npm badge for @pshkv/mcp-scanner`
 
 ---
 
