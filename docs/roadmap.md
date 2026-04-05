@@ -21,7 +21,7 @@
 - [ ] Gazebo simulation environment integration (ROS 2 bridge validation)
 - [ ] NVIDIA Isaac Sim connector (industrial robotics testing)
 - [x] Claude Desktop integration guide (MCP proxy setup)
-- [ ] Cursor integration guide
+- [x] Cursor integration guide
 
 ### Community
 - [ ] Developer documentation site (docs.sint.gg)
