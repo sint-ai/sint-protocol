@@ -36,7 +36,13 @@ import {
   isInterfaceTool,
   type InterfaceToolContext,
 } from "./tools/interface-tools.js";
-import { InterfaceStateManager } from "@sint/interface-bridge";
+import {
+  getDelegationToolDefinitions,
+  handleDelegationTool,
+  isDelegationTool,
+  type DelegationToolContext,
+} from "./tools/delegation-tools.js";
+import { InterfaceStateManager, DelegationTree } from "@sint/interface-bridge";
 import {
   getSintResources,
   readSintResource,
@@ -60,6 +66,7 @@ export class SintMCPServer {
   readonly approvalQueue: ApprovalQueue;
   readonly trajectory: TrajectoryRecorder;
   readonly interfaceState: InterfaceStateManager;
+  readonly delegationTree: DelegationTree;
 
   private identity: AgentIdentity | null = null;
   private enforcer: PolicyEnforcer | null = null;
@@ -111,6 +118,9 @@ export class SintMCPServer {
     this.interfaceState = new InterfaceStateManager(
       process.env["SINT_SESSION_ID"] ?? `session-${Date.now()}`,
     );
+
+    // Initialize delegation tree
+    this.delegationTree = new DelegationTree();
 
     // Initialize downstream & aggregator
     this.downstream = new DownstreamManager();
@@ -184,13 +194,19 @@ export class SintMCPServer {
       const downstreamTools = this.aggregator.toMCPToolsList();
       const sintTools = getSintToolDefinitions();
       const interfaceTools = getInterfaceToolDefinitions();
-      return { tools: [...downstreamTools, ...sintTools, ...interfaceTools] };
+      const delegationTools = getDelegationToolDefinitions();
+      return { tools: [...downstreamTools, ...sintTools, ...interfaceTools, ...delegationTools] };
     });
 
     // tools/call — enforce policy then route
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
       const toolArgs = (args ?? {}) as Record<string, unknown>;
+
+      // Handle multi-agent delegation tools (no policy enforcement)
+      if (isDelegationTool(name)) {
+        return handleDelegationTool(name, toolArgs, this.getDelegationToolContext());
+      }
 
       // Handle operator interface tools (no policy enforcement)
       if (isInterfaceTool(name)) {
@@ -261,10 +277,10 @@ export class SintMCPServer {
   }
 
   /**
-   * Get the count of built-in SINT tools (including interface tools).
+   * Get the count of built-in SINT tools (including interface and delegation tools).
    */
   getSintToolCount(): number {
-    return getSintToolDefinitions().length + getInterfaceToolDefinitions().length;
+    return getSintToolDefinitions().length + getInterfaceToolDefinitions().length + getDelegationToolDefinitions().length;
   }
 
   async finalizeTrajectory(outcome: TrajectoryOutcome): Promise<string> {
@@ -290,6 +306,18 @@ export class SintMCPServer {
       interfaceState: this.interfaceState,
       ledger: this.ledger,
       agentPublicKey: this.identity?.publicKey ?? "unknown",
+    };
+  }
+
+  private getDelegationToolContext(): DelegationToolContext {
+    return {
+      agentPublicKey: this.identity?.publicKey ?? "unknown",
+      agentPrivateKey: this.identity?.privateKey ?? "",
+      tokenId: this.identity?.defaultToken.tokenId ?? "unknown",
+      tokenStore: this.tokenStore,
+      revocationStore: this.revocationStore,
+      ledger: this.ledger,
+      delegationTree: this.delegationTree,
     };
   }
 
