@@ -1,3 +1,6 @@
+// DEPRECATED: This app is superseded by SINT Console / Conductor.
+// See apps/dashboard/README.md for migration notes.
+
 /**
  * SINT Dashboard — Main Application.
  *

@@ -87,6 +87,12 @@ importers:
       '@sint/gate-policy-gateway':
         specifier: workspace:*
         version: link:../../packages/policy-gateway
+      '@sint/interface-bridge':
+        specifier: workspace:*
+        version: link:../../packages/interface-bridge
+      '@sint/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@sint/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
@@ -624,13 +630,13 @@ importers:
       '@sint/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
+      '@sint/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
-      '@sint/gate-evidence-ledger':
-        specifier: workspace:*
-        version: link:../evidence-ledger
       '@sint/persistence':
         specifier: workspace:*
         version: link:../persistence

@@ -41,6 +41,9 @@ import { discoveryRoutes } from "./routes/discovery.js";
 import { economyRoutes, type EconomyRouteContext } from "./routes/economy.js";
 import { a2aRoutes, type A2ARouteContext } from "./routes/a2a.js";
 import { riskStreamRoutes, globalRiskBus } from "./routes/risk-stream.js";
+import { memoryRoutes, type MemoryRouteContext } from "./routes/memory.js";
+import { delegationRoutes, type DelegationRouteContext } from "./routes/delegations.js";
+import { csmlRoutes, type CsmlRouteContext } from "./routes/csml.js";
 import type { SintConfig } from "./config.js";
 
 /** Shared server state — injectable for testing. */
@@ -275,6 +278,12 @@ export interface ServerOptions {
   economyContext?: EconomyRouteContext;
   /** Optional A2A route context — mounts /v1/a2a when configured. */
   a2aContext?: A2ARouteContext;
+  /** Optional memory route context — mounts /v1/memory when configured. */
+  memoryContext?: MemoryRouteContext;
+  /** Optional delegation route context — mounts /v1/delegations when configured. */
+  delegationContext?: DelegationRouteContext;
+  /** Optional CSML route context — mounts /v1/csml when configured. */
+  csmlContext?: CsmlRouteContext;
 }
 
 /** Create a fully configured Hono app. */
@@ -315,6 +324,21 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   // A2A routes (optional — only when A2A context is configured)
   if (options.a2aContext) {
     app.route("", a2aRoutes(options.a2aContext));
+  }
+
+  // Memory routes (optional — only when memory bank is configured)
+  if (options.memoryContext) {
+    app.route("", memoryRoutes(options.memoryContext));
+  }
+
+  // Delegation routes (optional — only when delegation tree is configured)
+  if (options.delegationContext) {
+    app.route("", delegationRoutes(options.delegationContext));
+  }
+
+  // CSML routes (optional — requires server context for ledger access)
+  if (options.csmlContext) {
+    app.route("", csmlRoutes(options.csmlContext));
   }
 
   return app;

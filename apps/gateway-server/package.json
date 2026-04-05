@@ -31,6 +31,8 @@
     "@sint/gate-policy-gateway": "workspace:*",
     "@sint/bridge-economy": "workspace:*",
     "@sint/bridge-a2a": "workspace:*",
+    "@sint/memory": "workspace:*",
+    "@sint/interface-bridge": "workspace:*",
     "@sint/persistence": "workspace:*",
     "hono": "^4.7.0",
     "ws": "^8.18.0",
