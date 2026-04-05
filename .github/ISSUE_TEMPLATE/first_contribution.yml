@@ -1,0 +1,49 @@
+name: First Contribution
+about: Structured onboarding issue for first-time external contributors
+title: "first-contrib: <short task name>"
+labels: ["good first issue", "help wanted", "roadmap-q2"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to SINT. This template is optimized for first-time contributors.
+  - type: input
+    id: scope
+    attributes:
+      label: Task scope
+      placeholder: "What should be changed?"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Keep this concise and testable.
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation commands
+      placeholder: |
+        pnpm run build
+        pnpm run test
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Useful file references
+      placeholder: "docs/guides/... , packages/..."
+  - type: dropdown
+    id: mentor
+    attributes:
+      label: Maintainer mentor needed?
+      options:
+        - Yes
+        - No
+    validations:
+      required: true

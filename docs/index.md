@@ -35,6 +35,8 @@ features:
 - Build static docs site: `pnpm run docs:build`
 - Core onboarding: [Getting Started](./getting-started.md)
 - Integration examples: [Tutorials](./tutorials/hello-world-agent.md)
+- Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
+- Latest security bulletin: [April 2026](./security-bulletins/2026-04.md)
 
 ## Documentation Scope
 
