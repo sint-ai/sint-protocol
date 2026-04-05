@@ -39,6 +39,7 @@ export default defineConfig({
           { text: "Docker Deployment", link: "/guides/docker-deployment" },
           { text: "Persistence Baseline", link: "/guides/persistence-baseline" },
           { text: "WebSocket Approvals", link: "/guides/websocket-approvals" },
+          { text: "Gazebo ROS2 Validation", link: "/guides/gazebo-ros2-validation" },
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
           { text: "Claude Desktop Integration", link: "/guides/claude-desktop-integration" },

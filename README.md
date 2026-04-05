@@ -60,12 +60,14 @@ pnpm --filter @sint/gateway-server dev
 pnpm run stack:dev
 pnpm run stack:edge
 pnpm run stack:prod-lite
+pnpm run stack:gazebo-validation
 ```
 
 Compose profiles:
 - [`docker/compose/dev.yml`](docker/compose/dev.yml)
 - [`docker/compose/edge.yml`](docker/compose/edge.yml)
 - [`docker/compose/prod-lite.yml`](docker/compose/prod-lite.yml)
+- [`docker/compose/gazebo-validation.yml`](docker/compose/gazebo-validation.yml)
 
 ### Developer Docs Site (`docs.sint.gg`)
 
