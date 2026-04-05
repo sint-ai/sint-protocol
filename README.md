@@ -4,23 +4,23 @@
 ![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)
 ![Tests](https://img.shields.io/badge/tests-370-brightgreen)
 
-![Tests](https://img.shields.io/badge/tests-815%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-1200%2B%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-**Formally specified security, permission, and economic enforcement layer for physical AI.**
+**Security, permission, and economic enforcement layer for physical AI.**
 
 SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
 
-> **Academic grounding:** SINT is formally specified against IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The formal specification and evaluation framework reference the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
+> **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 
 ```
 Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Escalate
                                │
                        Evidence Ledger (SHA-256 hash-chained)
                                │
-                    TEE ProofReceipt (Intel SGX / ARM TrustZone)
+                    ProofReceipt (pluggable attestation)
 ```
 
 ## Why SINT?
@@ -47,7 +47,7 @@ AI agents can now control robots, execute code, move money, and operate machiner
 # Prerequisites: Node.js >= 22, pnpm >= 9
 pnpm install
 pnpm run build
-pnpm run test        # 815 passing tests across 30 workspace members
+pnpm run test        # 1200+ passing tests across 30 workspace members
 ```
 
 ### Start the Gateway Server
@@ -120,7 +120,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 │  │  10. Bill via EconomyPlugin (if configured)             │ │
 │  └─────────────────────────────────────────────────────────┘ │
 │                          ↓                                   │
-│  EvidenceLedger (SHA-256 hash chain + TEE ProofReceipt)     │
+│  EvidenceLedger (SHA-256 hash chain + ProofReceipt)        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -144,7 +144,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/core`](packages/core) | Types, Zod schemas, tier constants, formal DFA states | — |
 | [`@sint/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 55 |
 | [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 152 |
-| [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with TEE attestation | 45 |
+| [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with pluggable attestation | 45 |
 
 ### Bridges (12 bridges)
 
@@ -198,7 +198,9 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
 | [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
 
-**Total: 30 workspace members, 815 passing tests**
+**Total: 30 workspace members, 1200+ passing tests**
+
+> **Note:** Run `pnpm test` to get the exact count. The number grows as new bridges and conformance tests are added.
 
 ## Approval Tiers
 
@@ -322,7 +324,7 @@ CSML above a deployment threshold θ automatically escalates all subsequent requ
 |----|-------|----------------|
 | FR1 | Identification & Authentication | SintCapabilityToken with Ed25519 agent identity; W3C DID portability |
 | FR2 | Use Control | Four-tier Approval Gate; `maxRepetitions` constraint; per-resource action allowlists |
-| FR3 | System Integrity | SHA-256 hash-chained Evidence Ledger; TEE ProofReceipt for T2/T3 |
+| FR3 | System Integrity | SHA-256 hash-chained Evidence Ledger; ProofReceipt for T2/T3 (TEE attestation planned) |
 | FR4 | Data Confidentiality | Zenoh TLS transport; capability scope prevents sensor access without explicit token |
 | FR5 | Restricted Data Flow | Policy Gateway allowlists; `geofence` constraint; SINT Bridge per-topic DFA |
 | FR6 | Timely Response | `safety.estop.triggered` event; E-stop universality invariant I-G2 |
@@ -376,7 +378,7 @@ Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
 | **Phase 1** (complete) | Security Wedge — capability tokens, PolicyGateway, EvidenceLedger | 425 |
 | **Phase 2** (complete) | Engine Core — bridge-mcp, bridge-ros2, engine packages, persistence, gateway-server | +221 (646) |
 | **Phase 3** (complete) | Economy Bridge — @sint/bridge-economy with port/adapter pattern, EconomyPlugin | +91 (737) |
-| **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 (815) |
+| **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 |
 | **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles | shipped |
 | **Phase 6** (complete) | Engine layer — System1/2 engines, HAL, capsule sandbox, Avatar/CSML, reference capsules | shipped |
 
@@ -412,7 +414,7 @@ docker-compose up
 - **Crypto:** @noble/ed25519, @noble/hashes (audited, zero-dependency)
 - **MCP SDK:** @modelcontextprotocol/sdk
 - **Dashboard:** React 19, Vite 6
-- **Testing:** Vitest (815 passing tests)
+- **Testing:** Vitest (1200+ passing tests)
 - **Infra:** Docker, PostgreSQL 16+, Redis 7, GitHub Actions CI, Railway
 
 ## Docs & Artifacts
@@ -454,6 +456,18 @@ docker-compose up
 - EU AI Act Article 13: Transparency requirements for AI systems
 - NIST AI RMF: AI Risk Management Framework
 - W3C DID Core: Decentralized Identifiers specification
+
+## Roadmap
+
+| Feature | Status | Target |
+|---------|--------|--------|
+| npm package publishing (8 core packages) | 🔧 In progress | April 2026 |
+| Python SDK (PyNaCl + Pydantic) | 🔧 In progress | April 2026 |
+| Production gateway deployment | 📋 Planned | April 2026 |
+| Getting Started tutorial | ✅ Complete | [docs/getting-started.md](docs/getting-started.md) |
+| TEE proof receipts (Intel SGX / ARM TrustZone) | 📋 Planned | Q2 2026 |
+| Hardware-in-the-loop ROS 2 testing | 📋 Planned | Q2 2026 |
+| Formal verification (TLA+ / Alloy) | 📋 Planned | Q3 2026 |
 
 ## License
 
