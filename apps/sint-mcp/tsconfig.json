@@ -11,6 +11,8 @@
     { "path": "../../packages/bridge-mcp" },
     { "path": "../../packages/capability-tokens" },
     { "path": "../../packages/policy-gateway" },
-    { "path": "../../packages/evidence-ledger" }
+    { "path": "../../packages/evidence-ledger" },
+    { "path": "../../packages/interface-bridge" },
+    { "path": "../../packages/memory" }
   ]
 }

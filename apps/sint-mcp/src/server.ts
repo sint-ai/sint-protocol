@@ -31,6 +31,13 @@ import {
   type SintToolContext,
 } from "./tools/sint-tools.js";
 import {
+  getInterfaceToolDefinitions,
+  handleInterfaceTool,
+  isInterfaceTool,
+  type InterfaceToolContext,
+} from "./tools/interface-tools.js";
+import { InterfaceStateManager } from "@sint/interface-bridge";
+import {
   getSintResources,
   readSintResource,
   type ResourceContext,
@@ -52,6 +59,7 @@ export class SintMCPServer {
   readonly gateway: PolicyGateway;
   readonly approvalQueue: ApprovalQueue;
   readonly trajectory: TrajectoryRecorder;
+  readonly interfaceState: InterfaceStateManager;
 
   private identity: AgentIdentity | null = null;
   private enforcer: PolicyEnforcer | null = null;
@@ -98,6 +106,11 @@ export class SintMCPServer {
         });
       },
     });
+
+    // Initialize interface state manager
+    this.interfaceState = new InterfaceStateManager(
+      process.env["SINT_SESSION_ID"] ?? `session-${Date.now()}`,
+    );
 
     // Initialize downstream & aggregator
     this.downstream = new DownstreamManager();
@@ -170,13 +183,19 @@ export class SintMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       const downstreamTools = this.aggregator.toMCPToolsList();
       const sintTools = getSintToolDefinitions();
-      return { tools: [...downstreamTools, ...sintTools] };
+      const interfaceTools = getInterfaceToolDefinitions();
+      return { tools: [...downstreamTools, ...sintTools, ...interfaceTools] };
     });
 
     // tools/call — enforce policy then route
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
       const toolArgs = (args ?? {}) as Record<string, unknown>;
+
+      // Handle operator interface tools (no policy enforcement)
+      if (isInterfaceTool(name)) {
+        return handleInterfaceTool(name, toolArgs, this.getInterfaceToolContext());
+      }
 
       // Handle built-in SINT tools (no policy enforcement)
       if (isSintTool(name)) {
@@ -242,10 +261,10 @@ export class SintMCPServer {
   }
 
   /**
-   * Get the count of built-in SINT tools.
+   * Get the count of built-in SINT tools (including interface tools).
    */
   getSintToolCount(): number {
-    return getSintToolDefinitions().length;
+    return getSintToolDefinitions().length + getInterfaceToolDefinitions().length;
   }
 
   async finalizeTrajectory(outcome: TrajectoryOutcome): Promise<string> {
@@ -263,6 +282,14 @@ export class SintMCPServer {
       tokenId: this.identity?.defaultToken.tokenId ?? "unknown",
       tokenStore: this.tokenStore,
       revocationStore: this.revocationStore,
+    };
+  }
+
+  private getInterfaceToolContext(): InterfaceToolContext {
+    return {
+      interfaceState: this.interfaceState,
+      ledger: this.ledger,
+      agentPublicKey: this.identity?.publicKey ?? "unknown",
     };
   }
 

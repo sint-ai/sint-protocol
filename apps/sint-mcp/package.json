@@ -34,6 +34,8 @@
     "@sint/gate-capability-tokens": "workspace:*",
     "@sint/gate-evidence-ledger": "workspace:*",
     "@sint/gate-policy-gateway": "workspace:*",
+    "@sint/interface-bridge": "workspace:*",
+    "@sint/memory": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

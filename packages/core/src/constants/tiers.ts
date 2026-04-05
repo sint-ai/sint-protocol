@@ -621,4 +621,75 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     baseTier: ApprovalTier.T2_ACT,
     baseRisk: RiskTier.T2_STATEFUL,
   },
+
+  // ── Operator Interface tools (@sint/interface-bridge) ─────────────────────
+  //
+  // Resource format: sint://interface/<path>
+  // Read-only status and memory recall → T0_OBSERVE (auto-approved, logged)
+  // TTS output, HUD updates, memory store → T1_PREPARE (low-impact writes)
+  // Proactive notifications, mode changes, memory delete → T2_ACT (stateful)
+
+  // Interface status — read-only
+  {
+    resourcePattern: "sint://interface/status",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+
+  // Memory recall — read-only search
+  {
+    resourcePattern: "sint://interface/memory/recall",
+    actions: ["call"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+
+  // TTS output to operator — low-impact write
+  {
+    resourcePattern: "sint://interface/speak",
+    actions: ["call"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+
+  // HUD panel updates — low-impact write
+  {
+    resourcePattern: "sint://interface/hud/*",
+    actions: ["call"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+
+  // Memory store — low-impact write
+  {
+    resourcePattern: "sint://interface/memory/store",
+    actions: ["call"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+
+  // Proactive notification to operator — stateful (push action)
+  {
+    resourcePattern: "sint://interface/notify",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+
+  // Interface mode change — stateful
+  {
+    resourcePattern: "sint://interface/mode",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+
+  // Memory delete — stateful (destructive)
+  {
+    resourcePattern: "sint://interface/memory/delete",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
 ] as const;
