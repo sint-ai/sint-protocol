@@ -21,13 +21,17 @@
     "sintctl": "pnpm --filter @sint/sintctl exec sintctl --help",
     "stack:dev": "bash ./scripts/stack-up.sh dev",
     "stack:edge": "bash ./scripts/stack-up.sh edge",
-    "stack:prod-lite": "bash ./scripts/stack-up.sh prod-lite"
+    "stack:prod-lite": "bash ./scripts/stack-up.sh prod-lite",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
     "tsx": "^4.19.0",
     "turbo": "^2.4.0",
     "typescript": "^5.7.0",
+    "vitepress": "^1.6.4",
     "vitest": "^3.0.0"
   },
   "packageManager": "pnpm@9.15.0",

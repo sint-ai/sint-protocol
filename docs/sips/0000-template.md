@@ -1,40 +1,40 @@
-# SIP-XXXX: <Title>
+# SIP-XXXX: `[Title]`
 
 - Status: draft
-- Authors: <name>
-- Created: <YYYY-MM-DD>
-- Updated: <YYYY-MM-DD>
+- Authors: `[name]`
+- Created: `[YYYY-MM-DD]`
+- Updated: `[YYYY-MM-DD]`
 
 ## Summary
 
-<One paragraph>
+`[One paragraph]`
 
 ## Motivation
 
-<Why this change is needed>
+`[Why this change is needed]`
 
 ## Proposal
 
-<Protocol/API/schema details>
+`[Protocol/API/schema details]`
 
 ## Compatibility
 
 - Backward compatible: yes/no
-- Breaking surface: <if any>
-- Migration: <steps>
+- Breaking surface: `[if any]`
+- Migration: `[steps]`
 
 ## Security and Safety Impact
 
-<Threat model and runtime safety implications>
+`[Threat model and runtime safety implications]`
 
 ## Conformance Impact
 
-<Which tests or fixtures must be added/updated>
+`[Which tests or fixtures must be added/updated]`
 
 ## Rollout Plan
 
-<Phased rollout>
+`[Phased rollout]`
 
 ## Alternatives Considered
 
-<Rejected options>
+`[Rejected options]`

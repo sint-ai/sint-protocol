@@ -24,7 +24,7 @@
 - [x] Cursor integration guide
 
 ### Community
-- [ ] Developer documentation site (docs.sint.gg)
+- [x] Developer documentation site (docs.sint.gg)
 - [ ] Discord community launch
 - [ ] First external contributor onboarding
 - [ ] Monthly "SINT Security Bulletin" — protocol updates + physical AI security news
