@@ -1,10 +1,5 @@
 # SINT Protocol
 [![CI](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/sint-ai/sint-protocol/blob/main/LICENSE)
-![Node.js >= 22](https://img.shields.io/badge/node-%3E%3D22-brightgreen)
-![Tests](https://img.shields.io/badge/tests-370-brightgreen)
-
-![Tests](https://img.shields.io/badge/tests-1200%2B%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
@@ -47,7 +42,7 @@ AI agents can now control robots, execute code, move money, and operate machiner
 # Prerequisites: Node.js >= 22, pnpm >= 9
 pnpm install
 pnpm run build
-pnpm run test        # 1200+ passing tests across 30 workspace members
+pnpm run test        # full workspace test suite
 ```
 
 ### Start the Gateway Server
@@ -198,9 +193,9 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
 | [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
 
-**Total: 30 workspace members, 1200+ passing tests**
+**Total: 30 workspace members**
 
-> **Note:** Run `pnpm test` to get the exact count. The number grows as new bridges and conformance tests are added.
+> **Note:** Run `pnpm test` to get the current exact passing test count.
 
 ## Approval Tiers
 
@@ -414,7 +409,7 @@ docker-compose up
 - **Crypto:** @noble/ed25519, @noble/hashes (audited, zero-dependency)
 - **MCP SDK:** @modelcontextprotocol/sdk
 - **Dashboard:** React 19, Vite 6
-- **Testing:** Vitest (1200+ passing tests)
+- **Testing:** Vitest (run `pnpm test` for current count)
 - **Infra:** Docker, PostgreSQL 16+, Redis 7, GitHub Actions CI, Railway
 
 ## Docs & Artifacts
@@ -423,6 +418,7 @@ docker-compose up
 - SIP governance: [`docs/SIPS.md`](docs/SIPS.md)
 - Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
 - Conformance matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
+- Getting started: [`docs/getting-started.md`](docs/getting-started.md)
 - Deployment profiles: [`docs/profiles/`](docs/profiles/)
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
 - Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
