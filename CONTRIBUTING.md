@@ -1,94 +1,137 @@
 # Contributing to SINT Protocol
 
-Thank you for helping make physical AI safer.
+Thank you for your interest in contributing to SINT Protocol — the security enforcement layer for physical AI.
 
-## Ways to Contribute
+## Quick Start
 
-### 1. Implement a bridge adapter
+```bash
+# Fork and clone the repo
+git clone https://github.com/<your-username>/sint-protocol.git
+cd sint-protocol
 
-New bridge = new protocol integration. See `packages/bridge-iot/` as a minimal template.
+# Install dependencies (requires Node.js >= 22, pnpm >= 9)
+pnpm install
 
-**High-value bridges not yet built:**
-- PROFINET / EtherCAT / CANopen / Modbus TCP (industrial fieldbus)
-- DDS / RTPS (ROS 2 native transport layer)
-- MQTT 5 with shared subscriptions (fleet telemetry)
-- WebRTC data channels (browser-based operator consoles)
+# Build all packages
+pnpm run build
 
-Each bridge needs:
-- `src/<protocol>-resource-mapper.ts` — URI + action mapping
-- `src/<protocol>-interceptor.ts` — session + intercept logic
-- `__tests__/<protocol>.test.ts` — ≥15 tests covering allow/deny/escalate paths
+# Run all tests (370+)
+pnpm run test
 
-### 2. Add conformance tests
+# Type-check
+pnpm run typecheck
+```
 
-Every new security invariant needs a test in `packages/conformance-tests/src/`.
-Canonical fixtures (JSON) live in `packages/conformance-tests/fixtures/`.
+## Development Workflow
 
-Use the [bridge conformance issue template](.github/ISSUE_TEMPLATE/bridge_conformance.md) to report results.
+1. **Create a branch** from `master`:
+   ```bash
+   git checkout -b feat/your-feature-name
+   ```
 
-### 3. Port an SDK
+2. **Make your changes** following the coding conventions below.
 
-| Language | Status | Issue |
-|---|---|---|
-| TypeScript | ✅ `sdks/typescript/` | — |
-| Python | stub at `sdks/python/` | [#4](https://github.com/pshkv/sint-protocol/issues/4) |
-| Go | stub at `sdks/go/` | — |
-| Rust | not started | open an issue |
+3. **Run tests** for the package you modified:
+   ```bash
+   pnpm --filter @sint/gate-policy-gateway test
+   ```
 
-### 4. Report a security vulnerability
+4. **Run the full test suite** before submitting:
+   ```bash
+   pnpm run test
+   ```
 
-See [SECURITY.md](SECURITY.md).
+5. **Submit a pull request** against `master`.
 
-### 5. Submit a SINT Improvement Proposal (SIP)
+## Coding Conventions
 
-See [docs/SIPS.md](docs/SIPS.md) and use the template at [docs/sips/0000-template.md](docs/sips/0000-template.md).
+### TypeScript
+- **Strict mode** — `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters`
+- **ES modules** — `"type": "module"` with `.js` extensions in imports
+- **Readonly by default** — interface fields are `readonly`
+
+### Error Handling
+- **Result<T, E> — never throw** — All fallible operations return `{ ok: true, value: T } | { ok: false, error: E }`. Use `ok()` and `err()` helpers from `@sint/core`.
+- Do not use try/catch for control flow.
+
+### Validation
+- **Zod at boundaries** — Runtime validation at all system boundaries (API inputs, config parsing, external data).
+
+### Crypto
+- Use `@noble/ed25519` and `@noble/hashes` only. No other crypto libraries.
+- All IDs are UUIDv7 (sortable, timestamp-prefixed).
+- All timestamps are ISO 8601 with microsecond precision.
+
+### Testing
+- **Vitest** with `describe`/`it`/`expect` pattern.
+- Every new feature or bug fix must include tests.
+- Conformance tests in `packages/conformance-tests` must pass on every PR.
+
+## Architecture Rules
+
+These are non-negotiable:
+
+1. **Every action flows through `PolicyGateway.intercept()`** — No bridge, route, or service makes independent authorization decisions.
+2. **Attenuation only** — Delegated capability tokens can only reduce permissions, never escalate.
+3. **Append-only ledger** — The Evidence Ledger is insert-only. No updates, no deletes.
+4. **Interface-first persistence** — Storage adapters implement interfaces from `@sint/persistence`.
+
+## What We're Looking For
+
+### High-Priority Contributions
+- **New bridge adapters** — Extend SINT to protocols beyond MCP and ROS 2
+- **Policy rule sets** — Industry-specific policies (manufacturing, healthcare, logistics)
+- **Persistence adapters** — PostgreSQL, Redis, or other storage backends
+- **Language SDKs** — Python, Go, Rust clients for the Gateway API
+- **Documentation** — Tutorials, guides, architecture explanations
+
+### Good First Issues
+Look for issues labeled [`good first issue`](https://github.com/sint-ai/sint-protocol/labels/good%20first%20issue) — these are scoped, well-defined tasks suitable for new contributors.
+
+## Adding a New Package
+
+1. Create `packages/<name>/package.json` with `"name": "@sint/<name>"`
+2. Create `packages/<name>/tsconfig.json` extending `../../tsconfig.base.json`
+3. Create `packages/<name>/vitest.config.ts`
+4. Create `packages/<name>/src/index.ts` with exports
+5. Add dependency references to `tsconfig.json`
+6. Run `pnpm install` to link workspace dependencies
+
+## Commit Messages
+
+Use conventional commits:
+```
+feat(policy-gateway): add geofence polygon constraint
+fix(evidence-ledger): handle empty chain initialization
+docs(readme): update package table with test counts
+test(bridge-mcp): add forbidden combo detection tests
+```
+
+## Pull Request Process
+
+1. Ensure all tests pass (`pnpm run test`).
+2. Ensure type-check passes (`pnpm run typecheck`).
+3. Update relevant documentation if your change affects the public API.
+4. Add your changes to the relevant package's test suite.
+5. Conformance tests must still pass.
+6. One approval required from a maintainer.
+
+## Security Vulnerabilities
+
+**Do NOT open a public issue for security vulnerabilities.**
+
+Email security reports to: **i@pshkv.com** with subject line `[SINT-SECURITY]`.
+
+We will acknowledge within 48 hours and provide a timeline for fix and disclosure.
+
+## Code of Conduct
+
+Be respectful. Be constructive. Focus on the technical merit of contributions. We're building critical safety infrastructure — precision and rigor matter more than speed.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the Apache-2.0 license.
 
 ---
 
-## Development Setup
-
-```bash
-git clone https://github.com/pshkv/sint-protocol
-cd sint-protocol
-pnpm install
-pnpm run build
-pnpm run test        # Must be 0 failures before and after your change
-```
-
-**Node.js ≥ 22 and pnpm ≥ 9.15 required.**
-
-## Before Submitting a PR
-
-1. `pnpm run build` — zero TypeScript errors
-2. `pnpm run test` — all 1,105+ existing tests pass
-3. New functionality has unit tests in its own package
-4. New security-relevant behaviour has a test in `@sint/conformance-tests`
-5. New bridge adapter exports types from its `src/index.ts`
-
-## Code Style
-
-- **TypeScript strict mode** — `noUncheckedIndexedAccess`, `noUnusedLocals`
-- **`Result<T, E>` pattern** — never throw for control flow; use `ok()` / `err()` from `@sint/core`
-- **Readonly interfaces** by default
-- **Zod schemas** at system boundaries (external input, API surface)
-- **`@noble/ed25519`** for all Ed25519 operations (audited, zero-dep)
-- **UUID v7** for all IDs — use `generateUUIDv7()` from `@sint/gate-capability-tokens`, never `crypto.randomUUID()` (that gives v4)
-
-## Multi-Agent / AI Pair Programming
-
-This repo is designed for parallel human + AI development. See [AGENTS.md](AGENTS.md) for AI-specific guidance and [CLAUDE.md](CLAUDE.md) for implementation details and common pitfalls.
-
-**Package ownership by focus area** (to avoid conflicts):
-
-| Area | Packages |
-|---|---|
-| Security core | `@sint/core`, `@sint/gate-*` |
-| Bridges | `@sint/bridge-*` — each is independent |
-| Engine | `@sint/engine-*` |
-| Server / client | `@sint/gateway-server`, `@sint/client` |
-| Conformance | `@sint/conformance-tests` |
-
-## Questions?
-
-Open an [issue](https://github.com/pshkv/sint-protocol/issues) or comment on an existing one.
-For real-time discussion, reference the [A2A #1713](https://github.com/a2aproject/A2A/issues/1713) thread where SINT and APS are coordinating on joint physical AI governance.
+Questions? Open a [Discussion](https://github.com/sint-ai/sint-protocol/discussions) or reach out at i@pshkv.com.

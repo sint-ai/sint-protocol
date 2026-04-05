@@ -1,15 +1,27 @@
 ---
-name: Feature request
-about: Propose a new capability or bridge
+name: Feature Request
+about: Suggest a new feature or enhancement
+title: "[Feature] "
 labels: enhancement
+assignees: ''
 ---
 
-**Problem / use case**
+## Problem
 
-**Proposed solution**
+What problem does this feature solve? What use case does it address?
 
-**Which package(s) would this affect?**
+## Proposed Solution
 
-**Alternative approaches considered**
+Describe the solution you'd like. Include API examples or pseudo-code if relevant.
 
-**Are you willing to submit a PR?** [ ] Yes [ ] No
+## Alternatives Considered
+
+What other solutions have you considered? Why is this approach preferred?
+
+## Impact
+
+Which SINT packages would be affected? (e.g., `@sint/core`, `@sint/gate-policy-gateway`)
+
+## Additional Context
+
+Any mockups, diagrams, references, or related issues.
