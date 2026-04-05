@@ -58,6 +58,18 @@ export const physicalConstraintsSchema = z.object({
   contactForceThresholdN: z.number().positive().optional(),
 }).strict();
 
+/** Behavioral constraints schema — runtime input validation and rate limiting. */
+export const behavioralConstraintsSchema = z.object({
+  /** Max tool calls per 60-second rolling window. */
+  maxCallsPerMinute: z.number().int().positive().max(10_000).optional(),
+  /** Allowlist regex patterns — tool input must match at least one (if provided). */
+  allowedPatterns: z.array(z.string().min(1).max(512)).min(1).max(32).optional(),
+  /** Denylist regex patterns — matching inputs are unconditionally blocked. */
+  deniedPatterns: z.array(z.string().min(1).max(512)).min(1).max(32).optional(),
+  /** Maximum payload size in bytes for any tool call using this token. */
+  maxPayloadBytes: z.number().int().positive().max(104_857_600).optional(), // 100 MiB ceiling
+}).strict();
+
 export const modelConstraintsSchema = z.object({
   allowedModelIds: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
   maxModelVersion: z.string().min(1).max(64).optional(),
@@ -113,6 +125,12 @@ export const capabilityTokenSchema = z.object({
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
+  /** Runtime behavioral constraints (input patterns, rate limits, payload size). */
+  behavioralConstraints: behavioralConstraintsSchema.optional(),
+  /** APS passport identifier for cross-protocol identity linkage. */
+  passportId: z.string().min(1).max(256).optional(),
+  /** Delegation depth in the APS chain (0 = root). */
+  delegationDepth: z.number().int().min(0).max(32).optional(),
   delegationChain: delegationChainSchema,
   issuedAt: iso8601Schema,
   expiresAt: iso8601Schema,
@@ -132,6 +150,12 @@ export const capabilityTokenRequestSchema = z.object({
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
+  /** Runtime behavioral constraints for this token. */
+  behavioralConstraints: behavioralConstraintsSchema.optional(),
+  /** APS passport identifier for cross-protocol identity linkage. */
+  passportId: z.string().min(1).max(256).optional(),
+  /** Delegation depth in the APS chain (0 = root). */
+  delegationDepth: z.number().int().min(0).max(32).optional(),
   delegationChain: delegationChainSchema,
   expiresAt: iso8601Schema,
   revocable: z.boolean(),

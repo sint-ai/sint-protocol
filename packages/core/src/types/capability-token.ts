@@ -104,6 +104,54 @@ export interface SintPhysicalConstraints {
 }
 
 /**
+ * Behavioral constraints enforced at runtime against tool call inputs.
+ *
+ * These are checked by the Policy Gateway on every tool invocation — not just
+ * at credential issuance — to ensure the agent's runtime behavior stays within
+ * the bounds declared at token issuance time.
+ *
+ * Addresses the gap identified by the agentidentityprotocol community: a token
+ * may be legitimately issued but the agent's runtime behavior can still diverge.
+ *
+ * @example
+ * ```ts
+ * const bc: SintBehavioralConstraints = {
+ *   maxCallsPerMinute: 30,
+ *   allowedPatterns: ["^/safe/.*", "^read:"],
+ *   deniedPatterns: ["rm\\s+-rf", "DROP\\s+TABLE"],
+ *   maxPayloadBytes: 65536,
+ * };
+ * ```
+ */
+export interface SintBehavioralConstraints {
+  /**
+   * Maximum number of tool calls permitted within any 60-second rolling window.
+   * Enforcement is sliding-window, checked per token by the Policy Gateway.
+   */
+  readonly maxCallsPerMinute?: number;
+
+  /**
+   * Allowlist of ECMAScript regex patterns that tool-call inputs MUST match.
+   * At least one pattern must match the serialised input for the call to proceed.
+   * If empty or absent, any input is allowed (subject to deniedPatterns).
+   */
+  readonly allowedPatterns?: readonly string[];
+
+  /**
+   * Denylist of ECMAScript regex patterns that unconditionally block execution.
+   * If any pattern matches the serialised tool-call input, the call is denied.
+   * Checked before allowedPatterns.
+   */
+  readonly deniedPatterns?: readonly string[];
+
+  /**
+   * Maximum size (in bytes) of the serialised tool-call payload (JSON.stringify).
+   * Requests exceeding this limit are denied with CONSTRAINT_VIOLATION.
+   */
+  readonly maxPayloadBytes?: number;
+}
+
+/**
  * Constraints that bind a capability token to specific model identities.
  * Used to prevent silent model swaps in high-risk physical deployments.
  */
@@ -240,6 +288,27 @@ export interface SintCapabilityToken {
   readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   /** Optional pre-approved execution envelope for low-latency control. */
   readonly executionEnvelope?: SintExecutionEnvelope;
+  /**
+   * Optional runtime behavioral constraints enforced against tool-call inputs.
+   * Supplements physical constraints with pattern-based input validation and
+   * per-minute rate limiting at the tool-call level.
+   */
+  readonly behavioralConstraints?: SintBehavioralConstraints;
+
+  // --- Cross-protocol identity (Agent Passport System interop) ---
+  /**
+   * Agent Passport System (APS) passport identifier.
+   * Links this SINT token to an external APS Ed25519 passport for
+   * cross-protocol identity verification.
+   * @see https://github.com/aeoess/agent-passport-system
+   */
+  readonly passportId?: string;
+  /**
+   * Depth of this token in the delegation chain from the APS perspective.
+   * 0 = root (issued directly against an APS passport). Increases with
+   * each delegation hop. Used by cascade revocation to order traversal.
+   */
+  readonly delegationDepth?: number;
 
   // --- Delegation ---
   readonly delegationChain: SintDelegationChain;
@@ -265,6 +334,12 @@ export interface SintCapabilityTokenRequest {
   readonly attestationRequirements?: SintAttestationRequirements;
   readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   readonly executionEnvelope?: SintExecutionEnvelope;
+  /** Optional runtime behavioral constraints for this token. */
+  readonly behavioralConstraints?: SintBehavioralConstraints;
+  /** APS passport identifier for cross-protocol identity linkage. */
+  readonly passportId?: string;
+  /** Delegation depth in the APS chain (0 = root). */
+  readonly delegationDepth?: number;
   readonly delegationChain: SintDelegationChain;
   readonly expiresAt: ISO8601;
   readonly revocable: boolean;
