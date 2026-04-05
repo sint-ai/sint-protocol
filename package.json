@@ -33,5 +33,11 @@
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "path-to-regexp": ">=8.4.0",
+      "picomatch": ">=4.0.4"
+    }
   }
 }

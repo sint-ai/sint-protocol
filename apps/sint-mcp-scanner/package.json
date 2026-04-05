@@ -49,12 +49,11 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {},
   "devDependencies": {
-    "esbuild": "^0.24.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0",
     "@sint/bridge-mcp": "workspace:*",
-    "@sint/core": "workspace:*"
+    "@sint/core": "workspace:*",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   }
 }

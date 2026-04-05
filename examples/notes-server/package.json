@@ -9,7 +9,7 @@
     "build": "echo 'no build needed — runs with tsx'"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.0"
+    "@modelcontextprotocol/sdk": "^1.29.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0"

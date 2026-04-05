@@ -28,12 +28,12 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@sint/bridge-mcp": "workspace:*",
+    "@sint/core": "workspace:*",
     "@sint/gate-capability-tokens": "workspace:*",
-    "@sint/gate-policy-gateway": "workspace:*",
     "@sint/gate-evidence-ledger": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@sint/gate-policy-gateway": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {
