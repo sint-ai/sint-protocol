@@ -58,6 +58,19 @@ export interface ResolveApprovalRequest {
   reason?: string;
 }
 
+/** Playground/API request shape for policy intercept testing. */
+export interface InterceptRequest {
+  requestId: string;
+  timestamp: string;
+  agentId: string;
+  tokenId: string;
+  resource: string;
+  action: string;
+  params?: Record<string, unknown>;
+  physicalContext?: Record<string, unknown>;
+  executionContext?: Record<string, unknown>;
+}
+
 /** SSE approval event. */
 export interface ApprovalSSEEvent {
   type: "queued" | "resolved" | "timeout";

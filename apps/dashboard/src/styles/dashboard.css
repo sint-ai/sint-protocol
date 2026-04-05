@@ -285,6 +285,70 @@ code {
   font-size: 0.8rem;
 }
 
+/* ── Policy Playground ── */
+
+.playground-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.playground-help {
+  font-size: 0.85rem;
+}
+
+.playground-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 960px) {
+  .playground-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.playground-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.playground-textarea {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
+.playground-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.15);
+}
+
+.playground-textarea-readonly {
+  opacity: 0.95;
+}
+
+.playground-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 /* ── Overview Cards ── */
 
 .overview-cards {
