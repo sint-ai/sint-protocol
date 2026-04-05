@@ -8,6 +8,10 @@ import { StatusBar } from "../src/components/StatusBar.js";
 import { ApprovalPanel } from "../src/components/ApprovalPanel.js";
 import { ActionStream } from "../src/components/ActionStream.js";
 import { VoiceBar } from "../src/components/VoiceBar.js";
+import { MemoryInspector } from "../src/components/MemoryInspector.js";
+import { TransparencyFeed } from "../src/components/TransparencyFeed.js";
+import type { TransparencyEvent } from "../src/components/TransparencyFeed.js";
+import { ConstraintEditor } from "../src/components/ConstraintEditor.js";
 
 // ---------------------------------------------------------------------------
 // StatusBar
@@ -302,5 +306,299 @@ describe("VoiceBar", () => {
     render(<VoiceBar {...defaultProps} isSupported={false} />);
     const btn = screen.getByRole("button") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MemoryInspector
+// ---------------------------------------------------------------------------
+
+const mockMemoryEntries = [
+  {
+    key: "last_waypoint",
+    value: { x: 1.2, y: 3.4 },
+    tags: ["navigation", "position"],
+    storedAt: "2026-04-05T10:22:00.000000Z",
+    source: "working" as const,
+  },
+  {
+    key: "operator_override",
+    value: "allow_high_speed",
+    tags: ["policy"],
+    storedAt: "2026-04-05T09:11:00.000000Z",
+    source: "operator" as const,
+    ledgerEventId: "01900000-0000-7000-0000-000000000001",
+  },
+];
+
+describe("MemoryInspector", () => {
+  it("renders all entries", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    expect(screen.getByText("last_waypoint")).toBeDefined();
+    expect(screen.getByText("operator_override")).toBeDefined();
+  });
+
+  it("shows empty state when no entries match filter", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    const input = screen.getByPlaceholderText("Filter memories...");
+    fireEvent.change(input, { target: { value: "zzz_no_match" } });
+    expect(screen.getByText("No entries")).toBeDefined();
+  });
+
+  it("filters entries by key keyword", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    const input = screen.getByPlaceholderText("Filter memories...");
+    fireEvent.change(input, { target: { value: "waypoint" } });
+    expect(screen.getByText("last_waypoint")).toBeDefined();
+    expect(screen.queryByText("operator_override")).toBeNull();
+  });
+
+  it("filters entries by tag keyword", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    const input = screen.getByPlaceholderText("Filter memories...");
+    fireEvent.change(input, { target: { value: "policy" } });
+    expect(screen.getByText("operator_override")).toBeDefined();
+    expect(screen.queryByText("last_waypoint")).toBeNull();
+  });
+
+  it("renders source label for each entry", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    expect(screen.getByText("working")).toBeDefined();
+    expect(screen.getByText("operator")).toBeDefined();
+  });
+
+  it("renders tags for entries with tags", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    expect(screen.getByText("navigation")).toBeDefined();
+    expect(screen.getByText("position")).toBeDefined();
+    expect(screen.getByText("policy")).toBeDefined();
+  });
+
+  it("shows delete button when onDelete provided", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} onDelete={vi.fn()} />);
+    const delButtons = screen.getAllByText("del");
+    expect(delButtons.length).toBe(2);
+  });
+
+  it("shows confirm/cancel buttons after clicking del", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} onDelete={vi.fn()} />);
+    const delButtons = screen.getAllByText("del");
+    fireEvent.click(delButtons[0]!);
+    expect(screen.getByText("confirm")).toBeDefined();
+    expect(screen.getByText("cancel")).toBeDefined();
+  });
+
+  it("calls onDelete with key when confirm clicked", () => {
+    const onDelete = vi.fn();
+    render(<MemoryInspector entries={mockMemoryEntries} onDelete={onDelete} />);
+    const delButtons = screen.getAllByText("del");
+    fireEvent.click(delButtons[0]!);
+    fireEvent.click(screen.getByText("confirm"));
+    expect(onDelete).toHaveBeenCalledWith("last_waypoint");
+  });
+
+  it("hides confirm/cancel after cancel clicked", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} onDelete={vi.fn()} />);
+    const delButtons = screen.getAllByText("del");
+    fireEvent.click(delButtons[0]!);
+    fireEvent.click(screen.getByText("cancel"));
+    expect(screen.queryByText("confirm")).toBeNull();
+    expect(screen.queryByText("cancel")).toBeNull();
+  });
+
+  it("does not show delete buttons when onDelete not provided", () => {
+    render(<MemoryInspector entries={mockMemoryEntries} />);
+    expect(screen.queryByText("del")).toBeNull();
+  });
+
+  it("shows empty state message when entries array is empty", () => {
+    render(<MemoryInspector entries={[]} />);
+    expect(screen.getByText("No entries")).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TransparencyFeed
+// ---------------------------------------------------------------------------
+
+const mockTransparencyEvents: TransparencyEvent[] = [
+  {
+    id: "te-1",
+    timestamp: "2026-04-05T10:22:05Z",
+    agentIntent: "Move to docking station",
+    gatewayDecision: "allow",
+    tier: "T1",
+    resource: "ros2:///cmd_vel",
+    matched: true,
+  },
+  {
+    id: "te-2",
+    timestamp: "2026-04-05T10:21:50Z",
+    agentIntent: "Execute shell command",
+    gatewayDecision: "deny",
+    tier: "T3",
+    resource: "mcp://exec/run",
+    matched: false,
+  },
+  {
+    id: "te-3",
+    timestamp: "2026-04-05T10:20:00Z",
+    gatewayDecision: "escalate",
+    tier: "T2",
+    resource: "ros2:///gripper",
+    matched: true,
+  },
+];
+
+describe("TransparencyFeed", () => {
+  it("shows empty state when no events", () => {
+    render(<TransparencyFeed events={[]} />);
+    expect(screen.getByText("No transparency events yet")).toBeDefined();
+  });
+
+  it("renders agent intent text", () => {
+    render(<TransparencyFeed events={mockTransparencyEvents} />);
+    expect(screen.getByText("Move to docking station")).toBeDefined();
+    expect(screen.getByText("Execute shell command")).toBeDefined();
+  });
+
+  it("renders gateway decision labels in uppercase", () => {
+    render(<TransparencyFeed events={mockTransparencyEvents} />);
+    expect(screen.getByText("ALLOW")).toBeDefined();
+    expect(screen.getByText("DENY")).toBeDefined();
+    expect(screen.getByText("ESCALATE")).toBeDefined();
+  });
+
+  it("renders tier labels in brackets", () => {
+    render(<TransparencyFeed events={mockTransparencyEvents} />);
+    expect(screen.getByText("[T1]")).toBeDefined();
+    expect(screen.getByText("[T3]")).toBeDefined();
+    expect(screen.getByText("[T2]")).toBeDefined();
+  });
+
+  it("renders AGENT INTENT and GATEWAY column headers", () => {
+    render(<TransparencyFeed events={[mockTransparencyEvents[0]!]} />);
+    expect(screen.getByText("AGENT INTENT")).toBeDefined();
+    expect(screen.getByText("GATEWAY")).toBeDefined();
+  });
+
+  it("renders multiple events", () => {
+    render(<TransparencyFeed events={mockTransparencyEvents} />);
+    const intentHeaders = screen.getAllByText("AGENT INTENT");
+    expect(intentHeaders.length).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ConstraintEditor
+// ---------------------------------------------------------------------------
+
+describe("ConstraintEditor", () => {
+  const defaultConstraints = {
+    maxCallsPerMinute: 30,
+    maxPayloadBytes: 4096,
+    deniedPatterns: ["/emergency_stop", "/cmd_vel"],
+  };
+
+  it("renders token id prefix", () => {
+    render(
+      <ConstraintEditor
+        tokenId="01900000-0000-7000-0000-000000000042"
+        constraints={defaultConstraints}
+      />
+    );
+    // The rendered text is "token: 01900000-0000-70…" (16 chars sliced + ellipsis)
+    expect(screen.getByText(/token:/)).toBeDefined();
+    expect(screen.getByText(/01900000-0000-70/)).toBeDefined();
+  });
+
+  it("renders max calls per minute input with existing value", () => {
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+      />
+    );
+    // Both maxCpm and maxPayload inputs share placeholder "unlimited"; get all and check first
+    const inputs = screen.getAllByPlaceholderText("unlimited") as HTMLInputElement[];
+    expect(inputs[0]!.value).toBe("30");
+  });
+
+  it("renders denied patterns in textarea", () => {
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+      />
+    );
+    const textarea = screen.getByPlaceholderText(/\/cmd_vel/) as HTMLTextAreaElement;
+    expect(textarea.value).toContain("/emergency_stop");
+    expect(textarea.value).toContain("/cmd_vel");
+  });
+
+  it("does not show Apply button initially", () => {
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+      />
+    );
+    expect(screen.queryByText("Apply constraints")).toBeNull();
+  });
+
+  it("shows Apply button after changing a field", () => {
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+      />
+    );
+    const inputs = screen.getAllByPlaceholderText("unlimited");
+    fireEvent.change(inputs[0]!, { target: { value: "60" } });
+    expect(screen.getByText("Apply constraints")).toBeDefined();
+  });
+
+  it("calls onSave with tokenId and updated constraints when Apply clicked", () => {
+    const onSave = vi.fn();
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+        onSave={onSave}
+      />
+    );
+    const inputs = screen.getAllByPlaceholderText("unlimited");
+    fireEvent.change(inputs[0]!, { target: { value: "60" } });
+    fireEvent.click(screen.getByText("Apply constraints"));
+    expect(onSave).toHaveBeenCalledOnce();
+    const [calledTokenId, calledConstraints] = onSave.mock.calls[0] as [string, unknown];
+    expect(calledTokenId).toBe("tok-abc");
+    expect(calledConstraints).toBeTruthy();
+  });
+
+  it("hides Apply button after saving", () => {
+    render(
+      <ConstraintEditor
+        tokenId="tok-abc"
+        constraints={defaultConstraints}
+        onSave={vi.fn()}
+      />
+    );
+    const inputs = screen.getAllByPlaceholderText("unlimited");
+    fireEvent.change(inputs[0]!, { target: { value: "60" } });
+    fireEvent.click(screen.getByText("Apply constraints"));
+    expect(screen.queryByText("Apply constraints")).toBeNull();
+  });
+
+  it("renders with empty constraints without crashing", () => {
+    render(<ConstraintEditor tokenId="tok-empty" constraints={{}} />);
+    expect(screen.getByText(/token:/)).toBeDefined();
+  });
+
+  it("renders field labels", () => {
+    render(<ConstraintEditor tokenId="tok-abc" constraints={defaultConstraints} />);
+    expect(screen.getByText("Max calls / min")).toBeDefined();
+    expect(screen.getByText("Max payload bytes")).toBeDefined();
+    expect(screen.getByText("Denied patterns (one per line)")).toBeDefined();
   });
 });
