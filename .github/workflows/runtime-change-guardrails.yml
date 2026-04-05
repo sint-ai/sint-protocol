@@ -26,13 +26,23 @@ jobs:
           echo "$CHANGED_FILES"
 
           RUNTIME_REGEX='^(PROTOCOL\.md|apps/gateway-server/|packages/(policy-gateway|capability-tokens|evidence-ledger|avatar|persistence|persistence-postgres|bridge-[^/]+)/)'
+          RUNTIME_FILES="$(echo "$CHANGED_FILES" | grep -E "$RUNTIME_REGEX" || true)"
           HAS_RUNTIME_CHANGE=0
-          if echo "$CHANGED_FILES" | grep -Eq "$RUNTIME_REGEX"; then
+          if [[ -n "$RUNTIME_FILES" ]]; then
             HAS_RUNTIME_CHANGE=1
           fi
 
           if [[ "$HAS_RUNTIME_CHANGE" -eq 0 ]]; then
             echo "No protocol/runtime changes detected. Guardrail passed."
+            exit 0
+          fi
+
+          # Metadata-only changes in runtime packages (README/LICENSE/package metadata)
+          # should not require conformance fixture updates.
+          NON_SUBSTANTIVE_REGEX='(^|/)(README\.md|LICENSE|package\.json|CHANGELOG\.md)$'
+          SUBSTANTIVE_RUNTIME_FILES="$(echo "$RUNTIME_FILES" | grep -Ev "$NON_SUBSTANTIVE_REGEX" || true)"
+          if [[ -z "$SUBSTANTIVE_RUNTIME_FILES" ]]; then
+            echo "Only metadata/runtime-doc files changed in guarded paths. Guardrail passed."
             exit 0
           fi
 
