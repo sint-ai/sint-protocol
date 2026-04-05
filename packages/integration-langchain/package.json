@@ -1,0 +1,45 @@
+{
+  "name": "@sint/integration-langchain",
+  "version": "0.1.0",
+  "description": "SINT Protocol governance middleware for LangChain — capability tokens, policy enforcement, and evidence logging on every tool call.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "sint",
+    "langchain",
+    "ai-safety",
+    "governance",
+    "capability-tokens",
+    "agent-framework",
+    "policy-gateway"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol.git",
+    "directory": "packages/integration-langchain"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@sint/client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}
