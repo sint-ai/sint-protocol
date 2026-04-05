@@ -48,6 +48,20 @@ export default defineConfig({
         ],
       },
       {
+        text: "Community",
+        items: [
+          { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
+          { text: "External Contributor Onboarding", link: "/community/external-contributor-onboarding" },
+        ],
+      },
+      {
+        text: "Security Bulletins",
+        items: [
+          { text: "April 2026 Bulletin", link: "/security-bulletins/2026-04" },
+          { text: "Bulletin Template", link: "/security-bulletins/TEMPLATE" },
+        ],
+      },
+      {
         text: "Profiles",
         items: [
           { text: "Warehouse AMR Policy Template", link: "/profiles/warehouse-amr.policy.template" },

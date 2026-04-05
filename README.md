@@ -81,6 +81,11 @@ pnpm run docs:preview
 
 Docs source lives in [`docs/`](docs), VitePress config is in [`docs/.vitepress/config.mts`](docs/.vitepress/config.mts), and deployment is handled by [`docs-site.yml`](.github/workflows/docs-site.yml).
 
+Community/adoption assets:
+- [`docs/community/discord-launch-runbook.md`](docs/community/discord-launch-runbook.md)
+- [`docs/community/external-contributor-onboarding.md`](docs/community/external-contributor-onboarding.md)
+- [`docs/security-bulletins/2026-04.md`](docs/security-bulletins/2026-04.md)
+
 ### Run a Single Package
 
 ```bash

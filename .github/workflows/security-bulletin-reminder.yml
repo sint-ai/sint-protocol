@@ -1,0 +1,47 @@
+name: Security Bulletin Reminder
+
+on:
+  schedule:
+    - cron: "0 16 1 * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  open-reminder-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open monthly bulletin reminder issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const month = now.toLocaleString('en-US', { month: 'long', timeZone: 'UTC' });
+            const year = now.toLocaleString('en-US', { year: 'numeric', timeZone: 'UTC' });
+            const title = `Q2/Q3: Publish monthly SINT Security Bulletin (${month} ${year})`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            if (issues.some(i => i.title === title)) {
+              core.info('Reminder issue already exists.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['documentation', 'roadmap-tracking'],
+              body: [
+                'Publish this month\'s security bulletin in `docs/security-bulletins/`.',
+                '',
+                'Checklist:',
+                '- Add `<yyyy-mm>.md` from `TEMPLATE.md`',
+                '- Include security-relevant protocol/runtime changes',
+                '- Include operator action items and validation commands',
+                '- Link bulletin from docs navigation if needed',
+              ].join('\n'),
+            });
