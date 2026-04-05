@@ -146,6 +146,34 @@ export function approvalRoutes(ctx: ServerContext): Hono {
       return c.json({ error: "Approval request not found or already resolved" }, 404);
     }
 
+    // Fail closed: never allow stale approvals if token was revoked/expired while queued.
+    const tokenId = existing.request.tokenId;
+    const token = tokenId ? await ctx.tokenStore.get(tokenId) : undefined;
+    const tokenRevoked = tokenId ? !ctx.revocationStore.checkRevocation(tokenId as any).ok : false;
+    const tokenExpired =
+      token?.expiresAt !== undefined ? Date.parse(token.expiresAt) <= Date.now() : false;
+    const requestExpired = Date.parse(existing.expiresAt) <= Date.now();
+
+    if (body.status === "approved" && (tokenRevoked || tokenExpired || requestExpired || !token)) {
+      const reason = tokenRevoked
+        ? "stale approval rejected: token revoked"
+        : tokenExpired
+          ? "stale approval rejected: token expired"
+          : requestExpired
+            ? "stale approval rejected: approval request expired"
+            : "stale approval rejected: token missing";
+      ctx.approvalQueue.resolve(requestId, {
+        status: "denied",
+        by: "system/fail-closed",
+        reason,
+      });
+      return c.json({
+        error: "Stale approval request",
+        requestId,
+        reason,
+      }, 409);
+    }
+
     const resolution = ctx.approvalQueue.resolve(requestId, {
       status: body.status,
       by: body.by,

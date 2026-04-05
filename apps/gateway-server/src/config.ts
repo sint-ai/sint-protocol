@@ -24,6 +24,8 @@ export interface SintConfig {
   requireSignatures: boolean;
   /** Rate limit: max requests per minute. Default: 100. */
   rateLimitMax: number;
+  /** Allow WebSocket API key auth via ?apiKey= query param. Default: true. */
+  wsAllowQueryApiKey: boolean;
 }
 
 /** Load configuration from environment variables. */
@@ -57,5 +59,6 @@ export function loadConfig(): SintConfig {
     apiKey: process.env.SINT_API_KEY,
     requireSignatures: process.env.SINT_REQUIRE_SIGNATURES === "true",
     rateLimitMax: parseInt(process.env.SINT_RATE_LIMIT ?? "100", 10),
+    wsAllowQueryApiKey: process.env.SINT_WS_ALLOW_QUERY_API_KEY !== "false",
   };
 }
