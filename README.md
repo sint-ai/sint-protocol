@@ -132,7 +132,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 152 |
 | [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with TEE attestation | 45 |
 
-### Bridges (11 bridges)
+### Bridges (12 bridges)
 
 | Package | Description | Tests |
 |---------|-------------|-------|
@@ -143,10 +143,10 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
 | [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
 | [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
+| [`@sint/bridge-grpc`](packages/bridge-grpc) | gRPC service/method profile mapping with default tier assignment | 5 |
 | [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
 | [`@sint/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 15 |
 | [`@sint/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
-| [`@sint/bridge-economy`](packages/bridge-economy) | Economy enforcement: balance, budget, trust, billing | 47 |
 
 ### Engine (AI Execution Layer)
 
@@ -341,6 +341,7 @@ Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
 | `GET` | `/v1/approvals/pending` | List pending approval requests |
 | `POST` | `/v1/approvals/:id/resolve` | Approve or deny a request (M-of-N quorum) |
 | `GET` | `/v1/approvals/events` | SSE stream for real-time approval events |
+| `GET` | `/v1/approvals/ws` | WebSocket stream for low-latency approval events |
 | `POST` | `/v1/a2a` | JSON-RPC 2.0 A2A protocol endpoint |
 | `GET` | `/v1/metrics` | Prometheus metrics |
 | `GET` | `/v1/openapi.json` | OpenAPI surface for gateway integration |
@@ -402,6 +403,9 @@ docker-compose up
 - Deployment profiles: [`docs/profiles/`](docs/profiles/)
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
 - Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
+- Persistence baseline guide: [`docs/guides/persistence-baseline.md`](docs/guides/persistence-baseline.md)
+- WebSocket approvals guide: [`docs/guides/websocket-approvals.md`](docs/guides/websocket-approvals.md)
+- gRPC bridge guide: [`docs/guides/grpc-bridge-skeleton.md`](docs/guides/grpc-bridge-skeleton.md)
 - Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
 - ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
 - Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)

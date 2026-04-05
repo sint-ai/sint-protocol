@@ -8,23 +8,24 @@
     {
       "siteId": "warehouse-amr",
       "deploymentProfile": "warehouse-amr",
-      "bridges": ["mcp", "a2a", "ros2", "mqtt-sparkplug", "open-rmf"]
+      "bridges": ["mcp", "a2a", "ros2", "grpc", "mqtt-sparkplug", "open-rmf"]
     },
     {
       "siteId": "industrial-cell",
       "deploymentProfile": "industrial-cell",
-      "bridges": ["mcp", "a2a", "ros2", "opcua", "mqtt-sparkplug"]
+      "bridges": ["mcp", "a2a", "ros2", "grpc", "opcua", "mqtt-sparkplug"]
     },
     {
       "siteId": "edge-gateway",
       "deploymentProfile": "edge-gateway",
-      "bridges": ["mqtt-sparkplug", "opcua", "open-rmf"]
+      "bridges": ["grpc", "mqtt-sparkplug", "opcua", "open-rmf"]
     }
   ],
   "supportedBridges": [
     { "bridgeId": "mcp", "protocol": "mcp", "version": "1.x", "resourcePattern": "mcp://*/**" },
     { "bridgeId": "a2a", "protocol": "a2a", "version": "0.x", "resourcePattern": "a2a://*/**" },
     { "bridgeId": "ros2", "protocol": "ros2", "version": "jazzy+", "resourcePattern": "ros2:///**" },
+    { "bridgeId": "grpc", "protocol": "grpc", "version": "grpc-v1", "resourcePattern": "grpc://*/**" },
     { "bridgeId": "mavlink", "protocol": "mavlink", "version": "v2", "resourcePattern": "mavlink://*/**" },
     { "bridgeId": "mqtt-sparkplug", "protocol": "mqtt", "version": "sparkplug-b-v3", "resourcePattern": "mqtt-sparkplug:///**" },
     { "bridgeId": "opcua", "protocol": "opcua", "version": "1.05+", "resourcePattern": "opcua://*/**" },
@@ -39,6 +40,10 @@
   "complianceCrosswalk": {
     "path": "/v1/compliance/tier-crosswalk",
     "frameworks": ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"]
+  },
+  "approvalTransports": {
+    "sse": "/v1/approvals/events",
+    "websocket": "/v1/approvals/ws"
   },
   "openapi": "/v1/openapi.json"
 }

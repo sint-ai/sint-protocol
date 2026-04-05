@@ -69,6 +69,10 @@ func (c *Client) Health(out any) error {
 	return c.do(http.MethodGet, "/v1/health", nil, out)
 }
 
+func (c *Client) OpenAPI(out any) error {
+	return c.do(http.MethodGet, "/v1/openapi.json", nil, out)
+}
+
 func (c *Client) IssueToken(req map[string]any, out any) error {
 	return c.do(http.MethodPost, "/v1/tokens", req, out)
 }
@@ -90,10 +94,30 @@ func (c *Client) ApprovalsPending(out any) error {
 	return c.do(http.MethodGet, "/v1/approvals/pending", nil, out)
 }
 
+func (c *Client) Approval(requestID string, out any) error {
+	return c.do(http.MethodGet, "/v1/approvals/"+requestID, nil, out)
+}
+
 func (c *Client) ResolveApproval(requestID, status, by, reason string, out any) error {
 	payload := map[string]any{"status": status, "by": by}
 	if reason != "" {
 		payload["reason"] = reason
 	}
 	return c.do(http.MethodPost, "/v1/approvals/"+requestID+"/resolve", payload, out)
+}
+
+func (c *Client) Ledger(limit int, out any) error {
+	return c.do(http.MethodGet, fmt.Sprintf("/v1/ledger?limit=%d", limit), nil, out)
+}
+
+func (c *Client) LedgerProof(eventID string, out any) error {
+	return c.do(http.MethodGet, "/v1/ledger/"+eventID+"/proof", nil, out)
+}
+
+func (c *Client) ComplianceCrosswalk(out any) error {
+	return c.do(http.MethodGet, "/v1/compliance/tier-crosswalk", nil, out)
+}
+
+func (c *Client) EconomyRoute(req map[string]any, out any) error {
+	return c.do(http.MethodPost, "/v1/economy/route", req, out)
 }

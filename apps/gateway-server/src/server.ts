@@ -22,6 +22,7 @@ import {
   PgTokenStore,
   PgLedgerStore,
   getPool,
+  ensurePgSchema,
   RedisCache,
   RedisRevocationBus,
 } from "@sint/persistence";
@@ -107,7 +108,7 @@ export function createContext(): ServerContext {
  * - RedisCache: Distributed TTL cache for hot token lookups
  * - RedisRevocationBus: Pub/sub for <1s revocation propagation across nodes
  */
-export function createPersistentContext(config: SintConfig): ServerContext {
+export async function createPersistentContext(config: SintConfig): Promise<ServerContext> {
   let tokenStore: TokenStore;
   let ledgerStore: LedgerStore;
   let cache: CacheStore;
@@ -116,8 +117,10 @@ export function createPersistentContext(config: SintConfig): ServerContext {
   // ── Storage backend ──
   if (config.store === "postgres" && config.databaseUrl) {
     const pool = getPool({ connectionString: config.databaseUrl });
+    await ensurePgSchema(pool);
     tokenStore = new PgTokenStore(pool);
     ledgerStore = new PgLedgerStore(pool);
+    console.log("[SINT] PostgreSQL schema verified");
   } else {
     tokenStore = new InMemoryTokenStore();
     ledgerStore = new InMemoryLedgerStore();
@@ -127,6 +130,9 @@ export function createPersistentContext(config: SintConfig): ServerContext {
   if (config.cache === "redis" && config.redisUrl) {
     const redisPublisher = createRedisClient(config.redisUrl);
     const redisCacheClient = createRedisClient(config.redisUrl);
+    // Fail-fast connectivity check so deploy issues surface at startup.
+    await redisPublisher.ping();
+    await redisCacheClient.ping();
     cache = new RedisCache(redisCacheClient);
     const redisUrl = config.redisUrl;
     revocationBus = new RedisRevocationBus(
