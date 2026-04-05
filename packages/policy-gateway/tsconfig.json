@@ -6,7 +6,8 @@
   },
   "references": [
     { "path": "../core" },
-    { "path": "../capability-tokens" }
+    { "path": "../capability-tokens" },
+    { "path": "../evidence-ledger" }
   ],
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

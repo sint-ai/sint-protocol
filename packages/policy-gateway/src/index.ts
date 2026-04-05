@@ -23,6 +23,8 @@ export type {
 } from "./memory-integrity.js";
 export { InMemoryCircuitBreaker } from "./circuit-breaker.js";
 export type { CircuitBreakerPlugin, CircuitBreakerConfig, CircuitState } from "./circuit-breaker.js";
+export { ProactiveEscalationEngine } from "./proactive-escalation.js";
+export type { EscalationAlert, EventSource, ProactiveEscalationEngineOptions } from "./proactive-escalation.js";
 export { assignTier } from "./tier-assigner.js";
 export type { TierAssignment } from "./tier-assigner.js";
 export { checkConstraints, extractPhysicalContext } from "./constraint-checker.js";
