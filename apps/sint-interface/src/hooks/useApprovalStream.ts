@@ -1,3 +1,7 @@
+// NOTE: This hook is kept for Console integration reference.
+// The HUD voice layer does not consume approval streams directly.
+// The SINT Console Conductor module handles approval UI.
+
 /**
  * SINT Dashboard — WebSocket Approval Stream Hook.
  *
