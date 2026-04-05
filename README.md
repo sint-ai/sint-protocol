@@ -61,6 +61,7 @@ pnpm run stack:dev
 pnpm run stack:edge
 pnpm run stack:prod-lite
 pnpm run stack:gazebo-validation
+pnpm run stack:isaac-sim-validation
 ```
 
 Compose profiles:
@@ -68,6 +69,7 @@ Compose profiles:
 - [`docker/compose/edge.yml`](docker/compose/edge.yml)
 - [`docker/compose/prod-lite.yml`](docker/compose/prod-lite.yml)
 - [`docker/compose/gazebo-validation.yml`](docker/compose/gazebo-validation.yml)
+- [`docker/compose/isaac-sim-validation.yml`](docker/compose/isaac-sim-validation.yml)
 
 ### Developer Docs Site (`docs.sint.gg`)
 

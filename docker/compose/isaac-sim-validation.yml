@@ -1,0 +1,85 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      context: ../..
+      dockerfile: apps/gateway-server/Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      SINT_PORT: "3100"
+      SINT_STORE: postgres
+      SINT_CACHE: redis
+      DATABASE_URL: postgresql://sint:sint@postgres:5432/sint
+      REDIS_URL: redis://redis:6379
+      SINT_LOG_LEVEL: info
+      SINT_WS_ALLOW_QUERY_API_KEY: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sint
+      POSTGRES_PASSWORD: sint
+      POSTGRES_DB: sint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sint -d sint"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  isaac-sim:
+    image: ${ISAAC_SIM_IMAGE:-nvcr.io/nvidia/isaac-sim:4.2.0}
+    command: ["bash", "-lc", "./runheadless.sh"]
+    environment:
+      ACCEPT_EULA: "Y"
+      PRIVACY_CONSENT: "Y"
+      DISPLAY: ${DISPLAY:-}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-20}
+    ports:
+      - "8211:8211"
+      - "49100:49100"
+
+  isaac-ros2-publisher:
+    image: osrf/ros:jazzy-desktop
+    depends_on:
+      gateway:
+        condition: service_healthy
+    command: >-
+      bash -lc "
+      source /opt/ros/jazzy/setup.bash &&
+      sleep 8 &&
+      ros2 topic pub --rate 2 /isaac/warehouse_bot/cmd_vel geometry_msgs/msg/Twist
+      '{linear: {x: 0.25, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'
+      "
+
+volumes:
+  pgdata:
+  redisdata:

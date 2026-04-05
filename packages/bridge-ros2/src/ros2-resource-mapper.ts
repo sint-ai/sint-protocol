@@ -24,10 +24,17 @@ export interface TopicToResourceOptions {
    * physical paths share equivalent policy tiering.
    */
   gazeboNormalize?: boolean;
+  /**
+   * Normalize common Isaac Sim namespaced ROS2 control topics
+   * (e.g. `/isaac/ur10/cmd_vel`) into canonical control resources.
+   */
+  isaacNormalize?: boolean;
 }
 
 const GAZEBO_CONTROL_TOPIC_SUFFIX =
   /\/(cmd_vel|joint_commands|mode_change|plan|waypoints|navigate_to_pose)$/;
+const ISAAC_NAMESPACED_CONTROL_TOPIC =
+  /^\/(isaac|sim|robots)\/[^/]+\/(cmd_vel|joint_commands|mode_change|plan|waypoints|navigate_to_pose)$/;
 
 function normalizeTopicName(topicName: string, options?: TopicToResourceOptions): string {
   const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
@@ -49,6 +56,18 @@ function normalizeTopicName(topicName: string, options?: TopicToResourceOptions)
   return `/${suffix}`;
 }
 
+function normalizeIsaacTopicName(topicName: string, options?: TopicToResourceOptions): string {
+  const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
+  if (!options?.isaacNormalize) {
+    return normalized;
+  }
+  const match = normalized.match(ISAAC_NAMESPACED_CONTROL_TOPIC);
+  if (!match?.[2]) {
+    return normalized;
+  }
+  return `/${match[2]}`;
+}
+
 /**
  * Map a ROS 2 topic name to a SINT resource URI.
  *
@@ -62,7 +81,10 @@ export function topicToResourceUri(
   topicName: string,
   options?: TopicToResourceOptions,
 ): string {
-  const normalized = normalizeTopicName(topicName, options);
+  const normalized = normalizeIsaacTopicName(
+    normalizeTopicName(topicName, options),
+    options,
+  );
   return `ros2:///${normalized.slice(1)}`;
 }
 
@@ -77,6 +99,19 @@ export function topicToResourceUri(
  */
 export function gazeboTopicToResourceUri(topicName: string): string {
   return topicToResourceUri(topicName, { gazeboNormalize: true });
+}
+
+/**
+ * Map an Isaac Sim namespaced ROS2 topic to a canonical SINT resource URI.
+ *
+ * @example
+ * ```ts
+ * isaacTopicToResourceUri("/isaac/ur10/cmd_vel") // => "ros2:///cmd_vel"
+ * isaacTopicToResourceUri("/robots/cell_bot_01/joint_commands") // => "ros2:///joint_commands"
+ * ```
+ */
+export function isaacTopicToResourceUri(topicName: string): string {
+  return topicToResourceUri(topicName, { isaacNormalize: true });
 }
 
 /**

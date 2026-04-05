@@ -6,6 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   topicToResourceUri,
   gazeboTopicToResourceUri,
+  isaacTopicToResourceUri,
   serviceToResourceUri,
   actionToResourceUri,
   extractPhysicalContext,
@@ -38,6 +39,11 @@ describe("topicToResourceUri", () => {
     expect(topicToResourceUri("/model/amr_17/cmd_vel"))
       .toBe("ros2:///model/amr_17/cmd_vel");
   });
+
+  it("normalizes Isaac namespaced cmd_vel when enabled", () => {
+    expect(topicToResourceUri("/isaac/ur10/cmd_vel", { isaacNormalize: true }))
+      .toBe("ros2:///cmd_vel");
+  });
 });
 
 describe("gazeboTopicToResourceUri", () => {
@@ -51,6 +57,20 @@ describe("gazeboTopicToResourceUri", () => {
     expect(
       gazeboTopicToResourceUri("/world/demo/model/arm_1/joint_commands"),
     ).toBe("ros2:///joint_commands");
+  });
+});
+
+describe("isaacTopicToResourceUri", () => {
+  it("maps Isaac namespaced cmd_vel to canonical resource", () => {
+    expect(isaacTopicToResourceUri("/isaac/warehouse_bot/cmd_vel")).toBe(
+      "ros2:///cmd_vel",
+    );
+  });
+
+  it("maps Isaac namespaced joint command topic to canonical resource", () => {
+    expect(isaacTopicToResourceUri("/robots/cell_bot_01/joint_commands")).toBe(
+      "ros2:///joint_commands",
+    );
   });
 });
 
