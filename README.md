@@ -67,6 +67,16 @@ Compose profiles:
 - [`docker/compose/edge.yml`](docker/compose/edge.yml)
 - [`docker/compose/prod-lite.yml`](docker/compose/prod-lite.yml)
 
+### Developer Docs Site (`docs.sint.gg`)
+
+```bash
+pnpm run docs:dev
+pnpm run docs:build
+pnpm run docs:preview
+```
+
+Docs source lives in [`docs/`](docs), VitePress config is in [`docs/.vitepress/config.mts`](docs/.vitepress/config.mts), and deployment is handled by [`docs-site.yml`](.github/workflows/docs-site.yml).
+
 ### Run a Single Package
 
 ```bash
