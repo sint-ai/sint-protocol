@@ -15,7 +15,11 @@ import {
   RevocationStore,
 } from "@sint/gate-capability-tokens";
 import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { topicToResourceUri, gazeboTopicToResourceUri } from "@sint/bridge-ros2";
+import {
+  topicToResourceUri,
+  gazeboTopicToResourceUri,
+  isaacTopicToResourceUri,
+} from "@sint/bridge-ros2";
 import {
   rmfDispatchResourceUri,
   rmfOperationToAction,
@@ -261,5 +265,44 @@ describe("Industrial Interoperability Conformance", () => {
     expect(gazeboDecision.action).toBe(canonicalDecision.action);
     expect(gazeboDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
     expect(gazeboDecision.action).toBe("escalate");
+  });
+
+  it("Isaac Sim namespaced cmd_vel maps to equivalent ROS2 control-tier semantics", async () => {
+    const rosToken = issueAndStore({
+      resource: "ros2://*",
+      actions: ["publish"],
+      constraints: { maxVelocityMps: 0.6 },
+    });
+
+    const canonicalDecision = await gateway.intercept({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: rosToken.tokenId,
+      resource: topicToResourceUri("/cmd_vel"),
+      action: "publish",
+      params: { command: "dock_to_station", destination: "Dock-3" },
+      physicalContext: {
+        currentVelocityMps: 0.35,
+      },
+    });
+
+    const isaacDecision = await gateway.intercept({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: rosToken.tokenId,
+      resource: isaacTopicToResourceUri("/isaac/warehouse_bot/cmd_vel"),
+      action: "publish",
+      params: { command: "dock_to_station", destination: "Dock-3" },
+      physicalContext: {
+        currentVelocityMps: 0.35,
+      },
+    });
+
+    expect(isaacDecision.assignedTier).toBe(canonicalDecision.assignedTier);
+    expect(isaacDecision.action).toBe(canonicalDecision.action);
+    expect(isaacDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
+    expect(isaacDecision.action).toBe("escalate");
   });
 });

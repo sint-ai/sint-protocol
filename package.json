@@ -23,6 +23,7 @@
     "stack:edge": "bash ./scripts/stack-up.sh edge",
     "stack:prod-lite": "bash ./scripts/stack-up.sh prod-lite",
     "stack:gazebo-validation": "bash ./scripts/stack-up.sh gazebo-validation",
+    "stack:isaac-sim-validation": "bash ./scripts/stack-up.sh isaac-sim-validation",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
