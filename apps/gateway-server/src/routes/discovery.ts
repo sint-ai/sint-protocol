@@ -130,11 +130,66 @@ export function discoveryRoutes(): Hono {
         "/v1/compliance/tier-crosswalk": {
           get: { summary: "SINT tier mapping to NIST AI RMF, ISO/IEC 42001, and EU AI Act controls" },
         },
+        "/v1/docs": { get: { summary: "API docs landing page" } },
+        "/v1/docs/redoc": { get: { summary: "Redoc API documentation UI" } },
       },
       components: {
         schemas: SINT_SCHEMA_CATALOG,
       },
     });
+  });
+
+  app.get("/v1/docs", (c) => {
+    return c.html(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SINT Gateway API Docs</title>
+    <style>
+      body { font-family: Inter, Arial, sans-serif; margin: 0; background: #0b1324; color: #e7eefc; }
+      .wrap { max-width: 840px; margin: 56px auto; padding: 0 20px; }
+      .card { background: #121b30; border: 1px solid #24314f; border-radius: 12px; padding: 24px; }
+      a { color: #8ec6ff; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      h1 { margin: 0 0 6px 0; font-size: 28px; }
+      p { color: #b8c6e0; line-height: 1.55; }
+      .links { display: grid; gap: 10px; margin-top: 16px; }
+      .link { background: #0f1728; border: 1px solid #2a3859; border-radius: 10px; padding: 12px 14px; }
+      code { background: #1d2a45; padding: 2px 6px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>SINT Gateway API Documentation</h1>
+        <p>Interactive docs generated from the live OpenAPI surface.</p>
+        <div class="links">
+          <a class="link" href="/v1/docs/redoc">Open Redoc UI</a>
+          <a class="link" href="/v1/openapi.json">View raw OpenAPI JSON</a>
+          <a class="link" href="/.well-known/sint.json">View protocol discovery document</a>
+        </div>
+        <p style="margin-top:16px;">Tip: set <code>SINT_API_KEY</code> and test protected endpoints from your API client or <code>sintctl</code>.</p>
+      </section>
+    </main>
+  </body>
+</html>`);
+  });
+
+  app.get("/v1/docs/redoc", (c) => {
+    return c.html(`<!doctype html>
+<html>
+  <head>
+    <title>SINT Gateway API (Redoc)</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>body { margin: 0; }</style>
+  </head>
+  <body>
+    <redoc spec-url="/v1/openapi.json"></redoc>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+  </body>
+</html>`);
   });
 
   return app;

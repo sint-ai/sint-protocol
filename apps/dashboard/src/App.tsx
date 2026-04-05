@@ -14,6 +14,7 @@ import { PendingApprovals } from "./components/PendingApprovals.js";
 import { AuditLog } from "./components/AuditLog.js";
 import { TierLegend } from "./components/TierLegend.js";
 import { ApprovalFeed } from "./components/ApprovalFeed.js";
+import { PolicyPlayground } from "./components/PolicyPlayground.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { useAuth } from "./contexts/AuthContext.js";
 import { useApprovals } from "./hooks/useApprovals.js";
@@ -65,6 +66,8 @@ function Dashboard({ apiKey }: DashboardProps) {
           requests={pending}
           onResolved={handleApprovalResolved}
         />
+
+        <PolicyPlayground />
 
         <div className="dashboard-grid">
           <AuditLog ledger={ledger} loading={ledgerLoading} />

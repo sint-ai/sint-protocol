@@ -51,6 +51,7 @@ pnpm run test        # full workspace test suite
 pnpm --filter @sint/gateway-server dev
 # → http://localhost:3100/v1/health
 # → http://localhost:3100/v1/ready
+# → http://localhost:3100/v1/docs
 ```
 
 ### Start Production-Like Stacks (One Command)
@@ -425,6 +426,7 @@ docker-compose up
 - Operator CLI: [`apps/sintctl/README.md`](apps/sintctl/README.md)
 - Persistence baseline guide: [`docs/guides/persistence-baseline.md`](docs/guides/persistence-baseline.md)
 - WebSocket approvals guide: [`docs/guides/websocket-approvals.md`](docs/guides/websocket-approvals.md)
+- API docs site guide: [`docs/guides/api-documentation-site.md`](docs/guides/api-documentation-site.md)
 - gRPC bridge guide: [`docs/guides/grpc-bridge-skeleton.md`](docs/guides/grpc-bridge-skeleton.md)
 - Cursor integration guide: [`docs/guides/cursor-integration.md`](docs/guides/cursor-integration.md)
 - Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)

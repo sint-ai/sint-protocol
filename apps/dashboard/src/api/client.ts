@@ -13,6 +13,7 @@ import type {
   PendingApprovalsResponse,
   LedgerResponse,
   ResolveApprovalRequest,
+  InterceptRequest,
 } from "./types.js";
 
 /**
@@ -94,4 +95,12 @@ export async function getLedger(
 /** Generate a new Ed25519 keypair (dev utility). */
 export async function generateKeypair(): Promise<{ publicKey: string; privateKey: string }> {
   return fetchJSON("/v1/keypair", { method: "POST" });
+}
+
+/** Send one request through policy interception (playground/testing). */
+export async function interceptRequest(request: InterceptRequest): Promise<unknown> {
+  return fetchJSON("/v1/intercept", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 }

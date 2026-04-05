@@ -14,8 +14,8 @@
 ### SDK & Developer Experience
 - [x] Python SDK (`sint-python`) — bridge to robotics/ML ecosystem
 - [x] CLI tool for token management, ledger queries, policy testing
-- [ ] Interactive policy playground (web-based rule testing)
-- [ ] Comprehensive API documentation site
+- [x] Interactive policy playground (web-based rule testing)
+- [x] Comprehensive API documentation site
 
 ### Integration
 - [ ] Gazebo simulation environment integration (ROS 2 bridge validation)

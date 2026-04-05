@@ -101,6 +101,26 @@ describe("Gateway Server API", () => {
     expect(body.paths["/v1/approvals/events"]).toBeDefined();
     expect(body.paths["/v1/approvals/ws"]).toBeDefined();
     expect(body.paths["/v1/compliance/tier-crosswalk"]).toBeDefined();
+    expect(body.paths["/v1/docs"]).toBeDefined();
+    expect(body.paths["/v1/docs/redoc"]).toBeDefined();
+  });
+
+  it("GET /v1/docs returns HTML docs landing page", async () => {
+    const res = await app.request("/v1/docs");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const body = await res.text();
+    expect(body).toContain("SINT Gateway API Documentation");
+    expect(body).toContain("/v1/openapi.json");
+  });
+
+  it("GET /v1/docs/redoc returns Redoc UI shell", async () => {
+    const res = await app.request("/v1/docs/redoc");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const body = await res.text();
+    expect(body).toContain("redoc");
+    expect(body).toContain("/v1/openapi.json");
   });
 
   it("GET /v1/compliance/tier-crosswalk returns tier mappings", async () => {
