@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  gateway:
+    build:
+      context: ../..
+      dockerfile: apps/gateway-server/Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      SINT_PORT: "3100"
+      SINT_STORE: postgres
+      SINT_CACHE: redis
+      DATABASE_URL: postgresql://sint:sint@postgres:5432/sint
+      REDIS_URL: redis://redis:6379
+      SINT_LOG_LEVEL: info
+      SINT_WS_ALLOW_QUERY_API_KEY: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sint
+      POSTGRES_PASSWORD: sint
+      POSTGRES_DB: sint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sint -d sint"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  gazebo-sim:
+    image: osrf/ros:jazzy-desktop
+    command: >-
+      bash -lc "
+      source /opt/ros/jazzy/setup.bash &&
+      apt-get update && apt-get install -y ros-jazzy-gazebo-ros-pkgs &&
+      ros2 launch gazebo_ros empty_world.launch.py
+      "
+    network_mode: host
+
+  gazebo-cmdvel-publisher:
+    image: osrf/ros:jazzy-desktop
+    depends_on:
+      gateway:
+        condition: service_healthy
+    command: >-
+      bash -lc "
+      source /opt/ros/jazzy/setup.bash &&
+      sleep 8 &&
+      ros2 topic pub --rate 2 /model/warehouse_bot/cmd_vel geometry_msgs/msg/Twist
+      '{linear: {x: 0.3, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'
+      "
+    network_mode: host
+
+volumes:
+  pgdata:
+  redisdata:

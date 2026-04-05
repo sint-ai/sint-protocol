@@ -15,7 +15,7 @@ import {
   RevocationStore,
 } from "@sint/gate-capability-tokens";
 import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { topicToResourceUri } from "@sint/bridge-ros2";
+import { topicToResourceUri, gazeboTopicToResourceUri } from "@sint/bridge-ros2";
 import {
   rmfDispatchResourceUri,
   rmfOperationToAction,
@@ -222,5 +222,44 @@ describe("Industrial Interoperability Conformance", () => {
 
     expect(rmfDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
     expect(rmfDecision.action).toBe("escalate");
+  });
+
+  it("Gazebo model-scoped cmd_vel maps to equivalent ROS2 control-tier semantics", async () => {
+    const rosToken = issueAndStore({
+      resource: "ros2://*",
+      actions: ["publish"],
+      constraints: { maxVelocityMps: 0.6 },
+    });
+
+    const canonicalDecision = await gateway.intercept({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: rosToken.tokenId,
+      resource: topicToResourceUri("/cmd_vel"),
+      action: "publish",
+      params: { command: "move_to_aisle", destination: "B-04" },
+      physicalContext: {
+        currentVelocityMps: 0.4,
+      },
+    });
+
+    const gazeboDecision = await gateway.intercept({
+      requestId: generateUUIDv7(),
+      timestamp: nowISO8601(),
+      agentId: agent.publicKey,
+      tokenId: rosToken.tokenId,
+      resource: gazeboTopicToResourceUri("/world/demo/model/warehouse_bot/cmd_vel"),
+      action: "publish",
+      params: { command: "move_to_aisle", destination: "B-04" },
+      physicalContext: {
+        currentVelocityMps: 0.4,
+      },
+    });
+
+    expect(gazeboDecision.assignedTier).toBe(canonicalDecision.assignedTier);
+    expect(gazeboDecision.action).toBe(canonicalDecision.action);
+    expect(gazeboDecision.assignedTier).toBe(ApprovalTier.T2_ACT);
+    expect(gazeboDecision.action).toBe("escalate");
   });
 });

@@ -17,6 +17,38 @@ import {
   extractPhysicalContextFromWrench,
 } from "./ros2-message-types.js";
 
+export interface TopicToResourceOptions {
+  /**
+   * Normalize common Gazebo-scoped control topics (e.g. `/model/amr/cmd_vel`)
+   * into canonical ROS2 control resources (e.g. `/cmd_vel`) so simulation and
+   * physical paths share equivalent policy tiering.
+   */
+  gazeboNormalize?: boolean;
+}
+
+const GAZEBO_CONTROL_TOPIC_SUFFIX =
+  /\/(cmd_vel|joint_commands|mode_change|plan|waypoints|navigate_to_pose)$/;
+
+function normalizeTopicName(topicName: string, options?: TopicToResourceOptions): string {
+  const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
+  if (!options?.gazeboNormalize) {
+    return normalized;
+  }
+
+  const gazeboScoped =
+    normalized.startsWith("/model/") ||
+    normalized.startsWith("/world/");
+  if (!gazeboScoped) {
+    return normalized;
+  }
+
+  const suffix = normalized.match(GAZEBO_CONTROL_TOPIC_SUFFIX)?.[1];
+  if (!suffix) {
+    return normalized;
+  }
+  return `/${suffix}`;
+}
+
 /**
  * Map a ROS 2 topic name to a SINT resource URI.
  *
@@ -26,10 +58,25 @@ import {
  * topicToResourceUri("/camera/front") // => "ros2:///camera/front"
  * ```
  */
-export function topicToResourceUri(topicName: string): string {
-  // Strip leading slash if present, then add ros2:/// prefix
-  const normalized = topicName.startsWith("/") ? topicName.slice(1) : topicName;
-  return `ros2:///${normalized}`;
+export function topicToResourceUri(
+  topicName: string,
+  options?: TopicToResourceOptions,
+): string {
+  const normalized = normalizeTopicName(topicName, options);
+  return `ros2:///${normalized.slice(1)}`;
+}
+
+/**
+ * Map a Gazebo-scoped ROS2 topic to a canonical SINT resource URI.
+ *
+ * @example
+ * ```ts
+ * gazeboTopicToResourceUri("/model/amr_17/cmd_vel") // => "ros2:///cmd_vel"
+ * gazeboTopicToResourceUri("/world/demo/model/amr_17/joint_commands") // => "ros2:///joint_commands"
+ * ```
+ */
+export function gazeboTopicToResourceUri(topicName: string): string {
+  return topicToResourceUri(topicName, { gazeboNormalize: true });
 }
 
 /**

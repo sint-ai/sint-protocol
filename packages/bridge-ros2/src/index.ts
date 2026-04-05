@@ -1,5 +1,6 @@
 export {
   topicToResourceUri,
+  gazeboTopicToResourceUri,
   serviceToResourceUri,
   actionToResourceUri,
   extractPhysicalContext,

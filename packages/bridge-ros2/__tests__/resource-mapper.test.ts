@@ -5,6 +5,7 @@
 import { describe, it, expect } from "vitest";
 import {
   topicToResourceUri,
+  gazeboTopicToResourceUri,
   serviceToResourceUri,
   actionToResourceUri,
   extractPhysicalContext,
@@ -26,6 +27,30 @@ describe("topicToResourceUri", () => {
 
   it("handles topic without leading slash", () => {
     expect(topicToResourceUri("sensor/lidar")).toBe("ros2:///sensor/lidar");
+  });
+
+  it("normalizes Gazebo model-scoped cmd_vel when enabled", () => {
+    expect(topicToResourceUri("/model/amr_17/cmd_vel", { gazeboNormalize: true }))
+      .toBe("ros2:///cmd_vel");
+  });
+
+  it("keeps Gazebo model-scoped topic unchanged by default", () => {
+    expect(topicToResourceUri("/model/amr_17/cmd_vel"))
+      .toBe("ros2:///model/amr_17/cmd_vel");
+  });
+});
+
+describe("gazeboTopicToResourceUri", () => {
+  it("maps Gazebo cmd_vel topic to canonical ROS2 cmd_vel resource", () => {
+    expect(gazeboTopicToResourceUri("/model/warehouse_bot/cmd_vel")).toBe(
+      "ros2:///cmd_vel",
+    );
+  });
+
+  it("maps Gazebo world/model joint command topic to canonical resource", () => {
+    expect(
+      gazeboTopicToResourceUri("/world/demo/model/arm_1/joint_commands"),
+    ).toBe("ros2:///joint_commands");
   });
 });
 
