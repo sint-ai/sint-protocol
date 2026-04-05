@@ -1,6 +1,12 @@
 version: "3.9"
 
+# SINT Protocol — local development / single-host deployment stack.
+# Start everything:  docker compose up --build
+# Gateway only:      docker compose up gateway postgres redis
+
 services:
+
+  # ── SINT Policy Gateway ────────────────────────────────────────────────────
   gateway:
     build:
       context: .
@@ -8,29 +14,53 @@ services:
     ports:
       - "3100:3100"
     environment:
-      SINT_PORT: 3100
+      SINT_PORT: "3100"
       SINT_STORE: postgres
       SINT_CACHE: redis
       DATABASE_URL: postgresql://sint:sint@postgres:5432/sint
       REDIS_URL: redis://redis:6379
+      SINT_LOG_LEVEL: info
       # SINT_API_KEY: change-me-in-production
+      # SINT_MAX_TIER: T3_COMMIT
+      # SINT_REQUIRE_SIGNATURES: "false"
+      # SINT_RATE_LIMIT: "100"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
     restart: unless-stopped
 
+  # ── SINT Dashboard (React SPA via nginx) ───────────────────────────────────
   dashboard:
     build:
       context: .
       dockerfile: apps/dashboard/Dockerfile
     ports:
       - "3201:3201"
+    environment:
+      # VITE_GATEWAY_URL is baked at build time (ARG); set it as a build-arg
+      # if you need a custom public URL:
+      #   docker compose build --build-arg VITE_GATEWAY_URL=https://gateway.example.com dashboard
+      NEXT_PUBLIC_GATEWAY_URL: http://gateway:3100   # kept for compatibility
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3201/"]
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
     restart: unless-stopped
 
+  # ── PostgreSQL 16 ──────────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     environment:
@@ -41,24 +71,29 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Auto-run SQL migrations on first start
       - ./packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sint"]
+      test: ["CMD-SHELL", "pg_isready -U sint -d sint"]
       interval: 5s
       timeout: 5s
+      start_period: 10s
       retries: 5
     restart: unless-stopped
 
+  # ── Redis 7 ────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
       - redisdata:/data
+    command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
+      start_period: 5s
       retries: 5
     restart: unless-stopped
 

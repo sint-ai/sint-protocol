@@ -1,12 +1,44 @@
+# Dependencies — never copy into images
 node_modules
+**/node_modules
+
+# Build artefacts — the Dockerfile copies only what it needs from builder stage
 dist
-*.tsbuildinfo
+**/*.tsbuildinfo
 .turbo
+
+# Git history
 .git
-.env
-.env.local
+.gitignore
+.gitattributes
+
+# Test artefacts
 coverage
-__tests__
-*.test.ts
-*.spec.ts
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Local config / secrets
+.env
+.env.*
+*.local
+
+# Editor / IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# CI / GitHub
+.github
+
+# Claude / AI tooling
 .claude
+
+# Documentation (not needed in images)
+docs
+*.md
+!apps/gateway-server/README.md
+!apps/dashboard/README.md
