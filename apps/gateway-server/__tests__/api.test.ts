@@ -68,6 +68,8 @@ describe("Gateway Server API", () => {
     expect(body.version).toBeDefined();
     expect(Array.isArray(body.supportedBridges)).toBe(true);
     expect(Array.isArray(body.deploymentProfiles)).toBe(true);
+    expect(body.approvalTransports?.sse).toBe("/v1/approvals/events");
+    expect(body.approvalTransports?.websocket).toBe("/v1/approvals/ws");
     expect(body.complianceCrosswalk?.path).toBe("/v1/compliance/tier-crosswalk");
   });
 
@@ -85,6 +87,8 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.openapi).toBe("3.1.0");
     expect(body.paths["/.well-known/sint.json"]).toBeDefined();
+    expect(body.paths["/v1/approvals/events"]).toBeDefined();
+    expect(body.paths["/v1/approvals/ws"]).toBeDefined();
     expect(body.paths["/v1/compliance/tier-crosswalk"]).toBeDefined();
   });
 

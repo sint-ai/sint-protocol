@@ -2,8 +2,9 @@
  * SINT Gateway Server — Approval routes.
  *
  * REST endpoints for managing the human approval queue.
- * WebSocket support can be layered on top via Hono's
- * WebSocket adapter when running in a Node.js environment.
+ * Real-time transports:
+ * - SSE: /v1/approvals/events (implemented here)
+ * - WebSocket: /v1/approvals/ws (attached at HTTP server level)
  */
 
 import { Hono } from "hono";

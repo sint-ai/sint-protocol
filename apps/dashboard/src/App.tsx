@@ -13,13 +13,19 @@ import { OverviewCards } from "./components/OverviewCards.js";
 import { PendingApprovals } from "./components/PendingApprovals.js";
 import { AuditLog } from "./components/AuditLog.js";
 import { TierLegend } from "./components/TierLegend.js";
+import { ApprovalFeed } from "./components/ApprovalFeed.js";
 import { LoginScreen } from "./components/LoginScreen.js";
 import { useAuth } from "./contexts/AuthContext.js";
 import { useApprovals } from "./hooks/useApprovals.js";
 import { usePolling } from "./hooks/usePolling.js";
 import { getHealth, getLedger, configureAuth } from "./api/client.js";
 
-function Dashboard() {
+interface DashboardProps {
+  /** API key from the authenticated session, forwarded to the WS feed. */
+  apiKey?: string;
+}
+
+function Dashboard({ apiKey }: DashboardProps) {
   const { pending, connected, error: sseError, refresh: refreshApprovals } = useApprovals();
   const { data: health } = usePolling(getHealth, 10_000);
   const {
@@ -64,6 +70,8 @@ function Dashboard() {
           <AuditLog ledger={ledger} loading={ledgerLoading} />
           <TierLegend />
         </div>
+
+        <ApprovalFeed apiKey={apiKey} />
       </main>
     </>
   );
@@ -81,5 +89,5 @@ export function App() {
     return <LoginScreen />;
   }
 
-  return <Dashboard />;
+  return <Dashboard apiKey={session.apiKey} />;
 }

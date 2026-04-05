@@ -4,9 +4,16 @@
 
 import { Hono } from "hono";
 import type { SintRequest } from "@sint/core";
-import { sintRequestSchema } from "@sint/core";
+import { sintRequestSchema, ApprovalTier } from "@sint/core";
 import type { ServerContext } from "../server.js";
 import { globalRiskBus, computeRiskScore } from "./risk-stream.js";
+import { globalApprovalBus } from "../ws/ws-approval-stream.js";
+
+/** Tiers that require real-time streaming events. */
+const STREAMABLE_TIERS: ReadonlySet<string> = new Set([
+  ApprovalTier.T2_ACT,
+  ApprovalTier.T3_COMMIT,
+]);
 
 export function interceptRoutes(ctx: ServerContext): Hono {
   const app = new Hono();
@@ -56,7 +63,23 @@ export function interceptRoutes(ctx: ServerContext): Hono {
     });
     globalRiskBus.emit(riskUpdate);
 
-    // If escalated, enqueue for human approval
+    const now = new Date().toISOString();
+
+    // Stream T2/T3 DECISION events to WebSocket clients
+    if (STREAMABLE_TIERS.has(decision.assignedTier)) {
+      globalApprovalBus.emit({
+        type: "DECISION",
+        requestId: parsed.data.requestId,
+        agentId: parsed.data.agentId,
+        resource: parsed.data.resource,
+        action: parsed.data.action,
+        tier: decision.assignedTier,
+        decision: decision.action,
+        timestamp: now,
+      });
+    }
+
+    // If escalated, enqueue for human approval and also emit APPROVAL_REQUIRED
     if (decision.action === "escalate") {
       const quorum = decision.escalation?.approvalQuorum;
       const approvalRequest = ctx.approvalQueue.enqueue(
@@ -64,6 +87,15 @@ export function interceptRoutes(ctx: ServerContext): Hono {
         decision,
         quorum,
       );
+      globalApprovalBus.emit({
+        type: "APPROVAL_REQUIRED",
+        requestId: approvalRequest.requestId,
+        agentId: parsed.data.agentId,
+        resource: parsed.data.resource,
+        action: parsed.data.action,
+        tier: decision.assignedTier,
+        timestamp: now,
+      });
       return c.json({ ...decision, approvalRequestId: approvalRequest.requestId });
     }
 
@@ -106,6 +138,22 @@ export function interceptRoutes(ctx: ServerContext): Hono {
         },
       });
 
+      const batchNow = new Date().toISOString();
+
+      // Stream T2/T3 DECISION events to WebSocket clients
+      if (STREAMABLE_TIERS.has(decision.assignedTier)) {
+        globalApprovalBus.emit({
+          type: "DECISION",
+          requestId: parsed.data.requestId,
+          agentId: parsed.data.agentId,
+          resource: parsed.data.resource,
+          action: parsed.data.action,
+          tier: decision.assignedTier,
+          decision: decision.action,
+          timestamp: batchNow,
+        });
+      }
+
       if (decision.action === "escalate") {
         const quorum = decision.escalation?.approvalQuorum;
         const approvalRequest = ctx.approvalQueue.enqueue(
@@ -113,6 +161,15 @@ export function interceptRoutes(ctx: ServerContext): Hono {
           decision,
           quorum,
         );
+        globalApprovalBus.emit({
+          type: "APPROVAL_REQUIRED",
+          requestId: approvalRequest.requestId,
+          agentId: parsed.data.agentId,
+          resource: parsed.data.resource,
+          action: parsed.data.action,
+          tier: decision.assignedTier,
+          timestamp: batchNow,
+        });
         return { status: 202, decision, approvalRequestId: approvalRequest.requestId };
       }
 

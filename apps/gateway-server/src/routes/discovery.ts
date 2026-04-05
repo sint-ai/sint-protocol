@@ -51,6 +51,10 @@ export function discoveryRoutes(): Hono {
         path: "/v1/compliance/tier-crosswalk",
         frameworks: ["nist-ai-rmf-1.0", "iso-iec-42001-2023", "eu-ai-act-2024-1689"],
       },
+      approvalTransports: {
+        sse: "/v1/approvals/events",
+        websocket: "/v1/approvals/ws",
+      },
       openapi: "/v1/openapi.json",
     });
   });
@@ -105,6 +109,8 @@ export function discoveryRoutes(): Hono {
         "/v1/tokens/revoke": { post: { summary: "Revoke capability token" } },
         "/v1/ledger": { get: { summary: "Query evidence ledger" } },
         "/v1/approvals/pending": { get: { summary: "List pending approvals" } },
+        "/v1/approvals/events": { get: { summary: "SSE approval stream" } },
+        "/v1/approvals/ws": { get: { summary: "WebSocket approval stream (Upgrade)" } },
         "/v1/approvals/{requestId}/resolve": { post: { summary: "Resolve approval" } },
         "/v1/a2a": { post: { summary: "A2A JSON-RPC endpoint" } },
         "/v1/a2a/agents": { get: { summary: "List A2A agents" }, post: { summary: "Register A2A agent" } },

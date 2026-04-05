@@ -69,3 +69,33 @@ export interface ApprovalSSEEvent {
     reason?: string;
   };
 }
+
+/**
+ * Typed WebSocket events from the approval stream (/v1/approvals/ws).
+ * These are emitted for every T2/T3 decision and escalation.
+ */
+export interface ApprovalRequiredStreamEvent {
+  type: "APPROVAL_REQUIRED";
+  requestId: string;
+  agentId: string;
+  resource: string;
+  action: string;
+  /** T2_ACT or T3_COMMIT */
+  tier: string;
+  timestamp: string;
+}
+
+export interface DecisionStreamEvent {
+  type: "DECISION";
+  requestId: string;
+  agentId: string;
+  resource: string;
+  action: string;
+  /** T2_ACT or T3_COMMIT */
+  tier: string;
+  /** allow | deny | escalate | transform */
+  decision: string;
+  timestamp: string;
+}
+
+export type ApprovalStreamEvent = ApprovalRequiredStreamEvent | DecisionStreamEvent;

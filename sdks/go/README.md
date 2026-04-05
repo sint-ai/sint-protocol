@@ -1,4 +1,4 @@
-# SINT Go SDK (Minimal)
+# SINT Go SDK
 
 ## Usage
 
@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log"
 
-	"example.com/sint/sintclient"
+	"github.com/sint-ai/sint-protocol/sdks/go/sintclient"
 )
 
 func main() {
@@ -25,6 +25,10 @@ func main() {
 ## Surface
 
 - discovery and health
+- openapi
 - token issue and revoke
 - intercept (single and batch)
-- approvals list and resolve
+- approvals list/get/resolve
+- ledger query + proof
+- compliance crosswalk
+- economy route helper

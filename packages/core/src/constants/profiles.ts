@@ -50,6 +50,18 @@ export const SINT_BRIDGE_PROFILES: readonly BridgeProfile[] = [
     notes: "Robot runtime ingress for AMR and industrial cells.",
   },
   {
+    bridgeId: "grpc",
+    protocol: "grpc",
+    version: "grpc-v1",
+    resourcePattern: "grpc://*/**",
+    defaultTierByAction: {
+      observe: ApprovalTier.T0_OBSERVE,
+      call: ApprovalTier.T2_ACT,
+      write: ApprovalTier.T2_ACT,
+    },
+    notes: "Generic service ingress for unary/stream RPC governance.",
+  },
+  {
     bridgeId: "mavlink",
     protocol: "mavlink",
     version: "v2",
@@ -105,21 +117,21 @@ export const SINT_SITE_PROFILES: readonly SiteProfile[] = [
   {
     siteId: "warehouse-amr",
     deploymentProfile: "warehouse-amr",
-    bridges: ["mcp", "a2a", "ros2", "mqtt-sparkplug", "open-rmf"],
+    bridges: ["mcp", "a2a", "ros2", "grpc", "mqtt-sparkplug", "open-rmf"],
     defaultEscalationTheta: 0.15,
     notes: "Human-shared warehouse environment with AMR fleets.",
   },
   {
     siteId: "industrial-cell",
     deploymentProfile: "industrial-cell",
-    bridges: ["mcp", "a2a", "ros2", "opcua", "mqtt-sparkplug"],
+    bridges: ["mcp", "a2a", "ros2", "grpc", "opcua", "mqtt-sparkplug"],
     defaultEscalationTheta: 0.2,
     notes: "Safety-fenced manipulator cell with PLC interlock dependencies.",
   },
   {
     siteId: "edge-gateway",
     deploymentProfile: "edge-gateway",
-    bridges: ["mqtt-sparkplug", "opcua", "open-rmf"],
+    bridges: ["grpc", "mqtt-sparkplug", "opcua", "open-rmf"],
     defaultEscalationTheta: 0.25,
     notes: "Local T0/T1 verification profile with central T2/T3 escalation.",
   },
