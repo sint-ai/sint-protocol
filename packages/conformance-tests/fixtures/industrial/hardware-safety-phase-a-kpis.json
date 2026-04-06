@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "phase": "A",
+  "quarter": "Q2 2026",
+  "description": "Phase A hardware safety controller integration KPI targets — signal/evidence alignment",
+  "kpis": [
+    {
+      "id": "kpi-hw-001",
+      "name": "ROS2 software intercept p99",
+      "target": "< 10ms",
+      "targetMs": 10,
+      "benchmarkSuite": "ros2-control-loop-latency"
+    },
+    {
+      "id": "kpi-hw-002",
+      "name": "Hardware permit handshake p99",
+      "target": "< 40ms",
+      "targetMs": 40,
+      "benchmarkSuite": "hardware-safety-handshake"
+    },
+    {
+      "id": "kpi-hw-003",
+      "name": "E-stop propagation p99",
+      "target": "< 20ms",
+      "targetMs": 20,
+      "benchmarkSuite": "hardware-safety-handshake"
+    },
+    {
+      "id": "kpi-hw-004",
+      "name": "T2/T3 fail-open incidents",
+      "target": "0",
+      "targetCount": 0,
+      "invariant": "I-G2"
+    }
+  ]
+}
