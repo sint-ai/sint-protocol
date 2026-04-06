@@ -205,16 +205,20 @@ SINT does not protect against:
 - ROS 2 bridge with physics extraction
 - Approval dashboard
 
-### v0.2 — Production Hardening
+### v0.2 — Production Hardening (Current)
 - PostgreSQL and Redis persistence backends
 - Horizontal scaling with distributed policy evaluation
 - Prometheus metrics and Grafana dashboards
-- Comprehensive conformance test suite
+- Comprehensive conformance test suite (1,197 tests across 30 packages as of April 2026)
 - CI/CD with automated security testing
+- `@sint/token-registry` — centralized token lifecycle management with cascade revocation
+- `SafetyPermitPlugin` — declarative permit rules for physical-environment safety constraints
+- `IotInterceptor` — MQTT/CoAP gateway bridge (initial support for MQTT v5 and CoAP Block2)
+- Rust SDK (`sdks/rust/`) — zero-unsafe, `no_std`-compatible policy evaluation for embedded targets
 
 ### v0.3 — Ecosystem
 - Plugin system for custom policy rules
-- Additional bridge adapters (gRPC, MQTT, HTTP webhooks)
+- Additional bridge adapters (gRPC, HTTP webhooks)
 - Multi-tenant support with organization isolation
 - SDK for policy authoring (DSL or visual editor)
 
@@ -234,13 +238,21 @@ SINT Protocol directly addresses key NIST AI RMF controls:
 | NIST Function | NIST Control | SINT Component |
 |---|---|---|
 | GOVERN | GOVERN-1.1 (human oversight policies) | T2/T3 escalation tiers, CircuitBreaker stop mechanism |
-| GOVERN | GOVERN-6.1 (risk tolerance) | Per-deployment SintDeploymentProfile policies |
+| GOVERN | GOVERN-1.2 (risk tolerance) | Per-deployment SintDeploymentProfile policies |
+| GOVERN | GOVERN-4.1 (organizational accountability) | EvidenceLedger SHA-256 hash-chained append-only log |
 | MAP | MAP-1.1 (risk identification) | PolicyGateway tier assignment, CSML risk scoring |
+| MAP | MAP-2.2 (context of use) | deploymentProfile presets: warehouse-amr, industrial-cell |
+| MAP | MAP-3.5 (risk identification) | CSML metric: computeCsml(), CsmlResult |
 | MAP | MAP-5.1 (stakeholder impact) | PhysicsConstraints with velocity/force/geofence limits |
+| MEASURE | MEASURE-1.1 (risk measurement) | CSML score (5-component formula) |
+| MEASURE | MEASURE-2.5 (bias and fairness) | Per-model CSML: computeCsmlPerModel() |
 | MEASURE | MEASURE-2.6 (monitoring and feedback) | EvidenceLedger with SIEM export, SHA-256 hash chain |
-| MEASURE | MEASURE-2.8 (AI system operation) | ROS2ControlLoopLatency benchmarks, p99 < 10ms |
+| MEASURE | MEASURE-2.8 (AI system operation) | PolicyGateway p99 < 5ms benchmarks |
+| MANAGE | MANAGE-1.3 (risk response) | Tier escalation, ProactiveEscalationEngine |
 | MANAGE | MANAGE-2.2 (risk treatment) | CapabilityToken attenuation, T0–T3 treatment tiers |
 | MANAGE | MANAGE-4.2 (incident response) | CircuitBreakerPlugin, EvidenceLedger forensic trail |
+
+For the full mapping including sub-category evidence and implementation file references, see [`docs/specs/nist-ai-rmf-crosswalk.md`](docs/specs/nist-ai-rmf-crosswalk.md).
 
 ### 8.2 EU AI Act Alignment
 
