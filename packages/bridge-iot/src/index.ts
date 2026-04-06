@@ -27,3 +27,23 @@ export type {
   MqttGatewaySessionConfig,
   GatewayLike,
 } from "./mqtt-session.js";
+
+export {
+  DEFAULT_PROFILE_TEMPLATES,
+  createDeviceProfile,
+} from "./device-profiles.js";
+export type { IotDeviceClass, IoTDeviceProfile } from "./device-profiles.js";
+
+export {
+  hardwareSafetyContextFromPayload,
+  isSafetyTopic,
+  parseHardwareSafetyPayload,
+} from "./hardware-safety-bridge.js";
+export type { HardwareSafetyPayload } from "./hardware-safety-bridge.js";
+
+export { IotInterceptor } from "./iot-interceptor.js";
+export type {
+  IotInterceptorConfig,
+  IotInterceptResult,
+  IotGatewayLike,
+} from "./iot-interceptor.js";

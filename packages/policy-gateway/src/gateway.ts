@@ -31,6 +31,7 @@ import type { AgentTrustLevel } from "@sint/core";
 import type { GoalHijackPlugin } from "./goal-hijack.js";
 import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 import type { SupplyChainVerifierPlugin } from "./supply-chain.js";
+import type { SafetyPermitPlugin } from "./safety-permit.js";
 
 const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
 const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
@@ -236,6 +237,14 @@ export interface PolicyGatewayConfig {
    * Optional edge-mode control-plane hooks.
    */
   readonly edgeControlPlane?: EdgeControlPlanePlugin;
+  /**
+   * Optional async hardware safety permit resolver (Phase 9.3).
+   * Resolves hardware safety state from an external source (OPC-UA, PLC REST API,
+   * MQTT) before the built-in hardware safety handshake check.
+   * Plugin wins only if no hardwareSafety context is already present in the request.
+   * Fail-open: plugin errors do not block requests.
+   */
+  readonly safetyPermit?: SafetyPermitPlugin | undefined;
 }
 
 /**
@@ -573,14 +582,40 @@ export class PolicyGateway {
       }
     }
 
+    // 5f-pre. SafetyPermitPlugin — resolve external hardware safety state before built-in check
+    let currentRequest = request; // mutable local for SafetyPermitPlugin merge
+    if (this.config.safetyPermit) {
+      try {
+        const permitResult = await this.config.safetyPermit.resolvePermit(currentRequest);
+        if (permitResult && !currentRequest.executionContext?.hardwareSafety) {
+          currentRequest = {
+            ...currentRequest,
+            executionContext: {
+              ...currentRequest.executionContext,
+              hardwareSafety: {
+                permitState: permitResult.permitState,
+                ...(permitResult.interlockState !== undefined && { interlockState: permitResult.interlockState }),
+                ...(permitResult.estopState !== undefined && { estopState: permitResult.estopState }),
+                ...(permitResult.controllerId !== undefined && { controllerId: permitResult.controllerId }),
+                observedAt: permitResult.observedAt,
+              },
+            },
+          };
+        }
+      } catch {
+        // Fail-open: plugin error doesn't block the request
+        // The built-in evaluateHardwareSafetyHandshake() runs with original request context
+      }
+    }
+
     // 5f. Hardware safety-controller handshake checks.
     const hardwareSafetyDecision = this.evaluateHardwareSafetyHandshake(
-      request,
+      currentRequest,
       tierAssignment.approvalTier,
       requestId,
       timestamp,
-      request.agentId,
-      request.tokenId,
+      currentRequest.agentId,
+      currentRequest.tokenId,
     );
     if (hardwareSafetyDecision) {
       return hardwareSafetyDecision;

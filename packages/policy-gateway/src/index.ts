@@ -31,6 +31,8 @@ export { checkConstraints, extractPhysicalContext } from "./constraint-checker.j
 export type { ConstraintViolation } from "./constraint-checker.js";
 export { checkForbiddenCombos } from "./forbidden-combos.js";
 export type { ComboCheckResult } from "./forbidden-combos.js";
+export type { SafetyPermitPlugin, SafetyPermitResult } from "./safety-permit.js";
+export { NoopSafetyPermitPlugin } from "./safety-permit.js";
 export { ApprovalQueue } from "./approval-flow.js";
 export type {
   ApprovalRequest,
