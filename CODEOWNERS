@@ -1,0 +1,25 @@
+# SINT Protocol — Code Owners
+# Syntax: path  @owner1 @owner2
+
+# Protocol core
+/packages/core/                    @pshkv
+/packages/capability-tokens/       @pshkv
+/packages/policy-gateway/          @pshkv
+/packages/evidence-ledger/         @pshkv
+
+# Bridge adapters
+/packages/bridge-*/                @pshkv
+
+# SDKs
+/sdks/                             @pshkv
+
+# Apps
+/apps/                             @pshkv
+
+# Docs and specs (lighter review)
+/docs/                             @pshkv
+/docs/sip/                         @pshkv
+
+# Security-sensitive — require explicit review
+/packages/capability-tokens/src/   @pshkv
+/packages/policy-gateway/src/gateway.ts  @pshkv
