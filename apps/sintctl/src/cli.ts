@@ -224,6 +224,27 @@ async function run(): Promise<void> {
     return;
   }
 
+  if (group === "registry" && command === "publish") {
+    const tokenFile = getStringFlag(flags, "token", true)!;
+    const { readFileSync } = await import("node:fs");
+    const tokenJson = readFileSync(tokenFile, "utf8");
+    const token = JSON.parse(tokenJson) as unknown;
+    const publisherNote = getStringFlag(flags, "note");
+    printJson(await requestJson(config, "POST", "/v1/registry/publish", { token, publisherNote }));
+    return;
+  }
+
+  if (group === "registry" && command === "list") {
+    const issuer = getStringFlag(flags, "issuer");
+    const toolScope = getStringFlag(flags, "tool-scope");
+    const params = new URLSearchParams();
+    if (issuer) params.set("issuer", issuer);
+    if (toolScope) params.set("toolScope", toolScope);
+    const qs = params.toString();
+    printJson(await requestJson(config, "GET", `/v1/registry/tokens${qs ? `?${qs}` : ""}`));
+    return;
+  }
+
   printHelp();
   throw new Error(`Unknown command: ${positionals.join(" ")}`);
 }

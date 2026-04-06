@@ -108,6 +108,8 @@ async function main(): Promise<void> {
   let serverId = "unknown-server";
   let toolsJson: string | null = null;
   let emitClaudeConfig = false;
+  let checkRegistry = false;
+  let registryUrl = "https://registry.sint.gg/v1";
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--server" && args[i + 1]) {
@@ -118,6 +120,11 @@ async function main(): Promise<void> {
       i++;
     } else if (args[i] === "--emit-claude-config") {
       emitClaudeConfig = true;
+    } else if (args[i] === "--check-registry") {
+      checkRegistry = true;
+    } else if (args[i] === "--registry-url" && args[i + 1]) {
+      registryUrl = args[i + 1] ?? registryUrl;
+      i++;
     }
   }
 
@@ -155,6 +162,21 @@ async function main(): Promise<void> {
 
   const report = scanServer(serverId, tools);
   printReport(report);
+
+  if (checkRegistry) {
+    console.log("\n📋 Registry check:");
+    for (const tool of report.allTools) {
+      const toolScope = `mcp://${serverId}/${tool.toolName}`;
+      try {
+        const resp = await fetch(`${registryUrl}/registry/tokens?toolScope=${encodeURIComponent(toolScope)}`);
+        const data = await resp.json() as { entries: unknown[] };
+        const signed = data.entries.length > 0;
+        console.log(`  ${signed ? "✓" : "✗"} ${tool.toolName} — ${signed ? "registered" : "not in registry"}`);
+      } catch {
+        console.log(`  ? ${tool.toolName} — registry check failed`);
+      }
+    }
+  }
 
   // Exit with non-zero if CRITICAL tools found
   if (report.byRisk.CRITICAL > 0) {

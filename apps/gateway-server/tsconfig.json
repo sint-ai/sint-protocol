@@ -12,7 +12,8 @@
     { "path": "../../packages/bridge-economy" },
     { "path": "../../packages/bridge-a2a" },
     { "path": "../../packages/memory" },
-    { "path": "../../packages/interface-bridge" }
+    { "path": "../../packages/interface-bridge" },
+    { "path": "../../packages/token-registry" }
   ],
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]

@@ -44,6 +44,8 @@ import { riskStreamRoutes, globalRiskBus } from "./routes/risk-stream.js";
 import { memoryRoutes, type MemoryRouteContext } from "./routes/memory.js";
 import { delegationRoutes, type DelegationRouteContext } from "./routes/delegations.js";
 import { csmlRoutes, type CsmlRouteContext } from "./routes/csml.js";
+import { registryRoutes, type RegistryRouteContext } from "./routes/registry.js";
+import { InMemoryRegistryStore } from "@sint/token-registry";
 import type { SintConfig } from "./config.js";
 
 /** Shared server state — injectable for testing. */
@@ -56,6 +58,7 @@ export interface ServerContext {
   readonly approvalQueue: ApprovalQueue;
   readonly cache: CacheStore;
   readonly revocationBus: RevocationBus;
+  readonly registryStore: InMemoryRegistryStore;
   readonly backend: {
     readonly store: "memory" | "postgres";
     readonly cache: "memory" | "redis";
@@ -87,6 +90,7 @@ export function createContext(): ServerContext {
   const approvalQueue = new ApprovalQueue();
   const cache = new InMemoryCache();
   const revocationBus = new InMemoryRevocationBus();
+  const registryStore = new InMemoryRegistryStore();
 
   const gateway = new PolicyGateway({
     resolveToken: async (id) => tokenStore.get(id),
@@ -120,6 +124,7 @@ export function createContext(): ServerContext {
     approvalQueue,
     cache,
     revocationBus,
+    registryStore,
     backend: { store: "memory", cache: "memory" },
     readinessProbe: async () => ({
       ok: true,
@@ -241,6 +246,8 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     cache.delete(`token:${event.tokenId}`).catch(() => {});
   });
 
+  const registryStore = new InMemoryRegistryStore();
+
   return {
     tokenStore,
     revocationStore,
@@ -250,6 +257,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     approvalQueue,
     cache,
     revocationBus,
+    registryStore,
     backend: { store: config.store, cache: config.cache },
     readinessProbe: async () => {
       const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);
@@ -284,6 +292,8 @@ export interface ServerOptions {
   delegationContext?: DelegationRouteContext;
   /** Optional CSML route context — mounts /v1/csml when configured. */
   csmlContext?: CsmlRouteContext;
+  /** Optional registry route context — mounts /v1/registry when configured. */
+  registryContext?: RegistryRouteContext;
 }
 
 /** Create a fully configured Hono app. */
@@ -340,6 +350,9 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   if (options.csmlContext) {
     app.route("", csmlRoutes(options.csmlContext));
   }
+
+  // Registry routes — always mount with default in-memory store from context
+  app.route("/v1/registry", registryRoutes(options.registryContext ?? { registryStore: context.registryStore }));
 
   return app;
 }
