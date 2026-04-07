@@ -7,7 +7,7 @@
     "build": "echo 'no build needed'",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:fixtures": "vitest run src/canonical-fixtures-conformance.test.ts src/security-iot-fixtures-conformance.test.ts src/economy-fixtures-conformance.test.ts src/autogen-interop-conformance.test.ts src/agentskill-authz-fixtures-conformance.test.ts",
+    "test:fixtures": "vitest run src/canonical-fixtures-conformance.test.ts src/security-iot-fixtures-conformance.test.ts src/economy-fixtures-conformance.test.ts src/autogen-interop-conformance.test.ts src/agentskill-authz-fixtures-conformance.test.ts src/action-ref-explainability-conformance.test.ts",
     "test:ros2-loop": "vitest run src/ros2-control-loop-latency.test.ts"
   },
   "devDependencies": {

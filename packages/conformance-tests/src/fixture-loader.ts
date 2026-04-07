@@ -346,6 +346,66 @@ export interface AgentSkillDelegatedAuthorityFixture {
   }>;
 }
 
+export interface ActionRefExplainabilityFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profile: {
+    readonly hashAlgorithm: "sha256";
+    readonly identityTuple: readonly ["agentId", "resource", "action", "scope", "timestamp"];
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly identity: {
+      readonly engineA: {
+        readonly agentId: string;
+        readonly resource: string;
+        readonly action: string;
+        readonly scope: string;
+        readonly timestamp: string;
+      };
+      readonly engineB: {
+        readonly agentId: string;
+        readonly resource: string;
+        readonly action: string;
+        readonly scope: string;
+        readonly timestamp: string;
+      };
+    };
+    readonly decisionContext?: {
+      readonly engineA: {
+        readonly policyProfile?: string;
+        readonly ruleIds?: readonly string[];
+        readonly constraintDigest?: string;
+        readonly decisionTime?: string;
+        readonly verdict: "allow" | "deny" | "escalate" | "transform";
+      };
+      readonly engineB: {
+        readonly policyProfile?: string;
+        readonly ruleIds?: readonly string[];
+        readonly constraintDigest?: string;
+        readonly decisionTime?: string;
+        readonly verdict: "allow" | "deny" | "escalate" | "transform";
+      };
+    };
+    readonly artifactLinkage?: {
+      readonly decisionArtifact: {
+        readonly actionRef: string;
+        readonly compoundDigest: string;
+      };
+      readonly executionReceipt: {
+        readonly actionRef: string;
+        readonly decisionArtifactDigest: string;
+      };
+    };
+    readonly expected: {
+      readonly sameActionRef: boolean;
+      readonly explainabilityComparable?: boolean;
+      readonly linkageValid?: boolean;
+    };
+  }>;
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -421,5 +481,11 @@ export function loadAutogenCapabilityTrustFixture(): AutogenCapabilityTrustFixtu
 export function loadAgentSkillDelegatedAuthorityFixture(): AgentSkillDelegatedAuthorityFixture {
   return loadFixture<AgentSkillDelegatedAuthorityFixture>(
     "interop/agentskill-delegated-authority.v1.json",
+  );
+}
+
+export function loadActionRefExplainabilityFixture(): ActionRefExplainabilityFixture {
+  return loadFixture<ActionRefExplainabilityFixture>(
+    "interop/action-ref-explainability.v1.json",
   );
 }
