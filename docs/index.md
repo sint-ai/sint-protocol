@@ -36,10 +36,12 @@ features:
 - Core onboarding: [Getting Started](./getting-started.md)
 - Integration examples: [Tutorials](./tutorials/hello-world-agent.md)
 - Standalone certification tool: [Guide](./guides/standalone-certification-tool.md)
+- NIST submission playbook: [Guide](./guides/nist-submission-playbook.md)
 - Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
 - Formal threat model: [Security/Formal Threat Model](./security/formal-threat-model.md)
+- NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
 - Latest security bulletin: [April 2026](./security-bulletins/2026-04.md)
 
 ## Documentation Scope

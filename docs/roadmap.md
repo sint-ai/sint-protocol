@@ -40,6 +40,7 @@ See detailed plans in:
 
 - [x] Secure MCP deployments guide (`docs/guides/secure-mcp-deployments.md`)
 - [x] NIST AI RMF crosswalk document (`docs/specs/nist-ai-rmf-crosswalk.md`)
+- [x] NIST submission bundle generator + playbook (`pnpm run nist:bundle`)
 - [ ] PR to `modelcontextprotocol/servers` — SINT as reference security middleware
 - [ ] NIST submission to ai-inquiries@nist.gov (crosswalk + conformance suite + SPAI abstract)
 - [ ] SPAI 2026 abstract submitted (deadline: May 7, 2026)

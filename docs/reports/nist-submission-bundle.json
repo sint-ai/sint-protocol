@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-04-07T06:44:11.786Z",
+  "gitSha": null,
+  "success": true,
+  "targetProgram": "NIST AI Agent Standards Initiative",
+  "submissionChannel": "ai-inquiries@nist.gov",
+  "repository": "https://github.com/sint-ai/sint-protocol",
+  "artifacts": [
+    {
+      "path": "docs/specs/nist-ai-rmf-crosswalk.md",
+      "exists": true,
+      "sha256": "c0f2cd1f4c1bf2c4edb08d2852c446e6ed14219dc889c0108b6da856827e96ad"
+    },
+    {
+      "path": "docs/SINT_v0.2_SPEC.md",
+      "exists": true,
+      "sha256": "a79a7f8a395679e5e7080a716e26e54bad5a55905ab324788a3dac22aa202adb"
+    },
+    {
+      "path": "docs/SPAI_2026_ABSTRACT.md",
+      "exists": true,
+      "sha256": "8b67b9457c0670e0f474da82e0df622d151728b370392a6a8f52a732375b8ca7"
+    },
+    {
+      "path": "docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md",
+      "exists": true,
+      "sha256": "c28a1644583b4989520f3fea06c9019bb81403479b4322391de24ea64e81e61e"
+    },
+    {
+      "path": "docs/reports/certification-bundle-summary.json",
+      "exists": true,
+      "sha256": "ac878f735b4fdae9422b3654670bd9da0a77284c5cd31f092ce2335655936516"
+    },
+    {
+      "path": "docs/reports/certification-bundle-summary.md",
+      "exists": true,
+      "sha256": "9c41101e4acd361003fbb1e01df0bb98279d8db5f8cf3de482902a2eea51bd68"
+    },
+    {
+      "path": "docs/reports/industrial-benchmark-report.json",
+      "exists": true,
+      "sha256": "bcc89aa2d9d2f668b85971b6a42e78d70e26cd7240052edae518af5394c6733f"
+    },
+    {
+      "path": "docs/reports/industrial-benchmark-report.md",
+      "exists": true,
+      "sha256": "ef4b207c2a31df0c65cc21f6d79cf11cb7e6b156bf11d0aad343ecca8d89cee4"
+    },
+    {
+      "path": "docs/reports/ros2-control-loop-benchmark.json",
+      "exists": true,
+      "sha256": "2503633d7a096a41395e984a005849121d5d362c2c1cbc7b2b2188fbfca0110e"
+    },
+    {
+      "path": "docs/reports/ros2-control-loop-benchmark.md",
+      "exists": true,
+      "sha256": "674505d8ee8da180a2ec358b56f68a3874ec1db238caba46f7dd83f88c5f1d98"
+    }
+  ],
+  "notes": [
+    "This bundle is a submission packet draft for NIST review.",
+    "Final submission requires operator review and outbound email dispatch."
+  ]
+}

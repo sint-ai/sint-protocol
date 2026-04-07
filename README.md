@@ -479,6 +479,8 @@ docker-compose up
 - Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)
 - Hardware safety handshake fixture: [`packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json`](packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json)
 - Certification bundle summary: [`docs/reports/certification-bundle-summary.md`](docs/reports/certification-bundle-summary.md)
+- NIST submission playbook: [`docs/guides/nist-submission-playbook.md`](docs/guides/nist-submission-playbook.md)
+- NIST submission bundle report: [`docs/reports/nist-submission-bundle.md`](docs/reports/nist-submission-bundle.md)
 
 ## Design Principles
 

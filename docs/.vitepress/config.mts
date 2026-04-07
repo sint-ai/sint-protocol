@@ -44,6 +44,7 @@ export default defineConfig({
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
           { text: "AutoGen Interop Fixtures", link: "/guides/autogen-interop-fixtures" },
+          { text: "NIST Submission Playbook", link: "/guides/nist-submission-playbook" },
           { text: "Claude Desktop Integration", link: "/guides/claude-desktop-integration" },
           { text: "Cursor Integration", link: "/guides/cursor-integration" },
         ],
@@ -77,6 +78,7 @@ export default defineConfig({
           { text: "Industrial Benchmark Report", link: "/reports/industrial-benchmark-report" },
           { text: "ROS2 Control-Loop Benchmark", link: "/reports/ros2-control-loop-benchmark" },
           { text: "Certification Bundle Summary", link: "/reports/certification-bundle-summary" },
+          { text: "NIST Submission Bundle", link: "/reports/nist-submission-bundle" },
         ],
       },
       {
