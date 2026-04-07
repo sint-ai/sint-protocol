@@ -2,6 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { buildQuery, requestJson, type CliConfig } from "./client.js";
+import { runStandaloneCertification } from "./certification.js";
 
 type ParsedArgs = {
   positionals: string[];
@@ -87,6 +88,7 @@ Commands:
   ledger query              Query ledger events
   intercept run             Send a policy intercept request
   keypair create            Generate keypair via gateway utility endpoint
+  certify run               Run standalone conformance certification suite
 
 Examples:
   sintctl token issue --issuer <pub> --subject <pub> --resource ros2:///cmd_vel --actions publish --private-key <priv>
@@ -94,6 +96,7 @@ Examples:
   sintctl approvals resolve --request-id <id> --status approved --by operator@site
   sintctl ledger query --agent-id <pub> --limit 20
   sintctl intercept run --agent-id <pub> --token-id <id> --resource ros2:///cmd_vel --action publish --params-json '{"twist":{"linear":0.2}}'
+  sintctl certify run --output docs/reports/standalone-conformance-certification.json
 `);
 }
 
@@ -242,6 +245,20 @@ async function run(): Promise<void> {
     if (toolScope) params.set("toolScope", toolScope);
     const qs = params.toString();
     printJson(await requestJson(config, "GET", `/v1/registry/tokens${qs ? `?${qs}` : ""}`));
+    return;
+  }
+
+  if (group === "certify" && command === "run") {
+    const outputPath = getStringFlag(flags, "output");
+    const summary = runStandaloneCertification({
+      rootDir: process.cwd(),
+      outputPath,
+      gatewayUrl: gatewayUrl,
+    });
+    printJson(summary);
+    if (!summary.success) {
+      process.exit(1);
+    }
     return;
   }
 

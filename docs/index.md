@@ -35,6 +35,7 @@ features:
 - Build static docs site: `pnpm run docs:build`
 - Core onboarding: [Getting Started](./getting-started.md)
 - Integration examples: [Tutorials](./tutorials/hello-world-agent.md)
+- Standalone certification tool: [Guide](./guides/standalone-certification-tool.md)
 - Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)

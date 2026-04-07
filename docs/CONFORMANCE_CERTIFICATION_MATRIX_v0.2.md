@@ -28,6 +28,7 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
 | AgentSkill delegated-authority boundary | gateway + capability token validation | `packages/conformance-tests/fixtures/interop/agentskill-delegated-authority.v1.json` | `packages/conformance-tests/src/agentskill-authz-fixtures-conformance.test.ts` | Subject/scope binding enforced; revocation+expiry TOCTOU fail-closed; required attestation denial deterministic |
 | `action_ref` identity equivalence + explainability | cross-engine governance comparability profile | `packages/conformance-tests/fixtures/interop/action-ref-explainability.v1.json` | `packages/conformance-tests/src/action-ref-explainability-conformance.test.ts` | Same request identity yields stable `action_ref`; verdict divergence requires complete machine-readable decision context |
 | Economic Layer payment governance | budget + settlement safety profile | `packages/conformance-tests/fixtures/economy/payment-governance.v1.json` | `packages/conformance-tests/src/payment-governance-fixtures-conformance.test.ts` | Daily/rolling caps, recipient allowlist, receipt replay rejection, and reserve/commit mismatch checks are deterministic |
+| Standalone certification execution | `@sint/sintctl` certify command | N/A (executes canonical fixture pack) | `apps/sintctl/src/certification.ts`, `apps/sintctl/__tests__/certification.test.ts` | External operators can run one command and produce machine-readable certification summary evidence |
 
 ## Operational Certification Artifacts
 
@@ -69,6 +70,7 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
   - `packages/conformance-tests/fixtures/iot/mqtt-gateway-session.v1.json`
 - Executable fixture conformance gate:
   - `pnpm --filter @sint/conformance-tests run test:fixtures`
+  - `node apps/sintctl/dist/cli.js certify run`
   - `pnpm --filter @sint/bridge-iot run test:fixtures`
   - `pnpm --filter @sint/sdk run test:contracts`
   - `pnpm --filter @sint/persistence-postgres run test:fixtures`
