@@ -83,7 +83,10 @@ Docs source lives in [`docs/`](docs), VitePress config is in [`docs/.vitepress/c
 
 Community/adoption assets:
 - [`docs/community/discord-launch-runbook.md`](docs/community/discord-launch-runbook.md)
+- [`docs/community/discord-launch-kit.md`](docs/community/discord-launch-kit.md)
 - [`docs/community/external-contributor-onboarding.md`](docs/community/external-contributor-onboarding.md)
+- [`docs/community/good-first-issues-board.md`](docs/community/good-first-issues-board.md)
+- [`docs/community/open-source-collaboration-replies.md`](docs/community/open-source-collaboration-replies.md)
 - [`docs/security-bulletins/2026-04.md`](docs/security-bulletins/2026-04.md)
 
 ### Run a Single Package

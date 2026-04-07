@@ -1,0 +1,78 @@
+{
+  "generatedAt": "2026-04-07T06:51:20.538Z",
+  "source": "gh issue list --state open --label good first issue",
+  "total": 5,
+  "issues": [
+    {
+      "assignees": [],
+      "labels": [
+        {
+          "id": "LA_kwDORpEKeM8AAAACbrNxyA",
+          "name": "good first issue",
+          "description": "Good for newcomers",
+          "color": "7057ff"
+        }
+      ],
+      "number": 18,
+      "title": "Add README badges (CI, license, npm)",
+      "url": "https://github.com/sint-ai/sint-protocol/issues/18"
+    },
+    {
+      "assignees": [],
+      "labels": [
+        {
+          "id": "LA_kwDORpEKeM8AAAACbrNxyA",
+          "name": "good first issue",
+          "description": "Good for newcomers",
+          "color": "7057ff"
+        }
+      ],
+      "number": 17,
+      "title": "Add JSON Schema definitions for heartbeat messages",
+      "url": "https://github.com/sint-ai/sint-protocol/issues/17"
+    },
+    {
+      "assignees": [],
+      "labels": [
+        {
+          "id": "LA_kwDORpEKeM8AAAACbrNxyA",
+          "name": "good first issue",
+          "description": "Good for newcomers",
+          "color": "7057ff"
+        }
+      ],
+      "number": 9,
+      "title": "Create example: minimal MCP server with SINT protection",
+      "url": "https://github.com/sint-ai/sint-protocol/issues/9"
+    },
+    {
+      "assignees": [],
+      "labels": [
+        {
+          "id": "LA_kwDORpEKeM8AAAACbrNxyA",
+          "name": "good first issue",
+          "description": "Good for newcomers",
+          "color": "7057ff"
+        }
+      ],
+      "number": 8,
+      "title": "Add JSDoc comments to @sint/core exported types",
+      "url": "https://github.com/sint-ai/sint-protocol/issues/8"
+    },
+    {
+      "assignees": [],
+      "labels": [
+        {
+          "id": "LA_kwDORpEKeM8AAAACbrNxyA",
+          "name": "good first issue",
+          "description": "Good for newcomers",
+          "color": "7057ff"
+        }
+      ],
+      "number": 7,
+      "title": "Add unit tests for constraint validation edge cases",
+      "url": "https://github.com/sint-ai/sint-protocol/issues/7"
+    }
+  ],
+  "notes": []
+}

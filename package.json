@@ -18,6 +18,7 @@
     "benchmark:ros2-loop": "pnpm --filter @sint/conformance-tests exec vitest run src/ros2-control-loop-latency.test.ts --reporter=verbose",
     "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
+    "community:starter-board": "node ./scripts/generate-community-starter-board.mjs",
     "bench": "pnpm --filter @sint/gate-policy-gateway bench",
     "sintctl": "pnpm --filter @sint/sintctl exec sintctl --help",
     "stack:interface": "docker compose up --build gateway sint-interface postgres redis",
