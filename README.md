@@ -464,6 +464,7 @@ docker-compose up
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)
 - Multi-language SDKs: [`sdks/`](sdks/) (TypeScript, Python, Go)
 - Operator CLI: [`apps/sintctl/README.md`](apps/sintctl/README.md)
+- Standalone certification tool guide: [`docs/guides/standalone-certification-tool.md`](docs/guides/standalone-certification-tool.md)
 - Persistence baseline guide: [`docs/guides/persistence-baseline.md`](docs/guides/persistence-baseline.md)
 - WebSocket approvals guide: [`docs/guides/websocket-approvals.md`](docs/guides/websocket-approvals.md)
 - API docs site guide: [`docs/guides/api-documentation-site.md`](docs/guides/api-documentation-site.md)

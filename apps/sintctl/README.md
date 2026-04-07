@@ -6,6 +6,7 @@ Operator CLI for SINT gateway workflows:
 - approval queue list/resolve
 - ledger querying
 - intercept policy test requests
+- standalone conformance certification runs
 
 ## Usage
 
@@ -37,9 +38,27 @@ sintctl approvals resolve --request-id <id> --status approved --by operator@ware
 
 # 5) Query ledger
 sintctl ledger query --agent-id <agent-public-key> --limit 20
+
+# 6) Run standalone certification fixture suite
+sintctl certify run --output docs/reports/standalone-conformance-certification.json
 ```
 
 ## Global Options
 
 - `--gateway`: defaults to `http://localhost:3100`
 - `--api-key`: optional x-api-key header
+
+## Standalone Certification Tool
+
+`sintctl certify run` executes the canonical conformance fixture suite:
+
+```bash
+pnpm --filter @sint/sintctl build
+node apps/sintctl/dist/cli.js certify run
+```
+
+By default it writes a machine-readable summary artifact to:
+
+- `docs/reports/standalone-conformance-certification.json`
+
+Override output path with `--output <path>`.
