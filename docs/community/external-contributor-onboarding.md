@@ -24,6 +24,7 @@ within 1-2 days.
 
 ## Suggested First Issues
 
+- Use the generated board: `docs/community/good-first-issues-board.md`
 - Docs corrections in guides/tutorials
 - New conformance fixture cases
 - Small bridge mapping improvements
@@ -48,3 +49,7 @@ within 1-2 days.
 - Add contributor to release notes credits
 - Highlight first merged PR in monthly bulletin
 - Offer next-step issue with incremental complexity
+
+## Maintainer Reply Support
+
+Use `docs/community/open-source-collaboration-replies.md` for collaborative, low-pressure response templates in GitHub threads.

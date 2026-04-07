@@ -16,6 +16,9 @@ This file is the active roadmap index for docs navigation.
 - [x] Community governance docs
 - [ ] Discord community launch
 - [ ] First external contributor onboarding
+- [x] Discord launch kit + templates (`docs/community/discord-launch-kit.md`)
+- [x] Good-first-issues board generator (`pnpm run community:starter-board`)
+- [x] Open-source collaboration reply playbook (`docs/community/open-source-collaboration-replies.md`)
 - [x] Monthly security bulletin publication
 - [x] Hardware safety Phase A — signal/evidence alignment + conformance fixtures
 - [x] Secure MCP deployments guide published

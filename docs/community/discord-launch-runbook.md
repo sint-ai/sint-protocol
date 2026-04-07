@@ -68,9 +68,11 @@ Escalation ladder:
 1. Finalize channels and permissions.
 2. Post `#welcome` and `#rules` copy.
 3. Publish invite link in README + launch posts.
-4. Seed `#good-first-issues` with 5 starter tasks.
+4. Seed `#good-first-issues` with 5 starter tasks from `docs/community/good-first-issues-board.md`.
 5. Schedule first office hours session.
 6. Announce first security bulletin date.
+
+Use `docs/community/discord-launch-kit.md` for copy/paste launch messages and CTA templates.
 
 ## Week 1 Success Metrics
 
