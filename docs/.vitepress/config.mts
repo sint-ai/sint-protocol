@@ -43,6 +43,7 @@ export default defineConfig({
           { text: "Isaac Sim Integration", link: "/guides/isaac-sim-integration" },
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
+          { text: "AutoGen Interop Fixtures", link: "/guides/autogen-interop-fixtures" },
           { text: "Claude Desktop Integration", link: "/guides/claude-desktop-integration" },
           { text: "Cursor Integration", link: "/guides/cursor-integration" },
         ],

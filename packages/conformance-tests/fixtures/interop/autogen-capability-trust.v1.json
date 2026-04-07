@@ -1,0 +1,115 @@
+{
+  "fixtureId": "autogen-capability-trust-v1",
+  "schemaVersion": "2026-04-06",
+  "description": "Canonical AutoGen interop fixture for capability validation hooks, trust-signal tier behavior, and edge fail-closed semantics.",
+  "token": {
+    "resource": "mcp://*",
+    "actions": ["call"]
+  },
+  "equivalenceScenarios": [
+    {
+      "name": "planner task parity between callback and direct gateway path",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "trustSignal": "unrestricted",
+      "expected": {
+        "assignedTier": "T1_prepare",
+        "decisionAction": "allow",
+        "expectedEvidenceEvent": "policy.evaluated"
+      }
+    },
+    {
+      "name": "exec task parity between callback and direct gateway path",
+      "request": {
+        "resource": "mcp://exec/bash",
+        "action": "call",
+        "params": {
+          "command": "python run_cell_diagnostics.py"
+        }
+      },
+      "trustSignal": "unrestricted",
+      "expected": {
+        "assignedTier": "T3_commit",
+        "decisionAction": "escalate",
+        "expectedEvidenceEvent": "policy.evaluated"
+      }
+    }
+  ],
+  "trustMatrix": [
+    {
+      "name": "unrestricted keeps planner task at prepare tier",
+      "trustSignal": "unrestricted",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {}
+      },
+      "expected": {
+        "assignedTier": "T1_prepare",
+        "decisionAction": "allow"
+      }
+    },
+    {
+      "name": "medium risk escalates planner task via trust callback",
+      "trustSignal": "medium_risk",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {}
+      },
+      "expected": {
+        "assignedTier": "T2_act",
+        "decisionAction": "escalate",
+        "expectedEvidenceEvent": "economy.trust.evaluated"
+      }
+    },
+    {
+      "name": "high risk escalates planner task to commit tier",
+      "trustSignal": "high_risk",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {}
+      },
+      "expected": {
+        "assignedTier": "T3_commit",
+        "decisionAction": "escalate",
+        "expectedEvidenceEvent": "economy.trust.evaluated"
+      }
+    },
+    {
+      "name": "blocked trust signal denies before execution",
+      "trustSignal": "blocked",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {}
+      },
+      "expected": {
+        "assignedTier": "T3_commit",
+        "decisionAction": "deny",
+        "policyViolated": "TRUST_BLOCKED",
+        "expectedEvidenceEvent": "economy.trust.blocked"
+      }
+    }
+  ],
+  "edgeFailClosedScenario": {
+    "name": "edge disconnect denies trust-escalated T2 action",
+    "request": {
+      "resource": "mcp://autogen/planner/summarize",
+      "action": "call",
+      "params": {}
+    },
+    "trustSignal": "medium_risk",
+    "expected": {
+      "assignedTier": "T3_commit",
+      "decisionAction": "deny",
+      "policyViolated": "EDGE_CENTRAL_UNAVAILABLE"
+    }
+  }
+}

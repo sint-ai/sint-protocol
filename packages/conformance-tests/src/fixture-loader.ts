@@ -255,6 +255,56 @@ export interface EconomyRoutingFixture {
   }>;
 }
 
+export interface AutogenCapabilityTrustFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly token: TokenFixture;
+  readonly equivalenceScenarios: readonly Array<{
+    readonly name: string;
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+  readonly trustMatrix: readonly Array<{
+    readonly name: string;
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly policyViolated?: string;
+      readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+  readonly edgeFailClosedScenario: {
+    readonly name: string;
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly policyViolated?: string;
+    };
+  };
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -318,5 +368,11 @@ export function loadVerifiableComputeCriticalActionsFixture(): VerifiableCompute
 export function loadEconomyRoutingFixture(): EconomyRoutingFixture {
   return loadFixture<EconomyRoutingFixture>(
     "economy/cost-aware-routing.v1.json",
+  );
+}
+
+export function loadAutogenCapabilityTrustFixture(): AutogenCapabilityTrustFixture {
+  return loadFixture<AutogenCapabilityTrustFixture>(
+    "interop/autogen-capability-trust.v1.json",
   );
 }
