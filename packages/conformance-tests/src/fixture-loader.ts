@@ -305,6 +305,47 @@ export interface AutogenCapabilityTrustFixture {
   };
 }
 
+export interface AgentSkillDelegatedAuthorityFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly tokenTemplate: TokenFixture & {
+    readonly delegationDepth: number;
+    readonly revocable?: boolean;
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly tokenOverrides?: {
+      readonly resource?: string;
+      readonly actions?: readonly string[];
+      readonly expiresAt?: string;
+      readonly attestationRequirements?: {
+        readonly minAttestationGrade?: 0 | 1 | 2 | 3;
+        readonly allowedTeeBackends?: readonly Array<"intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none">;
+        readonly requireForTiers?: readonly ApprovalTier[];
+      };
+    };
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+      readonly executionContext?: Record<string, unknown>;
+    };
+    readonly lifecycle?: {
+      readonly revokeBeforeIntercept?: {
+        readonly reason: string;
+        readonly revokedBy: string;
+      };
+      readonly expireBeforeInterceptMs?: number;
+    };
+    readonly expected: {
+      readonly decisionAction: DecisionAction;
+      readonly assignedTier?: ApprovalTier;
+      readonly policyViolated?: string;
+    };
+  }>;
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -374,5 +415,11 @@ export function loadEconomyRoutingFixture(): EconomyRoutingFixture {
 export function loadAutogenCapabilityTrustFixture(): AutogenCapabilityTrustFixture {
   return loadFixture<AutogenCapabilityTrustFixture>(
     "interop/autogen-capability-trust.v1.json",
+  );
+}
+
+export function loadAgentSkillDelegatedAuthorityFixture(): AgentSkillDelegatedAuthorityFixture {
+  return loadFixture<AgentSkillDelegatedAuthorityFixture>(
+    "interop/agentskill-delegated-authority.v1.json",
   );
 }
