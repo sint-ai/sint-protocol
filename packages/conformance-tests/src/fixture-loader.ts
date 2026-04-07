@@ -107,6 +107,48 @@ export interface HardwareSafetyHandshakeFixture {
   }>;
 }
 
+export interface A2ASkillCapabilityEnforcementFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly agentCard: {
+    readonly url: string;
+    readonly name: string;
+    readonly version: string;
+    readonly skills: readonly Array<{
+      readonly id: string;
+      readonly name: string;
+      readonly tags?: readonly string[];
+    }>;
+  };
+  readonly tokens: Record<string, TokenFixture>;
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly tokenRef: string;
+    readonly agentRef: "primary" | "secondary";
+    readonly preRevoked?: boolean;
+    readonly request: {
+      readonly id: string;
+      readonly sessionId?: string;
+      readonly skillId?: string;
+      readonly message: {
+        readonly role: "user" | "agent";
+        readonly parts: readonly Array<
+          | { readonly type: "text"; readonly text: string }
+          | { readonly type: "data"; readonly data: Record<string, unknown> }
+        >;
+      };
+      readonly metadata?: Record<string, unknown>;
+    };
+    readonly expected: {
+      readonly interceptAction: "forward" | "deny" | "escalate";
+      readonly assignedTier?: ApprovalTier;
+      readonly policyViolated?: string;
+      readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+}
+
 export interface WellKnownDiscoveryFixture {
   readonly name: string;
   readonly version: string;
@@ -472,6 +514,12 @@ export function loadOpcUaSafetyControlFixture(): OpcUaSafetyControlFixture {
 export function loadHardwareSafetyHandshakeFixture(): HardwareSafetyHandshakeFixture {
   return loadFixture<HardwareSafetyHandshakeFixture>(
     "industrial/hardware-safety-handshake.v1.json",
+  );
+}
+
+export function loadA2ASkillCapabilityEnforcementFixture(): A2ASkillCapabilityEnforcementFixture {
+  return loadFixture<A2ASkillCapabilityEnforcementFixture>(
+    "industrial/a2a-skill-capability-enforcement.v1.json",
   );
 }
 

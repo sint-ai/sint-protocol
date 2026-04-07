@@ -1,0 +1,114 @@
+{
+  "fixtureId": "a2a-skill-capability-enforcement-v1",
+  "schemaVersion": "2026-04-06",
+  "description": "Canonical A2A fixture for skill-bound capability enforcement and deterministic evidence behavior.",
+  "agentCard": {
+    "url": "https://agents.example.com/fleet-manager",
+    "name": "Fleet Manager",
+    "version": "1.0.0",
+    "skills": [
+      { "id": "navigate", "name": "Navigate", "tags": ["physical", "movement"] },
+      { "id": "report", "name": "Report", "tags": ["read-only"] }
+    ]
+  },
+  "tokens": {
+    "reportOnly": {
+      "resource": "a2a://agents.example.com/report",
+      "actions": ["a2a.send"]
+    },
+    "navigate": {
+      "resource": "a2a://agents.example.com/navigate",
+      "actions": ["a2a.send"]
+    }
+  },
+  "cases": [
+    {
+      "name": "read-only report skill forwards and emits policy evidence",
+      "tokenRef": "reportOnly",
+      "agentRef": "primary",
+      "request": {
+        "id": "task-report-001",
+        "skillId": "report",
+        "message": {
+          "role": "user",
+          "parts": [{ "type": "text", "text": "Generate warehouse status report" }]
+        }
+      },
+      "expected": {
+        "interceptAction": "forward",
+        "assignedTier": "T0_observe",
+        "expectedEvidenceEvent": "policy.evaluated"
+      }
+    },
+    {
+      "name": "navigate request with report-only token fails closed on scope mismatch",
+      "tokenRef": "reportOnly",
+      "agentRef": "primary",
+      "request": {
+        "id": "task-nav-001",
+        "skillId": "navigate",
+        "message": {
+          "role": "user",
+          "parts": [{ "type": "text", "text": "Navigate robot to aisle B-12" }]
+        }
+      },
+      "expected": {
+        "interceptAction": "deny",
+        "policyViolated": "INSUFFICIENT_PERMISSIONS"
+      }
+    },
+    {
+      "name": "navigate request with matching token escalates at T2 and emits policy evidence",
+      "tokenRef": "navigate",
+      "agentRef": "primary",
+      "request": {
+        "id": "task-nav-002",
+        "skillId": "navigate",
+        "message": {
+          "role": "user",
+          "parts": [{ "type": "text", "text": "Navigate robot to aisle C-03" }]
+        }
+      },
+      "expected": {
+        "interceptAction": "escalate",
+        "assignedTier": "T2_act",
+        "expectedEvidenceEvent": "policy.evaluated"
+      }
+    },
+    {
+      "name": "revoked navigate token is denied before task forwarding",
+      "tokenRef": "navigate",
+      "agentRef": "primary",
+      "preRevoked": true,
+      "request": {
+        "id": "task-nav-003",
+        "skillId": "navigate",
+        "message": {
+          "role": "user",
+          "parts": [{ "type": "text", "text": "Navigate robot to aisle D-01" }]
+        }
+      },
+      "expected": {
+        "interceptAction": "deny",
+        "policyViolated": "TOKEN_REVOKED"
+      }
+    },
+    {
+      "name": "subject mismatch denies cross-agent token replay",
+      "tokenRef": "reportOnly",
+      "agentRef": "secondary",
+      "request": {
+        "id": "task-report-rogue-001",
+        "skillId": "report",
+        "message": {
+          "role": "user",
+          "parts": [{ "type": "text", "text": "Generate secure report" }]
+        }
+      },
+      "expected": {
+        "interceptAction": "deny",
+        "policyViolated": "TOKEN_SUBJECT_MISMATCH"
+      }
+    }
+  ]
+}
