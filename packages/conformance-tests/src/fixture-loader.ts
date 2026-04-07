@@ -406,6 +406,51 @@ export interface ActionRefExplainabilityFixture {
   }>;
 }
 
+export interface PaymentGovernanceFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly defaults: {
+    readonly dailyBudgetTokens: number;
+    readonly rollingWindowMs: number;
+    readonly rollingWindowCapTokens: number;
+    readonly approvedRecipients: readonly string[];
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly setup?: {
+      readonly usedTodayTokens?: number;
+      readonly priorTxsInWindow?: readonly Array<{
+        readonly tokens: number;
+        readonly atOffsetMs: number;
+      }>;
+      readonly reserveOnlyTxIds?: readonly string[];
+      readonly usedReceiptIds?: readonly string[];
+    };
+    readonly payment: {
+      readonly txId: string;
+      readonly agentId: string;
+      readonly recipient: string;
+      readonly tokens: number;
+      readonly receiptId?: string;
+    };
+    readonly flow: {
+      readonly reserve: boolean;
+      readonly commit: boolean;
+    };
+    readonly expected: {
+      readonly allowed: boolean;
+      readonly reason:
+        | "ALLOW"
+        | "BUDGET_EXCEEDED"
+        | "ROLLING_WINDOW_EXCEEDED"
+        | "RECIPIENT_NOT_ALLOWLISTED"
+        | "RECEIPT_REPLAY"
+        | "SETTLEMENT_MISMATCH";
+    };
+  }>;
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -487,5 +532,11 @@ export function loadAgentSkillDelegatedAuthorityFixture(): AgentSkillDelegatedAu
 export function loadActionRefExplainabilityFixture(): ActionRefExplainabilityFixture {
   return loadFixture<ActionRefExplainabilityFixture>(
     "interop/action-ref-explainability.v1.json",
+  );
+}
+
+export function loadPaymentGovernanceFixture(): PaymentGovernanceFixture {
+  return loadFixture<PaymentGovernanceFixture>(
+    "economy/payment-governance.v1.json",
   );
 }
