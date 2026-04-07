@@ -91,35 +91,34 @@ async with GatewayClient(config) as client:
     print(token["tokenId"])
 ```
 
-### OpenAI Agents SDK Governance Adapter
+### CrewAI GuardrailProvider Compatibility Adapter
 
-`OpenAIAgentsGovernanceAdapter` wraps tool calls with SINT runtime checks.
+`CrewAIGuardrailProviderCompat` maps SINT decisions into a CrewAI-friendly contract:
+
+- `allow`
+- `deny`
+- `escalate`
 
 ```python
 from sint import (
-    GatewayClient, GatewayConfig, OpenAIAgentsGovernanceAdapter,
-    ApprovalResolution, SintRequest
+    CrewAIGuardrailProviderCompat,
+    CrewAIApprovalResolution,
 )
 
-async with GatewayClient(GatewayConfig(base_url="http://localhost:3100")) as client:
-    adapter = OpenAIAgentsGovernanceAdapter(client)
+guardrail = CrewAIGuardrailProviderCompat(client)
 
-    async def resolver(request: SintRequest, decision):
-        # Hook this into your operator UI / pager workflow.
-        return ApprovalResolution(status="approved", by="operator@example.com")
+async def resolver(request, decision):
+    return CrewAIApprovalResolution(status="approved", by="operator@example.com")
 
-    decision = await adapter.authorize_tool_call(
-        request=my_request,
-        on_escalation=resolver,   # optional
-        approval_timeout_s=30.0,  # fail-closed timeout
-    )
+result = await guardrail.pre_tool_call(
+    request=my_request,
+    on_escalation=resolver,   # optional callback
+    approval_timeout_s=30.0,  # fail-closed timeout path
+)
 ```
 
-Typed outcomes:
-- `SintDeniedError`
-- `SintApprovalRequiredError`
-- `SintApprovalTimeoutError`
-- `SintApprovalDeniedError`
+Timeout behavior is fail-closed by default (`APPROVAL_TIMEOUT`).
+Stale approval responses map to deny (`STALE_APPROVAL`).
 
 ### sint-scan CLI
 
@@ -211,4 +210,4 @@ pytest tests/ -v
 ## Examples
 
 - Warehouse AMR flow: [`examples/warehouse_amr_flow.py`](examples/warehouse_amr_flow.py)
-- OpenAI Agents governance flow: [`examples/openai_agents_governance_flow.py`](examples/openai_agents_governance_flow.py)
+- CrewAI guardrail flow: [`examples/crewai_guardrail_flow.py`](examples/crewai_guardrail_flow.py)

@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "name": "crewai-fail-closed",
+  "description": "Fail-closed starter policy for CrewAI pre-tool-call guardrail integration.",
+  "defaults": {
+    "fallbackAction": "deny",
+    "approvalTimeoutMs": 30000,
+    "staleApprovalAction": "deny"
+  },
+  "rules": [
+    {
+      "resourcePattern": "mcp://*/read*",
+      "actions": ["call"],
+      "baseTier": "T0_observe",
+      "baseRisk": "T0_read"
+    },
+    {
+      "resourcePattern": "mcp://*/write*",
+      "actions": ["call"],
+      "baseTier": "T1_prepare",
+      "baseRisk": "T1_write_low"
+    },
+    {
+      "resourcePattern": "mcp://*/dispatch*",
+      "actions": ["call"],
+      "baseTier": "T2_act",
+      "baseRisk": "T2_stateful"
+    },
+    {
+      "resourcePattern": "mcp://*/execute*",
+      "actions": ["call"],
+      "baseTier": "T3_commit",
+      "baseRisk": "T3_irreversible"
+    }
+  ],
+  "invariants": [
+    "T2/T3 actions require explicit approval resolution",
+    "Unresolved escalation must deny on timeout",
+    "Stale approval must deny and require re-request",
+    "Token subject must equal request agent identity"
+  ]
+}
