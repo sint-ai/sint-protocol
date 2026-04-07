@@ -1,0 +1,103 @@
+{
+  "fixtureId": "agentskill-delegated-authority-v1",
+  "schemaVersion": "2026-04-07",
+  "description": "Canonical delegated-authority fixture for AgentSkill boundary enforcement: subject binding, scope checks, revocation/expiry TOCTOU handling, and tier-gated attestation requirements.",
+  "tokenTemplate": {
+    "resource": "mcp://autogen/planner/*",
+    "actions": ["call"],
+    "delegationDepth": 1,
+    "revocable": true
+  },
+  "cases": [
+    {
+      "name": "allow valid subject-bound token with matching scope",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "expected": {
+        "decisionAction": "allow",
+        "assignedTier": "T1_prepare"
+      }
+    },
+    {
+      "name": "deny when token scope does not match requested skill",
+      "tokenOverrides": {
+        "resource": "mcp://autogen/planner/analyze"
+      },
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "INSUFFICIENT_PERMISSIONS"
+      }
+    },
+    {
+      "name": "deny when token is revoked between issuance and execution",
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "lifecycle": {
+        "revokeBeforeIntercept": {
+          "reason": "security incident",
+          "revokedBy": "operator-safety"
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "TOKEN_REVOKED"
+      }
+    },
+    {
+      "name": "deny when token expires between issuance and execution",
+      "tokenOverrides": {
+        "expiresAt": "__SHORT_LIVED__"
+      },
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "lifecycle": {
+        "expireBeforeInterceptMs": 200
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "TOKEN_EXPIRED"
+      }
+    },
+    {
+      "name": "deny when attestation is required for assigned tier but absent",
+      "tokenOverrides": {
+        "attestationRequirements": {
+          "requireForTiers": ["T1_prepare"]
+        }
+      },
+      "request": {
+        "resource": "mcp://autogen/planner/summarize",
+        "action": "call",
+        "params": {
+          "goal": "summarize_warehouse_shift"
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "CONSTRAINT_VIOLATION"
+      }
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "fixtureId": "sint.economy.payment-governance.v1",
+  "schemaVersion": "2026-04-07",
+  "description": "Canonical conformance fixture for Economic Layer v1 payment governance: budget caps, rolling window controls, recipient allowlist, receipt replay rejection, and reserve/commit consistency.",
+  "defaults": {
+    "dailyBudgetTokens": 100,
+    "rollingWindowMs": 60000,
+    "rollingWindowCapTokens": 25,
+    "approvedRecipients": [
+      "vendor://trusted-api-alpha",
+      "vendor://trusted-api-beta"
+    ]
+  },
+  "cases": [
+    {
+      "name": "allow within daily budget and rolling window for allowlisted recipient",
+      "payment": {
+        "txId": "tx-allow-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://trusted-api-alpha",
+        "tokens": 8,
+        "receiptId": "r-allow-001"
+      },
+      "flow": {
+        "reserve": true,
+        "commit": true
+      },
+      "expected": {
+        "allowed": true,
+        "reason": "ALLOW"
+      }
+    },
+    {
+      "name": "deny when daily budget exceeded",
+      "setup": {
+        "usedTodayTokens": 96
+      },
+      "payment": {
+        "txId": "tx-budget-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://trusted-api-alpha",
+        "tokens": 10,
+        "receiptId": "r-budget-001"
+      },
+      "flow": {
+        "reserve": true,
+        "commit": true
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "BUDGET_EXCEEDED"
+      }
+    },
+    {
+      "name": "deny when rolling window spend cap exceeded by micro-transactions",
+      "setup": {
+        "priorTxsInWindow": [
+          { "tokens": 9, "atOffsetMs": -5000 },
+          { "tokens": 9, "atOffsetMs": -4000 },
+          { "tokens": 6, "atOffsetMs": -3000 }
+        ]
+      },
+      "payment": {
+        "txId": "tx-window-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://trusted-api-alpha",
+        "tokens": 3,
+        "receiptId": "r-window-001"
+      },
+      "flow": {
+        "reserve": true,
+        "commit": true
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "ROLLING_WINDOW_EXCEEDED"
+      }
+    },
+    {
+      "name": "deny when recipient is not on allowlist",
+      "payment": {
+        "txId": "tx-recipient-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://attacker-relay",
+        "tokens": 5,
+        "receiptId": "r-recipient-001"
+      },
+      "flow": {
+        "reserve": true,
+        "commit": true
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "RECIPIENT_NOT_ALLOWLISTED"
+      }
+    },
+    {
+      "name": "deny replayed receipt id across transactions",
+      "setup": {
+        "usedReceiptIds": ["r-replay-001"]
+      },
+      "payment": {
+        "txId": "tx-replay-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://trusted-api-alpha",
+        "tokens": 4,
+        "receiptId": "r-replay-001"
+      },
+      "flow": {
+        "reserve": true,
+        "commit": true
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "RECEIPT_REPLAY"
+      }
+    },
+    {
+      "name": "deny settlement when commit occurs without prior reserve",
+      "payment": {
+        "txId": "tx-mismatch-001",
+        "agentId": "agent://warehouse-controller-17",
+        "recipient": "vendor://trusted-api-alpha",
+        "tokens": 6,
+        "receiptId": "r-mismatch-001"
+      },
+      "flow": {
+        "reserve": false,
+        "commit": true
+      },
+      "expected": {
+        "allowed": false,
+        "reason": "SETTLEMENT_MISMATCH"
+      }
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "fixtureId": "action-ref-explainability-v1",
+  "schemaVersion": "2026-04-07",
+  "description": "Canonical interop profile for action_ref request identity equivalence and decision explainability comparability across engines.",
+  "profile": {
+    "hashAlgorithm": "sha256",
+    "identityTuple": ["agentId", "resource", "action", "scope", "timestamp"]
+  },
+  "cases": [
+    {
+      "name": "same identity tuple yields same action_ref across engines",
+      "identity": {
+        "engineA": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A17",
+          "timestamp": "2026-04-07T00:00:00.000000Z"
+        },
+        "engineB": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A17",
+          "timestamp": "2026-04-07T00:00:00.000000Z"
+        }
+      },
+      "expected": {
+        "sameActionRef": true
+      }
+    },
+    {
+      "name": "different verdicts remain comparable when decision context is complete",
+      "identity": {
+        "engineA": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A17",
+          "timestamp": "2026-04-07T00:01:00.000000Z"
+        },
+        "engineB": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A17",
+          "timestamp": "2026-04-07T00:01:00.000000Z"
+        }
+      },
+      "decisionContext": {
+        "engineA": {
+          "policyProfile": "warehouse-amr/v1",
+          "ruleIds": ["RULE-CORRIDOR-VALID", "RULE-TRUST-MEDIUM"],
+          "constraintDigest": "66d8ea53ee8ac4e520f84d7ca6cf4f5a13c89228f7ac8529496890ad7bf40f96",
+          "decisionTime": "2026-04-07T00:01:00.100000Z",
+          "verdict": "allow"
+        },
+        "engineB": {
+          "policyProfile": "warehouse-amr/v1",
+          "ruleIds": ["RULE-CORRIDOR-VALID", "RULE-TRUST-HIGH"],
+          "constraintDigest": "2f8a5a01cc3ab2d69695d45195ea4d0f3375f8f747db01c0cb7c9dd8e978ec93",
+          "decisionTime": "2026-04-07T00:01:00.120000Z",
+          "verdict": "deny"
+        }
+      },
+      "expected": {
+        "sameActionRef": true,
+        "explainabilityComparable": true
+      }
+    },
+    {
+      "name": "different verdicts are not comparable without complete explainability context",
+      "identity": {
+        "engineA": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A18",
+          "timestamp": "2026-04-07T00:02:00.000000Z"
+        },
+        "engineB": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:A18",
+          "timestamp": "2026-04-07T00:02:00.000000Z"
+        }
+      },
+      "decisionContext": {
+        "engineA": {
+          "policyProfile": "warehouse-amr/v1",
+          "ruleIds": ["RULE-CORRIDOR-STALE"],
+          "constraintDigest": "f478341949e67af6dc9f63369f84f1ce95f3231302e887bf87d07025fd638505",
+          "decisionTime": "2026-04-07T00:02:00.110000Z",
+          "verdict": "deny"
+        },
+        "engineB": {
+          "policyProfile": "warehouse-amr/v1",
+          "ruleIds": ["RULE-CORRIDOR-STALE"],
+          "decisionTime": "2026-04-07T00:02:00.110000Z",
+          "verdict": "allow"
+        }
+      },
+      "expected": {
+        "sameActionRef": true,
+        "explainabilityComparable": false
+      }
+    },
+    {
+      "name": "artifact and receipt linkage validates against shared action_ref and decision digest",
+      "identity": {
+        "engineA": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:B03",
+          "timestamp": "2026-04-07T00:03:00.000000Z"
+        },
+        "engineB": {
+          "agentId": "agent://warehouse-controller-17",
+          "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+          "action": "call",
+          "scope": "warehouse:aisle:B03",
+          "timestamp": "2026-04-07T00:03:00.000000Z"
+        }
+      },
+      "artifactLinkage": {
+        "decisionArtifact": {
+          "actionRef": "__COMPUTED__",
+          "compoundDigest": "5f3f6f2b78f8ef950f8614ffd7d8a1f4d7063edfa3f8f4e43f91784453a40c2e"
+        },
+        "executionReceipt": {
+          "actionRef": "__COMPUTED__",
+          "decisionArtifactDigest": "5f3f6f2b78f8ef950f8614ffd7d8a1f4d7063edfa3f8f4e43f91784453a40c2e"
+        }
+      },
+      "expected": {
+        "sameActionRef": true,
+        "linkageValid": true
+      }
+    }
+  ]
+}

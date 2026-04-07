@@ -25,6 +25,9 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
 | Verifiable compute critical-action gate | token + request proof metadata + gateway verifier hook | `packages/conformance-tests/fixtures/security/verifiable-compute-critical-actions.v1.json` | `packages/conformance-tests/src/security-iot-fixtures-conformance.test.ts`, `packages/policy-gateway/__tests__/gateway.test.ts` | Missing/stale proofs deny deterministically; valid proofs proceed to normal T2/T3 escalation flow |
 | Tier compliance crosswalk contract | core constants + discovery route | `packages/conformance-tests/fixtures/protocol/tier-compliance-crosswalk.v1.json` | `packages/conformance-tests/src/canonical-fixtures-conformance.test.ts`, `packages/core/__tests__/compliance-crosswalk.test.ts` | One-to-one tier mapping to NIST AI RMF / ISO 42001 / EU AI Act remains machine-readable and stable |
 | Economic routing + optional x402 quoting | `@sint/bridge-economy` + `/v1/economy/route` | `packages/conformance-tests/fixtures/economy/cost-aware-routing.v1.json` | `packages/conformance-tests/src/economy-fixtures-conformance.test.ts`, `apps/gateway-server/__tests__/economy.test.ts`, `packages/bridge-economy/__tests__/cost-aware-routing.test.ts` | Budget/latency-aware route selection is deterministic; x402 quote path is optional and backward-compatible |
+| AgentSkill delegated-authority boundary | gateway + capability token validation | `packages/conformance-tests/fixtures/interop/agentskill-delegated-authority.v1.json` | `packages/conformance-tests/src/agentskill-authz-fixtures-conformance.test.ts` | Subject/scope binding enforced; revocation+expiry TOCTOU fail-closed; required attestation denial deterministic |
+| `action_ref` identity equivalence + explainability | cross-engine governance comparability profile | `packages/conformance-tests/fixtures/interop/action-ref-explainability.v1.json` | `packages/conformance-tests/src/action-ref-explainability-conformance.test.ts` | Same request identity yields stable `action_ref`; verdict divergence requires complete machine-readable decision context |
+| Economic Layer payment governance | budget + settlement safety profile | `packages/conformance-tests/fixtures/economy/payment-governance.v1.json` | `packages/conformance-tests/src/payment-governance-fixtures-conformance.test.ts` | Daily/rolling caps, recipient allowlist, receipt replay rejection, and reserve/commit mismatch checks are deterministic |
 
 ## Operational Certification Artifacts
 
@@ -56,6 +59,12 @@ This matrix tracks canonical fixture coverage for major interoperability paths.
   - `packages/conformance-tests/fixtures/security/verifiable-compute-critical-actions.v1.json`
 - Economic routing + x402 fixture:
   - `packages/conformance-tests/fixtures/economy/cost-aware-routing.v1.json`
+- AgentSkill delegated-authority fixture:
+  - `packages/conformance-tests/fixtures/interop/agentskill-delegated-authority.v1.json`
+- `action_ref` identity/explainability fixture:
+  - `packages/conformance-tests/fixtures/interop/action-ref-explainability.v1.json`
+- Payment governance fixture:
+  - `packages/conformance-tests/fixtures/economy/payment-governance.v1.json`
 - MQTT session certification fixture:
   - `packages/conformance-tests/fixtures/iot/mqtt-gateway-session.v1.json`
 - Executable fixture conformance gate:

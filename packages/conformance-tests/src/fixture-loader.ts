@@ -255,6 +255,202 @@ export interface EconomyRoutingFixture {
   }>;
 }
 
+export interface AutogenCapabilityTrustFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly token: TokenFixture;
+  readonly equivalenceScenarios: readonly Array<{
+    readonly name: string;
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+  readonly trustMatrix: readonly Array<{
+    readonly name: string;
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly policyViolated?: string;
+      readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+  readonly edgeFailClosedScenario: {
+    readonly name: string;
+    readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+    };
+    readonly expected: {
+      readonly assignedTier: ApprovalTier;
+      readonly decisionAction: DecisionAction;
+      readonly policyViolated?: string;
+    };
+  };
+}
+
+export interface AgentSkillDelegatedAuthorityFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly tokenTemplate: TokenFixture & {
+    readonly delegationDepth: number;
+    readonly revocable?: boolean;
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly tokenOverrides?: {
+      readonly resource?: string;
+      readonly actions?: readonly string[];
+      readonly expiresAt?: string;
+      readonly attestationRequirements?: {
+        readonly minAttestationGrade?: 0 | 1 | 2 | 3;
+        readonly allowedTeeBackends?: readonly Array<"intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none">;
+        readonly requireForTiers?: readonly ApprovalTier[];
+      };
+    };
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly params?: Record<string, unknown>;
+      readonly executionContext?: Record<string, unknown>;
+    };
+    readonly lifecycle?: {
+      readonly revokeBeforeIntercept?: {
+        readonly reason: string;
+        readonly revokedBy: string;
+      };
+      readonly expireBeforeInterceptMs?: number;
+    };
+    readonly expected: {
+      readonly decisionAction: DecisionAction;
+      readonly assignedTier?: ApprovalTier;
+      readonly policyViolated?: string;
+    };
+  }>;
+}
+
+export interface ActionRefExplainabilityFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profile: {
+    readonly hashAlgorithm: "sha256";
+    readonly identityTuple: readonly ["agentId", "resource", "action", "scope", "timestamp"];
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly identity: {
+      readonly engineA: {
+        readonly agentId: string;
+        readonly resource: string;
+        readonly action: string;
+        readonly scope: string;
+        readonly timestamp: string;
+      };
+      readonly engineB: {
+        readonly agentId: string;
+        readonly resource: string;
+        readonly action: string;
+        readonly scope: string;
+        readonly timestamp: string;
+      };
+    };
+    readonly decisionContext?: {
+      readonly engineA: {
+        readonly policyProfile?: string;
+        readonly ruleIds?: readonly string[];
+        readonly constraintDigest?: string;
+        readonly decisionTime?: string;
+        readonly verdict: "allow" | "deny" | "escalate" | "transform";
+      };
+      readonly engineB: {
+        readonly policyProfile?: string;
+        readonly ruleIds?: readonly string[];
+        readonly constraintDigest?: string;
+        readonly decisionTime?: string;
+        readonly verdict: "allow" | "deny" | "escalate" | "transform";
+      };
+    };
+    readonly artifactLinkage?: {
+      readonly decisionArtifact: {
+        readonly actionRef: string;
+        readonly compoundDigest: string;
+      };
+      readonly executionReceipt: {
+        readonly actionRef: string;
+        readonly decisionArtifactDigest: string;
+      };
+    };
+    readonly expected: {
+      readonly sameActionRef: boolean;
+      readonly explainabilityComparable?: boolean;
+      readonly linkageValid?: boolean;
+    };
+  }>;
+}
+
+export interface PaymentGovernanceFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly defaults: {
+    readonly dailyBudgetTokens: number;
+    readonly rollingWindowMs: number;
+    readonly rollingWindowCapTokens: number;
+    readonly approvedRecipients: readonly string[];
+  };
+  readonly cases: readonly Array<{
+    readonly name: string;
+    readonly setup?: {
+      readonly usedTodayTokens?: number;
+      readonly priorTxsInWindow?: readonly Array<{
+        readonly tokens: number;
+        readonly atOffsetMs: number;
+      }>;
+      readonly reserveOnlyTxIds?: readonly string[];
+      readonly usedReceiptIds?: readonly string[];
+    };
+    readonly payment: {
+      readonly txId: string;
+      readonly agentId: string;
+      readonly recipient: string;
+      readonly tokens: number;
+      readonly receiptId?: string;
+    };
+    readonly flow: {
+      readonly reserve: boolean;
+      readonly commit: boolean;
+    };
+    readonly expected: {
+      readonly allowed: boolean;
+      readonly reason:
+        | "ALLOW"
+        | "BUDGET_EXCEEDED"
+        | "ROLLING_WINDOW_EXCEEDED"
+        | "RECIPIENT_NOT_ALLOWLISTED"
+        | "RECEIPT_REPLAY"
+        | "SETTLEMENT_MISMATCH";
+    };
+  }>;
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -318,5 +514,29 @@ export function loadVerifiableComputeCriticalActionsFixture(): VerifiableCompute
 export function loadEconomyRoutingFixture(): EconomyRoutingFixture {
   return loadFixture<EconomyRoutingFixture>(
     "economy/cost-aware-routing.v1.json",
+  );
+}
+
+export function loadAutogenCapabilityTrustFixture(): AutogenCapabilityTrustFixture {
+  return loadFixture<AutogenCapabilityTrustFixture>(
+    "interop/autogen-capability-trust.v1.json",
+  );
+}
+
+export function loadAgentSkillDelegatedAuthorityFixture(): AgentSkillDelegatedAuthorityFixture {
+  return loadFixture<AgentSkillDelegatedAuthorityFixture>(
+    "interop/agentskill-delegated-authority.v1.json",
+  );
+}
+
+export function loadActionRefExplainabilityFixture(): ActionRefExplainabilityFixture {
+  return loadFixture<ActionRefExplainabilityFixture>(
+    "interop/action-ref-explainability.v1.json",
+  );
+}
+
+export function loadPaymentGovernanceFixture(): PaymentGovernanceFixture {
+  return loadFixture<PaymentGovernanceFixture>(
+    "economy/payment-governance.v1.json",
   );
 }
