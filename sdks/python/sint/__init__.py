@@ -15,6 +15,15 @@ from .types import (
 from .client import GatewayClient
 from .tokens import CapabilityTokenRequest, build_token_request
 from .scanner import scan_tool, scan_server, ToolScanResult, ServerScanReport
+from .openai_agents import (
+    ApprovalResolution,
+    OpenAIAgentsGovernanceAdapter,
+    SintApprovalDeniedError,
+    SintApprovalRequiredError,
+    SintApprovalTimeoutError,
+    SintDeniedError,
+    SintGovernanceError,
+)
 
 __version__ = "0.1.0"
 
@@ -36,4 +45,12 @@ __all__ = [
     "scan_server",
     "ToolScanResult",
     "ServerScanReport",
+    # openai agents adapter
+    "OpenAIAgentsGovernanceAdapter",
+    "ApprovalResolution",
+    "SintGovernanceError",
+    "SintDeniedError",
+    "SintApprovalRequiredError",
+    "SintApprovalTimeoutError",
+    "SintApprovalDeniedError",
 ]
