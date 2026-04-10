@@ -178,14 +178,15 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
-**1,728 tests passing across 31 packages** (as of 2026-04-10)
+**1,772 tests passing across 41 packages** (as of 2026-04-10)
 
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
 - **Phase 3** (complete): EconomyPlugin, CircuitBreakerPlugin, CSML escalation, DynamicEnvelopePlugin, OWASP ASI coverage map
 - **Phase 4** (complete): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
 - **Phase 5** (complete): OWASP ASI01-ASI10 conformance fixtures, APS-SINT-MCP handshake spec, ASI03/ASI05 security fixes, sint-mcp production proxy, token registry, Python SDK, Rust SDK
-- **Phase 6** (next): ASI06 embedding-layer memory integrity, constraint language spec (#67), npm publish
+- **Phase 6** (complete): ASI06 cross-session/credential-funnel/velocity-loop checks, bridge test coverage (+42 tests), latency fast-path fix (steadyP99 5ms)
+- **Phase 7** (next): constraint language spec (#67), npm publish, hardware safety bridge (`@sint/bridge-iot` IotInterceptor), SafetyPermitPlugin
 
 ## Multi-Agent Coordination
 
