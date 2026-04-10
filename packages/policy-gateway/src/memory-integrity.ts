@@ -8,6 +8,9 @@
  * 3. Unauthorized privilege claims in recent history strings ("I was authorized to...", "admin approved")
  * 4. History length anomalies (recentActions > maxHistoryLength = 50)
  * 5. Timestamp rollback in requestId (UUIDv7 timestamp should be monotonic)
+ * 6. Cross-session continuity claims (hallucinated/injected prior-session references)
+ * 7. Credential read funnel pattern (≥3 credential/secret/key reads → any write within last 10)
+ * 8. Action velocity loop (>15 actions with last 5 all on identical resource → hallucination loop)
  */
 
 import type { SintRequest } from "@sint/core";
@@ -32,6 +35,36 @@ const PRIVILEGE_CLAIM_PATTERNS: readonly RegExp[] = [
   /elevated\s+(privilege|permission|access)/i,
   /root\s+(access\s+)?granted/i,
   /security\s+(bypass|override)\s+(approved|granted)/i,
+];
+
+/**
+ * Phrases that indicate hallucinated or injected cross-session continuity claims.
+ * These are patterns injected to make the agent believe it has prior authorizations.
+ */
+const CROSS_SESSION_CONTINUITY_PATTERNS: readonly RegExp[] = [
+  /from\s+session/i,
+  /previous\s+context/i,
+  /earlier\s+approved/i,
+  /prior\s+session/i,
+  /in\s+the\s+last\s+session/i,
+  /as\s+(previously|earlier)\s+(established|confirmed|agreed)/i,
+];
+
+/**
+ * Keyword fragments that indicate reads targeting sensitive credential resources.
+ * Used for the credential-read-funnel pattern detection.
+ */
+const CREDENTIAL_READ_KEYWORDS: readonly string[] = [
+  "credential",
+  "secret",
+  "key",
+  "token",
+  "password",
+  "passwd",
+  "apikey",
+  "api_key",
+  "private",
+  "cert",
 ];
 
 /** Mutually exclusive action pair definitions (action A cannot follow action B). */
@@ -90,6 +123,86 @@ function detectPrivilegeClaims(history: readonly string[]): string | null {
 }
 
 /**
+ * Check 6: Cross-session continuity claims.
+ * Detects hallucinated references to prior sessions or pre-existing authorizations.
+ */
+function detectCrossSessionContinuity(history: readonly string[]): string | null {
+  for (const entry of history) {
+    for (const pattern of CROSS_SESSION_CONTINUITY_PATTERNS) {
+      if (pattern.test(entry)) {
+        return `Cross-session continuity claim detected in history: "${entry}"`;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Check 7: Credential read funnel pattern.
+ * Detects ≥3 reads of credential/secret/key resources followed by any write within the last 10 actions.
+ */
+function detectCredentialReadFunnel(history: readonly string[]): string | null {
+  const window = history.slice(-10);
+  const lowered = window.map((e) => e.toLowerCase());
+
+  // Find the last write action index
+  const lastWriteIdx = lowered.reduceRight((acc, entry, idx) => {
+    if (acc === -1 && (entry.includes("write") || entry.includes("publish") || entry.startsWith("write"))) {
+      return idx;
+    }
+    return acc;
+  }, -1);
+
+  if (lastWriteIdx === -1) return null;
+
+  // Count credential reads before the last write
+  let credentialReadCount = 0;
+  for (let i = 0; i < lastWriteIdx; i++) {
+    const entry = lowered[i] ?? "";
+    if (
+      (entry.includes("read") || entry.includes("get") || entry.includes("fetch") || entry.includes("subscribe")) &&
+      CREDENTIAL_READ_KEYWORDS.some((kw) => entry.includes(kw))
+    ) {
+      credentialReadCount++;
+    }
+  }
+
+  if (credentialReadCount >= 3) {
+    return `Credential read funnel detected: ${credentialReadCount} credential/secret reads followed by a write action within last 10 actions`;
+  }
+  return null;
+}
+
+/**
+ * Check 8: Action velocity loop.
+ * Detects when the last 5 actions all reference the same resource (memory loop / hallucination loop).
+ * Only triggered when total history length > 15.
+ */
+function detectActionVelocityLoop(history: readonly string[]): string | null {
+  if (history.length <= 15) return null;
+
+  const tail = history.slice(-5);
+  if (tail.length < 5) return null;
+
+  // Extract the resource portion from each action (e.g. "read:/secrets/db" → "/secrets/db")
+  // Heuristic: split on first ':' or space and use the second part as the resource identifier
+  function extractResource(action: string): string {
+    const colonIdx = action.indexOf(":");
+    if (colonIdx !== -1) return action.slice(colonIdx + 1);
+    const spaceIdx = action.indexOf(" ");
+    if (spaceIdx !== -1) return action.slice(spaceIdx + 1);
+    return action;
+  }
+
+  const resources = tail.map(extractResource);
+  const first = resources[0];
+  if (first !== undefined && resources.every((r) => r === first)) {
+    return `Action velocity loop detected: last 5 actions all target identical resource "${first}" (${history.length} total actions)`;
+  }
+  return null;
+}
+
+/**
  * Extract the timestamp from a UUIDv7 (milliseconds since Unix epoch).
  * UUIDv7 format: tttttttt-tttt-7xxx-xxxx-xxxxxxxxxxxx
  * First 48 bits are millisecond timestamp.
@@ -126,6 +239,23 @@ export class DefaultMemoryIntegrityChecker implements MemoryIntegrityPlugin {
 
     const history = request.recentActions ?? [];
 
+    // Fast path: no history to analyze — skip all pattern checks.
+    // Only run the UUIDv7 monotonicity check (stateful, always relevant).
+    if (history.length === 0) {
+      const currentTs = uuidV7TimestampMs(request.requestId);
+      if (currentTs !== null && this.lastSeenTimestampMs !== null) {
+        if (currentTs < this.lastSeenTimestampMs) {
+          return {
+            poisoned: true,
+            anomalies: [`UUIDv7 timestamp rollback: ${currentTs} < previous ${this.lastSeenTimestampMs}`],
+            severity: "high",
+          };
+        }
+      }
+      if (currentTs !== null) this.lastSeenTimestampMs = currentTs;
+      return { poisoned: false, anomalies: [], severity: "low" };
+    }
+
     // Check 4: History length overflow
     if (history.length > this.maxHistoryLength) {
       anomalies.push(
@@ -152,6 +282,27 @@ export class DefaultMemoryIntegrityChecker implements MemoryIntegrityPlugin {
     const impossible = isImpossibleSequence(history);
     if (impossible !== null) {
       anomalies.push(impossible);
+    }
+
+    // Check 6: Cross-session continuity claims (high severity)
+    const crossSession = detectCrossSessionContinuity(history);
+    if (crossSession !== null) {
+      anomalies.push(crossSession);
+      highSeverity = true;
+    }
+
+    // Check 7: Credential read funnel (high severity)
+    const credFunnel = detectCredentialReadFunnel(history);
+    if (credFunnel !== null) {
+      anomalies.push(credFunnel);
+      highSeverity = true;
+    }
+
+    // Check 8: Action velocity loop (high severity)
+    const velocityLoop = detectActionVelocityLoop(history);
+    if (velocityLoop !== null) {
+      anomalies.push(velocityLoop);
+      highSeverity = true;
     }
 
     // Check 5: UUIDv7 timestamp monotonicity (high severity)
