@@ -11,7 +11,7 @@ SINT is a security enforcement layer for physical AI. It sits between AI agents 
 ```bash
 pnpm install          # Install dependencies
 pnpm run build        # Build all packages (required before test)
-pnpm run test         # Run all tests (currently 1,105 passing)
+pnpm run test         # Run all tests (currently 1,728 passing)
 pnpm run typecheck    # Type-check without emitting
 pnpm run clean        # Remove build artifacts
 pnpm run bench        # Run PolicyGateway performance benchmarks (p50/p99 latency)
@@ -178,12 +178,14 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
-**1,105 tests passing across 30 packages** (as of 2026-04-04)
+**1,728 tests passing across 31 packages** (as of 2026-04-10)
 
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
 - **Phase 3** (complete): EconomyPlugin, CircuitBreakerPlugin, CSML escalation, DynamicEnvelopePlugin, OWASP ASI coverage map
-- **Phase 4** (next): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
+- **Phase 4** (complete): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
+- **Phase 5** (complete): OWASP ASI01-ASI10 conformance fixtures, APS-SINT-MCP handshake spec, ASI03/ASI05 security fixes, sint-mcp production proxy, token registry, Python SDK, Rust SDK
+- **Phase 6** (next): ASI06 embedding-layer memory integrity, constraint language spec (#67), npm publish
 
 ## Multi-Agent Coordination
 
