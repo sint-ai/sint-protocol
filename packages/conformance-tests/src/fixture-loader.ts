@@ -540,3 +540,65 @@ export function loadPaymentGovernanceFixture(): PaymentGovernanceFixture {
     "economy/payment-governance.v1.json",
   );
 }
+
+export interface APSSINTHandshakeCase {
+  readonly name: string;
+  readonly scenario: "A" | "B" | "C";
+  readonly description: string;
+  readonly handshake: {
+    readonly subject: string;
+    readonly delegation_root: string;
+    readonly capability_token: string;
+    readonly action_ref: string;
+    readonly receipt_uri: string | null;
+  };
+  readonly token: {
+    readonly resource: string;
+    readonly actions: readonly string[];
+    readonly delegationChain?: {
+      readonly parentTokenId: string | null;
+      readonly depth: number;
+      readonly attenuated: boolean;
+    };
+    readonly revoked?: boolean;
+    readonly revocationReason?: string;
+  };
+  readonly parentToken?: {
+    readonly resource: string;
+    readonly actions: readonly string[];
+    readonly delegationChain?: {
+      readonly parentTokenId: string | null;
+      readonly depth: number;
+      readonly attenuated: boolean;
+    };
+    readonly revoked?: boolean;
+    readonly revocationReason?: string;
+  };
+  readonly request: {
+    readonly resource: string;
+    readonly action: string;
+    readonly params?: Record<string, unknown>;
+  };
+  readonly expected: {
+    readonly decisionAction: DecisionAction;
+    readonly assignedTier?: ApprovalTier;
+    readonly policyViolated?: string;
+    readonly mcpInterceptorAction?: "forward" | "deny" | "escalate" | null;
+    readonly ledgerEventEmitted?: string;
+    readonly note?: string;
+  };
+}
+
+export interface APSSINTHandshakeFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly interopProtocol: string;
+  readonly cases: readonly APSSINTHandshakeCase[];
+}
+
+export function loadAPSSINTHandshakeFixture(): APSSINTHandshakeFixture {
+  return loadFixture<APSSINTHandshakeFixture>(
+    "interop/aps-sint-handshake.v1.json",
+  );
+}

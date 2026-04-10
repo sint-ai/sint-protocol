@@ -1,0 +1,101 @@
+{
+  "fixtureId": "aps-sint-handshake-v1",
+  "schemaVersion": "2026-04-10",
+  "description": "3 canonical APS-SINT-MCP cross-protocol handshake conformance scenarios. Encodes the handshake defined in docs/specs/aps-sint-handshake-v1.md: authorized call, scope-exceeded denial, and cascade revocation mid-session.",
+  "interopProtocol": "APS-SINT-MCP",
+  "cases": [
+    {
+      "name": "authorized-call",
+      "scenario": "A",
+      "description": "Happy path: APS delegation assertion yields a valid SINT token; SintRequest for the exact scoped resource is allowed by PolicyGateway and forwarded by MCPInterceptor.",
+      "handshake": {
+        "subject": "did:key:z6MkSubjectAgent",
+        "delegation_root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "capability_token": "<tokenId>.<b64payload>.<b64sig>",
+        "action_ref": "019580f0-0000-7000-8000-000000000001",
+        "receipt_uri": "sint://ledger/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "token": {
+        "resource": "mcp://filesystem/readFile",
+        "actions": ["call"],
+        "delegationChain": { "parentTokenId": null, "depth": 1, "attenuated": true }
+      },
+      "request": {
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": { "path": "/data/report.csv" }
+      },
+      "expected": {
+        "decisionAction": "allow",
+        "assignedTier": "T1_prepare",
+        "mcpInterceptorAction": "forward",
+        "ledgerEventEmitted": "policy.evaluated"
+      }
+    },
+    {
+      "name": "scope-exceeded-denial",
+      "scenario": "B",
+      "description": "Token scoped to mcp://filesystem/* is used to call mcp://exec/run. SINT must deny with RESOURCE_MISMATCH before MCPInterceptor reaches the MCP server.",
+      "handshake": {
+        "subject": "did:key:z6MkSubjectAgent",
+        "delegation_root": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "capability_token": "<tokenId>.<b64payload>.<b64sig>",
+        "action_ref": "019580f0-0000-7000-8000-000000000002",
+        "receipt_uri": null
+      },
+      "token": {
+        "resource": "mcp://filesystem/*",
+        "actions": ["call"],
+        "delegationChain": { "parentTokenId": null, "depth": 0, "attenuated": false }
+      },
+      "request": {
+        "resource": "mcp://exec/run",
+        "action": "call",
+        "params": { "command": "id" }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "RESOURCE_MISMATCH",
+        "mcpInterceptorAction": null,
+        "note": "MCPInterceptor must NOT be reached; call is stopped at the SINT boundary"
+      }
+    },
+    {
+      "name": "cascade-revocation-mid-session",
+      "scenario": "C",
+      "description": "Root token R0 is delegated to child token C1. R0 is revoked mid-session. C1 must also be revoked explicitly; the gateway checks tokens independently. After C1 is revoked, all requests bearing C1 must be denied.",
+      "handshake": {
+        "subject": "did:key:z6MkChildAgent",
+        "delegation_root": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "capability_token": "<childTokenId>.<b64payload>.<b64sig>",
+        "action_ref": "019580f0-0000-7000-8000-000000000003",
+        "receipt_uri": null
+      },
+      "parentToken": {
+        "resource": "mcp://filesystem/*",
+        "actions": ["call"],
+        "delegationChain": { "parentTokenId": null, "depth": 0, "attenuated": false },
+        "revoked": true,
+        "revocationReason": "security-incident"
+      },
+      "token": {
+        "resource": "mcp://filesystem/readFile",
+        "actions": ["call"],
+        "delegationChain": { "parentTokenId": "parent-token-id", "depth": 1, "attenuated": true },
+        "revoked": true,
+        "revocationReason": "cascade-from-parent"
+      },
+      "request": {
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": { "path": "/data/confidential.csv" }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "TOKEN_REVOKED",
+        "mcpInterceptorAction": null,
+        "note": "SINT checks tokens independently; cascade revocation requires explicit revocation of each child token. Both R0 and C1 must be revoked separately via revocationStore.revoke()."
+      }
+    }
+  ]
+}
