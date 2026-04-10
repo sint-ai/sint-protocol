@@ -8,10 +8,20 @@
 \pdfpagewidth=8.5in
 \pdfpageheight=11in
 
-% --- IJCAI 2026 style (download from https://ijcai.org/authors_kit) ---
-% \usepackage{ijcai26}  % Uncomment when ijcai26.sty is available
-% Fallback geometry for review / arXiv preprint:
+% --- IJCAI 2026 style ---
+% Download ijcai26.sty from: https://www.ijcai.org/authors_kit
+% Then uncomment the next line and remove the \usepackage{geometry} line below.
+% \usepackage{ijcai26}
+
+% Fallback geometry for local preview / arXiv preprint (remove when using ijcai26.sty):
 \usepackage[margin=1in,top=0.9in,bottom=0.9in]{geometry}
+
+\pdfinfo{
+/TemplateVersion (IJCAI.2026.0)
+/Title (SINT Protocol: A Runtime Authorization Framework for Physical AI Agents)
+/Subject (Safe Physical AI, SPAI 2026, IJCAI/ECAI 2026)
+/Keywords (physical AI, runtime authorization, capability tokens, robot safety, OWASP ASI)
+}
 
 \usepackage{times}
 \usepackage{url}
