@@ -88,15 +88,17 @@ SINT is a security enforcement layer for physical AI. Every agent action — too
 
 | Attribute | Value |
 |-----------|-------|
-| **Coverage** | Partial |
-| **Enforcement checkpoint** | (a) `PolicyGateway.intercept()` — step 5, `assignTier()`; (b) `checkForbiddenCombos()` — called inside intercept for combo detection |
-| **Implementation** | `assignTier` tier rules (`mcp://exec/*` → `T3_COMMIT`); `checkForbiddenCombos` (`packages/policy-gateway/src/forbidden-combos.ts`) |
-| **Full coverage** | `mcp://exec/*` resource is classified as `T3_COMMIT` and escalated; `filesystem.write → exec.run` sequence triggers forbidden combo |
-| **Known gaps** | No semantic analysis of exec command arguments (e.g., detecting `rm -rf /` vs `ls`); no sandboxing enforcement |
-| **Policy violated** | `ESCALATION_REQUIRED` (via escalate action), `FORBIDDEN_COMBO` |
-| **Fixture cases** | `ASI05-attack-write-then-exec-forbidden-combo`, `ASI05-attack-exec-resource-escalates`, `ASI05-safe-read-no-forbidden-combo` |
+| **Coverage** | Full |
+| **Enforcement checkpoint** | (a) `PolicyGateway.intercept()` — step 5, `assignTier()`; (b) `checkForbiddenCombos()` — combo detection; (c) step 6b, `argInjectionDetector` — parameter semantic analysis |
+| **Implementation** | `assignTier` tier rules (`mcp://exec/*` → `T3_COMMIT`); `checkForbiddenCombos` (`packages/policy-gateway/src/forbidden-combos.ts`); `DefaultArgInjectionDetector` (`packages/policy-gateway/src/arg-injection-detector.ts`) |
+| **Config field** | `PolicyGatewayConfig.argInjectionDetector` |
+| **Full coverage** | `mcp://exec/*` resource is classified as `T3_COMMIT` and escalated; `filesystem.write → exec.run` sequence triggers forbidden combo; shell metacharacters, path traversal, env variable injection, and code patterns in params are detected and denied |
+| **Deny condition** | `injResult.detected && injResult.severity === "high"` (confidence > 0.5) |
+| **Policy violated** | `ESCALATION_REQUIRED` (via escalate action), `FORBIDDEN_COMBO`, `ARG_INJECTION_DETECTED` |
+| **Fail behaviour** | Fail-open: plugin errors do not block requests |
+| **Fixture cases** | `ASI05-attack-write-then-exec-forbidden-combo`, `ASI05-attack-exec-resource-escalates`, `ASI05-attack-arg-injection`, `ASI05-safe-read-no-forbidden-combo` |
 
-**Enforcement detail:** The tier assigner maps `mcp://exec/*` to `T3_COMMIT` unconditionally. The forbidden combos checker matches the `recentActions` array against built-in rules; `filesystem.writeFile` in history before `exec.run` triggers a forced `T3_COMMIT` escalation, requiring human approval before execution.
+**Enforcement detail:** The tier assigner maps `mcp://exec/*` to `T3_COMMIT` unconditionally. The forbidden combos checker matches the `recentActions` array against built-in rules; `filesystem.writeFile` in history before `exec.run` triggers a forced `T3_COMMIT` escalation, requiring human approval before execution. `DefaultArgInjectionDetector` recursively scans all string values in `request.params` for four pattern families: (1) shell metacharacters combined with dangerous command keywords (`rm`, `curl`, `wget`, `nc`, `bash`, `sh`, `python`, `eval`); (2) path traversal sequences (`../`, `/etc/`, `/proc/`, `~/.ssh/`, `/root/`); (3) environment variable injection (`$HOME`, `$PATH`, `${...}`, `%APPDATA%`); (4) code execution patterns (`import os`, `subprocess`, `exec(`, `eval(`). A high-severity match with confidence > 0.5 immediately denies the request with `ARG_INJECTION_DETECTED`.
 
 ---
 
@@ -195,7 +197,7 @@ SINT is a security enforcement layer for physical AI. Every agent action — too
 | ASI02 Tool Misuse | **Full** | `validateCapabilityToken` | `RESOURCE_MISMATCH` |
 | ASI03 Identity Abuse | **Full** | `validateCapabilityToken` (Ed25519) | `TOKEN_EXPIRED`, `INVALID_TOKEN` |
 | ASI04 Supply Chain | **Full** | `DefaultSupplyChainVerifier` | `SUPPLY_CHAIN_VIOLATION` |
-| ASI05 Code Execution | **Partial** | `assignTier` + `checkForbiddenCombos` | `ESCALATION_REQUIRED` |
+| ASI05 Code Execution | **Full** | `assignTier` + `checkForbiddenCombos` + `DefaultArgInjectionDetector` | `ESCALATION_REQUIRED`, `ARG_INJECTION_DETECTED` |
 | ASI06 Memory Poisoning | **Partial** | `DefaultMemoryIntegrityChecker` | `MEMORY_POISONING` |
 | ASI07 Inter-Agent Trust | **Full** | `delegateCapabilityToken` + `A2AInterceptor` | `DELEGATION_DEPTH_EXCEEDED` |
 | ASI08 Resource Exhaustion | **Full** | `InMemoryCircuitBreaker` + rate limiting | `RATE_LIMIT_EXCEEDED`, `CIRCUIT_OPEN` |
@@ -204,14 +206,14 @@ SINT is a security enforcement layer for physical AI. Every agent action — too
 
 ### Known Gaps
 
-- **ASI05:** No semantic analysis of code execution arguments. A request to execute `rm -rf /` and `ls /tmp` are both classified as `T3_COMMIT` and escalated — correctness — but the content of the argument is not inspected.
+- **ASI05:** Argument injection detection added via `DefaultArgInjectionDetector`. Shell metacharacters, path traversal, env injection, and code patterns in params are now detected and denied at high severity.
 - **ASI06:** No vector-embedding anomaly analysis for semantic memory poisoning. The checker uses regex heuristics on string history entries, not embedding-space distance metrics.
 
 ---
 
 ## Certification Notes
 
-- All 10 ASI controls are addressed. 8 of 10 are fully covered; 2 (ASI05, ASI06) have partial coverage with documented gaps.
+- All 10 ASI controls are addressed. 9 of 10 are fully covered; 1 (ASI06) has partial coverage with documented gaps.
 - The fixture pack (`owasp-asi-conformance.v1.json`) provides 30 machine-readable test vectors (attack + safe cases per control).
 - Tests in `owasp-asi-conformance.test.ts` run against a live `PolicyGateway` instance with real plugins instantiated.
 - These tests are part of the `@sint/conformance-tests` suite and must pass on every PR touching `@sint/gate-policy-gateway`, `@sint/gate-capability-tokens`, or any bridge adapter.

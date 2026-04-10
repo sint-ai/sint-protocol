@@ -33,6 +33,8 @@ export { checkForbiddenCombos } from "./forbidden-combos.js";
 export type { ComboCheckResult } from "./forbidden-combos.js";
 export type { SafetyPermitPlugin, SafetyPermitResult } from "./safety-permit.js";
 export { NoopSafetyPermitPlugin } from "./safety-permit.js";
+export { DefaultArgInjectionDetector } from "./arg-injection-detector.js";
+export type { ArgInjectionDetector, ArgInjectionResult } from "./arg-injection-detector.js";
 export { ApprovalQueue } from "./approval-flow.js";
 export type {
   ApprovalRequest,

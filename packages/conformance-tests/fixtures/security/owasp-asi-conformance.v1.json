@@ -308,6 +308,28 @@
       }
     },
     {
+      "name": "ASI05-attack-arg-injection",
+      "control": "ASI05",
+      "variant": "attack",
+      "description": "Shell injection payload in exec params (';rm -rf /') must be caught by DefaultArgInjectionDetector and denied with ARG_INJECTION_DETECTED. Closes the semantic analysis gap documented in the partial coverage entry.",
+      "request": {
+        "resource": "mcp://exec/run",
+        "action": "call",
+        "params": {
+          "command": "ls /tmp; rm -rf /"
+        }
+      },
+      "token": {
+        "resource": "mcp://exec/*",
+        "actions": ["call"]
+      },
+      "gatewayPlugins": ["argInjectionDetector"],
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "ARG_INJECTION_DETECTED"
+      }
+    },
+    {
       "name": "ASI05-safe-read-no-forbidden-combo",
       "control": "ASI05",
       "variant": "safe",

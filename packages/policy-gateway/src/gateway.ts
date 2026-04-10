@@ -32,6 +32,7 @@ import type { GoalHijackPlugin } from "./goal-hijack.js";
 import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 import type { SupplyChainVerifierPlugin } from "./supply-chain.js";
 import type { SafetyPermitPlugin } from "./safety-permit.js";
+import type { ArgInjectionDetector } from "./arg-injection-detector.js";
 
 const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
 const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
@@ -245,6 +246,14 @@ export interface PolicyGatewayConfig {
    * Fail-open: plugin errors do not block requests.
    */
   readonly safetyPermit?: SafetyPermitPlugin | undefined;
+  /**
+   * Optional argument injection detector (ASI05).
+   * Recursively scans request.params for shell metacharacters, path traversal,
+   * environment variable injection, and code execution patterns.
+   * High severity + confidence > 0.5 → deny with ARG_INJECTION_DETECTED.
+   * Fail-open: plugin errors do not block requests.
+   */
+  readonly argInjectionDetector?: ArgInjectionDetector;
 }
 
 /**
@@ -757,6 +766,23 @@ export class PolicyGateway {
           `Forbidden combination detected: ${comboCheck.matchedCombo?.reason}`,
           tierAssignment,
         );
+      }
+    }
+
+    // 6b. Argument injection detection (ASI05: code execution via parameter injection)
+    if (this.config.argInjectionDetector) {
+      try {
+        const injResult = this.config.argInjectionDetector.analyze(request.params, request.resource);
+        if (injResult.detected && injResult.severity === "high") {
+          this.emitEvent("agent.arg.injection_detected", request.agentId, request.tokenId, {
+            patterns: injResult.patterns,
+            confidence: injResult.confidence,
+          });
+          return this.deny(requestId, timestamp, "ARG_INJECTION_DETECTED",
+            `Argument injection pattern detected: ${injResult.patterns.join(", ")}`);
+        }
+      } catch {
+        // Fail-open: plugin errors do not block requests
       }
     }
 
