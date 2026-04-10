@@ -69,6 +69,19 @@ These fields are optional and backward-compatible. Clients that do not send them
 
 Gateway evidence payloads may include this context for audit and conformance correlation.
 
+## Constraint Language (CL-1.0)
+
+SINT v0.2 adopts a canonical constraint envelope shape (`ConstraintEnvelope`) for:
+
+- physical limits
+- behavioral limits
+- model/runtime binding
+- attestation requirements
+- dynamic tighten-only envelopes
+- preapproved execution corridors
+
+Reference specification: `docs/specs/constraint-language-spec.md`.
+
 ## Verifiable Compute Hooks
 
 SINT v0.2 includes tier-gated proof hooks for critical actions:

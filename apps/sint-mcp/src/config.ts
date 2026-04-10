@@ -70,7 +70,14 @@ export function loadConfig(argv: string[] = process.argv.slice(2)): SintMCPConfi
   let fileConfig: Partial<SintMCPConfig> = {};
   if (configPath && existsSync(configPath)) {
     const raw = readFileSync(configPath, "utf-8");
-    fileConfig = JSON.parse(raw) as Partial<SintMCPConfig>;
+    try {
+      fileConfig = JSON.parse(raw) as Partial<SintMCPConfig>;
+    } catch (err) {
+      throw new Error(
+        `Failed to parse SINT MCP config file "${configPath}": ${err instanceof Error ? err.message : String(err)}.\n` +
+        `Ensure it is valid JSON. See sint-mcp.config.example.json for reference.`,
+      );
+    }
   }
 
   // Merge: defaults < file < env < cli

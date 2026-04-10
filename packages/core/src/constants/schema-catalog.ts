@@ -249,15 +249,138 @@ const CONSTRAINT_ENVELOPE_SCHEMA: JsonSchemaDoc = {
   $id: "https://schemas.sint.ai/constraint-envelope.schema.json",
   title: "SINT ConstraintEnvelope",
   type: "object",
+  description:
+    "Canonical SINT constraint language envelope for physical, behavioral, model, attestation, and corridor controls.",
   properties: {
+    version: {
+      type: "string",
+      enum: ["cl-1.0"],
+      description: "Constraint language schema version.",
+    },
+    mode: {
+      type: "string",
+      enum: ["static-token", "dynamic-runtime", "corridor-preapproved"],
+      description: "Operational enforcement mode for this envelope.",
+    },
+    physical: {
+      type: "object",
+      properties: {
+        maxForceNewtons: { type: "number", minimum: 0 },
+        maxVelocityMps: { type: "number", minimum: 0 },
+        maxTorqueNm: { type: "number", minimum: 0 },
+        maxJerkMps3: { type: "number", minimum: 0 },
+        maxAngularVelocityRps: { type: "number", minimum: 0 },
+        contactForceThresholdN: { type: "number", minimum: 0 },
+        requiresHumanPresence: { type: "boolean" },
+        maxRepetitions: { type: "integer", minimum: 1 },
+        rateLimit: {
+          type: "object",
+          properties: {
+            maxCalls: { type: "integer", minimum: 1 },
+            windowMs: { type: "integer", minimum: 1 },
+          },
+          required: ["maxCalls", "windowMs"],
+          additionalProperties: false,
+        },
+        geofence: {
+          type: "object",
+          properties: {
+            coordinates: {
+              type: "array",
+              minItems: 3,
+              items: {
+                type: "array",
+                minItems: 2,
+                maxItems: 2,
+                items: { type: "number" },
+              },
+            },
+          },
+          required: ["coordinates"],
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
+    behavioral: {
+      type: "object",
+      properties: {
+        maxCallsPerMinute: { type: "integer", minimum: 1 },
+        allowedPatterns: { type: "array", items: { type: "string" } },
+        deniedPatterns: { type: "array", items: { type: "string" } },
+        maxPayloadBytes: { type: "integer", minimum: 1 },
+      },
+      additionalProperties: false,
+    },
+    model: {
+      type: "object",
+      properties: {
+        allowedModelIds: { type: "array", items: { type: "string" } },
+        maxModelVersion: { type: "string" },
+        modelFingerprintHash: { type: "string" },
+      },
+      additionalProperties: false,
+    },
+    attestation: {
+      type: "object",
+      properties: {
+        minAttestationGrade: { type: "integer", minimum: 0, maximum: 3 },
+        allowedTeeBackends: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["intel-sgx", "arm-trustzone", "amd-sev", "tpm2", "none"],
+          },
+        },
+        requireForTiers: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["T0_observe", "T1_prepare", "T2_act", "T3_commit"],
+          },
+        },
+      },
+      additionalProperties: false,
+    },
+    dynamic: {
+      type: "object",
+      properties: {
+        tightenOnly: { type: "boolean" },
+        pluginRef: { type: "string" },
+        observedAt: { type: "string", format: "date-time" },
+        evidenceRequired: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+    execution: {
+      type: "object",
+      properties: {
+        corridorId: { type: "string" },
+        expiresAt: { type: "string", format: "date-time" },
+        maxDeviationMeters: { type: "number", minimum: 0 },
+        maxHeadingDeviationDeg: { type: "number", minimum: 0, maximum: 180 },
+        maxVelocityMps: { type: "number", minimum: 0 },
+        maxForceNewtons: { type: "number", minimum: 0 },
+      },
+      additionalProperties: false,
+    },
+    /**
+     * Backward-compatible aliases for pre-v1 envelope fields.
+     * Deprecated: use execution.{...} instead.
+     */
     corridorId: { type: "string" },
     expiresAt: { type: "string", format: "date-time" },
     maxDeviationMeters: { type: "number", minimum: 0 },
     maxHeadingDeviationDeg: { type: "number", minimum: 0, maximum: 180 },
     maxVelocityMps: { type: "number", minimum: 0 },
     maxForceNewtons: { type: "number", minimum: 0 },
+    extensions: {
+      type: "object",
+      description: "Vendor-specific additive extensions that do not alter core semantics.",
+      additionalProperties: true,
+    },
   },
-  additionalProperties: true,
+  additionalProperties: false,
 };
 
 const SITE_PROFILE_SCHEMA: JsonSchemaDoc = {

@@ -13,4 +13,22 @@ describe("schema catalog request contract", () => {
     expect(executionContextProperties.hardwareSafety).toBeDefined();
     expect(executionContextProperties.preapprovedCorridor).toBeDefined();
   });
+
+  it("exposes constraint language v1 envelope groups with legacy aliases", () => {
+    const envelopeSchema = SINT_SCHEMA_CATALOG["constraint-envelope"] as Record<string, unknown>;
+    const properties = envelopeSchema.properties as Record<string, unknown>;
+
+    expect(properties.version).toBeDefined();
+    expect(properties.mode).toBeDefined();
+    expect(properties.physical).toBeDefined();
+    expect(properties.behavioral).toBeDefined();
+    expect(properties.model).toBeDefined();
+    expect(properties.attestation).toBeDefined();
+    expect(properties.dynamic).toBeDefined();
+    expect(properties.execution).toBeDefined();
+
+    // Legacy aliases remain available for backward compatibility.
+    expect(properties.corridorId).toBeDefined();
+    expect(properties.maxDeviationMeters).toBeDefined();
+  });
 });
