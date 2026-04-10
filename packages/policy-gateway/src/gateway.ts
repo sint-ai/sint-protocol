@@ -386,6 +386,16 @@ export class PolicyGateway {
       }
     }
 
+    // 3b. Verify the requesting agent is the token's subject (ASI03: identity abuse)
+    if (token.subject !== request.agentId) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "TOKEN_SUBJECT_MISMATCH",
+        `Token subject does not match requesting agent — possible stolen-token attack`,
+      );
+    }
+
     // 4. Validate the capability token (signature, expiry, permissions, constraints)
     const tokenValidation = validateCapabilityToken(token, {
       resource: request.resource,
