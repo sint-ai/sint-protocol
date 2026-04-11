@@ -89,6 +89,8 @@ Commands:
   intercept run             Send a policy intercept request
   keypair create            Generate keypair via gateway utility endpoint
   certify run               Run standalone conformance certification suite
+  registry publish          Publish a capability token to the public registry
+  registry list             List published tokens (--issuer, --resource filters)
 
 Examples:
   sintctl token issue --issuer <pub> --subject <pub> --resource ros2:///cmd_vel --actions publish --private-key <priv>
@@ -97,6 +99,9 @@ Examples:
   sintctl ledger query --agent-id <pub> --limit 20
   sintctl intercept run --agent-id <pub> --token-id <id> --resource ros2:///cmd_vel --action publish --params-json '{"twist":{"linear":0.2}}'
   sintctl certify run --output docs/reports/standalone-conformance-certification.json
+  sintctl registry publish --token ./token.json --note "prod filesystem token"
+  sintctl registry list --issuer <pub>
+  sintctl registry list --resource mcp://filesystem
 `);
 }
 
@@ -239,10 +244,10 @@ async function run(): Promise<void> {
 
   if (group === "registry" && command === "list") {
     const issuer = getStringFlag(flags, "issuer");
-    const toolScope = getStringFlag(flags, "tool-scope");
+    const resource = getStringFlag(flags, "resource");
     const params = new URLSearchParams();
     if (issuer) params.set("issuer", issuer);
-    if (toolScope) params.set("toolScope", toolScope);
+    if (resource) params.set("resource", resource);
     const qs = params.toString();
     printJson(await requestJson(config, "GET", `/v1/registry/tokens${qs ? `?${qs}` : ""}`));
     return;
