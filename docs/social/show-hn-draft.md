@@ -54,11 +54,13 @@ Every agent action (tool call, robot command, code execution) passes through a s
 Microsoft AGT (released April 2, 2026) targets digital/software agents — LangChain, CrewAI, etc. SINT targets physical AI — robots, drones, factory actuators — where actions are irreversible and have real-world consequences. Different problem, different enforcement model.
 
 **Technical details:**
-- TypeScript monorepo, 41 packages, 1,772 tests
-- Bridge adapters for MCP, ROS 2, MAVLink, MQTT, OPC-UA, gRPC, A2A, Open-RMF, Sparkplug B
+- TypeScript monorepo, 42 packages, 1,973 tests
+- Bridge adapters for MCP, ROS 2, MAVLink, MQTT, OPC-UA, gRPC, A2A, Open-RMF, Sparkplug B (12 bridges)
 - Works as a proxy between any AI agent and any tool server
 - All 10 OWASP Agentic AI Top-10 categories regression-tested (29 fixture pairs)
-- ROS2 control-loop latency: p99 < 25ms (steady-state p99 < 10ms)
+- ROS2 control-loop latency: p99 < 5ms steady-state
+- Constraint Language CL-1.0: portable machine-readable safety envelopes across all bridges
+- Public capability token registry (`@sint/token-registry`) for agent discovery
 - Result<T, E> pattern throughout — no exceptions for control flow
 - Apache 2.0 licensed
 
