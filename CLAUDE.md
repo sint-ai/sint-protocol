@@ -178,7 +178,7 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
-**1,772 tests passing across 41 packages** (as of 2026-04-10)
+**1,710+ tests passing across 42 packages** (as of 2026-04-11)
 
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
@@ -186,7 +186,10 @@ const result = interceptor.interceptPublish({
 - **Phase 4** (complete): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
 - **Phase 5** (complete): OWASP ASI01-ASI10 conformance fixtures, APS-SINT-MCP handshake spec, ASI03/ASI05 security fixes, sint-mcp production proxy, token registry, Python SDK, Rust SDK
 - **Phase 6** (complete): ASI06 cross-session/credential-funnel/velocity-loop checks, bridge test coverage (+42 tests), latency fast-path fix (steadyP99 5ms)
-- **Phase 7** (next): constraint language spec (#67), npm publish, hardware safety bridge (`@sint/bridge-iot` IotInterceptor), SafetyPermitPlugin
+- **Phase 7** (complete): `@sint/memory`, `@sint/interface-bridge`, voice-only HUD, sint__ operator tools
+- **Phase 8** (complete): `ProactiveEscalationEngine`, delegation tree, Console API routes (`/v1/memory`, `/v1/delegations`, `/v1/csml`)
+- **Phase 9** (complete): `@sint/token-registry` (public capability token registry, 18 tests), `SafetyPermitPlugin` (async external hardware safety resolver, fail-open), `IotInterceptor` (56 tests in bridge-iot), `/v1/registry` gateway routes, latency benchmark stabilised for parallel CI
+- **Phase 10** (next): npm publish, Constraint Language CL-1.0, Rust SDK, sintctl registry CLI commands, Show HN
 
 ## Multi-Agent Coordination
 
