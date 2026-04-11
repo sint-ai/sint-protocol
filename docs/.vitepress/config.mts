@@ -45,6 +45,7 @@ export default defineConfig({
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
           { text: "AutoGen Interop Fixtures", link: "/guides/autogen-interop-fixtures" },
           { text: "NIST Submission Playbook", link: "/guides/nist-submission-playbook" },
+          { text: "OpenAI Agents SDK Integration", link: "/guides/openai-agents-sdk-integration" },
           { text: "Claude Desktop Integration", link: "/guides/claude-desktop-integration" },
           { text: "Cursor Integration", link: "/guides/cursor-integration" },
         ],

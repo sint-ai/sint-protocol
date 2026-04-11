@@ -22,6 +22,22 @@ Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Es
 
 AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
 
+### SINT vs. Other Frameworks
+
+| Capability | **SINT Protocol** | Microsoft AGT | MCP Baseline | SROS2 |
+|---|---|---|---|---|
+| Physical constraint enforcement (velocity, force, geofence) | ✅ In token | ❌ | ❌ | ❌ |
+| Tier-based human oversight (T0–T3) | ✅ 4-tier | ⚠️ Execution rings | ❌ | ❌ |
+| Append-only hash-chained audit | ✅ SHA-256 | ⚠️ Logging | ❌ | ❌ |
+| ROS 2 / MAVLink / industrial bridges | ✅ 12 bridges | ❌ Digital only | ❌ | ⚠️ ROS only |
+| OWASP ASI01–ASI10 coverage | ✅ 10/10 Full | ✅ 10/10 | ❌ | ❌ |
+| Economic routing + budgets | ✅ bridge-economy | ❌ | ❌ | ❌ |
+| Swarm collective constraints | ✅ SwarmCoordinator | ❌ | ❌ | ❌ |
+| E-stop / CircuitBreaker | ✅ EU AI Act Art. 14 | ✅ Kill switch | ❌ | ❌ |
+
+**SINT is the only framework purpose-built for physical AI** — where actions are irreversible and have real-world consequences. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit) targets digital/software agents; SINT targets robots, drones, and actuators.
+
+
 **The empirical case for SINT:**
 - **ROSClaw (IROS 2026):** Up to 4.8× spread in out-of-policy LLM action proposals across frontier models under identical safety envelopes. The 3.4× divergence between frontier backends is measurable, reproducible, and persistent.
 - **MCP security (arXiv:2601.17549):** 10 documented real-world MCP breaches in under 8 months, including a CVSS 9.6 command injection affecting 437,000 downloads.
@@ -179,7 +195,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 |---------|-------------|-------|
 | [`@sint/core`](packages/core) | Types, Zod schemas, tier constants, formal DFA states | — |
 | [`@sint/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 55 |
-| [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 152 |
+| [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 256 |
 | [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with pluggable attestation | 45 |
 
 ### Bridges (12 bridges)
@@ -234,7 +250,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
 | [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
 
-**Total: 30 workspace members**
+**Total: 41 workspace members · 1,772 tests passing**
 
 > **Note:** Run `pnpm test` to get the current exact passing test count.
 
