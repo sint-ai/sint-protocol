@@ -1,4 +1,4 @@
-import type { RegistryEntry, RegistryLookupResult, RegistryListFilter } from "./types.js";
+import type { RegistryEntry, RegistryListFilter, RegistryLookupResult } from "./types.js";
 
 export interface RegistryStore {
   publish(entry: RegistryEntry): Promise<void>;
@@ -8,29 +8,28 @@ export interface RegistryStore {
 }
 
 export class InMemoryRegistryStore implements RegistryStore {
-  private readonly entries = new Map<string, RegistryEntry>();
+  private readonly store = new Map<string, RegistryEntry>();
 
   async publish(entry: RegistryEntry): Promise<void> {
-    this.entries.set(entry.tokenId, entry);
+    this.store.set(entry.tokenId, entry);
   }
 
   async get(tokenId: string): Promise<RegistryEntry | undefined> {
-    return this.entries.get(tokenId);
+    return this.store.get(tokenId);
   }
 
   async list(filter?: RegistryListFilter): Promise<RegistryEntry[]> {
-    let results = [...this.entries.values()];
-    if (filter?.issuer) {
-      results = results.filter((e) => e.issuer === filter.issuer);
-    }
-    if (filter?.toolScope) {
-      results = results.filter((e) => e.toolScope === filter.toolScope);
-    }
-    return results;
+    const entries = Array.from(this.store.values());
+    if (!filter) return entries;
+    return entries.filter(e => {
+      if (filter.issuer && e.issuer !== filter.issuer) return false;
+      if (filter.resource && !e.resource.startsWith(filter.resource.replace(/\*$/, ""))) return false;
+      return true;
+    });
   }
 
   async verify(tokenId: string): Promise<RegistryLookupResult> {
-    const entry = this.entries.get(tokenId);
+    const entry = this.store.get(tokenId);
     return entry ? { found: true, entry } : { found: false };
   }
 }

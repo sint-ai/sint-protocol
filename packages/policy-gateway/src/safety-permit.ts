@@ -18,11 +18,15 @@
 
 import type { SintRequest } from "@sint/core";
 
+export type PermitState = "granted" | "denied" | "unknown" | "stale";
+export type InterlockState = "closed" | "open" | "fault" | "unknown";
+export type EstopState = "clear" | "triggered" | "unknown";
+
 export interface SafetyPermitResult {
   /** Current permit state from the hardware controller. */
-  readonly permitState: "granted" | "denied" | "unknown" | "stale";
-  readonly interlockState?: "closed" | "open" | "fault" | "unknown" | undefined;
-  readonly estopState?: "clear" | "triggered" | "unknown" | undefined;
+  readonly permitState: PermitState;
+  readonly interlockState?: InterlockState | undefined;
+  readonly estopState?: EstopState | undefined;
   readonly controllerId?: string | undefined;
   /** ISO8601 — when this state was last observed. */
   readonly observedAt: string;
