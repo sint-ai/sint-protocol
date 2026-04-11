@@ -196,6 +196,21 @@ describe("PolicyGateway", () => {
     expect(decision.denial?.policyViolated).toBe("TOKEN_REVOKED");
   });
 
+  it("denies request when token subject does not match agent identity", async () => {
+    const token = issueAndStore();
+    const otherAgent = generateKeypair();
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: otherAgent.publicKey,
+        tokenId: token.tokenId,
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("TOKEN_SUBJECT_MISMATCH");
+  });
+
   // ── Wrong resource → deny ──
 
   it("denies request for unauthorized resource", async () => {

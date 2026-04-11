@@ -375,6 +375,17 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, "TOKEN_NOT_FOUND", "Capability token not found");
     }
 
+    // 2a. Bind token subject to the requesting agent identity.
+    // Prevents cross-agent token replay when a valid token ID is leaked.
+    if (token.subject !== request.agentId) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "TOKEN_SUBJECT_MISMATCH",
+        "Capability token subject does not match requesting agent identity",
+      );
+    }
+
     // 3. Check revocation status
     if (this.config.revocationStore) {
       const revocationResult = this.config.revocationStore.checkRevocation(token.tokenId);
