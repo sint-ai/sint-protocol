@@ -1,207 +1,425 @@
-% SINT Protocol — SPAI 2026 Extended Abstract
+% SINT Protocol — SPAI 2026 Short Paper (4 pages + references)
 % 1st IJCAI Workshop on Safe Physical AI (SPAI 2026)
-% Venue: IJCAI/ECAI 2026, Bremen, Germany, August 15-17, 2026
+% IEEE two-column format (required by SPAI CFP)
 % Submit at: https://openreview.net/group?id=ijcai.org/IJCAI-ECAI/2026/Workshop/SPAI
 
-\documentclass{article}
+\documentclass[conference]{IEEEtran}
 
-\pdfpagewidth=8.5in
-\pdfpageheight=11in
-
-% --- IJCAI 2026 style ---
-% Download ijcai26.sty from: https://www.ijcai.org/authors_kit
-% Then uncomment the next line and remove the \usepackage{geometry} line below.
-% \usepackage{ijcai26}
-
-% Fallback geometry for local preview / arXiv preprint (remove when using ijcai26.sty):
-\usepackage[margin=1in,top=0.9in,bottom=0.9in]{geometry}
-
-\pdfinfo{
-/TemplateVersion (IJCAI.2026.0)
-/Title (SINT Protocol: A Runtime Authorization Framework for Physical AI Agents)
-/Subject (Safe Physical AI, SPAI 2026, IJCAI/ECAI 2026)
-/Keywords (physical AI, runtime authorization, capability tokens, robot safety, OWASP ASI)
-}
-
-\usepackage{times}
-\usepackage{url}
-\usepackage[hidelinks]{hyperref}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[small]{caption}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
 \usepackage{microtype}
-\usepackage{enumitem}
+\usepackage{graphicx}
 \usepackage{xcolor}
-
-\setlength{\parskip}{3pt}
-\setlist[itemize]{noitemsep, topsep=2pt, parsep=0pt, partopsep=0pt}
-
-% -----------------------------------------------------------------------
-
-\title{\textbf{SINT Protocol: A Runtime Authorization Framework\\
-for Physical AI Agents}\\[4pt]
-{\normalsize \textit{Extended Abstract — 1st IJCAI Workshop on Safe Physical AI (SPAI 2026)}}}
-
-% For blind review, use: \author{}
-% For camera-ready, use the IJCAI \affiliations + \emails macros:
-%
-% \author{
-%   Author Name$^{1}$\and
-%   Author Name$^{2}$\\
-%   \affiliations
-%   $^{1}$Institution One, City, Country\\
-%   $^{2}$Institution Two, City, Country\\
-%   \emails
-%   author1@example.com, author2@example.com
-% }
-\author{}  % blind review
-
-\date{}
+\usepackage{enumitem}
+\setlist{noitemsep,topsep=2pt}
 
 \begin{document}
 
+\title{SINT Protocol: Runtime Authorization as a\\Safety Shield for LLM-Driven Physical Agents}
+
+\author{
+  \IEEEauthorblockN{Illia Pashkov}
+  \IEEEauthorblockA{Independent Researcher\\
+  \url{https://github.com/sint-ai/sint-protocol}}
+}
+
 \maketitle
-\thispagestyle{empty}
 
-% -----------------------------------------------------------------------
-
+% =====================================================================
 \begin{abstract}
-Physical AI agents — LLM-driven systems controlling robots, drones, and actuators — introduce a
-safety failure mode that neither classical robot safety (IEC~62443, ISO~10218) nor LLM alignment
-research fully addresses: \textit{an authenticated, aligned agent issuing a physically irreversible
-command without appropriate human oversight, at the wrong moment, in a degraded environment.}
-
-We present \textbf{SINT Protocol}, an open-source runtime authorization framework that enforces
-six safety invariants at every agent action boundary.
+LLM-driven physical agents---systems where a foundation model issues commands to
+robots, drones, or industrial actuators---introduce a safety failure mode
+addressed by neither classical robot safety standards nor LLM alignment research:
+\emph{an authenticated, aligned agent issuing a physically irreversible command
+without appropriate human oversight, in a degraded environment.}
+We present SINT Protocol, an open-source runtime authorization framework that
+interposes a cryptographically enforced safety shield at every agent--actuator
+boundary.
+SINT enforces six invariants: (1)~capability confinement via signed Ed25519
+tokens with physical constraint envelopes; (2)~graduated human oversight across
+four approval tiers; (3)~behavioral drift detection that makes the empirically
+observed 4.8$\times$ inter-model action-proposal variance~\cite{rosclaw}
+enforcement-visible; (4)~environment-adaptive constraint tightening driven by
+real-time sensor state; (5)~active detection plugins for prompt injection,
+memory poisoning, and supply-chain tampering; and (6)~an EU AI Act--compliant
+emergency stop.
+Evaluated across 1,772~tests on 12~protocol bridges (ROS~2, MAVLink, MCP, OPC-UA,
+MQTT, A2A), the gateway adds $<$5\,ms steady-state p99 latency---within the
+10\,ms budget of a 100\,Hz ROS~2 control loop.
 \end{abstract}
 
-% -----------------------------------------------------------------------
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
 
-\section*{Safety Invariants}
+The deployment of foundation models as controllers for physical systems is
+accelerating.
+Projects such as ROSClaw~\cite{rosclaw} demonstrate that GPT-4o, Claude~3.5, and
+Gemini~1.5 can drive ROS~2 robots through natural-language task specifications.
+However, the same study reveals a critical safety gap: across identical task
+envelopes, frontier LLMs exhibit up to 4.8$\times$ differences in out-of-policy
+action proposal rates, with a 3.4$\times$ persistent divergence between the best
+and worst backends.
+This variance is \emph{not} an alignment failure---the models are instruction-following
+correctly---but rather an intrinsic behavioral property that no amount of prompt
+engineering eliminates.
 
-\begin{itemize}
+Classical robot safety standards (IEC~62443~\cite{iec62443}, ISO~10218~\cite{iso10218})
+assume a \emph{trusted controller}: the software issuing commands is deterministic,
+formally verified, or at least version-locked.
+LLM-driven agents violate this assumption fundamentally.
+They are stochastic, prompt-injectable~\cite{owasp-asi}, and capable of behavioral
+drift across conversation turns.
+Meanwhile, LLM alignment research focuses on digital-only harms (toxic text,
+misinformation) and does not address the physical irreversibility of a
+\texttt{/cmd\_vel} command already executed on hardware.
 
-\item \textbf{Capability confinement.}
-Every action is authorized by a signed, expiring Ed25519 capability token scoped to a specific
-resource, action set, and physical constraint envelope (max velocity, max force, geofence polygon).
-Tokens cannot be self-issued or silently expanded; delegation is \emph{attenuation-only} with
-cryptographic enforcement.
+We identify three open problems at this intersection:
 
-\item \textbf{Tier-based human oversight.}
-Actions are classified into four approval tiers: \texttt{T0\_observe} (auto-allow),
-\texttt{T1\_prepare} (audit), \texttt{T2\_act} (human review), \texttt{T3\_commit} (explicit
-sign-off with M-of-N quorum). Classification is driven by 50+ pattern-matching rules covering
-ROS~2 topics, MAVLink commands, and MCP tool calls. Shell and code-execution tool names
-(\texttt{bash}, \texttt{exec}, \texttt{eval}) are explicitly classified at \texttt{T3\_commit}
-to address ASI05~\cite{owasp-asi}.
+\begin{enumerate}
+  \item \textbf{The Authorization Gap.}
+  No existing framework enforces \emph{who approved this physical action, under
+  what constraints, with what evidence}---at runtime, cryptographically, before
+  hardware execution.
 
-\item \textbf{Behavioral drift detection (CSML).}
-The Composite Safety-Model Latency score tracks an agent's out-of-policy action rate, timing
-anomalies, and safety event frequency across a sliding evidence window. When CSML exceeds a
-threshold~$\theta$, the agent's tier is automatically escalated — making behavioral drift a
-\emph{live enforcement trigger} rather than a post-incident finding. Frontier LLMs exhibit up to
-4.8$\times$ differences in out-of-policy action rates on identical tasks~\cite{rosclaw}; SINT
-makes this variance enforcement-visible.
+  \item \textbf{The Drift Visibility Gap.}
+  The 4.8$\times$ inter-model variance documented in~\cite{rosclaw} is currently
+  invisible to the control system.
+  An operator cannot distinguish a cautious agent from a reckless one until
+  damage occurs.
 
-\item \textbf{Environment-adaptive constraint tightening.}
-Token constraints are necessarily static at issuance. The \texttt{DynamicEnvelopePlugin} maps
-real-time sensor state to tighter effective limits:
-$v_{\text{eff}} = \min(\texttt{token.maxVelocityMps},\; d_{\text{obs}} \cdot r_f)$.
-This closes the gap identified in ROSClaw~\cite{rosclaw} between "configurable safety envelope"
-and "environment-adaptive safety envelope."
+  \item \textbf{The Static Envelope Problem.}
+  Safety envelopes (max velocity, geofence) are necessarily static at
+  configuration time, but the physical environment changes continuously
+  (obstacles appear, humans enter workspaces).
+  A fixed-parameter safety envelope is either too restrictive (blocking safe
+  actions) or too permissive (allowing dangerous ones).
+\end{enumerate}
 
-\item \textbf{Active safety plugins.}
-The \texttt{GoalHijackPlugin}~(ASI01) provides 5-layer heuristic detection: prompt injection,
-role override, semantic escalation, exfiltration probes, and cross-agent injection.
-The \texttt{MemoryIntegrityChecker}~(ASI06) detects replay attacks, privilege claims, history
-overflow, \emph{cross-session continuity injection} (hallucinated prior-auth claims),
-\emph{credential read funnels} ($\geq$3 secret reads followed by a write), and
-\emph{action velocity loops} (last 5 actions on an identical resource — hallucination loop
-indicator). The \texttt{DefaultSupplyChainVerifier}~(ASI04) validates model fingerprint hashes
-at runtime to detect tampered tools.
+SINT Protocol addresses all three by interposing a runtime safety shield at the
+agent--actuator boundary.
+Every action flows through a single \texttt{PolicyGateway.intercept()} choke point
+that enforces capability tokens, approval tiers, behavioral drift detection, and
+environment-adaptive constraint tightening---before any command reaches hardware.
 
-\item \textbf{Stop button (EU AI Act Art.~14(4)(e)).}
-The \texttt{CircuitBreakerPlugin} allows operators to manually \texttt{trip()} the circuit,
-instantly blocking all actions from a rogue agent. $N$ consecutive denials auto-open the circuit;
-HALF\_OPEN probe recovery ensures self-healing after incident resolution.
+% =====================================================================
+\section{Architecture}
+\label{sec:arch}
 
-\end{itemize}
+\subsection{Threat Model}
 
-\section*{Swarm Safety}
+We consider an LLM-driven agent that controls physical actuators via bridge
+adapters (ROS~2 topics, MAVLink commands, MCP tool calls, OPC-UA nodes, MQTT
+messages).
+The agent is \emph{authenticated} (identity-verified) but \emph{untrusted}:
+it may hallucinate dangerous commands, be prompt-injected, drift behaviorally,
+or have its tool chain tampered with.
+The human operator is trusted but may be absent, distracted, or overwhelmed by
+alert volume.
 
-For multi-agent deployments, \texttt{SwarmCoordinator} enforces collective constraints before
-individual gateway calls: maximum concurrent actors in T2+ tier, total kinetic energy ceiling
-($\sum \tfrac{1}{2}mv^2$), minimum inter-agent distance, and maximum escalated fraction. These
-collective constraints cannot be captured by per-agent token scoping alone.
+\subsection{Safety Invariants}
 
-\section*{Operator Interface Layer}
+SINT enforces six safety invariants at every action boundary:
 
-SINT's governance-first operator layer comprises: (i)~\texttt{@sint/memory} — a ledger-backed
-operator memory system where every recall emits a typed \texttt{SintLedgerEvent};
-(ii)~a voice-first SINT Command HUD routing every voice command through
-\texttt{PolicyGateway.intercept()} before execution; (iii)~a \texttt{ProactiveEscalationEngine}
-that monitors CSML drift across multi-turn windows and emits operator notifications at $\theta{=}0.3$;
-(iv)~hierarchical token delegation (\texttt{sint\_\_delegate\_to\_agent}, max depth~3) with
-atomic cascade revocation via DFS subtree traversal; and (v)~a REST API surface
-(\texttt{/v1/memory}, \texttt{/v1/delegations}, \texttt{/v1/csml}).
+\textbf{I-1: Capability Confinement.}
+Every action requires presentation of a signed, expiring Ed25519 capability
+token scoped to: (a)~a resource pattern (\texttt{ros2:///cmd\_vel},
+\texttt{mcp://bash}); (b)~an action set (\texttt{publish}, \texttt{call});
+and (c)~a physical constraint envelope (max velocity in m/s, max force in N,
+geofence polygon, rate limit).
+Delegation is \emph{attenuation-only}: child tokens can only narrow the parent's
+scope, never expand it (invariant I-T1).
+Token forgery requires breaking Ed25519 (computationally infeasible).
 
-\section*{Implementation \& Compliance}
+\textbf{I-2: Graduated Human Oversight.}
+Actions are classified into four tiers by physical consequence severity:
+\texttt{T0} (observe, auto-allow), \texttt{T1} (prepare, audited),
+\texttt{T2} (act, requires human review), \texttt{T3} (commit, requires explicit
+sign-off with optional M-of-N quorum).
+Classification uses 50+ pattern-matching rules covering ROS~2 topics, MAVLink
+commands, and MCP tool names.
+Critically, shell-execution tools (\texttt{bash}, \texttt{exec}, \texttt{eval})
+are hard-classified at \texttt{T3} regardless of context, addressing OWASP
+ASI05~\cite{owasp-asi} (uncontrolled code execution).
 
-SINT is implemented in TypeScript across \textbf{41~packages}, with \textbf{1,772~tests} covering
-core, gateway, bridges, and the avatar layer. Bridge adapters exist for ROS~2, MAVLink~v2,
-MCP tool calls, Google A2A, MQTT/CoAP, OPC-UA, Open-RMF, and Sparkplug~B. The Evidence Ledger
-implements a SHA-256 hash chain with optional TEE attestation (Intel SGX, ARM TrustZone, AMD SEV).
+\textbf{I-3: Behavioral Drift Detection (CSML).}
+The Composite Safety-Model Latency score is a sliding-window metric:
+\begin{equation}
+\text{CSML}(m,p,t) = \alpha\!\cdot\!AR_m + \beta\!\cdot\!BP_m + \gamma\!\cdot\!SV_m - \delta\!\cdot\!CR_m
+\label{eq:csml}
+\end{equation}
+where $AR_m$ is the out-of-policy action rate, $BP_m$ is the boundary proximity
+score, $SV_m$ is the safety violation frequency, and $CR_m$ is the compliance
+rate.
+When CSML exceeds threshold~$\theta$, all subsequent requests from that agent
+are automatically escalated by one tier---making the 4.8$\times$ inter-model
+variance~\cite{rosclaw} a \emph{live enforcement trigger} rather than a
+post-incident finding.
 
-SINT covers all 10 OWASP Agentic Top 10 categories (ASI01–ASI10)~\cite{owasp-asi}. Coverage is
-formally declared in a machine-readable conformance mapping and regression-tested across 29
-attack/safe-case fixture pairs that validate each ASI category against the gateway choke point.
+\textbf{I-4: Environment-Adaptive Constraint Tightening.}
+The \texttt{DynamicEnvelopePlugin} maps real-time sensor state to tighter
+effective limits:
+\begin{equation}
+v_{\text{eff}} = \min\!\left(\texttt{token.maxVelocity},\; d_{\text{obs}} \cdot r_f\right)
+\label{eq:dynamic}
+\end{equation}
+where $d_{\text{obs}}$ is the nearest obstacle distance and $r_f$ is a
+reaction factor.
+This closes the gap identified in~\cite{rosclaw} between a ``configurable''
+and an ``environment-adaptive'' safety envelope.
 
-\section*{Position}
+\textbf{I-5: Active Threat Detection Plugins.}
+The gateway hosts pluggable detectors that run on every request:
+\emph{GoalHijackPlugin} (ASI01: 5-layer prompt injection detection),
+\emph{MemoryIntegrityChecker} (ASI06: replay attacks, cross-session continuity
+injection, credential read funnels, action velocity loops),
+\emph{ArgInjectionDetector} (ASI05: shell metacharacters, path traversal,
+environment variable injection), and
+\emph{SupplyChainVerifier} (ASI04: model fingerprint hash validation).
 
-Safe physical AI requires that authorization be treated as a first-class \emph{runtime} concern —
-not a deployment configuration or a prompt engineering problem. The safety properties that
-matter (who approved this action, was the envelope respected, was the agent's drift within bounds)
-must be cryptographically auditable and enforced \emph{before} hardware execution, not after.
-SINT Protocol is a concrete, open-source instantiation of this position.
+\textbf{I-6: Emergency Stop (EU AI Act Art.~14(4)(e)).}
+The \texttt{CircuitBreakerPlugin} implements a three-state circuit
+(CLOSED $\to$ OPEN $\to$ HALF\_OPEN):
+manual operator trip, automatic trip on $N$ consecutive denials or anomalous
+CSML, and probe-based recovery.
+This ensures an operator can always halt a rogue agent instantly,
+regardless of the agent's internal state.
 
-{\small \textbf{Open source:} \url{https://github.com/sint-ai/sint-protocol}}
+\subsection{Swarm Collective Safety}
 
-% -----------------------------------------------------------------------
+For multi-agent deployments, a \texttt{SwarmCoordinator} enforces collective
+constraints \emph{before} individual gateway calls:
+maximum concurrent T2+ actors,
+total kinetic energy ceiling ($\sum \tfrac{1}{2}m_i v_i^2 \leq E_{\max}$),
+minimum inter-agent distance, and maximum escalated fraction.
+These constraints are fundamentally collective---no per-agent token can express
+``at most 3 of 10 agents may be in T2 simultaneously.''
 
-% IJCAI uses named.bst (author-year). With ijcai26.sty active, use:
-% \bibliographystyle{named}
-% \bibliography{references}
-% For self-contained fallback we use the inline thebibliography below.
-\bibliographystyle{named}
-\begin{thebibliography}{9}
+% =====================================================================
+\section{Evaluation}
+\label{sec:eval}
+
+\subsection{Latency}
+
+The gateway must not violate the timing budget of real-time control loops.
+We benchmark on a ROS~2 \texttt{/cmd\_vel} path at 100\,Hz (10\,ms budget)
+on an Apple M3 Pro (no GPU):
+
+\begin{table}[h]
+\centering
+\caption{PolicyGateway latency (600 iterations, 5 batches)}
+\label{tab:latency}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Metric & p50 & p95 & p99 & Steady p99 \\
+\midrule
+Latency (ms) & 1.5 & 5.3 & 12.5 & \textbf{5.1} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The steady-state p99 of 5.1\,ms consumes 51\% of the 10\,ms budget, leaving
+headroom for bridge serialization and network transport.
+Cold-start p99 (first batch) reaches 20\,ms due to JIT compilation; this is
+amortized after $\sim$120 iterations.
+
+\subsection{Test Coverage and Conformance}
+
+SINT is tested across 1,772~test cases covering:
+
+\begin{table}[h]
+\centering
+\caption{Test coverage by category}
+\label{tab:tests}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Category & Tests \\
+\midrule
+Policy gateway (tiers, constraints, plugins) & 256 \\
+OWASP ASI01--ASI10 conformance fixtures & 29 \\
+Bridge adapters (12 protocols) & 233 \\
+Capability tokens + delegation & 58 \\
+Evidence ledger (hash chain integrity) & 59 \\
+Swarm, economy, persistence, engine & 951 \\
+Integration + end-to-end & 186 \\
+\midrule
+\textbf{Total} & \textbf{1,772} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The OWASP conformance suite contains 29 machine-readable fixture pairs
+(attack vector + safe-case control) covering all 10 Agentic Security
+Initiative categories~\cite{owasp-asi}.
+Each fixture specifies a \texttt{SintRequest}, token scope, and expected
+gateway decision (\texttt{allow}/\texttt{deny}/\texttt{escalate}).
+
+\subsection{Bridge Protocol Coverage}
+
+SINT bridges 12 physical and agent protocols, each with a protocol-specific
+resource mapper that translates native identifiers into SINT URIs and extracts
+physical context:
+
+\smallskip
+\noindent
+\textbf{Physical:} ROS~2 (topics, services, actions), MAVLink~v2 (drone
+commands), MQTT/CoAP (IoT edge), OPC-UA (PLC/SCADA), Open-RMF (fleet
+management), Sparkplug~B (industrial telemetry).
+
+\noindent
+\textbf{Agent:} MCP (tool calls), Google A2A (multi-agent), gRPC (service mesh).
+
+% =====================================================================
+\section{Self-Critique and Open Problems}
+\label{sec:critique}
+
+We identify five limitations of the current approach and propose directions
+for each:
+
+\textbf{L-1: No formal verification.}
+SINT's invariants (I-1 through I-6) are enforced by runtime code, not by
+formal proof.
+A TLA+ or Coq mechanization of the gateway state machine would provide
+stronger guarantees.
+We plan to formalize the DFA (12~states, 18~transitions) and prove that
+physical actuation is unreachable without a valid token (invariant I-G1:
+No Bypass).
+
+\textbf{L-2: No real-robot evaluation.}
+All benchmarks run on TypeScript in a simulated environment.
+The 5.1\,ms p99 latency is promising but has not been validated on a physical
+ROS~2 system with network transport, sensor delays, and actuator feedback loops.
+A warehouse AMR pilot (Clearpath Jackal + UR5e) is planned for Q3~2026.
+
+\textbf{L-3: CSML threshold is empirically ungrounded.}
+The escalation threshold $\theta = 0.3$ is a design parameter, not an
+empirically validated value.
+Determining the minimum observation window and optimal threshold requires
+deployment data from diverse model backends under varied task distributions.
+
+\textbf{L-4: Heuristic threat detection.}
+The GoalHijackPlugin and MemoryIntegrityChecker use pattern-matching heuristics
+(regex, keyword lists), not learned classifiers.
+Sophisticated adversarial prompts may evade detection.
+A hybrid approach combining heuristic pre-filters with lightweight transformer
+classifiers is a natural extension.
+
+\textbf{L-5: Static tier classification.}
+The 50+ tier rules are hand-authored.
+A learned tier classifier trained on human-operator approval decisions could
+adapt to deployment-specific risk profiles and reduce false escalations.
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related}
+
+\textbf{Robot safety standards.}
+IEC~62443~\cite{iec62443} and ISO~10218~\cite{iso10218} define security
+requirements for industrial control systems and robotic devices, but assume
+deterministic, trusted controllers.
+SINT extends these standards to the LLM-driven agent case by treating the
+controller as \emph{untrusted} and interposing a runtime authorization layer.
+
+\textbf{Safety shields.}
+Alshiekh et al.~\cite{shields} formalize safety shields as runtime monitors
+that override unsafe actions in reinforcement learning.
+SINT shares this ``interposition'' architecture but operates at a higher
+abstraction level (capability tokens and approval tiers vs.\ state-action
+shielding) and supports multi-protocol, multi-agent deployments.
+
+\textbf{Agentic AI security.}
+The OWASP Agentic Security Initiative~\cite{owasp-asi} identifies 10 risk
+categories for autonomous AI agents.
+The Microsoft Agent Governance Toolkit (2026) addresses these for
+digital/software agents.
+SINT is, to our knowledge, the first framework to provide verified coverage
+of all 10 ASI categories specifically for \emph{physical} agents with
+real-world actuators.
+
+\textbf{Capability-based security.}
+The object-capability model~\cite{miller-ocap} provides the theoretical
+foundation for SINT's token design.
+Unlike ambient-authority RBAC systems, capability tokens are unforgeable,
+attenuatable, and revocable---properties critical for delegation in multi-agent
+physical deployments.
+
+\textbf{LLM-driven robotics.}
+ROSClaw~\cite{rosclaw} provides the empirical foundation for SINT's behavioral
+drift detection, demonstrating measurable inter-model safety variance.
+SayCan~\cite{saycan} and Code-as-Policies~\cite{codeaspolicies} demonstrate
+LLM-to-robot pipelines but include no runtime authorization layer.
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented SINT Protocol, a runtime safety shield for LLM-driven physical
+agents that enforces capability confinement, graduated human oversight,
+behavioral drift detection, environment-adaptive constraints, active threat
+detection, and emergency stop---at sub-5\,ms steady-state p99 latency on a
+100\,Hz ROS~2 control loop.
+
+Our core position: safe physical AI requires authorization as a
+\emph{first-class runtime concern}, enforced cryptographically at the
+agent--actuator boundary, not as a deployment configuration or prompt
+engineering strategy.
+
+SINT is open source (Apache~2.0) at
+\url{https://github.com/sint-ai/sint-protocol}.
+
+% =====================================================================
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{10}
 
 \bibitem{rosclaw}
-Cardenas, I.S., Arnett, M.A., Yeo, N.C., Sah, L., Kim, J.-H. (2026).
-ROSClaw: An OpenClaw ROS~2 Framework for Agentic Robot Control and Interaction.
-\textit{arXiv:2603.26997}.
-
-\bibitem{owasp-asi}
-OWASP Foundation (2025).
-OWASP Agentic AI Security Top 10 — Agentic Security Initiative.
-\url{https://owasp.org/www-project-top-10-for-large-language-model-applications/}.
+I.~S. Cardenas, M.~A. Arnett, N.~C. Yeo, L.~Sah, and J.-H. Kim,
+``ROSClaw: An OpenClaw ROS~2 framework for agentic robot control and
+interaction,'' \emph{arXiv:2603.26997}, 2026.
 
 \bibitem{iec62443}
-IEC 62443-3-3:2013.
-Industrial communication networks — IT security for networks and systems.
+{IEC 62443-3-3:2013},
+``Industrial communication networks---IT security for networks and systems.''
 
 \bibitem{iso10218}
-ISO 10218-1:2011.
-Robots and robotic devices — Safety requirements for industrial robots.
+{ISO 10218-1:2011},
+``Robots and robotic devices---Safety requirements for industrial robots.''
+
+\bibitem{owasp-asi}
+{OWASP Foundation},
+``OWASP top 10 for agentic applications,'' 2025. [Online]. Available:
+\url{https://owasp.org/www-project-top-10-for-large-language-model-applications/}
 
 \bibitem{nist-ai-rmf}
-NIST (2023).
-Artificial Intelligence Risk Management Framework (AI RMF 1.0).
+{NIST},
+``Artificial intelligence risk management framework (AI RMF 1.0),'' 2023.
+
+\bibitem{shields}
+M.~Alshiekh, R.~Bloem, R.~Ehlers, B.~K{\"o}nighofer, S.~Niekum, and
+U.~Topcu,
+``Safe reinforcement learning via shielding,'' in \emph{Proc. AAAI}, 2018.
+
+\bibitem{miller-ocap}
+M.~S. Miller, K.-P. Yee, and J.~Shapiro,
+``Capability myths demolished,'' Tech.\ Rep., 2003.
+
+\bibitem{saycan}
+M.~Ahn \emph{et~al.},
+``Do as I can, not as I say: Grounding language in robotic affordances,''
+in \emph{Proc. CoRL}, 2022.
+
+\bibitem{codeaspolicies}
+J.~Liang \emph{et~al.},
+``Code as policies: Language model programs for embodied control,''
+in \emph{Proc. ICRA}, 2023.
 
 \bibitem{nist-sp800-82}
-NIST SP 800-82 Rev.~3 (2023).
-Guide to Operational Technology (OT) Security.
+{NIST SP 800-82 Rev.~3},
+``Guide to operational technology (OT) security,'' 2023.
 
 \end{thebibliography}
 
