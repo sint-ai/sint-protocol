@@ -73,7 +73,7 @@ export default defineConfig({
           { text: "Warehouse AMR Policy Template", link: "/profiles/warehouse-amr.policy.template" },
           { text: "Industrial Cell Policy Template", link: "/profiles/industrial-cell.policy.template" },
           { text: "Edge Gateway Policy Template", link: "/profiles/edge-gateway.policy.template" },
-          { text: "OpenAI Agents Fail-Closed Template", link: "/profiles/openai-agents-fail-closed.policy.template" },
+          { text: "CrewAI Fail-Closed Template", link: "/profiles/crewai-fail-closed.policy.template" },
         ],
       },
       {
