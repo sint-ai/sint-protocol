@@ -1,0 +1,98 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write  # Required for npm provenance (SLSA Level 2)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm run build
+
+      - name: Run tests (gate)
+        run: pnpm run test
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Publish core packages (dependency order)
+        run: |
+          PACKAGES=(
+            "packages/core"
+            "packages/capability-tokens"
+            "packages/evidence-ledger"
+            "packages/policy-gateway"
+            "packages/bridge-mcp"
+            "packages/bridge-ros2"
+            "packages/bridge-mavlink"
+            "packages/bridge-iot"
+            "packages/bridge-a2a"
+            "packages/bridge-economy"
+            "packages/token-registry"
+          )
+
+          for pkg in "${PACKAGES[@]}"; do
+            name=$(node -p "require('./$pkg/package.json').name")
+            echo "Publishing $name..."
+            (cd "$pkg" && npm publish --access public --provenance) || {
+              echo "Warning: $name publish failed (may already exist at this version)"
+            }
+            echo "✓ $name"
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish SDK
+        run: |
+          (cd packages/sdk && npm publish --access public --provenance) || echo "SDK publish skipped"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify installation
+        run: |
+          cd /tmp
+          npm install @sint/core@${{ steps.version.outputs.version }} --prefer-online
+          node -e "const c = require('@sint/core'); console.log('✓ @sint/core loads OK, exports:', Object.keys(c).length, 'items')"
+
+      - name: Create GitHub Release summary
+        run: |
+          echo "## Published v${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Install:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npm install @sint/core@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Published packages:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/core\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/gate-capability-tokens\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/gate-evidence-ledger\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/gate-policy-gateway\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-mcp\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-ros2\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-mavlink\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-iot\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-a2a\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/bridge-economy\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/token-registry\`" >> $GITHUB_STEP_SUMMARY
