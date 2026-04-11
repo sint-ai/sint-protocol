@@ -174,6 +174,7 @@ class PolicyDecision(BaseModel):
     action: str  # "allow" | "deny" | "escalate" | "transform"
     assigned_tier: ApprovalTier = Field(..., alias="assignedTier")
     assigned_risk: RiskTier = Field(..., alias="assignedRisk")
+    approval_request_id: str | None = Field(None, alias="approvalRequestId")
     denial: DenialInfo | None = None
     escalation: EscalationInfo | None = None
     transformations: dict[str, Any] | None = None

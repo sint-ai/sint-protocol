@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "name": "openai-agents-fail-closed",
+  "description": "Fail-closed starter policy profile for OpenAI Agents SDK tool governance with SINT.",
+  "defaults": {
+    "fallbackAction": "deny",
+    "approvalTimeoutMs": 30000,
+    "staleApprovalAction": "deny"
+  },
+  "rules": [
+    {
+      "resourcePattern": "mcp://*/read*",
+      "actions": ["call"],
+      "baseTier": "T0_observe",
+      "baseRisk": "T0_read"
+    },
+    {
+      "resourcePattern": "mcp://*/list*",
+      "actions": ["call"],
+      "baseTier": "T0_observe",
+      "baseRisk": "T0_read"
+    },
+    {
+      "resourcePattern": "mcp://*/write*",
+      "actions": ["call"],
+      "baseTier": "T1_prepare",
+      "baseRisk": "T1_write_low"
+    },
+    {
+      "resourcePattern": "mcp://*/update*",
+      "actions": ["call"],
+      "baseTier": "T1_prepare",
+      "baseRisk": "T1_write_low"
+    },
+    {
+      "resourcePattern": "mcp://*/move*",
+      "actions": ["call"],
+      "baseTier": "T2_act",
+      "baseRisk": "T2_stateful",
+      "escalateOnHumanPresence": true
+    },
+    {
+      "resourcePattern": "mcp://*/dispatch*",
+      "actions": ["call"],
+      "baseTier": "T2_act",
+      "baseRisk": "T2_stateful"
+    },
+    {
+      "resourcePattern": "mcp://*/delete*",
+      "actions": ["call"],
+      "baseTier": "T3_commit",
+      "baseRisk": "T3_irreversible"
+    },
+    {
+      "resourcePattern": "mcp://*/execute*",
+      "actions": ["call"],
+      "baseTier": "T3_commit",
+      "baseRisk": "T3_irreversible"
+    }
+  ],
+  "invariants": [
+    "No T2/T3 action can execute without explicit approval resolution",
+    "Approval timeout must resolve to denied",
+    "Token subject must equal request agent identity"
+  ]
+}

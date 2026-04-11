@@ -91,6 +91,36 @@ async with GatewayClient(config) as client:
     print(token["tokenId"])
 ```
 
+### OpenAI Agents SDK Governance Adapter
+
+`OpenAIAgentsGovernanceAdapter` wraps tool calls with SINT runtime checks.
+
+```python
+from sint import (
+    GatewayClient, GatewayConfig, OpenAIAgentsGovernanceAdapter,
+    ApprovalResolution, SintRequest
+)
+
+async with GatewayClient(GatewayConfig(base_url="http://localhost:3100")) as client:
+    adapter = OpenAIAgentsGovernanceAdapter(client)
+
+    async def resolver(request: SintRequest, decision):
+        # Hook this into your operator UI / pager workflow.
+        return ApprovalResolution(status="approved", by="operator@example.com")
+
+    decision = await adapter.authorize_tool_call(
+        request=my_request,
+        on_escalation=resolver,   # optional
+        approval_timeout_s=30.0,  # fail-closed timeout
+    )
+```
+
+Typed outcomes:
+- `SintDeniedError`
+- `SintApprovalRequiredError`
+- `SintApprovalTimeoutError`
+- `SintApprovalDeniedError`
+
 ### sint-scan CLI
 
 Classify MCP tools into SINT approval tiers (mirrors `@sint/bridge-mcp` logic):
@@ -181,3 +211,4 @@ pytest tests/ -v
 ## Examples
 
 - Warehouse AMR flow: [`examples/warehouse_amr_flow.py`](examples/warehouse_amr_flow.py)
+- OpenAI Agents governance flow: [`examples/openai_agents_governance_flow.py`](examples/openai_agents_governance_flow.py)
