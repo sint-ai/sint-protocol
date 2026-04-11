@@ -476,6 +476,7 @@ docker-compose up
 - AgentSkill delegated authority fixtures guide: [`docs/guides/agentskill-authz-interop-fixtures.md`](docs/guides/agentskill-authz-interop-fixtures.md)
 - action_ref identity/explainability profile: [`docs/specs/action-ref-identity-explainability-profile.md`](docs/specs/action-ref-identity-explainability-profile.md)
 - Payment governance profile (Economic Layer v1): [`docs/specs/payment-governance-profile-v1.md`](docs/specs/payment-governance-profile-v1.md)
+- OpenAI Agents SDK governance guide: [`docs/guides/openai-agents-sdk-integration.md`](docs/guides/openai-agents-sdk-integration.md)
 - Cursor integration guide: [`docs/guides/cursor-integration.md`](docs/guides/cursor-integration.md)
 - Benchmark report: [`docs/reports/industrial-benchmark-report.md`](docs/reports/industrial-benchmark-report.md)
 - ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)

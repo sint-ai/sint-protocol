@@ -1,6 +1,6 @@
 # Show HN Draft — SINT Protocol
 
-> **Title:** Show HN: SINT Protocol – MCP security layer with capability tokens, T0–T3 tiers, and tamper-evident audit log
+> **Title:** Show HN: SINT Protocol – Runtime authorization for physical AI agents (robots, drones, actuators)
 
 > **URL:** https://github.com/sint-ai/sint-protocol
 
@@ -50,11 +50,15 @@ Every agent action (tool call, robot command, code execution) passes through a s
 
 ---
 
+**How it differs from Microsoft Agent Governance Toolkit:**
+Microsoft AGT (released April 2, 2026) targets digital/software agents — LangChain, CrewAI, etc. SINT targets physical AI — robots, drones, factory actuators — where actions are irreversible and have real-world consequences. Different problem, different enforcement model.
+
 **Technical details:**
-- TypeScript monorepo, 31 packages, 1,105 tests
-- Bridge adapters for MCP, ROS 2, MAVLink, MQTT, OPC-UA, A2A
+- TypeScript monorepo, 41 packages, 1,772 tests
+- Bridge adapters for MCP, ROS 2, MAVLink, MQTT, OPC-UA, gRPC, A2A, Open-RMF, Sparkplug B
 - Works as a proxy between any AI agent and any tool server
-- All 10 OWASP Agentic AI Top-10 categories regression-tested
+- All 10 OWASP Agentic AI Top-10 categories regression-tested (29 fixture pairs)
+- ROS2 control-loop latency: p99 < 25ms (steady-state p99 < 10ms)
 - Result<T, E> pattern throughout — no exceptions for control flow
 - Apache 2.0 licensed
 
