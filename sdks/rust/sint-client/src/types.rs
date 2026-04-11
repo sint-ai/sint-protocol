@@ -28,6 +28,20 @@ pub enum ApprovalTier {
     T3Commit,
 }
 
+/// Physical sensor context attached to a SINT request.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PhysicalContext {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub human_detected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_velocity_mps: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_force_newtons: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obstacle_distance_m: Option<f64>,
+}
+
 /// PolicyGateway intercept request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,6 +54,8 @@ pub struct SintRequest {
     pub action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub physical_context: Option<PhysicalContext>,
 }
 
 /// PolicyGateway decision.
@@ -77,4 +93,45 @@ pub struct IssueTokenRequest {
     pub resource: String,
     pub actions: Vec<String>,
     pub expires_in_hours: Option<u32>,
+}
+
+/// An event recorded in the SINT audit ledger.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LedgerEvent {
+    pub event_id: String,
+    pub event_type: String,
+    pub agent_id: String,
+    pub resource: String,
+    pub action: String,
+    pub decision: String,
+    pub tier: String,
+    pub timestamp: String,
+}
+
+/// Query parameters for the ledger endpoint.
+#[derive(Debug, Clone, Default)]
+pub struct LedgerQuery {
+    pub agent_id: Option<String>,
+    pub event_type: Option<String>,
+    pub resource: Option<String>,
+    pub limit: Option<u32>,
+}
+
+/// Request to revoke a capability token.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TokenRevocationRequest {
+    pub token_id: String,
+    pub reason: String,
+    pub revoked_by: String,
+}
+
+/// Confirmation record returned after a token is revoked.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RevocationRecord {
+    pub token_id: String,
+    pub revoked_at: String,
+    pub reason: String,
 }

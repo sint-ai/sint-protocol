@@ -13,5 +13,11 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 reqwest = { workspace = true }
-uuid = { workspace = true }
+uuid = { version = "1", features = ["v4", "v7"] }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+anyhow = "1"
+
+[[example]]
+name = "hello_world"
