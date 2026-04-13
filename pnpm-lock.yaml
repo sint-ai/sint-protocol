@@ -31,6 +31,25 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  apps/badge-server:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.14.0
+        version: 1.19.11(hono@4.12.8)
+      hono:
+        specifier: ^4.7.0
+        version: 4.12.8
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   apps/dashboard:
     dependencies:
       react:
