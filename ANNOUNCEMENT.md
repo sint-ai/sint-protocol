@@ -27,9 +27,9 @@ Think of it like a firewall, but for AI actions in the real world.
 **Tweet 4 (technical):**
 Built as a multi-MCP proxy — works with Claude, Cursor, or any MCP client today. Also supports ROS 2 for robotics.
 
-12 packages. 370 tests. TypeScript. Apache-2.0.
+Reference implementation, public docs, TypeScript monorepo, Apache-2.0.
 
-Full protocol spec: github.com/sint-ai/sint-protocol/blob/main/PROTOCOL.md
+Docs + spec: docs.sint.gg
 
 **Tweet 5 (CTA):**
 We're looking for contributors:
@@ -64,12 +64,12 @@ Key ideas:
 
 - **Physical safety constraints** — velocity, force, and geofence limits enforced at the protocol level, not in application code.
 
-Currently works as a multi-MCP proxy (sits between Claude/Cursor and downstream MCP servers) and has a ROS 2 bridge. 12 packages, 370 tests, all TypeScript.
+Today it ships a TypeScript reference implementation with gateway, dashboard, SDK, docs, conformance material, and bridges for MCP plus robotics-oriented integrations such as ROS 2.
 
 We're looking for early contributors, especially for gRPC bridges, Python/Go SDKs, and domain-specific tier rules.
 
 Repo: https://github.com/sint-ai/sint-protocol
-Protocol spec: https://github.com/sint-ai/sint-protocol/blob/main/PROTOCOL.md
+Protocol spec: https://docs.sint.gg/SINT_v0.2_SPEC
 
 ---
 
@@ -96,7 +96,7 @@ The protocol also detects forbidden action sequences — individually safe actio
 
 Everything is recorded in a SHA-256 hash-chained audit log.
 
-**Current state:** 12 TypeScript packages, 370 tests, works as a multi-MCP proxy (Claude, Cursor) + ROS 2 bridge. Apache-2.0 licensed.
+**Current state:** Apache-2.0, TypeScript reference implementation, docs at `docs.sint.gg`, and a growing set of bridges, SDKs, and conformance tooling around the policy gateway.
 
 **Looking for contributors:** New bridge adapters (gRPC, MQTT), Python/Go SDKs, domain-specific tier rules, and anyone who wants to poke holes in the threat model.
 

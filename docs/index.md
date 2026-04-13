@@ -3,30 +3,39 @@ layout: home
 
 hero:
   name: SINT Protocol
-  text: Governance and Safety Control Plane for Physical AI
-  tagline: Delegated authority, runtime enforcement, and evidence for actions with real-world consequence.
+  text: Open Protocol for Governing AI Agent Execution
+  tagline: Capability tokens, runtime policy enforcement, approval tiers, and evidence for actions with real-world consequence.
   image:
     src: /sint-logo.svg
     alt: SINT Protocol
   actions:
     - theme: brand
-      text: Quick Start
+      text: Getting Started
       link: /getting-started
     - theme: alt
-      text: Protocol Spec v0.2
+      text: Protocol Spec
       link: /SINT_v0.2_SPEC
     - theme: alt
-      text: Roadmap
-      link: /roadmap
+      text: GitHub
+      link: https://github.com/sint-ai/sint-protocol
 
 features:
-  - title: Runtime Safety Enforcement
-    details: Every request is validated, tiered, approved when required, and fail-closed under revocation or disconnect.
-  - title: Industrial Interoperability
-    details: Bridge profiles for MCP, A2A, ROS 2, MQTT/Sparkplug, OPC UA, Open-RMF, and gRPC.
-  - title: Auditability by Default
-    details: Evidence ledger records decisions and outcomes with tamper-evident hash chaining and proof routes.
+  - title: One Control Plane
+    details: Put capability tokens, policy checks, approval routing, and revocation in one protocol surface instead of scattered middleware.
+  - title: Built for Real Execution
+    details: Protect MCP tools, robotics interfaces, and industrial systems with the same consequence-aware governance model.
+  - title: Evidence by Default
+    details: Record every decision in a tamper-evident evidence ledger with hash chaining and proof-friendly receipts.
 ---
+
+## Start Here
+
+- Repo overview: [README](https://github.com/sint-ai/sint-protocol)
+- 10-minute quick start: [Getting Started](./getting-started.md)
+- First runnable example: [Hello World](./tutorials/hello-world-agent.md)
+- Protocol reference: [SINT v0.2 Spec](./SINT_v0.2_SPEC.md)
+- SIP process: [SIP-0001](./sip/SIP-0001-process.md)
+- Discussions: [GitHub Discussions](https://github.com/sint-ai/sint-protocol/discussions)
 
 ## Developer Quick Links
 
@@ -47,6 +56,6 @@ features:
 - NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
 - Latest security bulletin: [April 2026](./security-bulletins/2026-04.md)
 
-## Documentation Scope
+## What This Docs Site Covers
 
-This site is the canonical public docs surface for `docs.sint.gg`. It is generated from the `/docs` directory in this repository and deployed by GitHub Actions.
+This site is the public documentation surface for `docs.sint.gg`. It covers the protocol spec, implementation guides, conformance material, community process, and integration tutorials for developers adopting or contributing to SINT.

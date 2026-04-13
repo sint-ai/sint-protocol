@@ -1,75 +1,87 @@
-# SINT Protocol — Value Proposition
+# SINT Protocol — One Pager
+
+## Positioning
+
+SINT Protocol is an open protocol and reference stack for governing AI agents that can take real actions in the world.
+
+It sits between agent frameworks and execution surfaces such as MCP tools, robotics interfaces, industrial control systems, and approval workflows. SINT defines how authority is issued, how runtime decisions are enforced, and how evidence is recorded.
 
 ## The Problem
 
-AI agents are moving from chat into production. Organizations now run dozens of autonomous agents across engineering, research, operations, and support. But deploying agents at scale exposes a fundamental gap:
+Agent systems are moving from chat into execution:
 
-**There is no standard way to orchestrate, govern, and audit AI agents as a workforce.**
+- calling MCP tools
+- operating robots and drones
+- writing to OT and industrial systems
+- triggering business actions that are costly or irreversible
 
-Every team builds ad-hoc solutions. Agents conflict on shared tasks. There is no audit trail. No budget control. No coordination protocol. No security enforcement layer between "the LLM decided to do it" and "it happened."
+The gap is not intelligence. The gap is control.
 
-## What Exists Today
+Developers still need a standard way to answer four questions:
 
-| Layer | Protocol | What It Solves | What It Doesn't |
-|-------|----------|---------------|-----------------|
-| Tool access | **MCP** (Anthropic) | How agents call tools | How agents coordinate with each other |
-| Agent messaging | **A2A** (Google) | How two agents communicate | Multi-agent orchestration, governance, audit |
-| Frameworks | AutoGen, CrewAI, LangGraph | Multi-agent within one framework | Cross-framework interop, wire-level protocol |
+1. Who is allowed to do this?
+2. Under which constraints?
+3. When does a human need to approve?
+4. How do we prove what happened later?
 
-**The orchestration layer is missing.** No protocol defines how to manage agent lifecycles, coordinate multi-agent workflows, enforce budgets, or audit every action — across any framework, language, or runtime.
+Most teams solve these questions with app-specific middleware, scattered policy code, and best-effort logs. That does not scale across frameworks, environments, or consequence levels.
 
-## SINT Protocol: The Orchestration Layer
+## What SINT Is
 
-SINT sits above MCP and A2A. It composes with them, not against them. SINT defines the protocol-level primitives for running AI agents in production.
+SINT turns execution governance into protocol primitives:
 
-### Six Pillars
+- **Capability tokens** for scoped authority, expiry, delegation, and revocation
+- **Policy gateway** as the single interception point for protected actions
+- **Approval tiers** that map consequence severity to autonomy or human review
+- **Evidence ledger** with append-only, tamper-evident, hash-chained records
+- **Bridge layer** for MCP, A2A, ROS 2, MAVLink, OPC UA, MQTT/Sparkplug, Open-RMF, and gRPC
 
-**1. Heartbeat Lifecycle** — Agents operate on observable heartbeat cycles: wake, check for work, execute a step, report status, sleep. Stall detection is built in. Agent liveness becomes a first-class system metric.
+## Where It Fits
 
-**2. Task Coordination** — Tasks are checked out with exclusive locks. One agent, one task, no conflicts. Dependencies, priorities, deadlines, and parent-child hierarchies are protocol-native.
+SINT complements existing systems instead of replacing them.
 
-**3. Chain of Command** — Every agent operates within an organizational hierarchy. Approvals escalate based on risk. Budgets are enforced per-agent and per-task.
+| Layer | What it does | What SINT adds |
+|---|---|---|
+| MCP / A2A | Tool calling and agent-to-agent communication | Runtime authorization, tiering, audit, revocation |
+| Robotics middleware | Device and control transport | Consequence-aware governance and evidence |
+| Application code | Business logic | Reusable execution control plane |
 
-**4. Graduated Governance (T0-T3)** — Authorization mapped to consequence severity. Reading data? Auto-approved. Moving a robot? Requires review. Executing code? Requires a human. The tier system scales from fully autonomous to fully supervised.
+## Why Developers Care
 
-**5. Cryptographic Audit** — Every action is recorded in a SHA-256 hash-chained evidence ledger. Tamper-evident by construction. Queryable by agent, task, time range. Designed for enterprise compliance without blockchain overhead.
+| Concern | SINT answer |
+|---|---|
+| Permissioning | Scoped capability tokens with attenuation-only delegation |
+| Safety constraints | Token-native bounds like velocity, force, and geofence |
+| Human oversight | Graduated approval tiers from autonomous to operator-reviewed |
+| Auditability | Hash-chained evidence ledger and pluggable proof receipts |
+| Interoperability | One governance model across agent, robotics, and industrial bridges |
 
-**6. Capability Tokens** — Ed25519-signed permissions with resource scoping, action restrictions, physical safety constraints, and attenuation-only delegation. Agents can delegate to sub-agents but only with narrower permissions.
+## Current Project Surface
 
-## Why It Matters
+- Apache-2.0 licensed
+- TypeScript reference implementation
+- Public docs at [docs.sint.gg](https://docs.sint.gg)
+- Protocol spec and SIP process published in-repo
+- Example flows for hello-world, warehouse AMR, and industrial-cell scenarios
+- Gateway, dashboard, CLI, SDK, conformance tests, and bridge packages in one monorepo
 
-| Stakeholder | Value |
-|-------------|-------|
-| **CTO / VP Eng** | Operational control over agent fleets. Budget governance. Compliance-ready audit trails. |
-| **AI/ML Engineers** | Cross-framework interop. Clean protocol design. Build agents in any language. |
-| **Security / Compliance** | Hash-chained audit. Graduated approval tiers. Forbidden combination detection. |
-| **Product Managers** | Task lifecycle visibility. Cost tracking. Multi-agent workflow coordination. |
+## Best First Steps
 
-## Current State
+- Read the repo overview: [README.md](./README.md)
+- Run the quick start: [docs/getting-started.md](./docs/getting-started.md)
+- Try the first example: [examples/hello-world/README.md](./examples/hello-world/README.md)
+- Review the protocol surface: [docs/SINT_v0.2_SPEC.md](./docs/SINT_v0.2_SPEC.md)
+- Join design discussion: [GitHub Discussions](https://github.com/sint-ai/sint-protocol/discussions)
 
-- **12 packages, 370+ tests, Apache-2.0**
-- Reference implementation in TypeScript (Node.js 22+)
-- MCP proxy bridge (works with Claude, Cursor, any MCP client)
-- ROS 2 bridge for robotics
-- Gateway HTTP API with Prometheus metrics
-- Real-time approval dashboard
-- Docker Compose production deployment
+## Who Should Pay Attention
 
-## What's Next
+- developers building MCP servers or agent platforms
+- robotics teams that need permissioning and operator escalation
+- platform and security engineers responsible for agent execution control
+- researchers and standards contributors working on trustworthy agent infrastructure
 
-- Heartbeat agent lifecycle and task queue (Q2 2026)
-- PostgreSQL/Redis persistence adapters
-- Python and Go SDKs
-- Testnet for community integration testing
-- Protocol spec v1.0-rc
+## Bottom Line
 
-## Get Involved
+SINT is trying to become the open execution-governance layer for AI systems that can do more than talk.
 
-- **GitHub:** github.com/sint-ai/sint-protocol
-- **Contribute:** Bridge adapters, SDKs, tier rules, conformance tests
-- **Discuss:** GitHub Discussions for RFCs and community Q&A
-- **License:** Apache-2.0
-
----
-
-*SINT Protocol is the trust, orchestration, and governance layer for AI agent execution — once autonomous systems move beyond simple chat into real action.*
+If an agent can cause real-world consequences, SINT is the layer that should decide whether the action is allowed, whether a human must approve it, and what evidence remains afterward.

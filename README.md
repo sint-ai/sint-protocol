@@ -1,14 +1,39 @@
 # SINT Protocol
 [![CI](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-docs.sint.gg-1f6feb)](https://docs.sint.gg)
+[![Spec](https://img.shields.io/badge/spec-v0.2-0a7ea4)](https://docs.sint.gg/SINT_v0.2_SPEC)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-**Security, permission, and economic enforcement layer for physical AI.**
+**Open protocol and reference stack for governing AI agents with real-world consequences.**
 
-SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
+SINT sits between agent frameworks and execution surfaces. It gives developers a single control plane to issue scoped authority, enforce runtime policy, require human approval when risk rises, and produce tamper-evident evidence for every action.
 
-> **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
+Use SINT when an agent can do more than generate text: call MCP tools, operate robots, write to industrial systems, move through approval workflows, or trigger irreversible business actions.
+
+> **In one sentence:** SINT is a policy gateway, capability-token system, approval engine, and evidence ledger for agent execution across MCP, A2A, ROS 2, MAVLink, OPC UA, MQTT/Sparkplug, Open-RMF, and gRPC.
+
+| Start here | Link |
+|---|---|
+| 10-minute quick start | [`docs/getting-started.md`](docs/getting-started.md) |
+| Live docs site | [docs.sint.gg](https://docs.sint.gg) |
+| Protocol spec | [SINT v0.2](https://docs.sint.gg/SINT_v0.2_SPEC) |
+| First runnable example | [`examples/hello-world/README.md`](examples/hello-world/README.md) |
+| RFC and governance process | [`docs/sip/SIP-0001-process.md`](docs/sip/SIP-0001-process.md) |
+| Discussions | [GitHub Discussions](https://github.com/sint-ai/sint-protocol/discussions) |
+
+## What SINT gives developers
+
+- **Capability tokens** with scoped permissions, attenuation-only delegation, expiry, and revocation.
+- **A single policy choke point** that decides allow, deny, or escalate for every protected action.
+- **Graduated approval tiers** so risky actions can require operator review without reworking the client.
+- **Tamper-evident evidence** via an append-only SHA-256 hash-chained ledger.
+- **Bridge integrations** for agent, robotics, and industrial control surfaces instead of one framework only.
+
+## Where SINT fits
+
+SINT does not replace MCP, A2A, ROS 2, or industrial protocols. It sits beside them and governs execution:
 
 ```
 Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Escalate
@@ -18,39 +43,39 @@ Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Es
                     ProofReceipt (pluggable attestation)
 ```
 
-## Why SINT?
+## Why teams pay attention to it
 
-AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
+AI agents can already control tools, robots, money flows, and industrial systems. The missing piece is not more reasoning. It is a standard way to say:
 
-### SINT vs. Other Frameworks
+- who is allowed to act
+- under which constraints
+- when human approval is required
+- how to prove what happened afterward
 
-| Capability | **SINT Protocol** | Microsoft AGT | MCP Baseline | SROS2 |
-|---|---|---|---|---|
-| Physical constraint enforcement (velocity, force, geofence) | ✅ In token | ❌ | ❌ | ❌ |
-| Tier-based human oversight (T0–T3) | ✅ 4-tier | ⚠️ Execution rings | ❌ | ❌ |
-| Append-only hash-chained audit | ✅ SHA-256 | ⚠️ Logging | ❌ | ❌ |
-| ROS 2 / MAVLink / industrial bridges | ✅ 12 bridges | ❌ Digital only | ❌ | ⚠️ ROS only |
-| OWASP ASI01–ASI10 coverage | ✅ 10/10 Full | ✅ 10/10 | ❌ | ❌ |
-| Economic routing + budgets | ✅ bridge-economy | ❌ | ❌ | ❌ |
-| Swarm collective constraints | ✅ SwarmCoordinator | ❌ | ❌ | ❌ |
-| E-stop / CircuitBreaker | ✅ EU AI Act Art. 14 | ✅ Kill switch | ❌ | ❌ |
+SINT turns those questions into protocol primitives instead of one-off application logic.
 
-**SINT is the only framework purpose-built for physical AI** — where actions are irreversible and have real-world consequences. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit) targets digital/software agents; SINT targets robots, drones, and actuators.
+### SINT vs. point solutions
 
+| Capability | **SINT Protocol** | MCP / A2A baseline | Robotics auth only |
+|---|---|---|---|
+| Permissioned actions with explicit scope | ✅ | ⚠️ Tool- or framework-specific | ⚠️ Usually transport-specific |
+| Physical constraints in the authorization object | ✅ | ❌ | ⚠️ External policy or app code |
+| Tiered human approval flow | ✅ | ❌ | ❌ |
+| Tamper-evident evidence trail | ✅ | ❌ | ⚠️ Logging only |
+| Real-time revocation without redeploy | ✅ | ⚠️ Partial | ⚠️ Vendor-specific |
+| Cross-surface interoperability | ✅ MCP, A2A, ROS 2, MAVLink, OPC UA, MQTT, gRPC, Open-RMF | ⚠️ Digital-agent focused | ❌ |
 
-**The empirical case for SINT:**
-- **ROSClaw (IROS 2026):** Up to 4.8× spread in out-of-policy LLM action proposals across frontier models under identical safety envelopes. The 3.4× divergence between frontier backends is measurable, reproducible, and persistent.
-- **MCP security (arXiv:2601.17549):** 10 documented real-world MCP breaches in under 8 months, including a CVSS 9.6 command injection affecting 437,000 downloads.
-- **SROS2:** Formally demonstrated to contain 4 critical vulnerabilities at ACM CCS 2022, including access-control bypasses permitting arbitrary command injection.
-- **Unitree BLE worm (September 2025):** Hardcoded crypto keys enabled wormable BLE/Wi-Fi command injection across robot fleets — precisely the scenario SINT's per-agent token scoping and real-time revocation prevent.
+### Core guarantees
 
-**Core guarantees:**
-- No agent action ever bypasses the Policy Gateway (invariant I-G1: No Bypass)
-- Every decision is recorded in a tamper-evident SHA-256 hash-chained ledger (invariant I-G3: Ledger Primacy)
-- Physical constraints (velocity, force, geofence) are enforced at the protocol level — in the token, not in config
-- Tier-gated verifiable compute hooks support provable-execution evidence on critical actions
-- E-stop is universal across all non-terminal DFA states (invariant I-G2: E-stop Universality)
-- Per-agent capability tokens with real-time revocation
+- No protected action bypasses `PolicyGateway.intercept()`.
+- Every decision lands in a hash-chained evidence ledger.
+- Physical constraints live in the token, not hidden config.
+- Approval tiers map consequence severity to operator oversight.
+- Revocation and emergency-stop semantics are first-class protocol behavior.
+
+### Standards and research grounding
+
+SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 
 ## Quick Start
 
