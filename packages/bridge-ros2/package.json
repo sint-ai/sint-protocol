@@ -28,7 +28,6 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "private": true,
   "publishConfig": {
     "access": "public"
   },
