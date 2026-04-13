@@ -52,14 +52,29 @@ jobs:
             "packages/token-registry"
           )
 
+          FAILED=()
           for pkg in "${PACKAGES[@]}"; do
             name=$(node -p "require('./$pkg/package.json').name")
             echo "Publishing $name..."
-            (cd "$pkg" && npm publish --access public --provenance) || {
-              echo "Warning: $name publish failed (may already exist at this version)"
-            }
-            echo "✓ $name"
+            if (cd "$pkg" && npm publish --access public --provenance); then
+              echo "✓ $name"
+            else
+              exit_code=$?
+              # 409 = already published at this version, treat as success
+              if npm view "$name@$(node -p "require('./$pkg/package.json').version")" > /dev/null 2>&1; then
+                echo "✓ $name (already published)"
+              else
+                echo "✗ $name FAILED (exit $exit_code)"
+                FAILED+=("$name")
+              fi
+            fi
           done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed to publish: ${FAILED[*]}"
+            echo "::error::If you see E403 with 2FA error: the NPM_TOKEN must be a Granular Access Token"
+            echo "::error::with 'Bypass 2FA' enabled. Generate at npmjs.com → Access Tokens → Generate New Token → Granular."
+            exit 1
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
