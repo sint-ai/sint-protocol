@@ -11,7 +11,7 @@ npm install @sint/persistence
 ## Usage
 
 ```typescript
-import { InMemoryTokenStore, InMemoryLedgerStore } from "@sint/persistence";
+import { InMemoryTokenStore, InMemoryLedgerStore } from "@pshkv/persistence";
 
 // In-memory stores for development and testing
 const tokenStore = new InMemoryTokenStore();

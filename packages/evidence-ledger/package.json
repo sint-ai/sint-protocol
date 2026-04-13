@@ -1,5 +1,5 @@
 {
-  "name": "@sint/gate-evidence-ledger",
+  "name": "@pshkv/gate-evidence-ledger",
   "version": "0.1.0",
   "description": "SINT Gate — Append-only tamper-evident Evidence Ledger",
   "type": "module",
@@ -19,11 +19,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
+    "@pshkv/core": "workspace:*",
     "@noble/hashes": "^1.7.0"
   },
   "devDependencies": {
-    "@sint/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },

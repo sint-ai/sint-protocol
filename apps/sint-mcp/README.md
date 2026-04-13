@@ -62,7 +62,7 @@ Configure with a `sint-mcp.config.json` in your working directory:
   "mcpServers": {
     "sint": {
       "command": "npx",
-      "args": ["-y", "@sint/mcp", "--config", "/path/to/sint-mcp.config.json"]
+      "args": ["-y", "@pshkv/mcp", "--config", "/path/to/sint-mcp.config.json"]
     }
   }
 }

@@ -17,7 +17,7 @@ const run = spawnSync(
   "pnpm",
   [
     "--filter",
-    "@sint/conformance-tests",
+    "@pshkv/conformance-tests",
     "exec",
     "vitest",
     "run",

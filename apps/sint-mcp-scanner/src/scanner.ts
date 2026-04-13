@@ -7,13 +7,13 @@
  * @module @pshkv/mcp-scanner/scanner
  */
 
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 import {
   getRiskHint,
   isShellExecTool,
   tierFromAnnotations,
-} from "@sint/bridge-mcp";
-import type { MCPToolAnnotations } from "@sint/bridge-mcp";
+} from "@pshkv/bridge-mcp";
+import type { MCPToolAnnotations } from "@pshkv/bridge-mcp";
 
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 

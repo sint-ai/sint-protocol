@@ -7,14 +7,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
-} from "@sint/gate-capability-tokens";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);

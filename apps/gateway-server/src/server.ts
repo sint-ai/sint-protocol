@@ -9,11 +9,11 @@
  */
 
 import { Hono } from "hono";
-import { CsmlEscalator } from "@sint/avatar";
-import { RevocationStore } from "@sint/gate-capability-tokens";
-import { PolicyGateway, ApprovalQueue } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import type { TokenStore, LedgerStore, CacheStore, RevocationBus } from "@sint/persistence";
+import { CsmlEscalator } from "@pshkv/avatar";
+import { RevocationStore } from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import type { TokenStore, LedgerStore, CacheStore, RevocationBus } from "@pshkv/persistence";
 import {
   InMemoryTokenStore,
   InMemoryLedgerStore,
@@ -25,8 +25,8 @@ import {
   ensurePgSchema,
   RedisCache,
   RedisRevocationBus,
-} from "@sint/persistence";
-import type { SintCapabilityToken, SintEventType } from "@sint/core";
+} from "@pshkv/persistence";
+import type { SintCapabilityToken, SintEventType } from "@pshkv/core";
 import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
@@ -45,7 +45,7 @@ import { memoryRoutes, type MemoryRouteContext } from "./routes/memory.js";
 import { delegationRoutes, type DelegationRouteContext } from "./routes/delegations.js";
 import { csmlRoutes, type CsmlRouteContext } from "./routes/csml.js";
 import { registryRoutes, type RegistryRouteContext } from "./routes/registry.js";
-import { InMemoryRegistryStore } from "@sint/token-registry";
+import { InMemoryRegistryStore } from "@pshkv/token-registry";
 import type { SintConfig } from "./config.js";
 
 /** Shared server state — injectable for testing. */

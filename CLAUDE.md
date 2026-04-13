@@ -127,7 +127,7 @@ interface PolicyDecision {
 
 ## Adding a New Package
 
-1. Create `packages/<name>/package.json` with `"name": "@sint/<name>"`
+1. Create `packages/<name>/package.json` with `"name": "@pshkv/<name>"`
 2. Create `packages/<name>/tsconfig.json` extending `../../tsconfig.base.json`
 3. Create `packages/<name>/vitest.config.ts`
 4. Create `packages/<name>/src/index.ts` with exports
@@ -138,7 +138,7 @@ interface PolicyDecision {
 
 ### Issuing a token
 ```typescript
-import { generateKeypair, issueCapabilityToken } from "@sint/gate-capability-tokens";
+import { generateKeypair, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
 const root = generateKeypair();
 const agent = generateKeypair();
 const result = issueCapabilityToken({
@@ -155,7 +155,7 @@ const result = issueCapabilityToken({
 
 ### Intercepting an MCP tool call
 ```typescript
-import { MCPInterceptor } from "@sint/bridge-mcp";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
 const interceptor = new MCPInterceptor({ gateway });
 const sessionId = interceptor.createSession({ agentId, tokenId, serverName: "filesystem" });
 const result = interceptor.interceptToolCall(sessionId, {
@@ -167,7 +167,7 @@ const result = interceptor.interceptToolCall(sessionId, {
 
 ### Intercepting a ROS 2 publish
 ```typescript
-import { ROS2Interceptor } from "@sint/bridge-ros2";
+import { ROS2Interceptor } from "@pshkv/bridge-ros2";
 const interceptor = new ROS2Interceptor({ gateway, agentId, tokenId, robotMassKg: 25 });
 const result = interceptor.interceptPublish({
   topicName: "/cmd_vel", messageType: "geometry_msgs/Twist",

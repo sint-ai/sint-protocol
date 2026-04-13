@@ -16,8 +16,8 @@
  * @module @sint/bridge-mavlink/mavlink-resource-mapper
  */
 
-import { ApprovalTier } from "@sint/core";
-import type { SintRequest } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
+import type { SintRequest } from "@pshkv/core";
 import { MAV_CMD } from "./mavlink-types.js";
 import type {
   MavlinkIntercept,

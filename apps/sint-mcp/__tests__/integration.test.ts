@@ -14,9 +14,9 @@ import { PolicyEnforcer } from "../src/enforcer.js";
 import { ToolAggregator, parseNamespace, makeNamespace } from "../src/aggregator.js";
 import { DownstreamManager } from "../src/downstream.js";
 import { createAgentIdentity } from "../src/identity.js";
-import { PolicyGateway, ApprovalQueue } from "@sint/gate-policy-gateway";
-import { RevocationStore } from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
+import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { RevocationStore } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 function createIntegrationSetup() {

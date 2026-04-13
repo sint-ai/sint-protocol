@@ -11,7 +11,7 @@ npm install @sint/bridge-economy
 ## Usage
 
 ```typescript
-import { EconomyPlugin } from "@sint/bridge-economy";
+import { EconomyPlugin } from "@pshkv/bridge-economy";
 
 const economy = new EconomyPlugin({
   balanceAdapter: myBalanceAdapter,

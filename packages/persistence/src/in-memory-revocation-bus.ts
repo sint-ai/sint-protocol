@@ -4,7 +4,7 @@
  * @module @sint/persistence/in-memory-revocation-bus
  */
 
-import type { UUIDv7 } from "@sint/core";
+import type { UUIDv7 } from "@pshkv/core";
 import type { RevocationBus, RevocationEvent } from "./interfaces.js";
 
 export class InMemoryRevocationBus implements RevocationBus {

@@ -8,12 +8,12 @@
  * @module @sint/mcp/enforcer
  */
 
-import { type SintRequest, type PolicyDecision, ApprovalTier } from "@sint/core";
-import type { PolicyGateway } from "@sint/gate-policy-gateway";
-import type { ApprovalQueue } from "@sint/gate-policy-gateway";
-import { generateUUIDv7, nowISO8601 } from "@sint/gate-capability-tokens";
-import { toResourceUri, toSintAction } from "@sint/bridge-mcp";
-import type { MCPToolCall } from "@sint/bridge-mcp";
+import { type SintRequest, type PolicyDecision, ApprovalTier } from "@pshkv/core";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import type { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
+import { toResourceUri, toSintAction } from "@pshkv/bridge-mcp";
+import type { MCPToolCall } from "@pshkv/bridge-mcp";
 import type { ParsedNamespace } from "./aggregator.js";
 import type { DownstreamManager } from "./downstream.js";
 import type { TrajectoryRecorder } from "./trajectory.js";

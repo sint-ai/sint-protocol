@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-mqtt-sparkplug",
+  "name": "@pshkv/bridge-mqtt-sparkplug",
   "version": "0.1.0",
   "description": "SINT Bridge — MQTT Sparkplug profile adapter for industrial IoT command and telemetry governance",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

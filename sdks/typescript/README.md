@@ -16,7 +16,7 @@ pnpm add @sint/sdk
 ## Quick Start
 
 ```typescript
-import { createSintClient } from "@sint/sdk";
+import { createSintClient } from "@pshkv/sdk";
 
 const sint = createSintClient({
   baseUrl: "http://localhost:3000",
@@ -185,7 +185,7 @@ const schema = await sint.schema("request");
 All HTTP 4xx/5xx responses throw a `SintError`:
 
 ```typescript
-import { SintError } from "@sint/sdk";
+import { SintError } from "@pshkv/sdk";
 
 try {
   await sint.intercept({ /* ... */ });

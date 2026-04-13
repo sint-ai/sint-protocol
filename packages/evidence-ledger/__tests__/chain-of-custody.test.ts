@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { LedgerWriter } from "../src/writer.js";
 import { generateProof, verifyProof } from "../src/chain-of-custody.js";
-import type { SintLedgerEvent } from "@sint/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 const AGENT_ID = "b".repeat(64);
 

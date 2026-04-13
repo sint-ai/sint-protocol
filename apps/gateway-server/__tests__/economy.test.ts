@@ -12,7 +12,7 @@ import {
   InMemoryBalanceAdapter,
   InMemoryBudgetAdapter,
   type IX402Port,
-} from "@sint/bridge-economy";
+} from "@pshkv/bridge-economy";
 
 describe("Gateway Server — Economy Routes", () => {
   let ctx: ServerContext;

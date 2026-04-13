@@ -1,5 +1,5 @@
 {
-  "name": "@sint/engine-hal",
+  "name": "@pshkv/engine-hal",
   "version": "0.1.0",
   "description": "SINT Protocol Hardware Abstraction Layer — auto-detect hardware, select deployment profile",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
+    "@pshkv/core": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {

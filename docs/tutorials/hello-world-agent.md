@@ -55,7 +55,7 @@ SINT uses Ed25519 keypairs for identity. Every agent has a keypair. The public k
 Create a file called `hello-agent.ts`:
 
 ```typescript
-import { SintClient } from "@sint/client";
+import { SintClient } from "@pshkv/client";
 
 const client = new SintClient({
   baseUrl: "http://localhost:3100",
@@ -82,7 +82,7 @@ Capability tokens are the atomic unit of permission in SINT. They grant specific
 Extend `hello-agent.ts`:
 
 ```typescript
-import { SintClient } from "@sint/client";
+import { SintClient } from "@pshkv/client";
 
 const client = new SintClient({
   baseUrl: "http://localhost:3100",
@@ -132,7 +132,7 @@ Key things to notice:
 Now the agent uses its token to request an action through the Policy Gateway. The gateway evaluates the request against policy rules and decides: **allow**, **deny**, or **escalate** (require human approval).
 
 ```typescript
-import { SintClient } from "@sint/client";
+import { SintClient } from "@pshkv/client";
 
 const client = new SintClient({
   baseUrl: "http://localhost:3100",
@@ -267,7 +267,7 @@ Events:
 <summary>hello-agent.ts — full working example</summary>
 
 ```typescript
-import { SintClient } from "@sint/client";
+import { SintClient } from "@pshkv/client";
 
 const client = new SintClient({
   baseUrl: "http://localhost:3100",

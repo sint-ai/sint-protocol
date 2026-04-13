@@ -17,7 +17,7 @@ npm install @sint/integration-langchain
 ### Callback Handler (recommended)
 
 ```typescript
-import { SintGovernanceHandler } from "@sint/integration-langchain";
+import { SintGovernanceHandler } from "@pshkv/integration-langchain";
 
 const handler = new SintGovernanceHandler({
   gatewayUrl: "http://localhost:4100",
@@ -32,7 +32,7 @@ const result = await chain.invoke(input, { callbacks: [handler] });
 ### Tool Wrapper
 
 ```typescript
-import { wrapToolsWithGovernance } from "@sint/integration-langchain";
+import { wrapToolsWithGovernance } from "@pshkv/integration-langchain";
 
 const governedTools = wrapToolsWithGovernance(tools, {
   gatewayUrl: "http://localhost:4100",

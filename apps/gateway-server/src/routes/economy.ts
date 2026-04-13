@@ -15,8 +15,8 @@
 
 import { Hono } from "hono";
 import type { ServerContext } from "../server.js";
-import type { EconomyPluginHooks } from "@sint/gate-policy-gateway";
-import type { IX402Port } from "@sint/bridge-economy";
+import type { EconomyPluginHooks } from "@pshkv/gate-policy-gateway";
+import type { IX402Port } from "@pshkv/bridge-economy";
 
 /** Extended context with optional economy plugin. */
 export interface EconomyRouteContext {
@@ -106,7 +106,7 @@ export function economyRoutes(econCtx: EconomyRouteContext): Hono {
     }
 
     // Import pricing calculator inline to avoid circular dep
-    const { computeActionCost } = await import("@sint/bridge-economy");
+    const { computeActionCost } = await import("@pshkv/bridge-economy");
 
     const pricing = computeActionCost(
       {
@@ -188,7 +188,7 @@ export function economyRoutes(econCtx: EconomyRouteContext): Hono {
       );
     }
 
-    const { applyX402Quotes, selectCostAwareRoute } = await import("@sint/bridge-economy");
+    const { applyX402Quotes, selectCostAwareRoute } = await import("@pshkv/bridge-economy");
 
     const candidates = await applyX402Quotes(body.candidates, econCtx.x402Port);
     const decision = selectCostAwareRoute({

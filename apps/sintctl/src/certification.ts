@@ -57,7 +57,7 @@ export function runStandaloneCertification(
     ? resolve(rootDir, options.outputPath)
     : defaultCertificationOutputPath(rootDir);
 
-  const command = ["pnpm", "--filter", "@sint/conformance-tests", "test:fixtures"] as const;
+  const command = ["pnpm", "--filter", "@pshkv/conformance-tests", "test:fixtures"] as const;
   const run = spawnSync(command[0], [...command.slice(1)], {
     cwd: rootDir,
     stdio: "inherit",

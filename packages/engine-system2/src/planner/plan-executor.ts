@@ -7,8 +7,8 @@
  * @module @sint/engine-system2/planner/plan-executor
  */
 
-import type { Result, SintPlan, SintPlanStep } from "@sint/core";
-import { ok, err } from "@sint/core";
+import type { Result, SintPlan, SintPlanStep } from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
 
 /** Event emitted by the plan executor. */
 export interface PlanExecutorEvent {

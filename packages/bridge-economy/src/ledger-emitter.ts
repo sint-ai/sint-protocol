@@ -8,8 +8,8 @@
  * @module @sint/bridge-economy/ledger-emitter
  */
 
-import type { SintEventType } from "@sint/core";
-import type { LedgerEmitter } from "@sint/gate-policy-gateway";
+import type { SintEventType } from "@pshkv/core";
+import type { LedgerEmitter } from "@pshkv/gate-policy-gateway";
 
 /**
  * Typed emitter for economy-related ledger events.

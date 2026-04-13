@@ -6,8 +6,8 @@
 
 import { describe, it, expect } from "vitest";
 import { assignTier } from "../src/tier-assigner.js";
-import { ApprovalTier, RiskTier } from "@sint/core";
-import type { SintRequest } from "@sint/core";
+import { ApprovalTier, RiskTier } from "@pshkv/core";
+import type { SintRequest } from "@pshkv/core";
 
 function makeRequest(overrides: Partial<SintRequest>): SintRequest {
   return {

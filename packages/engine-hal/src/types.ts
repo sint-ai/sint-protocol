@@ -8,7 +8,7 @@
  * @module @sint/engine-hal/types
  */
 
-import type { ISO8601, SintHardwareDeploymentProfile } from "@sint/core";
+import type { ISO8601, SintHardwareDeploymentProfile } from "@pshkv/core";
 
 /**
  * A point-in-time snapshot of system resource utilization.

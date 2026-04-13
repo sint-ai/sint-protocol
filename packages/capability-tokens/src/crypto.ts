@@ -11,7 +11,7 @@ import * as ed25519 from "@noble/ed25519";
 import { sha512 } from "@noble/hashes/sha512";
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
-import type { Ed25519PublicKey, Ed25519Signature, SHA256 } from "@sint/core";
+import type { Ed25519PublicKey, Ed25519Signature, SHA256 } from "@pshkv/core";
 
 // Configure ed25519 to use sha512
 ed25519.etc.sha512Sync = (...m: Uint8Array[]) => {

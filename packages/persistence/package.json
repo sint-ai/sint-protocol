@@ -1,5 +1,5 @@
 {
-  "name": "@sint/persistence",
+  "name": "@pshkv/persistence",
   "version": "0.1.0",
   "description": "SINT Persistence — storage interfaces and adapters for ledger, tokens, and revocation",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
+    "@pshkv/core": "workspace:*",
     "pg": "^8.13.0",
     "ioredis": "^5.4.0"
   },

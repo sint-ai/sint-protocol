@@ -13,9 +13,9 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import os from "node:os";
 
-import type { SintHardwareProfile } from "@sint/core";
-import { ok, err } from "@sint/core";
-import type { Result } from "@sint/core";
+import type { SintHardwareProfile } from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
+import type { Result } from "@pshkv/core";
 
 import { selectDeploymentProfile } from "./profiler.js";
 

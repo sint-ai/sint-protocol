@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-economy",
+  "name": "@pshkv/bridge-economy",
   "version": "0.1.0",
   "description": "SINT Protocol Economy Bridge — Port/adapter integration with external economy services (balance, budget, trust, pricing)",
   "type": "module",
@@ -19,9 +19,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-policy-gateway": "workspace:*",
-    "@sint/gate-evidence-ledger": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-policy-gateway": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

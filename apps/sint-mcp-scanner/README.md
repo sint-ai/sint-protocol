@@ -105,8 +105,8 @@ Exit code `2` if any CRITICAL tools are found — use in CI/CD pipelines.
 Once you know which tools need protection, add the SINT gateway proxy:
 
 ```typescript
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { MCPInterceptor } from "@sint/bridge-mcp";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
 
 const interceptor = new MCPInterceptor({ gateway });
 const result = interceptor.interceptToolCall(sessionId, toolCall);

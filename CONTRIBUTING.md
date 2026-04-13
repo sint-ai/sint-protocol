@@ -90,7 +90,7 @@ Look for issues labeled [`good first issue`](https://github.com/sint-ai/sint-pro
 
 ## Adding a New Package
 
-1. Create `packages/<name>/package.json` with `"name": "@sint/<name>"`
+1. Create `packages/<name>/package.json` with `"name": "@pshkv/<name>"`
 2. Create `packages/<name>/tsconfig.json` extending `../../tsconfig.base.json`
 3. Create `packages/<name>/vitest.config.ts`
 4. Create `packages/<name>/src/index.ts` with exports

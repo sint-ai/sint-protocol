@@ -1,5 +1,5 @@
 {
-  "name": "@sint/interface-bridge",
+  "name": "@pshkv/interface-bridge",
   "version": "0.1.0",
   "description": "Operator interface bridge for SINT Protocol — voice, HUD, memory, notification tools",
   "type": "module",
@@ -19,8 +19,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/memory": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/memory": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

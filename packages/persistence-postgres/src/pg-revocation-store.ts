@@ -13,7 +13,7 @@
  * @module @sint/persistence-postgres/pg-revocation-store
  */
 
-import type { UUIDv7 } from "@sint/core";
+import type { UUIDv7 } from "@pshkv/core";
 import type { PgPool } from "./pg-pool.js";
 
 /** A stored revocation record. */

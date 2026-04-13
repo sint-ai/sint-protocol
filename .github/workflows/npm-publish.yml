@@ -88,7 +88,7 @@ jobs:
         run: |
           cd /tmp
           npm install @sint/core@${{ steps.version.outputs.version }} --prefer-online
-          node -e "const c = require('@sint/core'); console.log('✓ @sint/core loads OK, exports:', Object.keys(c).length, 'items')"
+          node -e "const c = require('@pshkv/core'); console.log('✓ @sint/core loads OK, exports:', Object.keys(c).length, 'items')"
 
       - name: Create GitHub Release summary
         run: |

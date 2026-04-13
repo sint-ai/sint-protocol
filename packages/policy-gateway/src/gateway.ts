@@ -17,17 +17,17 @@ import {
   type SintRequest,
   sintRequestSchema,
   DEFAULT_APPROVAL_TIMEOUT_MS,
-} from "@sint/core";
+} from "@pshkv/core";
 import {
   validateCapabilityToken,
   type RevocationStore,
-} from "@sint/gate-capability-tokens";
-import { nowISO8601 } from "@sint/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
+import { nowISO8601 } from "@pshkv/gate-capability-tokens";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
 import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
 import { checkForbiddenCombos } from "./forbidden-combos.js";
 import type { CircuitBreakerPlugin, CircuitState } from "./circuit-breaker.js";
-import type { AgentTrustLevel } from "@sint/core";
+import type { AgentTrustLevel } from "@pshkv/core";
 import type { GoalHijackPlugin } from "./goal-hijack.js";
 import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 import type { SupplyChainVerifierPlugin } from "./supply-chain.js";

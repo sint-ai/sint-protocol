@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-a2a",
+  "name": "@pshkv/bridge-a2a",
   "version": "0.1.0",
   "description": "SINT Bridge — Google A2A adapter: secures agent-to-agent task delegation through the policy gateway",
   "type": "module",
@@ -19,9 +19,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*",
-    "@sint/gate-policy-gateway": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-policy-gateway": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

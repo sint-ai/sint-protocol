@@ -21,8 +21,8 @@ import type {
   SintEventType,
   SintLedgerEvent,
   UUIDv7,
-} from "@sint/core";
-import { ok, err } from "@sint/core";
+} from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
 import { randomBytes } from "node:crypto";
 
 /** Genesis hash — the hash chain starts here. */

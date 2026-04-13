@@ -4,7 +4,7 @@
  * @module @sint/gate-capability-tokens/utils
  */
 
-import type { ISO8601, UUIDv7 } from "@sint/core";
+import type { ISO8601, UUIDv7 } from "@pshkv/core";
 import { randomBytes } from "node:crypto";
 
 /**

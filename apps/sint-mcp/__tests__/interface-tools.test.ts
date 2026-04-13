@@ -12,8 +12,8 @@ import {
   isInterfaceTool,
   type InterfaceToolContext,
 } from "../src/tools/interface-tools.js";
-import { InterfaceStateManager } from "@sint/interface-bridge";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
+import { InterfaceStateManager } from "@pshkv/interface-bridge";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 
 function createCtx(withMemory = false): InterfaceToolContext {
   const ledger = new LedgerWriter();

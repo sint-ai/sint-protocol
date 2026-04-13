@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { createCapsuleImports } from "../src/capsule-api.js";
-import type { SintCapsuleManifest, SintSensorReading } from "@sint/core";
+import type { SintCapsuleManifest, SintSensorReading } from "@pshkv/core";
 
 const CAPSULE_ID = "01905f7c-0000-7000-8000-000000000001";
 const VALID_HASH = "a".repeat(64);

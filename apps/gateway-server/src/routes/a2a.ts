@@ -24,7 +24,7 @@ import {
   type A2AJsonRpcRequest,
   type A2ASendTaskParams,
   A2A_ERROR_CODES,
-} from "@sint/bridge-a2a";
+} from "@pshkv/bridge-a2a";
 import type { ServerContext } from "../server.js";
 
 /** Context required for the A2A route. */

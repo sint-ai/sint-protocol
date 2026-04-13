@@ -15,8 +15,8 @@
  * @module @sint/gate-policy-gateway/proactive-escalation
  */
 
-import type { ApprovalTier, SintLedgerEvent } from "@sint/core";
-import { computeCsml } from "@sint/gate-evidence-ledger";
+import type { ApprovalTier, SintLedgerEvent } from "@pshkv/core";
+import { computeCsml } from "@pshkv/gate-evidence-ledger";
 
 export interface EscalationAlert {
   readonly agentId: string;

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import type { SintRequest, PolicyDecision } from "@sint/core";
-import { ApprovalTier, RiskTier } from "@sint/core";
+import type { SintRequest, PolicyDecision } from "@pshkv/core";
+import { ApprovalTier, RiskTier } from "@pshkv/core";
 import { EconomyPlugin } from "../src/economy-plugin.js";
 import type { EconomyPluginConfig } from "../src/economy-plugin.js";
 import { InMemoryBalanceAdapter } from "../src/adapters/in-memory-balance-adapter.js";

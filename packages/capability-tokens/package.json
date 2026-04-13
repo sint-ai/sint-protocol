@@ -1,5 +1,5 @@
 {
-  "name": "@sint/gate-capability-tokens",
+  "name": "@pshkv/gate-capability-tokens",
   "version": "0.1.0",
   "description": "SINT Gate — Capability token issuance, validation, delegation, and revocation",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
+    "@pshkv/core": "workspace:*",
     "@noble/ed25519": "^2.2.0",
     "@noble/hashes": "^1.7.0",
     "zod": "^3.24.0"

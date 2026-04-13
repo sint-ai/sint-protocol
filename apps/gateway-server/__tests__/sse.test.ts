@@ -11,8 +11,8 @@ import type { Hono } from "hono";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityTokenRequest } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

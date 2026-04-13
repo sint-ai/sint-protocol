@@ -10,10 +10,10 @@ import {
   type SintToolContext,
 } from "../src/tools/sint-tools.js";
 import { DownstreamManager } from "../src/downstream.js";
-import { ApprovalQueue } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { RevocationStore, generateKeypair, issueCapabilityToken } from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
+import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { RevocationStore, generateKeypair, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 function createToolContext(): SintToolContext {

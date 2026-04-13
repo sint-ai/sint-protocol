@@ -11,14 +11,14 @@ npm install @sint/core
 ## Usage
 
 ```typescript
-import { Tier, ActionType, type CapabilityToken, type PolicyDecision } from "@sint/core";
+import { Tier, ActionType, type CapabilityToken, type PolicyDecision } from "@pshkv/core";
 
 // Tier constants
 console.log(Tier.T0_OBSERVE);  // Auto-approved, logged
 console.log(Tier.T3_COMMIT);   // Requires human approval
 
 // Zod schemas for runtime validation
-import { CapabilityTokenSchema } from "@sint/core";
+import { CapabilityTokenSchema } from "@pshkv/core";
 const parsed = CapabilityTokenSchema.parse(rawToken);
 ```
 

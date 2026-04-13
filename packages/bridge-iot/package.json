@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-iot",
+  "name": "@pshkv/bridge-iot",
   "version": "0.1.0",
   "description": "SINT Bridge — MQTT/CoAP edge IoT bridge for constrained devices",
   "type": "module",
@@ -20,7 +20,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

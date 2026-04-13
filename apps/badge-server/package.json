@@ -1,5 +1,5 @@
 {
-  "name": "@sint/badge-server",
+  "name": "@pshkv/badge-server",
   "version": "0.1.0",
   "description": "SINT Protocol badge server — sint.cloud/badge/project/{id}.svg",
   "type": "module",

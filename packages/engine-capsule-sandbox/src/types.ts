@@ -11,7 +11,7 @@ import type {
   SintCapsuleManifest,
   SintSensorReading,
   UUIDv7,
-} from "@sint/core";
+} from "@pshkv/core";
 
 /** Lifecycle state of a capsule instance. */
 export type CapsuleState =

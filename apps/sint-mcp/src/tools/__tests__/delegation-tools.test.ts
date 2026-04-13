@@ -12,10 +12,10 @@ import {
   isDelegationTool,
   type DelegationToolContext,
 } from "../delegation-tools.js";
-import { DelegationTree } from "@sint/interface-bridge";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { generateKeypair, issueCapabilityToken } from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
+import { DelegationTree } from "@pshkv/interface-bridge";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { generateKeypair, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
 
 function createContext(overrides?: Partial<DelegationToolContext>): DelegationToolContext {
   const keypair = generateKeypair();

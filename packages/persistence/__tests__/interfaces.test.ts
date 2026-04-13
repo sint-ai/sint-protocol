@@ -11,7 +11,7 @@ import { InMemoryLedgerStore } from "../src/in-memory-ledger-store.js";
 import { InMemoryTokenStore } from "../src/in-memory-token-store.js";
 import { InMemoryCache } from "../src/in-memory-cache.js";
 import { InMemoryRevocationBus } from "../src/in-memory-revocation-bus.js";
-import type { SintLedgerEvent, SintCapabilityToken } from "@sint/core";
+import type { SintLedgerEvent, SintCapabilityToken } from "@pshkv/core";
 
 function makeLedgerEvent(
   seq: number,

@@ -6,7 +6,7 @@
  * in IotInterceptor.
  */
 
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 
 export type IotDeviceClass = "temperature-sensor" | "actuator" | "plc" | "smart-meter";
 

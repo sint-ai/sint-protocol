@@ -7,7 +7,7 @@ import {
   issueCapabilityToken,
   delegateCapabilityToken,
   generateKeypair,
-} from "@sint/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
 import type { ServerContext } from "../server.js";
 
 export function tokenRoutes(ctx: ServerContext): Hono {

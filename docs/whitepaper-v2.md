@@ -487,7 +487,7 @@ SINT's MCP proxy sits between AI clients (Claude, Cursor, GPT) and downstream MC
   "mcpServers": {
     "sint-proxy": {
       "command": "npx",
-      "args": ["@sint/bridge-mcp", "--downstream", "filesystem,exec"]
+      "args": ["@pshkv/bridge-mcp", "--downstream", "filesystem,exec"]
     }
   }
 }
@@ -1314,7 +1314,7 @@ Add to Claude Desktop MCP config:
   "mcpServers": {
     "sint-proxy": {
       "command": "npx",
-      "args": ["@sint/bridge-mcp", "--downstream", "filesystem,exec"]
+      "args": ["@pshkv/bridge-mcp", "--downstream", "filesystem,exec"]
     }
   }
 }

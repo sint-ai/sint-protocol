@@ -1,5 +1,5 @@
 {
-  "name": "@sint/sintctl",
+  "name": "@pshkv/sintctl",
   "version": "0.1.0",
   "description": "SINT operator CLI for token, approval, ledger, and intercept workflows",
   "type": "module",

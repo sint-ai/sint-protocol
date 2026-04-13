@@ -18,8 +18,8 @@ import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken, SintRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

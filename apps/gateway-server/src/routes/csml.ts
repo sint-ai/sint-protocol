@@ -8,7 +8,7 @@
  */
 
 import { Hono } from "hono";
-import { computeCsml } from "@sint/gate-evidence-ledger";
+import { computeCsml } from "@pshkv/gate-evidence-ledger";
 import type { ServerContext } from "../server.js";
 
 /** Context for CSML routes — uses the standard ServerContext ledger. */

@@ -8,9 +8,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ApprovalTier, PolicyDecision } from "@sint/core";
-import type { OpcUaOperation } from "@sint/bridge-opcua";
-import type { RouteCandidate } from "@sint/bridge-economy";
+import type { ApprovalTier, PolicyDecision } from "@pshkv/core";
+import type { OpcUaOperation } from "@pshkv/bridge-opcua";
+import type { RouteCandidate } from "@pshkv/bridge-economy";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = resolve(ROOT, "../fixtures");

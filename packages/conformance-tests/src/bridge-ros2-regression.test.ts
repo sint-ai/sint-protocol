@@ -16,17 +16,17 @@ import {
   nowISO8601,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { ROS2Interceptor } from "@sint/bridge-ros2";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { ROS2Interceptor } from "@pshkv/bridge-ros2";
 import type {
   ROS2TopicMessage,
   ROS2ServiceCall,
   ROS2ActionGoal,
-} from "@sint/bridge-ros2";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
-import { ApprovalTier } from "@sint/core";
+} from "@pshkv/bridge-ros2";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
+import { ApprovalTier } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

@@ -2,7 +2,7 @@
  * Type definitions for SINT OS.
  */
 
-import type { OpenClawAdapterConfig, CrossSystemPolicy } from "@sint/openclaw-adapter";
+import type { OpenClawAdapterConfig, CrossSystemPolicy } from "@pshkv/openclaw-adapter";
 
 /** Full SINT OS configuration. */
 export interface SintOSConfig {

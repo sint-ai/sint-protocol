@@ -11,8 +11,8 @@ npm install @sint/gate-policy-gateway
 ## Usage
 
 ```typescript
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { Tier } from "@sint/core";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { Tier } from "@pshkv/core";
 
 const gateway = new PolicyGateway({
   tokenResolver: async (tokenId) => lookupToken(tokenId),

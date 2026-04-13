@@ -4,8 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import { computeCsml, computeCsmlPerModel } from "../src/csml.js";
-import type { SintLedgerEvent } from "@sint/core";
-import { DEFAULT_CSML_COEFFICIENTS } from "@sint/core";
+import type { SintLedgerEvent } from "@pshkv/core";
+import { DEFAULT_CSML_COEFFICIENTS } from "@pshkv/core";
 
 const GENESIS = "0000000000000000000000000000000000000000000000000000000000000000";
 const AGENT = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";

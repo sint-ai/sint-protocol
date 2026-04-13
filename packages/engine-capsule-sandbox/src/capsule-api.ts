@@ -12,7 +12,7 @@ import type {
   SintCapsuleManifest,
   SintSensorModality,
   SintSensorReading,
-} from "@sint/core";
+} from "@pshkv/core";
 import type { CapsuleApi } from "./types.js";
 
 /**
@@ -54,7 +54,7 @@ function redactSecrets(message: string): string {
  *
  * @example
  * ```ts
- * import { createCapsuleImports } from "@sint/engine-capsule-sandbox";
+ * import { createCapsuleImports } from "@pshkv/engine-capsule-sandbox";
  *
  * const api = createCapsuleImports(
  *   manifest,

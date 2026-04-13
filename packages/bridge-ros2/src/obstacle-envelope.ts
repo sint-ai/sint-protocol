@@ -33,8 +33,8 @@
  * @module @sint/bridge-ros2/obstacle-envelope
  */
 
-import type { DynamicEnvelopePlugin } from "@sint/gate-policy-gateway";
-import type { SintRequest } from "@sint/core";
+import type { DynamicEnvelopePlugin } from "@pshkv/gate-policy-gateway";
+import type { SintRequest } from "@pshkv/core";
 
 /** Configuration for ObstacleAwareEnvelope. */
 export interface ObstacleAwareEnvelopeConfig {
