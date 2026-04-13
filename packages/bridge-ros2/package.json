@@ -1,7 +1,7 @@
 {
   "name": "@pshkv/bridge-ros2",
   "version": "0.1.0",
-  "description": "SINT Bridge — ROS 2 adapter: intercepts robot topic publishes and service calls through the security gate",
+  "description": "SINT Bridge \u2014 ROS 2 adapter: intercepts robot topic publishes and service calls through the security gate",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,5 +31,10 @@
   "private": true,
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/bridge-ros2"
   }
 }

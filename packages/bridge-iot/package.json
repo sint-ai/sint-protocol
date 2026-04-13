@@ -1,7 +1,7 @@
 {
   "name": "@pshkv/bridge-iot",
   "version": "0.1.0",
-  "description": "SINT Bridge — MQTT/CoAP edge IoT bridge for constrained devices",
+  "description": "SINT Bridge \u2014 MQTT/CoAP edge IoT bridge for constrained devices",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,5 +29,10 @@
   "private": true,
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/bridge-iot"
   }
 }

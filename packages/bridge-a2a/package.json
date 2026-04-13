@@ -1,7 +1,7 @@
 {
   "name": "@pshkv/bridge-a2a",
   "version": "0.1.0",
-  "description": "SINT Bridge — Google A2A adapter: secures agent-to-agent task delegation through the policy gateway",
+  "description": "SINT Bridge \u2014 Google A2A adapter: secures agent-to-agent task delegation through the policy gateway",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,5 +30,10 @@
   "private": true,
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/bridge-a2a"
   }
 }
