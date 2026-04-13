@@ -272,5 +272,5 @@ slashed. But the commit/reveal cycle must not block the flight.
 
 ---
 
-*SINT Protocol — building the security layer for the age of physical AI.*
-*914+ tests, 17 packages, 6 bridge adapters, 9/9 APS cross-verification.*
+*SINT Protocol — exploring the open execution-governance layer for physical AI.*
+*For the current public project story and implementation entry points, see the README and docs site.*

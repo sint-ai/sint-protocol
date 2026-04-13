@@ -7,7 +7,7 @@
 
 ## Abstract
 
-As AI agents gain the ability to control robots, execute code, move money, and operate physical machinery, a critical gap has emerged: there is no standard security layer between an LLM's decision and its physical-world consequence. SINT Protocol fills this gap with a layered enforcement architecture that combines capability-based authorization, graduated approval tiers mapped to consequence severity, tamper-evident audit logging, and physical constraint enforcement — all flowing through a single Policy Gateway choke point.
+As AI agents gain the ability to control robots, execute code, move money, and operate physical machinery, a critical gap has emerged: there is no standard execution-governance layer between an LLM's decision and its physical-world consequence. SINT Protocol fills this gap with a layered enforcement architecture that combines capability-based authorization, graduated approval tiers mapped to consequence severity, tamper-evident audit logging, and physical constraint enforcement — all flowing through a single Policy Gateway choke point.
 
 This paper describes the problem, the SINT architecture, its differentiation from existing agent protocols, token economics considerations, and a development roadmap.
 
@@ -127,11 +127,11 @@ SINT detects and blocks dangerous multi-step sequences:
 | **A2A** (Google) | Agent interoperability | ❌ None | Enterprise auth | ❌ None | Google ecosystem focus |
 | **AgentProtocol** (LangChain) | Framework-agnostic agent API | ❌ None | ❌ None | ❌ None | Specification only |
 | **ANP** | Agent networking | ❌ None | DID-based identity | ❌ None | Early stage |
-| **SINT** | **Physical AI security** | ✅ **First-class** | ✅ **Ed25519 capability tokens** | ✅ **Hash-chained ledger** | 12 packages, 370 tests |
+| **SINT** | **Physical AI execution governance** | ✅ **First-class** | ✅ **Ed25519 capability tokens** | ✅ **Hash-chained ledger** | Open reference stack + conformance suite |
 
 ### 3.2 SINT's Unique Position
 
-SINT does not compete with MCP or ACP — it **complements** them. SINT is the security enforcement layer that sits between any agent protocol and the physical world:
+SINT does not compete with MCP or ACP — it **complements** them. SINT is the execution-governance layer that sits between agent protocols and real execution surfaces:
 
 ```
 Agent ──► MCP/ACP/A2A ──► SINT Policy Gateway ──► Physical World
@@ -174,21 +174,18 @@ The SINT Protocol may incorporate a utility token for:
 
 ### 5.1 Current Implementation
 
-| Component | Package | Tests |
-|-----------|---------|-------|
-| Core types & schemas | `@sint/core` | — |
-| Capability tokens | `@sint/gate-capability-tokens` | 31 |
-| Policy gateway | `@sint/gate-policy-gateway` | 39 |
-| Evidence ledger | `@sint/gate-evidence-ledger` | 29 |
-| MCP bridge | `@sint/bridge-mcp` | 43 |
-| ROS 2 bridge | `@sint/bridge-ros2` | 20 |
-| Persistence layer | `@sint/persistence` | 26 |
-| TypeScript SDK | `@sint/client` | 10 |
-| Conformance tests | `@sint/conformance-tests` | 29 |
-| Gateway server (Hono) | `@sint/gateway-server` | 44 |
-| MCP proxy server | `@sint/mcp` | 80 |
-| Approval dashboard | `@sint/dashboard` | 19 |
-| **Total** | **12 packages** | **370 tests** |
+The public reference implementation is a TypeScript monorepo that includes:
+
+- core protocol types and schemas
+- capability tokens
+- policy gateway
+- evidence ledger
+- bridge adapters for MCP and robotics-oriented execution surfaces
+- persistence adapters
+- gateway server, CLI, dashboard, and SDKs
+- conformance and regression tooling
+
+Implementation breadth changes quickly, so the most reliable current inventory is the repository package list and docs site rather than a hard-coded package/test count in this paper.
 
 ### 5.2 Technology Stack
 
@@ -229,7 +226,7 @@ The SINT Protocol may incorporate a utility token for:
 
 ## 7. Conclusion
 
-SINT Protocol is the security enforcement layer that physical AI systems need but don't yet have. While existing protocols solve agent communication, SINT ensures every physical-world action is authorized, constrained, audited, and revocable. With 12 packages, 370 tests, and native MCP/ROS 2 integration already built, SINT is positioned to become the standard security stack for the emerging physical AI ecosystem.
+SINT Protocol is an execution-governance layer for physical and safety-critical AI systems. While existing protocols solve communication and interoperability, SINT focuses on runtime authorization, constraint enforcement, approval routing, and evidence. The public reference stack, docs, and conformance material are intended to make that model inspectable, adoptable, and extensible in real deployments.
 
 ---
 

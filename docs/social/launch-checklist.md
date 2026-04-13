@@ -1,115 +1,58 @@
 # SINT Protocol Launch Checklist
 
-Day-of sequence. Work top to bottom — each step depends on the previous.
+Day-of sequence for launching the current public protocol story.
 
 ---
 
-## Pre-Launch (Do First)
+## Pre-Launch
 
-- [ ] `git pull --rebase` — confirm on latest master
-- [ ] `pnpm run build && pnpm run test` — all 1,105 tests pass
-- [ ] `node apps/sint-mcp-scanner/dist/cli.js --help` — CLI smoke test
+- [ ] `git pull --rebase` on the launch branch
+- [ ] `pnpm run build && pnpm run test`
+- [ ] `pnpm run docs:build`
+- [ ] sanity-check the current surfaces:
+  - [ ] `README.md`
+  - [ ] `docs/index.md`
+  - [ ] `docs/getting-started.md`
+  - [ ] `docs/social/show-hn-draft.md`
+  - [ ] `docs/social/twitter-launch-thread.md`
+  - [ ] `docs/social/linkedin-launch-post.md`
 
----
+## Step 1 — Confirm the public links
 
-## Step 1 — Publish @pshkv/mcp-scanner to npm
+- [ ] GitHub repo: `https://github.com/sint-ai/sint-protocol`
+- [ ] Docs homepage: `https://docs.sint.gg`
+- [ ] Quick start: `https://docs.sint.gg/getting-started`
+- [ ] Protocol spec: `https://docs.sint.gg/SINT_v0.2_SPEC`
+- [ ] Discussions: `https://github.com/sint-ai/sint-protocol/discussions`
 
-```bash
-npm login  # log in as sint-ai org or personal account with @sint scope access
-bash scripts/publish-scanner.sh --dry-run  # preview what will be published
-bash scripts/publish-scanner.sh            # publish
-```
+## Step 2 — Publish the X thread
 
-Verify:
-```bash
-npx @pshkv/mcp-scanner --server test --tools '[{"name":"bash","description":"runs shell"}]'
-npx sint-scan --help
-```
+- [ ] Attach a short demo clip to Tweet 1
+- [ ] Attach a terminal screenshot to the `sint-scan` tweet
+- [ ] Post the thread from `docs/social/twitter-launch-thread.md`
 
-- [ ] `npx sint-scan` works from a fresh directory (no local install)
-- [ ] npm page at npmjs.com/package/@pshkv/mcp-scanner shows correct README and version
+## Step 3 — Post Show HN
 
----
+- [ ] Use the title and body from `docs/social/show-hn-draft.md`
+- [ ] Post the top-level comment immediately after submission
+- [ ] Stay available to answer questions for the first two hours
 
-## Step 2 — Update README Badge
+## Step 4 — Publish the LinkedIn post
 
-After npm publish, update the npm badge in README.md to the real registry link:
+- [ ] Post the copy from `docs/social/linkedin-launch-post.md`
+- [ ] Include the GitHub repo and docs links
 
-```
-![npm](https://img.shields.io/npm/v/@pshkv/mcp-scanner?label=npm%3A%40sint%2Fmcp-scanner)
-```
+## Step 5 — Community distribution
 
-Commit: `docs(readme): add live npm badge for @pshkv/mcp-scanner`
+- [ ] MCP community
+- [ ] robotics / ROS community
+- [ ] relevant agent framework communities
+- [ ] security and standards communities
+- [ ] broad OSS channels from `COMMUNITY-TARGETS.md`
 
----
+## Step 6 — Follow-through
 
-## Step 3 — Post X Thread
-
-Copy from `docs/social/twitter-launch-thread.md`. Post as a thread (7 tweets, each is one block).
-
-- [ ] Attach [VIDEO] to Tweet 1 — 30s demo: dashboard + ROS2 robot arm denial
-- [ ] Attach [SCREENSHOT] to Tweet 4 — terminal showing `npx sint-scan` CRITICAL output
-- [ ] Tag all accounts in Tweet 7: @jspahrsummers @doppenhe @Aurimas_Gr @M_haggis @SlowMist_Team
-- [ ] Post thread
-
----
-
-## Step 4 — Post Show HN
-
-Copy from `docs/social/show-hn-draft.md`.
-
-- Title: `Show HN: SINT Protocol – MCP security layer with capability tokens, T0–T3 tiers, and tamper-evident audit log`
-- URL: `https://github.com/sint-ai/sint-protocol`
-- Post the comment text as the first comment immediately after submission
-
-- [ ] Submitted to HN
-- [ ] OP comment posted
-
----
-
-## Step 5 — Post LinkedIn
-
-Copy from `docs/social/linkedin-launch-post.md`.
-
-- [ ] Post published
-- [ ] Tagged: Anthropic, Open Robotics, NIST
-
----
-
-## Step 6 — Community Distribution
-
-From `COMMUNITY-TARGETS.md`:
-
-- [ ] MCP Discord — #show-and-tell or #security channel
-- [ ] LangChain Discord — #announcements or #tools
-- [ ] Hugging Face Discord — #agents
-- [ ] Reply to @doppenhe MCP security posts
-- [ ] Reply to @Aurimas_Gr robotics security posts
-- [ ] Reply to @M_haggis physical AI posts
-- [ ] DM @SlowMist_Team for security research collaboration
-
----
-
-## Step 7 — Outreach Emails
-
-- [ ] ros-security@openrobotics.org — attach WHITEPAPER.md summary, link to GitHub
-- [ ] ai-inquiries@nist.gov — NIST AI RMF alignment section from WHITEPAPER.md (Section 8.1)
-
----
-
-## Step 8 — Monitor and Respond
-
-- [ ] Set up GitHub notification for new issues/stars
-- [ ] Respond to HN comments within 2 hours of submission
-- [ ] Respond to X replies within 2 hours of posting
-- [ ] Track star count: target 50 stars day 1, 200 by end of week
-
----
-
-## Human-Only Actions (Cannot Be Automated)
-
-- Recording the 30-second demo video (dashboard + ROS2 denial)
-- `npm login` authentication
-- Actually posting to X, HN, LinkedIn
-- Sending emails to ros-security@ and ai-inquiries@
-- Responding to community replies
+- [ ] Watch discussions and issues for inbound feedback
+- [ ] Respond quickly to technical questions
+- [ ] Turn repeated questions into docs improvements
+- [ ] Convert useful feedback into issues or RFCs

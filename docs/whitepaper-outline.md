@@ -116,7 +116,7 @@ SINT Protocol is a layered open standard for security, governance, and economic 
 
 ## 12. Conclusion & Roadmap
 
-- Current status: working reference implementation with 370+ tests
+- Current status: working public reference implementation with docs, examples, and conformance tooling
 - Near-term: production hardening, additional bridges, conformance certification
 - Medium-term: economic layer, governance framework, ecosystem growth
 - Long-term: industry standard for physical AI security

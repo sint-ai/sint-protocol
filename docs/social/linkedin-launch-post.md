@@ -1,41 +1,46 @@
 # LinkedIn Launch Post — SINT Protocol
 
-> **Instructions:** Post from personal or company account. Tone: professional, outcome-focused. Tag company pages where possible.
+> **Instructions:** Post from a personal or company account. Tone: professional, technical, and outcome-focused.
 
 ---
 
 ## Post Text
 
-AI agents are moving into production — controlling robots, executing code, managing infrastructure. But most deployments have a dangerous gap: **there's no authorization layer between the model's decision and the physical action.**
+AI agents are moving from chat into execution.
 
-Today we're open-sourcing **SINT Protocol** — the security enforcement layer for production AI agents.
+They can now call tools, operate robots, write to infrastructure, and trigger workflows with real cost or safety impact. But most teams still lack a standard answer to four questions:
 
-SINT sits between your AI agents and every tool they can call. Every action is authorized by a signed capability token, classified into an approval tier (auto-approve → human sign-off), and recorded in a tamper-evident audit log. Shell execution and irreversible operations require explicit human approval. Physics constraints — velocity, force, geofence — are enforced at the protocol level, not in application code.
+1. Who is authorized to act?
+2. Under which constraints?
+3. When does a human need to approve?
+4. How do you prove what happened afterward?
 
-**Why it matters for enterprises:**
-- **EU AI Act compliance** — Article 14(4)(e) human oversight requirement is built-in via the CircuitBreaker stop mechanism
-- **NIST AI RMF alignment** — GOVERN-1.1 (human oversight), MANAGE-4.2 (incident response), MEASURE-2.6 (monitoring) are directly addressed
-- **Audit-ready** — SHA-256 hash-chained evidence ledger with SIEM export. Every agent decision is cryptographically recorded
-- **MCP + ROS2 + IoT ready** — bridge adapters for Model Context Protocol, ROS 2, MAVLink, MQTT, OPC-UA out of the box
+That is the gap we built **SINT Protocol** to address.
 
-1,105 tests. 31 packages. Apache-2.0. Production-ready Docker Compose deployment.
+SINT is an open protocol and reference stack for governing AI agent execution. It sits between agent frameworks and execution surfaces and provides:
 
-Scan your MCP server's tools right now: `npx sint-scan`
+- **Capability tokens** for scoped authority, expiry, delegation, and revocation
+- **A policy gateway** that can allow, deny, or escalate protected actions at runtime
+- **Approval tiers** that map consequence severity to autonomy or operator review
+- **A tamper-evident evidence ledger** for audit and forensic review
 
-GitHub: https://github.com/sint-ai/sint-protocol
-Whitepaper: https://github.com/sint-ai/sint-protocol/blob/master/WHITEPAPER.md
+The point is not to replace MCP, A2A, robotics middleware, or existing tool ecosystems. The point is to add a common control plane for execution governance across them.
 
-What gap in AI agent security keeps you up at night? Happy to discuss in the comments.
+If you are building MCP infrastructure, robotics systems, or enterprise agent workflows, that boundary between "the model decided" and "the action happened" matters more every quarter.
+
+Repo: https://github.com/sint-ai/sint-protocol
+Docs: https://docs.sint.gg
+
+What would make you trust an agent execution layer in production?
 
 ---
 
 ## Hashtags
 
-#AIAgents #AIGovernance #MCP #PhysicalAI #CyberSecurity #Robotics #EUAIAct #NIST #OpenSource #AgentSecurity
+#AIAgents #AIGovernance #MCP #PhysicalAI #CyberSecurity #Robotics #OpenSource #AgentSecurity
 
 ## Tags to include (company pages)
 
 - Anthropic
 - Open Robotics
 - NIST
-

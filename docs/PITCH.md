@@ -1,43 +1,33 @@
 # SINT Protocol — 500-Word Pitch
 
-**Six teams. Six codebases. Six languages. Same cryptographic primitive. Zero coordination.**
+AI agents have crossed the line from answering questions to taking actions. They call MCP tools, operate robots, write to industrial systems, and trigger business workflows with real costs.
 
-In the past 90 days, six independent AI agent projects — built in different cities, under different licenses, by teams who had never spoken — all arrived at the same design decision: Ed25519 public keys, encoded as `did:key:z6Mk...`, using the identical two-byte `[0xed, 0x01]` multicodec prefix, via the same base58btc encoding algorithm. We ran 9 cross-verification tests against motebit/motebit, one of the six. 9/9 passed. Zero code changes on either side.
+The problem is that most teams still treat execution governance as scattered application logic. Authorization is bolted on per tool. Human review is handled ad hoc. Audit trails are incomplete or easy to bypass. When an agent makes a risky move, there is no standard control plane between "the model decided" and "the action happened."
 
-This is not a coincidence. It is a theorem.
+SINT Protocol exists to fill that gap.
 
----
+SINT is an open protocol and reference stack for governing AI agent execution when actions have real-world consequences. It sits between agent frameworks and execution surfaces and provides four things developers actually need:
 
-## The Problem
+1. **Capability tokens** that scope who can do what, where, for how long, and under which constraints.
+2. **A policy gateway** that evaluates every protected action at runtime and decides allow, deny, or escalate.
+3. **Approval tiers** that map consequence severity to autonomy or human review.
+4. **A tamper-evident evidence ledger** that records what happened afterward in a form suitable for audit and forensics.
 
-AI agents are being deployed into the physical world — robots, payment systems, medical devices, industrial controllers. The question everyone is avoiding: **who decides what the agent is allowed to do, and how do you prove it happened?**
+This matters because existing standards mostly solve communication, not execution governance. MCP helps agents call tools. A2A helps agents talk to each other. Robotics middleware helps systems move data and commands. None of those layers, by themselves, answer the critical questions:
 
-Current answer: nobody. Agents act, log to files (if at all), and hope nothing goes wrong. When it does, there's no cryptographic trail, no bounded authority, no accountability. This is the security architecture of duct tape.
+- Is this agent authorized to perform this action?
+- Are physical or operational constraints being enforced?
+- Does this action require a human to approve it?
+- Can we prove the decision path after the fact?
 
----
+SINT turns those questions into protocol primitives instead of one-off middleware.
 
-## The Stack
+For developers, the appeal is straightforward. You can keep the frameworks and transports you already use, then add a common governance model across them. A protected MCP tool call, a ROS 2 command, and an industrial bridge action can all pass through the same policy gateway. The result is a cleaner system boundary, less duplicated policy code, and a stronger story for security, compliance, and incident review.
 
-SINT Protocol is a security enforcement layer that sits between an AI agent and anything it can affect. Every action flows through a single choke point: `PolicyGateway.intercept()`. No action executes without:
+For teams deploying physical or safety-critical AI, the value is even clearer. SINT supports token-native constraints like velocity, force, and geofence bounds, plus approval tiers that can force human review as risk rises. That makes it useful in environments where actions are not easily reversible and "just trust the model" is not an acceptable operating model.
 
-1. **A capability token** — Ed25519-signed, specifying which agent, which resource, which actions, and which constraints. Delegation only attenuates: a child token can never exceed parent permissions.
-2. **A tier assignment** — T0 (read-only, auto-approve) through T3 (irreversible, human sign-off). A robot moving at speed is T2. Transferring funds is T3. No configuration needed: the gateway assigns tiers based on resource type and physical context.
-3. **A hash-chained evidence event** — every decision, allow or deny, appended to an append-only ledger. SHA-256 chained. No updates, no deletes. Tamper-evident by construction.
+SINT is open-source under Apache-2.0 and ships with public docs, runnable examples, a protocol spec, and a growing reference implementation around the gateway, bridges, SDKs, dashboard, and conformance tooling.
 
-The constraint language (`CL-1.0`) binds physical limits — velocity, force, geofence — cryptographically to the token itself. A robot that receives a token capped at 0.5 m/s cannot be commanded faster, regardless of what the AI model says.
+If you are building MCP infrastructure, robotics systems, agent platforms, or any workflow where an AI action can have costly consequences, SINT is the layer to evaluate. The goal is simple: make governed agent execution a protocol concern, not a recurring integration problem.
 
----
-
-## The Signal
-
-Six projects converged on the same identity primitive from first principles. That convergence is the specification. Not a committee document — executable tests that pass or fail. We have submitted crosswalk files to the OWASP AI Security Initiative and Agent Governance Vocabulary. We have cross-verification suites running against APS, motebit, MolTrust, WTRMRK, and AgentNexus. Pull requests are open. Tests are green.
-
-The agent governance problem has exactly one hard requirement before everything else works: you need unforgeable identities that travel across systems without requiring a central authority. Ed25519 + `did:key` is that primitive. Six independent projects already know this.
-
----
-
-## The Bet
-
-Physical AI without a security enforcement layer is not a product. It is a liability waiting to be triggered. SINT Protocol is the enforcement layer — open-source, auditable, test-driven — with a cryptographic primitive that six projects have already independently chosen. 
-
-The convergence happened without us. We're just the first to make it executable.
+Start with the repo, run the quick start, and tell us where the model-to-action boundary still feels unsafe.
