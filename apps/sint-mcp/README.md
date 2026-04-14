@@ -27,10 +27,10 @@ Every downstream tool is exposed to the agent as `serverName__toolName` (e.g. `f
 
 ```bash
 # stdio (Claude Desktop, Claude Code, etc.)
-npx @sint/mcp
+npx sint-mcp
 
 # Streamable HTTP
-npx @sint/mcp --sse --port 3200
+npx sint-mcp --sse --port 3200
 ```
 
 Configure with a `sint-mcp.config.json` in your working directory:
@@ -62,7 +62,7 @@ Configure with a `sint-mcp.config.json` in your working directory:
   "mcpServers": {
     "sint": {
       "command": "npx",
-      "args": ["-y", "@sint/mcp", "--config", "/path/to/sint-mcp.config.json"]
+      "args": ["-y", "sint-mcp", "--config", "/path/to/sint-mcp.config.json"]
     }
   }
 }

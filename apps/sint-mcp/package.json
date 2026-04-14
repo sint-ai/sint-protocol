@@ -1,5 +1,5 @@
 {
-  "name": "@sint/mcp",
+  "name": "sint-mcp",
   "version": "0.1.0",
   "description": "SINT MCP — Security-first multi-MCP proxy server with policy enforcement",
   "type": "module",
@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc --build && node build.mjs",
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "start": "node dist/index.cjs",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist *.tsbuildinfo",
     "test": "vitest run",

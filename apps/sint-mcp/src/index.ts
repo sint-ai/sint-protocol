@@ -7,9 +7,9 @@
  * SINT policy on every tool call.
  *
  * Usage:
- *   npx @sint/mcp                           # stdio, default config
- *   npx @sint/mcp --sse --port 3200         # SSE remote
- *   npx @sint/mcp --config ./config.json    # custom config
+ *   npx sint-mcp                            # stdio, default config
+ *   npx sint-mcp --sse --port 3200         # SSE remote
+ *   npx sint-mcp --config ./config.json     # custom config
  *
  * @module @sint/mcp
  */
