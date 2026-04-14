@@ -1,25 +1,28 @@
 {
-  "name": "@pshkv/mcp",
+  "name": "@sint/mcp",
   "version": "0.1.0",
   "description": "SINT MCP — Security-first multi-MCP proxy server with policy enforcement",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
   "bin": {
-    "sint-mcp": "./dist/index.js"
+    "sint-mcp": "./dist/index.cjs"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.cjs"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
+      "default": "./dist/server.cjs"
     }
   },
+  "files": [
+    "dist/index.cjs",
+    "dist/server.cjs",
+    "README.md",
+    "sint-mcp.config.example.json"
+  ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && node build.mjs",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
@@ -27,7 +30,13 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "dependencies": {
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@pshkv/bridge-mcp": "workspace:*",
     "@pshkv/core": "workspace:*",
@@ -36,11 +45,10 @@
     "@pshkv/gate-policy-gateway": "workspace:*",
     "@pshkv/interface-bridge": "workspace:*",
     "@pshkv/memory": "workspace:*",
-    "zod": "^3.24.0"
-  },
-  "devDependencies": {
+    "esbuild": "^0.25.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "zod": "^3.24.0"
   }
 }

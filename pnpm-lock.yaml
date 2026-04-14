@@ -192,7 +192,7 @@ importers:
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
   apps/sint-mcp:
-    dependencies:
+    devDependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@3.25.76)
@@ -217,10 +217,9 @@ importers:
       '@pshkv/memory':
         specifier: workspace:*
         version: link:../../packages/memory
-      zod:
-        specifier: ^3.24.0
-        version: 3.25.76
-    devDependencies:
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.12
       tsx:
         specifier: ^4.19.0
         version: 4.21.0
@@ -230,6 +229,9 @@ importers:
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
 
   apps/sint-mcp-scanner:
     devDependencies:

@@ -30,7 +30,7 @@ Every downstream tool is exposed to the agent as `serverName__toolName` (e.g. `f
 npx @sint/mcp
 
 # Streamable HTTP
-npx @sint/mcp --http --port 3200
+npx @sint/mcp --sse --port 3200
 ```
 
 Configure with a `sint-mcp.config.json` in your working directory:
@@ -62,7 +62,7 @@ Configure with a `sint-mcp.config.json` in your working directory:
   "mcpServers": {
     "sint": {
       "command": "npx",
-      "args": ["-y", "@pshkv/mcp", "--config", "/path/to/sint-mcp.config.json"]
+      "args": ["-y", "@sint/mcp", "--config", "/path/to/sint-mcp.config.json"]
     }
   }
 }
@@ -77,7 +77,7 @@ All options can be set via config file, environment variable, or CLI flag. Prior
 | `servers` | — | — | `{}` | Downstream server configs (see below) |
 | `defaultPolicy` | `--policy` | `SINT_MCP_POLICY` | `cautious` | `permissive` \| `cautious` \| `strict` |
 | `approvalTimeoutMs` | `--timeout` | `SINT_MCP_APPROVAL_TIMEOUT` | `120000` | How long to wait for human approval |
-| `transport` | `--stdio` / `--http` | `SINT_MCP_TRANSPORT` | `stdio` | `stdio` \| `http` |
+| `transport` | `--stdio` / `--sse` | `SINT_MCP_TRANSPORT` | `stdio` | `stdio` \| `sse` |
 | `port` | `--port` | `SINT_MCP_PORT` | `3200` | HTTP port (http transport only) |
 | `agentPrivateKey` | — | `SINT_AGENT_PRIVATE_KEY` | auto-generated | Agent Ed25519 private key (hex) |
 
