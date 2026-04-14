@@ -19,6 +19,22 @@ Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Es
                     ProofReceipt (pluggable attestation)
 ```
 
+## Install the MCP server
+
+The installable server entrypoint is `sint-mcp`.
+
+```bash
+npx -y sint-mcp --stdio
+npx -y sint-mcp --config ./sint-mcp.config.example.json --stdio
+```
+
+If you prefer containers, build and run the repo root `Dockerfile`:
+
+```bash
+docker build -t sint-mcp .
+docker run --rm -i sint-mcp
+```
+
 ## Why SINT?
 
 AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
