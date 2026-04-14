@@ -8,7 +8,7 @@
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { generateUUIDv7 } from "@sint/gate-capability-tokens";
+import { generateUUIDv7 } from "@pshkv/gate-capability-tokens";
 
 /**
  * Apply standard middleware to a Hono app.

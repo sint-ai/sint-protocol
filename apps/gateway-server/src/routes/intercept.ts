@@ -3,8 +3,8 @@
  */
 
 import { Hono } from "hono";
-import type { SintRequest } from "@sint/core";
-import { sintRequestSchema, ApprovalTier } from "@sint/core";
+import type { SintRequest } from "@pshkv/core";
+import { sintRequestSchema, ApprovalTier } from "@pshkv/core";
 import type { ServerContext } from "../server.js";
 import { globalRiskBus, computeRiskScore } from "./risk-stream.js";
 import { globalApprovalBus } from "../ws/ws-approval-stream.js";

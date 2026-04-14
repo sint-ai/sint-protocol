@@ -16,10 +16,10 @@
  * @module @sint/avatar/csml-escalator
  */
 
-import { ApprovalTier } from "@sint/core";
-import { computeCsml } from "@sint/gate-evidence-ledger";
-import { DEFAULT_CSML_COEFFICIENTS } from "@sint/core";
-import type { CsmlCoefficients } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
+import { computeCsml } from "@pshkv/gate-evidence-ledger";
+import { DEFAULT_CSML_COEFFICIENTS } from "@pshkv/core";
+import type { CsmlCoefficients } from "@pshkv/core";
 import type { AgentEventQuery, CsmlEscalationDecision } from "./types.js";
 import { DEFAULT_CSML_THETA } from "./avatar-registry.js";
 

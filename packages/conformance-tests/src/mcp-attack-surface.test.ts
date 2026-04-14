@@ -28,18 +28,18 @@ import {
   issueCapabilityToken,
   delegateCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import { PolicyGateway, checkForbiddenCombos } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { MCPInterceptor } from "@sint/bridge-mcp";
-import type { MCPToolCall } from "@sint/bridge-mcp";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, checkForbiddenCombos } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
+import type { MCPToolCall } from "@pshkv/bridge-mcp";
 import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@sint/core";
-import { ApprovalTier } from "@sint/core";
-import { InMemoryRateLimitStore } from "@sint/persistence";
+} from "@pshkv/core";
+import { ApprovalTier } from "@pshkv/core";
+import { InMemoryRateLimitStore } from "@pshkv/persistence";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

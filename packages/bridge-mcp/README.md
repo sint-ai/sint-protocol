@@ -11,8 +11,8 @@ npm install @sint/bridge-mcp
 ## Usage
 
 ```typescript
-import { MCPInterceptor } from "@sint/bridge-mcp";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 const interceptor = new MCPInterceptor({
   gateway: myPolicyGateway,
@@ -33,7 +33,7 @@ console.log(decision.action); // "allow" | "deny" | "escalate"
 Drop into any MCP server as middleware:
 
 ```typescript
-import { createSintMiddleware } from "@sint/bridge-mcp";
+import { createSintMiddleware } from "@pshkv/bridge-mcp";
 
 const middleware = createSintMiddleware({
   gateway: myPolicyGateway,

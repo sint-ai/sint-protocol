@@ -1,5 +1,5 @@
 {
-  "name": "@sint/openclaw-adapter",
+  "name": "@pshkv/openclaw-adapter",
   "version": "0.1.0",
   "description": "SINT Protocol adapter for OpenClaw — injects capability token governance into every OpenClaw tool call, MCP server, and node action.",
   "type": "module",
@@ -36,8 +36,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@sint/client": "workspace:*",
-    "@sint/core": "workspace:*"
+    "@pshkv/client": "workspace:*",
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

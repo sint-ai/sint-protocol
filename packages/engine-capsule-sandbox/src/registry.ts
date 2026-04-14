@@ -14,8 +14,8 @@ import type {
   SintCapsuleManifest,
   SintSensorModality,
   UUIDv7,
-} from "@sint/core";
-import { ok, err } from "@sint/core";
+} from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
 import type { CapsuleError, CapsuleInstance } from "./types.js";
 import { validateManifest } from "./manifest-validator.js";
 
@@ -24,7 +24,7 @@ import { validateManifest } from "./manifest-validator.js";
  *
  * @example
  * ```ts
- * import { CapsuleRegistry } from "@sint/engine-capsule-sandbox";
+ * import { CapsuleRegistry } from "@pshkv/engine-capsule-sandbox";
  *
  * const registry = new CapsuleRegistry();
  * const result = registry.register(manifest);

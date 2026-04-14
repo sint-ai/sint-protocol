@@ -12,9 +12,9 @@
  * @module @sint/bridge-a2a/interceptor
  */
 
-import type { PolicyDecision, SintRequest, UUIDv7 } from "@sint/core";
-import type { PolicyGateway } from "@sint/gate-policy-gateway";
-import { generateUUIDv7, nowISO8601 } from "@sint/gate-capability-tokens";
+import type { PolicyDecision, SintRequest, UUIDv7 } from "@pshkv/core";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
 import {
   type A2AAgentCard,
   type A2AInterceptResult,

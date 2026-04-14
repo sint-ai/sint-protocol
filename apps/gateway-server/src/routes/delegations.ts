@@ -8,7 +8,7 @@
  */
 
 import { Hono } from "hono";
-import type { DelegationTree } from "@sint/interface-bridge";
+import type { DelegationTree } from "@pshkv/interface-bridge";
 
 /** Context for delegation routes — tree is optional; missing → empty/503. */
 export interface DelegationRouteContext {

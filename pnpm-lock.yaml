@@ -31,6 +31,25 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  apps/badge-server:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.14.0
+        version: 1.19.11(hono@4.12.8)
+      hono:
+        specifier: ^4.7.0
+        version: 4.12.8
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
+      tsx:
+        specifier: ^4.19.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   apps/dashboard:
     dependencies:
       react:
@@ -73,37 +92,37 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.0
         version: 1.19.11(hono@4.12.8)
-      '@sint/avatar':
+      '@pshkv/avatar':
         specifier: workspace:*
         version: link:../../packages/avatar
-      '@sint/bridge-a2a':
+      '@pshkv/bridge-a2a':
         specifier: workspace:*
         version: link:../../packages/bridge-a2a
-      '@sint/bridge-economy':
+      '@pshkv/bridge-economy':
         specifier: workspace:*
         version: link:../../packages/bridge-economy
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../../packages/capability-tokens
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../../packages/evidence-ledger
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../../packages/policy-gateway
-      '@sint/interface-bridge':
+      '@pshkv/interface-bridge':
         specifier: workspace:*
         version: link:../../packages/interface-bridge
-      '@sint/memory':
+      '@pshkv/memory':
         specifier: workspace:*
         version: link:../../packages/memory
-      '@sint/persistence':
+      '@pshkv/persistence':
         specifier: workspace:*
         version: link:../../packages/persistence
-      '@sint/token-registry':
+      '@pshkv/token-registry':
         specifier: workspace:*
         version: link:../../packages/token-registry
       hono:
@@ -177,25 +196,25 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@3.25.76)
-      '@sint/bridge-mcp':
+      '@pshkv/bridge-mcp':
         specifier: workspace:*
         version: link:../../packages/bridge-mcp
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../../packages/capability-tokens
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../../packages/evidence-ledger
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../../packages/policy-gateway
-      '@sint/interface-bridge':
+      '@pshkv/interface-bridge':
         specifier: workspace:*
         version: link:../../packages/interface-bridge
-      '@sint/memory':
+      '@pshkv/memory':
         specifier: workspace:*
         version: link:../../packages/memory
       zod:
@@ -214,10 +233,10 @@ importers:
 
   apps/sint-mcp-scanner:
     devDependencies:
-      '@sint/bridge-mcp':
+      '@pshkv/bridge-mcp':
         specifier: workspace:*
         version: link:../../packages/bridge-mcp
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
       esbuild:
@@ -244,7 +263,7 @@ importers:
 
   capsules/inspection:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -257,7 +276,7 @@ importers:
 
   capsules/navigation:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -270,7 +289,7 @@ importers:
 
   capsules/pick-and-place:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../../packages/core
     devDependencies:
@@ -293,14 +312,14 @@ importers:
 
   packages/avatar:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
     devDependencies:
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
       typescript:
@@ -312,13 +331,13 @@ importers:
 
   packages/bridge-a2a:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
@@ -331,13 +350,13 @@ importers:
 
   packages/bridge-economy:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
@@ -350,7 +369,7 @@ importers:
 
   packages/bridge-grpc:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -363,7 +382,7 @@ importers:
 
   packages/bridge-iot:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -376,14 +395,14 @@ importers:
 
   packages/bridge-mavlink:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
       typescript:
@@ -395,13 +414,13 @@ importers:
 
   packages/bridge-mcp:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
@@ -414,7 +433,7 @@ importers:
 
   packages/bridge-mqtt-sparkplug:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -427,7 +446,7 @@ importers:
 
   packages/bridge-opcua:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -440,7 +459,7 @@ importers:
 
   packages/bridge-open-rmf:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -453,13 +472,13 @@ importers:
 
   packages/bridge-ros2:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
       zod:
@@ -475,14 +494,14 @@ importers:
 
   packages/bridge-swarm:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
     devDependencies:
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
       typescript:
@@ -500,7 +519,7 @@ importers:
       '@noble/hashes':
         specifier: ^1.7.0
         version: 1.8.0
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
       zod:
@@ -516,14 +535,14 @@ importers:
 
   packages/client:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gateway-server':
+      '@pshkv/gateway-server':
         specifier: workspace:*
         version: link:../../apps/gateway-server
       hono:
@@ -538,46 +557,46 @@ importers:
 
   packages/conformance-tests:
     devDependencies:
-      '@sint/bridge-a2a':
+      '@pshkv/bridge-a2a':
         specifier: workspace:*
         version: link:../bridge-a2a
-      '@sint/bridge-economy':
+      '@pshkv/bridge-economy':
         specifier: workspace:*
         version: link:../bridge-economy
-      '@sint/bridge-grpc':
+      '@pshkv/bridge-grpc':
         specifier: workspace:*
         version: link:../bridge-grpc
-      '@sint/bridge-iot':
+      '@pshkv/bridge-iot':
         specifier: workspace:*
         version: link:../bridge-iot
-      '@sint/bridge-mcp':
+      '@pshkv/bridge-mcp':
         specifier: workspace:*
         version: link:../bridge-mcp
-      '@sint/bridge-mqtt-sparkplug':
+      '@pshkv/bridge-mqtt-sparkplug':
         specifier: workspace:*
         version: link:../bridge-mqtt-sparkplug
-      '@sint/bridge-opcua':
+      '@pshkv/bridge-opcua':
         specifier: workspace:*
         version: link:../bridge-opcua
-      '@sint/bridge-open-rmf':
+      '@pshkv/bridge-open-rmf':
         specifier: workspace:*
         version: link:../bridge-open-rmf
-      '@sint/bridge-ros2':
+      '@pshkv/bridge-ros2':
         specifier: workspace:*
         version: link:../bridge-ros2
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
-      '@sint/gate-policy-gateway':
+      '@pshkv/gate-policy-gateway':
         specifier: workspace:*
         version: link:../policy-gateway
-      '@sint/persistence':
+      '@pshkv/persistence':
         specifier: workspace:*
         version: link:../persistence
       typescript:
@@ -605,7 +624,7 @@ importers:
       '@noble/hashes':
         specifier: ^1.7.0
         version: 1.8.0
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -618,7 +637,7 @@ importers:
 
   packages/engine-hal:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
       zod:
@@ -634,7 +653,7 @@ importers:
 
   packages/engine-system1:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -647,7 +666,7 @@ importers:
 
   packages/engine-system2:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -663,11 +682,11 @@ importers:
       '@noble/hashes':
         specifier: ^1.7.0
         version: 1.8.0
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
       typescript:
@@ -679,7 +698,7 @@ importers:
 
   packages/integration-langchain:
     dependencies:
-      '@sint/client':
+      '@pshkv/client':
         specifier: workspace:*
         version: link:../client
     devDependencies:
@@ -692,10 +711,10 @@ importers:
 
   packages/interface-bridge:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/memory':
+      '@pshkv/memory':
         specifier: workspace:*
         version: link:../memory
     devDependencies:
@@ -708,13 +727,13 @@ importers:
 
   packages/memory:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
     devDependencies:
@@ -727,10 +746,10 @@ importers:
 
   packages/openclaw-adapter:
     dependencies:
-      '@sint/client':
+      '@pshkv/client':
         specifier: workspace:*
         version: link:../client
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -743,13 +762,13 @@ importers:
 
   packages/os-core:
     dependencies:
-      '@sint/client':
+      '@pshkv/client':
         specifier: workspace:*
         version: link:../client
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/openclaw-adapter':
+      '@pshkv/openclaw-adapter':
         specifier: workspace:*
         version: link:../openclaw-adapter
     devDependencies:
@@ -762,7 +781,7 @@ importers:
 
   packages/persistence:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
       ioredis:
@@ -784,13 +803,13 @@ importers:
 
   packages/persistence-postgres:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
-      '@sint/persistence':
+      '@pshkv/persistence':
         specifier: workspace:*
         version: link:../persistence
       pg:
@@ -806,20 +825,20 @@ importers:
 
   packages/policy-gateway:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
-      '@sint/gate-evidence-ledger':
+      '@pshkv/gate-evidence-ledger':
         specifier: workspace:*
         version: link:../evidence-ledger
       zod:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
-      '@sint/persistence':
+      '@pshkv/persistence':
         specifier: workspace:*
         version: link:../persistence
       typescript:
@@ -831,10 +850,10 @@ importers:
 
   packages/token-registry:
     dependencies:
-      '@sint/core':
+      '@pshkv/core':
         specifier: workspace:*
         version: link:../core
-      '@sint/gate-capability-tokens':
+      '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
     devDependencies:

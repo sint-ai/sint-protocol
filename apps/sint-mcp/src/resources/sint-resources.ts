@@ -7,9 +7,9 @@
  * @module @sint/mcp/resources/sint-resources
  */
 
-import type { SintCapabilityToken } from "@sint/core";
-import type { ApprovalQueue } from "@sint/gate-policy-gateway";
-import type { LedgerWriter } from "@sint/gate-evidence-ledger";
+import type { SintCapabilityToken } from "@pshkv/core";
+import type { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import type { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type { DownstreamManager } from "../downstream.js";
 
 /** Context needed by resource handlers. */

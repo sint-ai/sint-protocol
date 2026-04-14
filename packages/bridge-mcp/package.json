@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-mcp",
+  "name": "@pshkv/bridge-mcp",
   "version": "0.1.0",
   "description": "SINT Bridge — MCP adapter: intercepts AI agent tool calls through the security gate",
   "type": "module",
@@ -19,9 +19,9 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*",
-    "@sint/gate-policy-gateway": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-policy-gateway": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

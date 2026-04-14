@@ -8,8 +8,8 @@
  * @module @sint/engine-capsule-sandbox/content-verifier
  */
 
-import type { Result } from "@sint/core";
-import { ok, err } from "@sint/core";
+import type { Result } from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from "@noble/hashes/utils";
 import type { CapsuleError } from "./types.js";
@@ -24,7 +24,7 @@ import type { CapsuleError } from "./types.js";
  *
  * @example
  * ```ts
- * import { verifyContentHash } from "@sint/engine-capsule-sandbox";
+ * import { verifyContentHash } from "@pshkv/engine-capsule-sandbox";
  * import { sha256 } from "@noble/hashes/sha2";
  * import { bytesToHex } from "@noble/hashes/utils";
  *

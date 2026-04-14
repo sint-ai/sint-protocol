@@ -11,7 +11,7 @@ import {
   type ApprovalTier,
   DEFAULT_FORBIDDEN_COMBOS,
   type ForbiddenCombination,
-} from "@sint/core";
+} from "@pshkv/core";
 
 /** Result of a forbidden combo check. */
 export interface ComboCheckResult {

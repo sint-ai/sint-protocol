@@ -7,7 +7,7 @@
  * @module @sint/bridge-mcp/mcp-middleware
  */
 
-import type { PolicyGateway } from "@sint/gate-policy-gateway";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import { MCPInterceptor } from "./mcp-interceptor.js";
 import type { MCPToolCall, MCPInterceptResult } from "./types.js";
 

@@ -18,7 +18,7 @@
  */
 
 import { Hono } from "hono";
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 import type { ServerContext } from "../server.js";
 
 /** A single risk score update emitted over the SSE stream. */

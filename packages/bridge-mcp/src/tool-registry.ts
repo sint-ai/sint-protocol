@@ -8,7 +8,7 @@
  * @module @sint/bridge-mcp/tool-registry
  */
 
-import { hashSha256, sign, verify } from "@sint/gate-capability-tokens";
+import { hashSha256, sign, verify } from "@pshkv/gate-capability-tokens";
 import type { MCPToolAnnotations } from "./types.js";
 
 /**

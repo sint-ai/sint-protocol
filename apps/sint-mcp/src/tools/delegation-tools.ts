@@ -8,10 +8,10 @@
  * Max depth: 3. Cascade revocation via RevocationStore.
  */
 
-import { issueCapabilityToken, type RevocationStore } from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
-import type { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { DelegationTree } from "@sint/interface-bridge";
+import { issueCapabilityToken, type RevocationStore } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
+import type { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { DelegationTree } from "@pshkv/interface-bridge";
 
 export interface DelegationToolContext {
   readonly agentPublicKey: string;

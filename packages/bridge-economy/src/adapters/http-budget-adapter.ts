@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/http-budget-adapter
  */
 
-import { err, type Result } from "@sint/core";
+import { err, type Result } from "@pshkv/core";
 import type { IBudgetPort, BudgetCheckParams, BudgetCheckResult } from "../interfaces.js";
 import { HttpClient, type HttpClientConfig } from "./http-client.js";
 

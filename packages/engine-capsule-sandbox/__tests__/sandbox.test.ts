@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CapsuleSandbox } from "../src/sandbox.js";
 import type { CapsuleApi } from "../src/types.js";
-import type { SintCapsuleManifest } from "@sint/core";
+import type { SintCapsuleManifest } from "@pshkv/core";
 
 /** A valid UUIDv7 for test fixtures. */
 const CAPSULE_ID_1 = "01905f7c-0000-7000-8000-000000000001";

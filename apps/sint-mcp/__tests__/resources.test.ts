@@ -5,9 +5,9 @@
 import { describe, it, expect } from "vitest";
 import { getSintResources, readSintResource, type ResourceContext } from "../src/resources/sint-resources.js";
 import { DownstreamManager } from "../src/downstream.js";
-import { ApprovalQueue } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import type { SintCapabilityToken } from "@sint/core";
+import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import type { SintCapabilityToken } from "@pshkv/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 function createResourceContext(): ResourceContext {

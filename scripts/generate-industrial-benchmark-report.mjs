@@ -16,7 +16,7 @@ mkdirSync(reportDir, { recursive: true });
 
 const vitestArgs = [
   "--filter",
-  "@sint/conformance-tests",
+  "@pshkv/conformance-tests",
   "exec",
   "vitest",
   "run",

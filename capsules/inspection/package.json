@@ -1,5 +1,5 @@
 {
-  "name": "@sint/capsule-inspection",
+  "name": "@pshkv/capsule-inspection",
   "version": "1.0.0",
   "description": "SINT Reference Capsule — Visual anomaly detection for manufacturing QA",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

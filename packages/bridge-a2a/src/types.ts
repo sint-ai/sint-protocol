@@ -10,7 +10,7 @@
  * @module @sint/bridge-a2a/types
  */
 
-import type { ISO8601, UUIDv7 } from "@sint/core";
+import type { ISO8601, UUIDv7 } from "@pshkv/core";
 
 // ── Agent Card ────────────────────────────────────────────────────────────────
 

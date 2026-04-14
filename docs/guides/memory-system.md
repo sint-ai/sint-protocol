@@ -28,7 +28,7 @@ WorkingMemory          OperatorMemory
 ## Usage
 
 ```typescript
-import { WorkingMemory, OperatorMemory, MemoryBank } from "@sint/memory";
+import { WorkingMemory, OperatorMemory, MemoryBank } from "@pshkv/memory";
 
 const working = new WorkingMemory(500); // max 500 entries
 const persistent = new OperatorMemory(ledgerWriter, agentId);

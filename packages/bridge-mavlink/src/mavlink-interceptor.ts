@@ -23,8 +23,8 @@
  * @module @sint/bridge-mavlink/mavlink-interceptor
  */
 
-import type { PolicyGateway } from "@sint/gate-policy-gateway";
-import { generateUUIDv7, nowISO8601 } from "@sint/gate-capability-tokens";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
 import type { MavlinkIntercept, MavlinkInterceptResult } from "./mavlink-types.js";
 import { mapMavlinkToSint } from "./mavlink-resource-mapper.js";
 

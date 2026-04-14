@@ -4,8 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import { CsmlEscalator } from "../src/csml-escalator.js";
-import { ApprovalTier } from "@sint/core";
-import type { SintLedgerEvent } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 const GENESIS = "0000000000000000000000000000000000000000000000000000000000000000";
 const AGENT = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";

@@ -7,9 +7,9 @@
  * @module @sint/engine-capsule-sandbox/manifest-validator
  */
 
-import type { Result, SintCapsuleManifest } from "@sint/core";
-import { ok, err } from "@sint/core";
-import { capsuleManifestSchema } from "@sint/core";
+import type { Result, SintCapsuleManifest } from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
+import { capsuleManifestSchema } from "@pshkv/core";
 import type { CapsuleError } from "./types.js";
 
 /**
@@ -23,7 +23,7 @@ import type { CapsuleError } from "./types.js";
  *
  * @example
  * ```ts
- * import { validateManifest } from "@sint/engine-capsule-sandbox";
+ * import { validateManifest } from "@pshkv/engine-capsule-sandbox";
  *
  * const result = validateManifest({
  *   capsuleId: "01905f7c-0000-7000-8000-000000000001",

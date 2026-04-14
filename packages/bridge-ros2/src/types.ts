@@ -8,7 +8,7 @@ import type {
   ApprovalTier,
   ISO8601,
   PolicyDecision,
-} from "@sint/core";
+} from "@pshkv/core";
 import type { QoSProfile } from "./ros2-qos.js";
 
 /**

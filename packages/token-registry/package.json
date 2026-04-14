@@ -1,5 +1,5 @@
 {
-  "name": "@sint/token-registry",
+  "name": "@pshkv/token-registry",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -16,8 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
@@ -25,5 +25,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/token-registry"
   }
 }

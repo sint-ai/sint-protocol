@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 import {
   mapTrustLevelToApprovalTier,
   mergedTier,

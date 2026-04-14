@@ -9,7 +9,7 @@
  */
 
 import type { Context, Next } from "hono";
-import { verify } from "@sint/gate-capability-tokens";
+import { verify } from "@pshkv/gate-capability-tokens";
 
 /** Paths exempt from all authentication. */
 const EXEMPT_PATHS = new Set([

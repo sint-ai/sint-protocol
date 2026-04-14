@@ -5,10 +5,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { PolicyEnforcer } from "../src/enforcer.js";
 import { DownstreamManager } from "../src/downstream.js";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { ApprovalQueue } from "@sint/gate-policy-gateway";
-import { RevocationStore, generateKeypair, issueCapabilityToken } from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { RevocationStore, generateKeypair, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 function createTestSetup() {

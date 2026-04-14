@@ -1,5 +1,5 @@
 {
-  "name": "@sint/bridge-open-rmf",
+  "name": "@pshkv/bridge-open-rmf",
   "version": "0.1.0",
   "description": "SINT Bridge — Open-RMF profile adapter for multi-fleet dispatch and facility workflows",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

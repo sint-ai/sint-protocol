@@ -1,5 +1,5 @@
 {
-  "name": "@sint/engine-system1",
+  "name": "@pshkv/engine-system1",
   "version": "0.1.0",
   "description": "SINT Protocol System 1 — Neural perception pipeline with sensor fusion, ONNX inference, and anomaly detection",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

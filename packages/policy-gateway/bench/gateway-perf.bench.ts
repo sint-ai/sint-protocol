@@ -15,9 +15,9 @@ import {
   generateUUIDv7,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import { InMemoryRateLimitStore } from "@sint/persistence";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import { InMemoryRateLimitStore } from "@pshkv/persistence";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
 
 // ── Shared setup (runs once, not per iteration) ─────────────────────────────
 

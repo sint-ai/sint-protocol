@@ -1,5 +1,5 @@
 {
-  "name": "@sint/capsule-pick-and-place",
+  "name": "@pshkv/capsule-pick-and-place",
   "version": "1.0.0",
   "description": "SINT Reference Capsule — Gripper control for pick-and-place tasks",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

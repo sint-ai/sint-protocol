@@ -10,7 +10,7 @@
  */
 
 import { Hono } from "hono";
-import type { MemoryBank } from "@sint/memory";
+import type { MemoryBank } from "@pshkv/memory";
 
 /** Context for memory routes — memoryBank is optional; missing → 503. */
 export interface MemoryRouteContext {

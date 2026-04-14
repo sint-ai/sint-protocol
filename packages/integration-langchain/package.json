@@ -1,5 +1,5 @@
 {
-  "name": "@sint/integration-langchain",
+  "name": "@pshkv/integration-langchain",
   "version": "0.1.0",
   "description": "SINT Protocol governance middleware for LangChain — capability tokens, policy enforcement, and evidence logging on every tool call.",
   "type": "module",
@@ -36,7 +36,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@sint/client": "workspace:*"
+    "@pshkv/client": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

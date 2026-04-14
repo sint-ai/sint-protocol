@@ -1,5 +1,5 @@
 {
-  "name": "@sint/gate-policy-gateway",
+  "name": "@pshkv/gate-policy-gateway",
   "version": "0.1.0",
   "description": "SINT Gate — Policy Gateway: the single choke point for all agent actions",
   "type": "module",
@@ -20,13 +20,13 @@
     "bench": "vitest bench"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*",
-    "@sint/gate-evidence-ledger": "workspace:*",
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@sint/persistence": "workspace:*",
+    "@pshkv/persistence": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },

@@ -15,9 +15,9 @@ import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest, PolicyDecision } from "@sint/core";
-import { ApprovalTier, RiskTier } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest, PolicyDecision } from "@pshkv/core";
+import { ApprovalTier, RiskTier } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

@@ -18,9 +18,9 @@ import type { MavlinkIntercept, MavCommandLong, MavSetPositionTargetLocalNed } f
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken } from "@sint/core";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 function futureISO(h = 1): string {
   return new Date(Date.now() + h * 3_600_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");

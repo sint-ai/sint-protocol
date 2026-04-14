@@ -16,7 +16,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { MqttGatewaySession, MqttAuthorizationError } from "../src/mqtt-session.js";
 import type { MqttClientAdapter, GatewayLike } from "../src/mqtt-session.js";
-import type { PolicyDecision } from "@sint/core";
+import type { PolicyDecision } from "@pshkv/core";
 
 const AGENT_ID = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";
 const TOKEN_ID = "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7";

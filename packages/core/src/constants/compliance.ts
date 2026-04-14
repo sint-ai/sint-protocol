@@ -27,9 +27,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI01_GOAL_HIJACK,
     level: "full",
     implementedBy: [
-      "@sint/gate-policy-gateway (forbidden-combos)",
-      "@sint/avatar (CSML drift detection)",
-      "@sint/gate-policy-gateway (GoalHijackPlugin)",
+      "@pshkv/gate-policy-gateway (forbidden-combos)",
+      "@pshkv/avatar (CSML drift detection)",
+      "@pshkv/gate-policy-gateway (GoalHijackPlugin)",
     ],
     description:
       "Forbidden action-sequence detection catches known goal-hijack patterns " +
@@ -42,9 +42,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI02_TOOL_MISUSE,
     level: "full",
     implementedBy: [
-      "@sint/bridge-mcp (TAM enforcement)",
-      "@sint/gate-policy-gateway (tier assignment)",
-      "@sint/gate-capability-tokens (resource scope)",
+      "@pshkv/bridge-mcp (TAM enforcement)",
+      "@pshkv/gate-policy-gateway (tier assignment)",
+      "@pshkv/gate-capability-tokens (resource scope)",
     ],
     description:
       "Tool Authorization Manifests (TAM) define per-tool security requirements. " +
@@ -56,9 +56,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI03_IDENTITY_ABUSE,
     level: "full",
     implementedBy: [
-      "@sint/gate-capability-tokens (Ed25519 signing)",
-      "@sint/gate-capability-tokens (did:key identity)",
-      "@sint/gate-capability-tokens (delegation chain)",
+      "@pshkv/gate-capability-tokens (Ed25519 signing)",
+      "@pshkv/gate-capability-tokens (did:key identity)",
+      "@pshkv/gate-capability-tokens (delegation chain)",
     ],
     description:
       "Every capability token is Ed25519-signed with the issuer's private key. " +
@@ -70,9 +70,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI04_SUPPLY_CHAIN,
     level: "full",
     implementedBy: [
-      "@sint/bridge-mcp (TAM manifest validation)",
-      "@sint/gate-capability-tokens (Ed25519 plugin signing)",
-      "@sint/gate-policy-gateway (DefaultSupplyChainVerifier)",
+      "@pshkv/bridge-mcp (TAM manifest validation)",
+      "@pshkv/gate-capability-tokens (Ed25519 plugin signing)",
+      "@pshkv/gate-policy-gateway (DefaultSupplyChainVerifier)",
     ],
     description:
       "TAM manifests are defined by the operator (not the tool provider) — " +
@@ -86,8 +86,8 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI05_CODE_EXECUTION,
     level: "partial",
     implementedBy: [
-      "@sint/gate-policy-gateway (forbidden-combos)",
-      "@sint/engine-capsule-sandbox (isolation)",
+      "@pshkv/gate-policy-gateway (forbidden-combos)",
+      "@pshkv/engine-capsule-sandbox (isolation)",
     ],
     description:
       "Capsule sandbox provides process-level isolation for agent execution. " +
@@ -100,7 +100,7 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI06_MEMORY_POISONING,
     level: "partial",
     implementedBy: [
-      "@sint/gate-policy-gateway (DefaultMemoryIntegrityChecker)",
+      "@pshkv/gate-policy-gateway (DefaultMemoryIntegrityChecker)",
     ],
     description:
       "DefaultMemoryIntegrityChecker detects history anomalies: suspicious " +
@@ -117,8 +117,8 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI07_INTER_AGENT,
     level: "full",
     implementedBy: [
-      "@sint/bridge-a2a (A2A protocol enforcement)",
-      "@sint/gate-capability-tokens (did:key per agent)",
+      "@pshkv/bridge-a2a (A2A protocol enforcement)",
+      "@pshkv/gate-capability-tokens (did:key per agent)",
     ],
     description:
       "A2A bridge validates the sender's capability token before processing " +
@@ -130,9 +130,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI08_CASCADE,
     level: "full",
     implementedBy: [
-      "@sint/gate-policy-gateway (CircuitBreakerPlugin)",
-      "@sint/gate-policy-gateway (rate limiting)",
-      "@sint/bridge-swarm (SwarmCoordinator collective constraints)",
+      "@pshkv/gate-policy-gateway (CircuitBreakerPlugin)",
+      "@pshkv/gate-policy-gateway (rate limiting)",
+      "@pshkv/bridge-swarm (SwarmCoordinator collective constraints)",
     ],
     description:
       "CircuitBreakerPlugin opens the circuit (OPEN state) when an agent trips " +
@@ -144,9 +144,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI09_TRUST_EXPLOIT,
     level: "full",
     implementedBy: [
-      "@sint/gate-policy-gateway (T2/T3 human approval)",
-      "@sint/gate-policy-gateway (M-of-N quorum)",
-      "@sint/avatar (CSML drift detection)",
+      "@pshkv/gate-policy-gateway (T2/T3 human approval)",
+      "@pshkv/gate-policy-gateway (M-of-N quorum)",
+      "@pshkv/avatar (CSML drift detection)",
     ],
     description:
       "T2_act requires operator review before physical execution. " +
@@ -158,9 +158,9 @@ export const SINT_OWASP_COVERAGE: readonly OwaspCoverageEntry[] = [
     category: OwaspAsi.ASI10_ROGUE_AGENT,
     level: "full",
     implementedBy: [
-      "@sint/gate-policy-gateway (CircuitBreakerPlugin)",
-      "@sint/avatar (CSML anomalous persona)",
-      "@sint/gate-policy-gateway (DynamicEnvelopePlugin)",
+      "@pshkv/gate-policy-gateway (CircuitBreakerPlugin)",
+      "@pshkv/avatar (CSML anomalous persona)",
+      "@pshkv/gate-policy-gateway (DynamicEnvelopePlugin)",
     ],
     description:
       "CircuitBreakerPlugin provides the EU AI Act Article 14(4)(e) 'stop button': " +

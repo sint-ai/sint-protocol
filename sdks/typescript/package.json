@@ -1,5 +1,5 @@
 {
-  "name": "@sint/sdk",
+  "name": "@pshkv/sdk",
   "version": "0.2.0",
   "description": "SINT Protocol TypeScript/Node.js SDK",
   "type": "module",

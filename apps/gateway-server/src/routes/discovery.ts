@@ -20,7 +20,7 @@ import {
   SINT_SITE_PROFILES,
   SINT_SCHEMA_CATALOG,
   SINT_TIER_COMPLIANCE_CROSSWALK,
-} from "@sint/core";
+} from "@pshkv/core";
 
 export function discoveryRoutes(): Hono {
   const app = new Hono();

@@ -1,36 +1,36 @@
 {
-  "generatedAt": "2026-04-04T22:08:55.448Z",
+  "generatedAt": "2026-04-13T21:35:12.502Z",
   "gitSha": null,
   "success": true,
   "totals": {
     "testSuites": 2,
     "passedSuites": 2,
     "failedSuites": 0,
-    "tests": 9,
-    "passedTests": 9,
+    "tests": 11,
+    "passedTests": 11,
     "failedTests": 0
   },
   "rawTotals": {
     "testSuites": 4,
     "passedSuites": 4,
     "failedSuites": 0,
-    "tests": 9,
-    "passedTests": 9,
+    "tests": 11,
+    "passedTests": 11,
     "failedTests": 0
   },
   "suites": [
     {
       "file": "packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts",
       "status": "passed",
-      "durationMs": 39.96,
+      "durationMs": 40.917,
       "testCount": 7,
       "failedCount": 0
     },
     {
       "file": "packages/conformance-tests/src/industrial-interoperability.test.ts",
       "status": "passed",
-      "durationMs": 15.908,
-      "testCount": 2,
+      "durationMs": 31.97,
+      "testCount": 4,
       "failedCount": 0
     }
   ],
@@ -39,55 +39,67 @@
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios human enters aisle: cmd_vel request escalates to T3",
       "status": "passed",
-      "durationMs": 9.375
+      "durationMs": 9.589
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios stale corridor request is deterministically denied",
       "status": "passed",
-      "durationMs": 3.145
+      "durationMs": 2.842
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios revocation under load never fails open",
       "status": "passed",
-      "durationMs": 17.114
+      "durationMs": 17.837
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios safety-zone breach is deterministically denied",
       "status": "passed",
-      "durationMs": 2.446
+      "durationMs": 2.725
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios model swap against token modelConstraints is denied",
       "status": "passed",
-      "durationMs": 2.3
+      "durationMs": 2.59
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios edge disconnect never allows T2/T3 fail-open behavior",
       "status": "passed",
-      "durationMs": 2.591
+      "durationMs": 2.493
     },
     {
       "suite": "industrial-benchmark-scenarios.test.ts",
       "name": "Industrial Benchmark Scenarios multi-fleet conflict path escalates to T3 with approval quorum",
       "status": "passed",
-      "durationMs": 2.96
+      "durationMs": 2.917
     },
     {
       "suite": "industrial-interoperability.test.ts",
       "name": "Industrial Interoperability Conformance warehouse move intent yields equivalent tiering for RMF->ROS2 and Sparkplug paths",
       "status": "passed",
-      "durationMs": 12.448
+      "durationMs": 19.168
     },
     {
       "suite": "industrial-interoperability.test.ts",
       "name": "Industrial Interoperability Conformance A2A -> Open-RMF dispatch path maps into the same gateway approval semantics",
       "status": "passed",
-      "durationMs": 2.908
+      "durationMs": 2.603
+    },
+    {
+      "suite": "industrial-interoperability.test.ts",
+      "name": "Industrial Interoperability Conformance Gazebo model-scoped cmd_vel maps to equivalent ROS2 control-tier semantics",
+      "status": "passed",
+      "durationMs": 4.663
+    },
+    {
+      "suite": "industrial-interoperability.test.ts",
+      "name": "Industrial Interoperability Conformance Isaac Sim namespaced cmd_vel maps to equivalent ROS2 control-tier semantics",
+      "status": "passed",
+      "durationMs": 4.97
     }
   ]
 }

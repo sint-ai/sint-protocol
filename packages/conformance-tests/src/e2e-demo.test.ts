@@ -21,11 +21,11 @@ import {
   RevocationStore,
   generateUUIDv7,
   nowISO8601,
-} from "@sint/gate-capability-tokens";
-import { PolicyGateway, ApprovalQueue } from "@sint/gate-policy-gateway";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { toResourceUri, toSintAction, getRiskHint, type MCPToolCall } from "@sint/bridge-mcp";
-import { ApprovalTier, type SintRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { toResourceUri, toSintAction, getRiskHint, type MCPToolCall } from "@pshkv/bridge-mcp";
+import { ApprovalTier, type SintRequest } from "@pshkv/core";
 
 describe("SINT Protocol End-to-End", () => {
   // Shared state — built up through the test sequence

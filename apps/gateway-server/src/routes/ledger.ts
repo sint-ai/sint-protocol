@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { queryLedger, generateProof } from "@sint/gate-evidence-ledger";
+import { queryLedger, generateProof } from "@pshkv/gate-evidence-ledger";
 import type { ServerContext } from "../server.js";
 
 export function ledgerRoutes(ctx: ServerContext): Hono {

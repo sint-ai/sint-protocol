@@ -1,0 +1,19 @@
+[build]
+dockerfilePath = "apps/gateway-server/Dockerfile"
+watchPatterns = [
+  "apps/gateway-server/**",
+  "packages/core/**",
+  "packages/capability-tokens/**",
+  "packages/evidence-ledger/**",
+  "packages/policy-gateway/**",
+  "packages/persistence/**",
+  "packages/avatar/**",
+  "packages/bridge-a2a/**",
+  "packages/bridge-economy/**",
+]
+
+[deploy]
+healthcheckPath = "/v1/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

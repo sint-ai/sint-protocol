@@ -192,7 +192,7 @@ export interface MavlinkInterceptResult {
   /** Whether the command should be forwarded to the autopilot. */
   readonly action: "forward" | "deny" | "escalate";
   /** PolicyGateway decision details. */
-  readonly decision: import("@sint/core").PolicyDecision;
+  readonly decision: import("@pshkv/core").PolicyDecision;
   /** Original intercepted message. */
   readonly original: MavlinkIntercept;
   /** Sanitized command (for "transform" decisions — e.g., velocity capped). */

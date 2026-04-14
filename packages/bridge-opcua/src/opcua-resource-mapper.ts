@@ -1,4 +1,4 @@
-import { ApprovalTier, type BridgeProfile } from "@sint/core";
+import { ApprovalTier, type BridgeProfile } from "@pshkv/core";
 
 export type OpcUaOperation = "read" | "write" | "call" | "subscribe" | "browse";
 

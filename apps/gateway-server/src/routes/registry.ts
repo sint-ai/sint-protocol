@@ -10,9 +10,9 @@
  */
 
 import { Hono } from "hono";
-import type { RegistryStore } from "@sint/token-registry";
-import { buildRegistryEntry } from "@sint/token-registry";
-import type { RegistryPublishRequest } from "@sint/token-registry";
+import type { RegistryStore } from "@pshkv/token-registry";
+import { buildRegistryEntry } from "@pshkv/token-registry";
+import type { RegistryPublishRequest } from "@pshkv/token-registry";
 
 export interface RegistryRouteContext {
   readonly registryStore?: RegistryStore | undefined;

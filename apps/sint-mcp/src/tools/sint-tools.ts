@@ -8,10 +8,10 @@
  * @module @sint/mcp/tools/sint-tools
  */
 
-import type { SintCapabilityToken } from "@sint/core";
-import type { ApprovalQueue } from "@sint/gate-policy-gateway";
-import type { LedgerWriter } from "@sint/gate-evidence-ledger";
-import { issueCapabilityToken, type RevocationStore } from "@sint/gate-capability-tokens";
+import type { SintCapabilityToken } from "@pshkv/core";
+import type { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import type { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { issueCapabilityToken, type RevocationStore } from "@pshkv/gate-capability-tokens";
 import type { DownstreamManager } from "../downstream.js";
 
 /** All built-in tool definitions for tools/list. */

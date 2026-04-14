@@ -9,8 +9,8 @@ import {
   generateKeypair,
   issueCapabilityToken,
   sign,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityTokenRequest } from "@pshkv/core";
 import { clearRateLimits } from "../src/middleware/auth.js";
 
 function futureISO(hoursFromNow: number): string {

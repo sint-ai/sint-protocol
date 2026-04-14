@@ -1,5 +1,5 @@
 {
-  "name": "@sint/avatar",
+  "name": "@pshkv/avatar",
   "version": "0.1.0",
   "description": "SINT Protocol Avatar Layer (L5) — behavioral identity profiles, CSML-driven tier escalation",
   "type": "module",
@@ -19,11 +19,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-evidence-ledger": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*"
   },
   "devDependencies": {
-    "@sint/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },

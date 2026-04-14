@@ -8,8 +8,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createApp, createContext, type ServerContext } from "../src/server.js";
 import type { Hono } from "hono";
-import { MemoryBank, WorkingMemory, OperatorMemory } from "@sint/memory";
-import { DelegationTree } from "@sint/interface-bridge";
+import { MemoryBank, WorkingMemory, OperatorMemory } from "@pshkv/memory";
+import { DelegationTree } from "@pshkv/interface-bridge";
 import type { MemoryRouteContext } from "../src/routes/memory.js";
 import type { DelegationRouteContext } from "../src/routes/delegations.js";
 import type { CsmlRouteContext } from "../src/routes/csml.js";

@@ -1,5 +1,5 @@
 {
-  "name": "@sint/engine-system2",
+  "name": "@pshkv/engine-system2",
   "version": "0.1.0",
   "description": "SINT Protocol System 2 — Symbolic reasoning with behavior trees, task planning, and System 1/2 arbitration",
   "type": "module",
@@ -19,7 +19,7 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

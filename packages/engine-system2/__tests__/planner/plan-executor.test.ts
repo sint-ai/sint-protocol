@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { PlanExecutor } from "../../src/planner/plan-executor.js";
-import { ApprovalTier, ok, err } from "@sint/core";
-import type { SintPlan, SintPlanStep } from "@sint/core";
+import { ApprovalTier, ok, err } from "@pshkv/core";
+import type { SintPlan, SintPlanStep } from "@pshkv/core";
 
 function makePlan(stepCount: number): SintPlan {
   const steps: SintPlanStep[] = [];

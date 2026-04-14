@@ -15,11 +15,11 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { SintCapabilityToken } from "@sint/core";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { ApprovalQueue } from "@sint/gate-policy-gateway";
-import { RevocationStore } from "@sint/gate-capability-tokens";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
+import type { SintCapabilityToken } from "@pshkv/core";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { RevocationStore } from "@pshkv/gate-capability-tokens";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import { DownstreamManager } from "./downstream.js";
 import { ToolAggregator, parseNamespace } from "./aggregator.js";
 import { PolicyEnforcer } from "./enforcer.js";
@@ -42,7 +42,7 @@ import {
   isDelegationTool,
   type DelegationToolContext,
 } from "./tools/delegation-tools.js";
-import { InterfaceStateManager, DelegationTree } from "@sint/interface-bridge";
+import { InterfaceStateManager, DelegationTree } from "@pshkv/interface-bridge";
 import {
   getSintResources,
   readSintResource,

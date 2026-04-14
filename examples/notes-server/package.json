@@ -1,5 +1,5 @@
 {
-  "name": "@sint/example-notes-server",
+  "name": "@pshkv/example-notes-server",
   "version": "0.1.0",
   "private": true,
   "description": "Example: minimal MCP server with SINT protection",

@@ -11,7 +11,7 @@
 
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from "@noble/hashes/utils";
-import type { SintLedgerEvent } from "@sint/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 export interface ChainOfCustodyProof {
   readonly eventId: string;

@@ -16,15 +16,15 @@ import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@sint/core";
+} from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
-} from "@sint/gate-capability-tokens";
-import { PolicyGateway, type EdgeControlPlanePlugin } from "@sint/gate-policy-gateway";
-import { mapTrustLevelToApprovalTier, mergedTier } from "@sint/bridge-economy";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, type EdgeControlPlanePlugin } from "@pshkv/gate-policy-gateway";
+import { mapTrustLevelToApprovalTier, mergedTier } from "@pshkv/bridge-economy";
 import { loadAutogenCapabilityTrustFixture } from "./fixture-loader.js";
 
 type TrustSignal = "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";

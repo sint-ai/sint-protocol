@@ -11,7 +11,7 @@ npm install @sint/gate-evidence-ledger
 ## Usage
 
 ```typescript
-import { EvidenceLedger } from "@sint/gate-evidence-ledger";
+import { EvidenceLedger } from "@pshkv/gate-evidence-ledger";
 
 const ledger = new EvidenceLedger();
 

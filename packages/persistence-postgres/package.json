@@ -1,5 +1,5 @@
 {
-  "name": "@sint/persistence-postgres",
+  "name": "@pshkv/persistence-postgres",
   "version": "0.1.0",
   "description": "SINT Persistence — production PostgreSQL backend for EvidenceLedger and RevocationStore",
   "type": "module",
@@ -20,9 +20,9 @@
     "test:fixtures": "vitest run src/__tests__/certification-fixtures.test.ts"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-evidence-ledger": "workspace:*",
-    "@sint/persistence": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*",
+    "@pshkv/persistence": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^3.0.0",

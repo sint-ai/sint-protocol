@@ -7,9 +7,9 @@
  * @module @sint/bridge-ros2/ros2-interceptor
  */
 
-import type { SintRequest } from "@sint/core";
-import type { PolicyGateway } from "@sint/gate-policy-gateway";
-import { generateUUIDv7, nowISO8601 } from "@sint/gate-capability-tokens";
+import type { SintRequest } from "@pshkv/core";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
 import type {
   ROS2TopicMessage,
   ROS2ServiceCall,

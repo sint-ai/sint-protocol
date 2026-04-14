@@ -19,8 +19,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ProactiveEscalationEngine } from "../src/proactive-escalation.js";
 import type { EscalationAlert, EventSource } from "../src/proactive-escalation.js";
-import { ApprovalTier } from "@sint/core";
-import type { SintLedgerEvent } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

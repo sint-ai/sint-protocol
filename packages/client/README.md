@@ -11,7 +11,7 @@ npm install @sint/client
 ## Usage
 
 ```typescript
-import { SintClient } from "@sint/client";
+import { SintClient } from "@pshkv/client";
 
 const client = new SintClient({
   baseUrl: "http://localhost:3100",

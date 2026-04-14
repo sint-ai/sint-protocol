@@ -13,7 +13,23 @@ permissions:
   id-token: write
 
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has-docker: ${{ steps.check.outputs.has-docker }}
+    steps:
+      - id: check
+        run: |
+          if [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
+            echo "has-docker=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-docker=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DOCKERHUB_TOKEN not set — skipping Docker publish"
+          fi
+
   publish:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has-docker == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

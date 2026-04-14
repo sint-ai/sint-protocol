@@ -8,7 +8,7 @@ import type { ApsDelegationScope } from "../src/aps-mapping.js";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
 
 function futureISO(h = 24): string {
   return new Date(Date.now() + h * 3_600_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");

@@ -9,7 +9,7 @@ describe("certification summary helpers", () => {
     const summary = buildCertificationSummary({
       outputPath: "/tmp/report.json",
       exitCode: 0,
-      command: ["pnpm", "--filter", "@sint/conformance-tests", "test:fixtures"],
+      command: ["pnpm", "--filter", "@pshkv/conformance-tests", "test:fixtures"],
       gatewayUrl: "http://localhost:3100",
     });
 
@@ -24,7 +24,7 @@ describe("certification summary helpers", () => {
     const summary = buildCertificationSummary({
       outputPath: "/tmp/report.json",
       exitCode: 1,
-      command: ["pnpm", "--filter", "@sint/conformance-tests", "test:fixtures"],
+      command: ["pnpm", "--filter", "@pshkv/conformance-tests", "test:fixtures"],
     });
 
     expect(summary.success).toBe(false);

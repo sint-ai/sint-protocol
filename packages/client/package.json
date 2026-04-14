@@ -1,5 +1,5 @@
 {
-  "name": "@sint/client",
+  "name": "@pshkv/client",
   "version": "0.1.0",
   "description": "SINT Client SDK — TypeScript client for the SINT Gateway",
   "type": "module",
@@ -19,11 +19,11 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*"
+    "@pshkv/core": "workspace:*"
   },
   "devDependencies": {
-    "@sint/gateway-server": "workspace:*",
-    "@sint/gate-capability-tokens": "workspace:*",
+    "@pshkv/gateway-server": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
     "hono": "^4.7.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

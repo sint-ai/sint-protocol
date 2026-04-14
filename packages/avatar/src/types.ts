@@ -17,7 +17,7 @@
  * @module @sint/avatar/types
  */
 
-import type { ApprovalTier } from "@sint/core";
+import type { ApprovalTier } from "@pshkv/core";
 
 // ─── Core Profile ─────────────────────────────────────────────────────────────
 
@@ -133,4 +133,4 @@ export interface CsmlEscalationDecision {
 export type AgentEventQuery = (
   agentId: string,
   windowSize: number
-) => readonly import("@sint/core").SintLedgerEvent[] | Promise<readonly import("@sint/core").SintLedgerEvent[]>;
+) => readonly import("@pshkv/core").SintLedgerEvent[] | Promise<readonly import("@pshkv/core").SintLedgerEvent[]>;

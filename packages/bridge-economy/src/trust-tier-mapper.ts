@@ -15,7 +15,7 @@
  * @module @sint/bridge-economy/trust-tier-mapper
  */
 
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 import type { EconomyTrustLevel } from "./interfaces.js";
 
 /** Numeric tier ordering for comparison (higher = more restrictive). */

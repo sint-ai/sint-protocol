@@ -9,8 +9,8 @@
  * @module @sint/engine-system1/perception-pipeline
  */
 
-import type { Result, SintWorldState } from "@sint/core";
-import { err, ok } from "@sint/core";
+import type { Result, SintWorldState } from "@pshkv/core";
+import { err, ok } from "@pshkv/core";
 import type { OnnxModelExecutor, PerceptionConfig } from "./types.js";
 import { DEFAULT_PERCEPTION_CONFIG } from "./types.js";
 import { SensorBus } from "./sensor-bus.js";

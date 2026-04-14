@@ -20,7 +20,7 @@ import {
   type SintCapabilityToken,
   type SintPhysicalConstraints,
   err,
-} from "@sint/core";
+} from "@pshkv/core";
 import { issueCapabilityToken } from "./issuer.js";
 import { validateCapabilityToken } from "./validator.js";
 

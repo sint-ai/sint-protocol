@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { ActionPredictor } from "../src/action-predictor.js";
-import type { SintWorldState, SintPerceivedObject, SintPose, SintAnomalyFlag } from "@sint/core";
+import type { SintWorldState, SintPerceivedObject, SintPose, SintAnomalyFlag } from "@pshkv/core";
 
 const DEFAULT_POSE: SintPose = {
   position: { x: 0, y: 0, z: 0 },

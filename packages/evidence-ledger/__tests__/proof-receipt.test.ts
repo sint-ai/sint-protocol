@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { LedgerWriter } from "../src/writer.js";
 import { generateProofReceipt, verifyProofReceipt } from "../src/proof-receipt.js";
-import { generateKeypair, sign, verify } from "@sint/gate-capability-tokens";
+import { generateKeypair, sign, verify } from "@pshkv/gate-capability-tokens";
 
 describe("generateProofReceipt", () => {
   const authority = generateKeypair();

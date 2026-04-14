@@ -10,10 +10,10 @@ import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import { LedgerWriter } from "@sint/gate-evidence-ledger";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint/core";
-import { ApprovalTier } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
+import { ApprovalTier } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

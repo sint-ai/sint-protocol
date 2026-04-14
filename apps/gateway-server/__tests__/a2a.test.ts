@@ -8,12 +8,12 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { createApp, createContext, type ServerContext } from "../src/server.js";
 import type { Hono } from "hono";
 import type { A2ARouteContext } from "../src/routes/a2a.js";
-import { AgentCardRegistry } from "@sint/bridge-a2a";
+import { AgentCardRegistry } from "@pshkv/bridge-a2a";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
 
 const WEATHER_AGENT_CARD = {
   url: "https://agents.example.com/weather",

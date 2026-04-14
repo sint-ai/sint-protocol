@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { ApprovalTier } from "@sint/core";
+import { ApprovalTier } from "@pshkv/core";
 import { tierFromAnnotations, getRiskHint } from "../src/mcp-resource-mapper.js";
 import type { MCPToolAnnotations, MCPToolCall } from "../src/types.js";
 

@@ -16,7 +16,7 @@
  * @module @sint/gate-policy-gateway/safety-permit
  */
 
-import type { SintRequest } from "@sint/core";
+import type { SintRequest } from "@pshkv/core";
 
 export type PermitState = "granted" | "denied" | "unknown" | "stale";
 export type InterlockState = "closed" | "open" | "fault" | "unknown";

@@ -6,14 +6,14 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { MCPInterceptor } from "../src/mcp-interceptor.js";
-import { PolicyGateway } from "@sint/gate-policy-gateway";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint/core";
-import { ApprovalTier } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
+import { ApprovalTier } from "@pshkv/core";
 import type { MCPToolCall } from "../src/types.js";
 
 function futureISO(hoursFromNow: number): string {

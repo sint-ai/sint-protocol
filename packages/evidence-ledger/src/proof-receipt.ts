@@ -14,7 +14,7 @@ import type {
   SHA256,
   SintLedgerEvent,
   SintProofReceipt,
-} from "@sint/core";
+} from "@pshkv/core";
 
 /**
  * Generate a Proof Receipt for a specific ledger event.

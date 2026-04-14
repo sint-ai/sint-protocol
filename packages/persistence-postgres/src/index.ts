@@ -3,7 +3,7 @@
  *
  * @example
  * ```typescript
- * import { createPgPool, runMigrations, PgLedgerWriter, PgRevocationStore, PgRateLimitStore } from "@sint/persistence-postgres";
+ * import { createPgPool, runMigrations, PgLedgerWriter, PgRevocationStore, PgRateLimitStore } from "@pshkv/persistence-postgres";
  *
  * const pool = await createPgPool({ connectionString: process.env.DATABASE_URL! });
  * await runMigrations(pool);

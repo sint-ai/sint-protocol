@@ -17,7 +17,7 @@ import {
   validateCapabilityToken,
   delegateCapabilityToken,
   keyToDid,
-} from "@sint/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
 
 // Generate keys
 const issuer = await generateKeypair();

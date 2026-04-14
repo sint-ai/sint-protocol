@@ -1,7 +1,7 @@
 {
-  "name": "@sint/bridge-mavlink",
+  "name": "@pshkv/bridge-mavlink",
   "version": "0.1.0",
-  "description": "SINT Protocol MAVLink bridge — UAV/drone command interception and safety enforcement",
+  "description": "SINT Protocol MAVLink bridge \u2014 UAV/drone command interception and safety enforcement",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,16 +19,20 @@
     "test:watch": "vitest watch"
   },
   "dependencies": {
-    "@sint/core": "workspace:*",
-    "@sint/gate-policy-gateway": "workspace:*"
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-policy-gateway": "workspace:*"
   },
   "devDependencies": {
-    "@sint/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "private": true,
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "packages/bridge-mavlink"
   }
 }

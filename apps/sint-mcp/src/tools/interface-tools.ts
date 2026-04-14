@@ -9,9 +9,9 @@
  * @module @sint/mcp/tools/interface-tools
  */
 
-import { InterfaceStateManager } from "@sint/interface-bridge";
-import type { MemoryBank } from "@sint/memory";
-import type { LedgerWriter } from "@sint/gate-evidence-ledger";
+import { InterfaceStateManager } from "@pshkv/interface-bridge";
+import type { MemoryBank } from "@pshkv/memory";
+import type { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 
 /** Extended SINT tool context for interface tools. */
 export interface InterfaceToolContext {

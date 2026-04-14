@@ -1,5 +1,5 @@
 {
-  "name": "@sint/os-core",
+  "name": "@pshkv/os-core",
   "version": "0.1.0",
   "description": "SINT OS Core — unified entrypoint for the SINT Operating System. Combines OpenClaw runtime, SINT Protocol governance, avatar face, and multimodal bridge.",
   "type": "module",
@@ -38,9 +38,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@sint/client": "workspace:*",
-    "@sint/core": "workspace:*",
-    "@sint/openclaw-adapter": "workspace:*"
+    "@pshkv/client": "workspace:*",
+    "@pshkv/core": "workspace:*",
+    "@pshkv/openclaw-adapter": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0",

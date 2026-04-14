@@ -1,5 +1,5 @@
 /**
- * sint.cloud badge server
+ * sint.click badge server
  * 
  * GET /badge/project/:id.svg
  *   ?status=verified|pending|failed
@@ -180,7 +180,7 @@ app.post("/badge/claim", async (c) => {
   return c.json({ 
     projectId: body.projectId, 
     badgeUrl: `/badge/project/${body.projectId}.svg`,
-    markdownBadge: `[![SINT Verified](https://sint.cloud/badge/project/${body.projectId}.svg)](https://github.com/sint-ai/sint-protocol)`,
+    markdownBadge: `[![SINT Verified](https://sint.click/badge/project/${body.projectId}.svg)](https://github.com/sint-ai/sint-protocol)`,
     status: "pending",
     message: "Badge claimed. Status will update to 'verified' after cross-verification tests pass."
   }, 201);
@@ -194,7 +194,7 @@ app.get("/badge/registry", (c) => {
     status: r.status,
     verifiedAt: r.verifiedAt,
     testCount: r.testCount,
-    badgeUrl: `https://sint.cloud/badge/project/${r.projectId}.svg`,
+    badgeUrl: `https://sint.click/badge/project/${r.projectId}.svg`,
   }));
   return c.json({ count: entries.length, projects: entries });
 });

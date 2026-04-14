@@ -21,8 +21,8 @@ import { PolicyGateway } from "../src/gateway.js";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
-import type { SintCapabilityToken, SintRequest } from "@sint/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
 
 const VALID_HASH_A = "a".repeat(64);
 const VALID_HASH_B = "b".repeat(64);

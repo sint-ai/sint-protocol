@@ -7,12 +7,12 @@
  * @module @sint/mcp/identity
  */
 
-import type { SintCapabilityToken } from "@sint/core";
+import type { SintCapabilityToken } from "@pshkv/core";
 import {
   generateKeypair,
   getPublicKey,
   issueCapabilityToken,
-} from "@sint/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
 
 /** Agent identity with keypair and default token. */
 export interface AgentIdentity {

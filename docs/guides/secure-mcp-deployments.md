@@ -101,14 +101,14 @@ npm install @sint/bridge-mcp @sint/gate-policy-gateway @sint/gate-capability-tok
 ### Configure and run
 
 ```typescript
-import { PolicyGateway } from "@sint/gate-policy-gateway";
-import { MCPInterceptor } from "@sint/bridge-mcp";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
 import {
   generateKeypair,
   issueCapabilityToken,
   InMemoryRevocationStore,
-} from "@sint/gate-capability-tokens";
-import { InMemoryEvidenceLedger } from "@sint/gate-evidence-ledger";
+} from "@pshkv/gate-capability-tokens";
+import { InMemoryEvidenceLedger } from "@pshkv/gate-evidence-ledger";
 
 // ── 1. Root key (kept offline in production) ──────────────────────────────────
 const rootKeypair = generateKeypair();
@@ -271,7 +271,7 @@ SINT assigns every tool call to an approval tier based on its resource URI patte
 TAM entries are operator-controlled — the tool cannot self-declare elevated permissions:
 
 ```typescript
-import { TamRegistry, ApprovalTier } from "@sint/bridge-mcp";
+import { TamRegistry, ApprovalTier } from "@pshkv/bridge-mcp";
 
 const tamRegistry = new TamRegistry();
 
@@ -358,7 +358,7 @@ const receipt = await ledger.getProofReceipt(eventId);
 The `siem-exporter` in `packages/bridge-mcp/` streams ledger events to any SIEM:
 
 ```typescript
-import { SiemExporter } from "@sint/bridge-mcp/siem-exporter";
+import { SiemExporter } from "@pshkv/bridge-mcp/siem-exporter";
 
 const exporter = new SiemExporter({
   endpoint: "https://your-siem.example.com/ingest",

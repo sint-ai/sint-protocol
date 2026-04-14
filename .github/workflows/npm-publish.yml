@@ -52,14 +52,29 @@ jobs:
             "packages/token-registry"
           )
 
+          FAILED=()
           for pkg in "${PACKAGES[@]}"; do
             name=$(node -p "require('./$pkg/package.json').name")
             echo "Publishing $name..."
-            (cd "$pkg" && npm publish --access public --provenance) || {
-              echo "Warning: $name publish failed (may already exist at this version)"
-            }
-            echo "✓ $name"
+            if (cd "$pkg" && npm publish --access public --provenance); then
+              echo "✓ $name"
+            else
+              exit_code=$?
+              # 409 = already published at this version, treat as success
+              if npm view "$name@$(node -p "require('./$pkg/package.json').version")" > /dev/null 2>&1; then
+                echo "✓ $name (already published)"
+              else
+                echo "✗ $name FAILED (exit $exit_code)"
+                FAILED+=("$name")
+              fi
+            fi
           done
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed to publish: ${FAILED[*]}"
+            echo "::error::If you see E403 with 2FA error: the NPM_TOKEN must be a Granular Access Token"
+            echo "::error::with 'Bypass 2FA' enabled. Generate at npmjs.com → Access Tokens → Generate New Token → Granular."
+            exit 1
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -72,8 +87,16 @@ jobs:
       - name: Verify installation
         run: |
           cd /tmp
-          npm install @sint/core@${{ steps.version.outputs.version }} --prefer-online
-          node -e "const c = require('@sint/core'); console.log('✓ @sint/core loads OK, exports:', Object.keys(c).length, 'items')"
+          # Wait for npm CDN propagation (up to 60s)
+          for i in $(seq 1 6); do
+            if npm install @pshkv/core@${{ steps.version.outputs.version }} --prefer-online 2>/dev/null; then
+              break
+            fi
+            echo "Registry not ready yet, retrying in 10s... ($i/6)"
+            sleep 10
+          done
+          npm install @pshkv/core@${{ steps.version.outputs.version }} --prefer-online
+          node -e "const c = require('@pshkv/core'); console.log('✓ @pshkv/core loads OK, exports:', Object.keys(c).length, 'items')"
 
       - name: Create GitHub Release summary
         run: |
@@ -81,18 +104,18 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Install:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "npm install @sint/core@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "npm install @pshkv/core@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Published packages:" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/core\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/gate-capability-tokens\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/gate-evidence-ledger\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/gate-policy-gateway\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-mcp\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-ros2\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-mavlink\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-iot\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-a2a\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/bridge-economy\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`@sint/token-registry\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/core\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/gate-capability-tokens\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/gate-evidence-ledger\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/gate-policy-gateway\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-mcp\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-ros2\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-mavlink\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-iot\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-a2a\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/bridge-economy\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@pshkv/token-registry\`" >> $GITHUB_STEP_SUMMARY

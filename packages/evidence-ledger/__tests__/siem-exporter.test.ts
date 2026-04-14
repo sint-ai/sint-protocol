@@ -12,7 +12,7 @@ import {
   formatCef,
   exportBatch,
 } from "../src/siem-exporter.js";
-import type { SintLedgerEvent } from "@sint/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 const AGENT_ID = "a".repeat(64);
 
