@@ -1,5 +1,6 @@
 # SINT Protocol
 [![CI](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/sint-ai/sint-protocol/actions/workflows/ci.yml)
+[![Glama](https://glama.ai/mcp/servers/sint-ai/sint-protocol/badges/card.svg)](https://glama.ai/mcp/servers/sint-ai/sint-protocol)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D22-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
