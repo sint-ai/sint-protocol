@@ -2,5 +2,107 @@
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": [
     "pshkv"
+  ],
+  "name": "SINT Protocol",
+  "description": "Security-first MCP proxy with policy enforcement — scan tools for risks (T0–T3 tiers), enforce approval gates, produce hash-chained audit trails. OWASP ASI05 compliant.",
+  "repository": "https://github.com/sint-ai/sint-protocol",
+  "homepage": "https://sint.gg",
+  "license": "Apache-2.0",
+  "keywords": [
+    "security",
+    "governance",
+    "policy",
+    "audit",
+    "mcp",
+    "owasp",
+    "ai-agents",
+    "approval",
+    "compliance"
+  ],
+  "tools": [
+    {
+      "name": "sint__status",
+      "description": "Show SINT MCP status: connected servers, agent identity, queue size, and system health"
+    },
+    {
+      "name": "sint__servers",
+      "description": "List all downstream MCP servers with connection status, tool counts, and health"
+    },
+    {
+      "name": "sint__whoami",
+      "description": "Show current agent identity: public key, active token, session info"
+    },
+    {
+      "name": "sint__pending",
+      "description": "List all pending approval requests awaiting human review"
+    },
+    {
+      "name": "sint__approve",
+      "description": "Approve a pending escalated action by its request ID"
+    },
+    {
+      "name": "sint__deny",
+      "description": "Deny a pending escalated action by its request ID"
+    },
+    {
+      "name": "sint__audit",
+      "description": "Query the SINT evidence ledger for recent decisions and events"
+    },
+    {
+      "name": "sint__add_server",
+      "description": "Dynamically add a new downstream MCP server at runtime"
+    },
+    {
+      "name": "sint__remove_server",
+      "description": "Remove a downstream MCP server by name"
+    },
+    {
+      "name": "sint__issue_token",
+      "description": "Issue a new capability token with specified permissions and constraints"
+    },
+    {
+      "name": "sint__revoke_token",
+      "description": "Revoke an active capability token"
+    },
+    {
+      "name": "sint__interface_status",
+      "description": "Show operator interface session state and mode"
+    },
+    {
+      "name": "sint__recall_memory",
+      "description": "Recall stored agent memory by key or search"
+    },
+    {
+      "name": "sint__store_memory",
+      "description": "Store a key-value memory entry for agent persistence"
+    },
+    {
+      "name": "sint__speak",
+      "description": "Send a message to the operator interface"
+    },
+    {
+      "name": "sint__show_hud",
+      "description": "Display a HUD overlay on the operator interface"
+    },
+    {
+      "name": "sint__notify",
+      "description": "Send a notification to the operator"
+    },
+    {
+      "name": "sint__interface_mode",
+      "description": "Switch operator interface mode (autonomous, supervised, manual)"
+    },
+    {
+      "name": "sint__delegate_to_agent",
+      "description": "Delegate a task to another agent with scoped capability token"
+    },
+    {
+      "name": "sint__list_delegations",
+      "description": "List active delegation chains from this agent"
+    },
+    {
+      "name": "sint__revoke_delegation_tree",
+      "description": "Revoke an entire delegation subtree by root token"
+    }
   ]
 }
