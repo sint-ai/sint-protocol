@@ -2,6 +2,7 @@ packages:
   - "packages/*"
   - "!packages/mcp-scanner"
   - "apps/*"
+  - "!apps/*-standalone"
   - "examples/*"
   - "capsules/*"
   - "sdks/typescript"

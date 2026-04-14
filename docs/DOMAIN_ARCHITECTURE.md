@@ -79,6 +79,7 @@ If SINT evolves into a full agentic OS (model companies start owning layers):
    - Upload logo (orange N icon from sint.gg)
    - Add one-liner: "The open-source governance layer for AI agents — scan MCP servers, enforce policy bundles, prove compliance."
    - Add homepage: https://sint.gg
+   - Use the repo-root `Dockerfile` for the Glama build spec so the server can be inspected and released
    - Fix the installable status: needs `@sint/mcp` published to npm
 
 ## npm publish (do from Mac Mini)

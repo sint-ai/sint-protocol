@@ -84,6 +84,23 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish MCP server
+        run: |
+          pkg="apps/sint-mcp"
+          name=$(node -p "require('./$pkg/package.json').name")
+          version=$(node -p "require('./$pkg/package.json').version")
+          echo "Publishing $name@$version..."
+          if (cd "$pkg" && npm publish --access public --provenance); then
+            echo "✓ $name"
+          elif npm view "$name@$version" > /dev/null 2>&1; then
+            echo "✓ $name (already published)"
+          else
+            echo "::error::Failed to publish $name@$version"
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Verify installation
         run: |
           cd /tmp
@@ -97,6 +114,24 @@ jobs:
           done
           npm install @pshkv/core@${{ steps.version.outputs.version }} --prefer-online
           node -e "const c = require('@pshkv/core'); console.log('✓ @pshkv/core loads OK, exports:', Object.keys(c).length, 'items')"
+
+      - name: Verify MCP server installation
+        run: |
+          cd /tmp
+          mcp_version=$(node -p "require('${GITHUB_WORKSPACE}/apps/sint-mcp/package.json').version")
+          for i in $(seq 1 6); do
+            if npm install @sint/mcp@"$mcp_version" --prefer-online 2>/dev/null; then
+              break
+            fi
+            echo "Registry not ready yet for @sint/mcp, retrying in 10s... ($i/6)"
+            sleep 10
+          done
+          npm install @sint/mcp@"$mcp_version" --prefer-online
+          npx @sint/mcp --stdio >/tmp/sint-mcp-verify.log 2>&1 &
+          MCP_PID=$!
+          sleep 2
+          kill "$MCP_PID" >/dev/null 2>&1 || true
+          cat /tmp/sint-mcp-verify.log
 
       - name: Create GitHub Release summary
         run: |
@@ -119,3 +154,4 @@ jobs:
           echo "- \`@pshkv/bridge-a2a\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`@pshkv/bridge-economy\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`@pshkv/token-registry\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`@sint/mcp\`" >> $GITHUB_STEP_SUMMARY
