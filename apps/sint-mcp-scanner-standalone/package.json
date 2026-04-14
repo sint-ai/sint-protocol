@@ -1,0 +1,20 @@
+{
+  "name": "sint-scan",
+  "version": "0.1.0",
+  "description": "Scan any MCP server for risky tools in seconds — maps tools to SINT tiers (T0-T3), detects shell-exec risks, OWASP ASI05 coverage",
+  "keywords": ["mcp", "security", "ai-agents", "sint", "governance", "audit", "owasp", "llm", "claude", "agents"],
+  "homepage": "https://sint.gg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "directory": "apps/sint-mcp-scanner"
+  },
+  "author": "SINT Labs <hello@sint.gg>",
+  "license": "Apache-2.0",
+  "bin": {
+    "sint-scan": "./cli.js"
+  },
+  "main": "./scanner.js",
+  "engines": { "node": ">=18" },
+  "files": ["cli.js", "scanner.js", "README.md"]
+}
