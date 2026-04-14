@@ -20,6 +20,9 @@ COPY packages/persistence/package.json             packages/persistence/
 COPY packages/avatar/package.json                  packages/avatar/
 COPY packages/bridge-a2a/package.json              packages/bridge-a2a/
 COPY packages/bridge-economy/package.json          packages/bridge-economy/
+COPY packages/memory/package.json                  packages/memory/
+COPY packages/interface-bridge/package.json        packages/interface-bridge/
+COPY packages/token-registry/package.json          packages/token-registry/
 COPY apps/gateway-server/package.json              apps/gateway-server/
 
 RUN pnpm install --frozen-lockfile
@@ -33,6 +36,9 @@ COPY packages/persistence/             packages/persistence/
 COPY packages/avatar/                  packages/avatar/
 COPY packages/bridge-a2a/             packages/bridge-a2a/
 COPY packages/bridge-economy/          packages/bridge-economy/
+COPY packages/memory/                  packages/memory/
+COPY packages/interface-bridge/        packages/interface-bridge/
+COPY packages/token-registry/          packages/token-registry/
 COPY apps/gateway-server/              apps/gateway-server/
 
 RUN pnpm run build
@@ -61,6 +67,9 @@ COPY --from=builder /app/packages/persistence/package.json             packages/
 COPY --from=builder /app/packages/avatar/package.json                  packages/avatar/
 COPY --from=builder /app/packages/bridge-a2a/package.json              packages/bridge-a2a/
 COPY --from=builder /app/packages/bridge-economy/package.json          packages/bridge-economy/
+COPY --from=builder /app/packages/memory/package.json                  packages/memory/
+COPY --from=builder /app/packages/interface-bridge/package.json        packages/interface-bridge/
+COPY --from=builder /app/packages/token-registry/package.json          packages/token-registry/
 COPY --from=builder /app/apps/gateway-server/package.json              apps/gateway-server/
 
 # Built artefacts
@@ -73,6 +82,9 @@ COPY --from=builder /app/packages/persistence/migrations/       packages/persist
 COPY --from=builder /app/packages/avatar/dist/                  packages/avatar/dist/
 COPY --from=builder /app/packages/bridge-a2a/dist/              packages/bridge-a2a/dist/
 COPY --from=builder /app/packages/bridge-economy/dist/          packages/bridge-economy/dist/
+COPY --from=builder /app/packages/memory/dist/                  packages/memory/dist/
+COPY --from=builder /app/packages/interface-bridge/dist/        packages/interface-bridge/dist/
+COPY --from=builder /app/packages/token-registry/dist/          packages/token-registry/dist/
 COPY --from=builder /app/apps/gateway-server/dist/              apps/gateway-server/dist/
 
 # Install production dependencies only (node_modules for native deps like pg, ioredis)
