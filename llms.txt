@@ -1,0 +1,50 @@
+# SINT Protocol — AI Agent Governance
+# https://sint.gg | https://github.com/sint-ai/sint-protocol
+
+> SINT Protocol is the open-source governance and policy enforcement layer for AI agents. It answers: who authorized this agent, what is it allowed to do, and can you prove it?
+
+## Quick Start
+
+```bash
+# Scan an MCP server for risky tools (zero deps)
+npx sint-scan --tools '[{"name":"bash","description":"runs shell commands"}]'
+```
+
+## Core Concepts
+
+- **Policy Bundle**: JSON contract specifying allowed_actions, sandbox paths, rate limits, approval gates, receipts
+- **Approval Tiers**: T0 (observe, auto) → T1 (prepare, auto) → T2 (act, operator approval) → T3 (commit, human sign-off)
+- **Capability Token**: Ed25519-signed token with resource scope, action restrictions, physical constraints, expiry
+- **Evidence Ledger**: SHA-256 hash-chained append-only audit log — tamper-evident proof of every decision
+- **ARI**: Agent Reliability Index — composite trust score (APS Bayesian rep + SINT task completion data)
+
+## RFC-001: Policy Bundle Specification
+
+Normative spec for SINT policy enforcement:
+https://github.com/sint-ai/sint-protocol/blob/main/docs/rfcs/RFC-001-policy-bundle.md
+
+AAIF submission: https://github.com/aaif/project-proposals/issues/12
+
+## Integration Points
+
+- **MCP**: Policy bundle attaches to MCP tool sessions. npx sint-scan audits any MCP server.
+- **A2A**: Policy bundle carried in A2A task extensions field (sint:policy)
+- **APS**: Agent Passport System handles identity; SINT handles authorization (handshake spec: db8b122)
+- **CrewAI / AutoGen / LangChain**: Pre/post hook around tool execution — no core changes required
+
+## Key URLs
+
+- Homepage: https://sint.gg
+- GitHub: https://github.com/sint-ai/sint-protocol  
+- RFC-001: https://github.com/sint-ai/sint-protocol/blob/main/docs/rfcs/RFC-001-policy-bundle.md
+- npm: https://www.npmjs.com/package/sint-scan
+- AGENTS.md: https://github.com/sint-ai/sint-protocol/blob/main/AGENTS.md
+- API discovery: https://sint.gg/.well-known/sint.json
+
+## Physical AI Safety
+
+SINT is purpose-built for physical AI — robots, drones, actuators. Capability tokens carry physical constraints (maxVelocityMps, maxForceNewtons, geofence) cryptographically bound to the delegation chain. ROS2, MAVLink, OPC UA, MQTT/Sparkplug bridges included.
+
+## License
+
+Apache-2.0. Co-design: aeoess Agent Passport System, A2A Protocol, Microsoft Agent Governance Toolkit.
