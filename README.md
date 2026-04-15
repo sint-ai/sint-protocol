@@ -261,7 +261,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | Package | Description | Tests |
 |---------|-------------|-------|
 | [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | — |
-| [`@sint/mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | — |
+| [`sint-mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | — |
 | [`@sint/dashboard`](apps/dashboard) | Real-time approval dashboard with operator auth | 29 |
 | [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | — |
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
