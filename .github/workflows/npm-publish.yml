@@ -110,7 +110,7 @@ jobs:
             sleep 10
           done
           npm install @pshkv/core@"$core_version" --prefer-online
-          node -e "const c = require('@pshkv/core'); console.log('✓ @pshkv/core loads OK, exports:', Object.keys(c).length, 'items')"
+          node -e "import('@pshkv/core').then((c) => console.log('✓ @pshkv/core loads OK, exports:', Object.keys(c).length, 'items'))"
 
       - name: Verify MCP server installation
         run: |
