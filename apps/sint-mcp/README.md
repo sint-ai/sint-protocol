@@ -177,6 +177,173 @@ All built-in tools are prefixed with `sint__` and bypass downstream policy (they
 | `sint__add_server` | Add a downstream server at runtime |
 | `sint__remove_server` | Remove a downstream server by name |
 
+## Example tool calls
+
+These examples use MCP-style JSON arguments for the built-in `sint__*` tools.
+
+### Approvals and audit
+
+Approve one blocked request after reviewing it in `sint__pending`:
+
+```json
+{
+  "name": "sint__approve",
+  "arguments": {
+    "requestId": "apr_01hxyz",
+    "by": "ops-console"
+  }
+}
+```
+
+Deny one blocked request with an audit-friendly reason:
+
+```json
+{
+  "name": "sint__deny",
+  "arguments": {
+    "requestId": "apr_01hxyz",
+    "reason": "Outside approved maintenance window",
+    "by": "alice@example.com"
+  }
+}
+```
+
+Read the latest 10 ledger events:
+
+```json
+{
+  "name": "sint__audit",
+  "arguments": {
+    "limit": 10
+  }
+}
+```
+
+### Operator interface
+
+Show the approvals HUD panel:
+
+```json
+{
+  "name": "sint__show_hud",
+  "arguments": {
+    "panel": "approvals"
+  }
+}
+```
+
+Store incident context in memory:
+
+```json
+{
+  "name": "sint__store_memory",
+  "arguments": {
+    "key": "incident-42/root-cause",
+    "value": {
+      "service": "gateway",
+      "summary": "Token scope mismatch during rollout"
+    },
+    "tags": ["incident", "prod"],
+    "persist": true
+  }
+}
+```
+
+Send a notification with a follow-up action:
+
+```json
+{
+  "name": "sint__notify",
+  "arguments": {
+    "message": "Approval queue has blocked actions",
+    "action": {
+      "label": "Review approvals",
+      "tool": "sint__pending",
+      "args": {}
+    }
+  }
+}
+```
+
+Switch the interface to compact mode:
+
+```json
+{
+  "name": "sint__interface_mode",
+  "arguments": {
+    "mode": "compact"
+  }
+}
+```
+
+### Tokens and delegation
+
+Issue a scoped token:
+
+```json
+{
+  "name": "sint__issue_token",
+  "arguments": {
+    "subject": "agent:planner-01",
+    "resource": "mcp://github/repos/sint-ai/sint-protocol/*",
+    "actions": ["call"],
+    "expiresInHours": 24
+  }
+}
+```
+
+Delegate limited scope to a sub-agent:
+
+```json
+{
+  "name": "sint__delegate_to_agent",
+  "arguments": {
+    "subagentId": "agent:reviewer-01",
+    "toolScope": ["mcp://filesystem/reports/*"],
+    "expiresInHours": 4,
+    "maxCallsPerMinute": 10
+  }
+}
+```
+
+Revoke a delegated subtree:
+
+```json
+{
+  "name": "sint__revoke_delegation_tree",
+  "arguments": {
+    "rootTokenId": "tok_01hxyz",
+    "reason": "Incident response containment"
+  }
+}
+```
+
+### Server management
+
+Add a filesystem server without restarting SINT:
+
+```json
+{
+  "name": "sint__add_server",
+  "arguments": {
+    "name": "filesystem",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+  }
+}
+```
+
+Remove that downstream server later:
+
+```json
+{
+  "name": "sint__remove_server",
+  "arguments": {
+    "name": "filesystem"
+  }
+}
+```
+
 ## MCP Resources
 
 sint-mcp exposes read-only resources for browsing protocol state:
