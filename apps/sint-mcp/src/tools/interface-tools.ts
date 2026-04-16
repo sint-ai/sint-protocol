@@ -37,125 +37,151 @@ export function getInterfaceToolDefinitions(): Array<{
     {
       name: "sint__recall_memory",
       description:
-        "Search the operator memory bank for relevant stored context. Use this before asking for human input again or when you need prior decisions, notes, or context by keyword. Returns matching memory entries as JSON.",
+        "Search the operator memory bank for relevant stored context. Use this before asking for human input again or when you need prior decisions, notes, or context by keyword. This tool does not mutate memory and returns matching entries as JSON.",
       inputSchema: {
         type: "object",
         properties: {
           query: {
+            title: "Search query",
             type: "string",
             description: "Search string used to match memory keys, tags, or content",
+            minLength: 1,
             examples: ["deployment approval", "customer abc", "incident 42"],
           },
           limit: {
+            title: "Result limit",
             type: "number",
             description: "Maximum number of matches to return; defaults to 10",
             minimum: 1,
+            default: 10,
             examples: [5, 10, 25],
           },
         },
         required: ["query"],
         additionalProperties: false,
+        examples: [{ query: "incident 42", limit: 5 }],
       },
     },
     {
       name: "sint__speak",
       description:
-        "Send text-to-speech output to the operator interface. Use this for spoken alerts or short status updates that need immediate attention; prefer concise text because the content is voiced aloud. Returns a JSON confirmation with the spoken text and priority.",
+        "Send text-to-speech output to the operator interface. Use this for spoken alerts or short status updates that need immediate attention; prefer concise text because the content is voiced aloud. Returns a JSON confirmation with the spoken text, priority, and timestamp.",
       inputSchema: {
         type: "object",
         properties: {
           text: {
+            title: "Spoken text",
             type: "string",
             description: "Short text that will be spoken aloud to the operator",
+            minLength: 1,
             examples: ["Approval needed for production deploy", "Battery level critical"],
           },
           priority: {
+            title: "Priority",
             type: "string",
             enum: ["low", "normal", "urgent"],
             description: "Voice output priority; defaults to normal",
+            default: "normal",
           },
         },
         required: ["text"],
         additionalProperties: false,
+        examples: [{ text: "Approval needed for production deploy", priority: "urgent" }],
       },
     },
     {
       name: "sint__show_hud",
       description:
-        "Show or refresh one HUD panel in the operator interface. Use this to surface approvals, audit details, context, or memory on screen; this updates the live interface but does not persist business data. Returns a JSON confirmation describing which panel was updated.",
+        "Show or refresh one HUD panel in the operator interface. Use this to surface approvals, audit details, context, or memory on screen; this updates the live interface but does not persist business data. Returns a JSON confirmation describing which panel was updated and when.",
       inputSchema: {
         type: "object",
         properties: {
           panel: {
+            title: "HUD panel",
             type: "string",
             enum: ["approvals", "audit", "context", "memory"],
             description: "HUD panel to display or refresh",
           },
           data: {
+            title: "Panel payload",
             description: "Optional JSON payload for the panel; useful for supplying custom context alongside the panel change",
           },
         },
         required: ["panel"],
         additionalProperties: false,
+        examples: [{ panel: "approvals" }, { panel: "context", data: { stage: "deploy", owner: "ops" } }],
       },
     },
     {
       name: "sint__store_memory",
       description:
-        "Store structured context in the operator memory bank for later retrieval. Use this for durable notes, human preferences, incident breadcrumbs, or other context worth recalling later. Returns a JSON confirmation with the stored key and persistence state.",
+        "Store structured context in the operator memory bank for later retrieval. Use this for durable notes, human preferences, incident breadcrumbs, or other context worth recalling later. Returns a JSON confirmation with the stored key, persistence state, and any ledger event identifier.",
       inputSchema: {
         type: "object",
         properties: {
           key: {
+            title: "Memory key",
             type: "string",
             description: "Stable unique key for the memory entry",
+            minLength: 1,
             examples: ["incident-42/root-cause", "customer/acme/preference"],
           },
           value: {
+            title: "Memory value",
             description: "Any JSON value to persist under the key",
           },
           tags: {
+            title: "Tags",
             type: "array",
             items: { type: "string" },
             description: "Optional tags used for categorization and later search",
             examples: [["incident", "prod"], ["customer", "billing"]],
           },
           persist: {
+            title: "Persist beyond session",
             type: "boolean",
             description: "Whether the entry should persist beyond the current session; defaults to false",
+            default: false,
           },
         },
         required: ["key", "value"],
         additionalProperties: false,
+        examples: [{ key: "incident-42/root-cause", value: { service: "gateway", summary: "Token scope mismatch" }, tags: ["incident", "prod"], persist: true }],
       },
     },
     {
       name: "sint__notify",
       description:
-        "Send a proactive notification to the operator interface, optionally with one follow-up action button. Use this for alerts or prompts that should remain visible in the UI; this is better than sint__speak when the operator needs something clickable or persistent. Returns a JSON confirmation with the notification timestamp.",
+        "Send a proactive notification to the operator interface, optionally with one follow-up action button. Use this for alerts or prompts that should remain visible in the UI; this is better than sint__speak when the operator needs something clickable or persistent. Returns a JSON confirmation with the notification timestamp and echoed message.",
       inputSchema: {
         type: "object",
         properties: {
           message: {
+            title: "Notification message",
             type: "string",
             description: "Visible notification text shown to the operator",
+            minLength: 1,
             examples: ["Approval queue has 2 blocked actions", "GPU temperature exceeded threshold"],
           },
           action: {
+            title: "Optional action button",
             type: "object",
             description: "Optional action button attached to the notification",
             properties: {
               label: {
+                title: "Button label",
                 type: "string",
                 description: "Button label shown in the notification UI",
                 examples: ["Review approvals", "Open audit"],
               },
               tool: {
+                title: "Tool to invoke",
                 type: "string",
                 description: "MCP tool name to invoke when the button is clicked",
                 examples: ["sint__pending", "sint__approve"],
               },
               args: {
+                title: "Tool arguments",
                 description: "Arguments passed to the MCP tool when the action button is clicked",
               },
             },
@@ -165,6 +191,7 @@ export function getInterfaceToolDefinitions(): Array<{
         },
         required: ["message"],
         additionalProperties: false,
+        examples: [{ message: "Approval queue has blocked actions", action: { label: "Review approvals", tool: "sint__pending", args: {} } }],
       },
     },
     {

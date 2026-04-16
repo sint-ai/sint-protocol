@@ -69,8 +69,8 @@ export function getDelegationToolDefinitions(): Array<{
     {
       name: "sint__list_delegations",
       description:
-        "List the active delegation tree rooted at the current token. Use this to audit which sub-agents currently hold delegated access, how deep the tree is, and what scope has been passed down. Returns a JSON array of delegation nodes.",
-      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+        "List the active delegation tree rooted at the current token. Use this to audit which sub-agents currently hold delegated access, how deep the tree is, and what scope has been passed down. This tool is read-only and returns a JSON array of delegation nodes.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false, examples: [{}] },
     },
     {
       name: "sint__revoke_delegation_tree",
