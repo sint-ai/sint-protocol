@@ -14,6 +14,8 @@ import {
   CallToolRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
+  ListPromptsRequestSchema,
+  ListResourceTemplatesRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { SintCapabilityToken } from "@pshkv/core";
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
@@ -82,6 +84,7 @@ export class SintMCPServer {
         capabilities: {
           tools: {},
           resources: {},
+          prompts: {},
         },
       },
     );
@@ -198,6 +201,11 @@ export class SintMCPServer {
       return { tools: [...downstreamTools, ...sintTools, ...interfaceTools, ...delegationTools] };
     });
 
+    // prompts/list — SINT currently exposes no prompt templates
+    this.server.setRequestHandler(ListPromptsRequestSchema, async () => {
+      return { prompts: [] };
+    });
+
     // tools/call — enforce policy then route
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
@@ -259,6 +267,11 @@ export class SintMCPServer {
     // resources/list
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
       return { resources: getSintResources() };
+    });
+
+    // resources/templates/list — SINT currently exposes no resource templates
+    this.server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
+      return { resourceTemplates: [] };
     });
 
     // resources/read
