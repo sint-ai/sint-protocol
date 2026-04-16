@@ -31,109 +31,157 @@ export function getInterfaceToolDefinitions(): Array<{
     {
       name: "sint__interface_status",
       description:
-        "Return current operator interface state: mode, listening/speaking flags, active HUD panels, memory context size, and session ID",
-      inputSchema: { type: "object", properties: {}, required: [] },
+        "Inspect the current operator interface state before sending operator-facing updates. Use this to confirm the active mode, HUD panels, speaking/listening flags, and session context. Returns a JSON snapshot of the current interface state.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__recall_memory",
-      description: "Search the memory bank for entries matching a query string. Returns matching entries as JSON.",
+      description:
+        "Search the operator memory bank for relevant stored context. Use this before asking for human input again or when you need prior decisions, notes, or context by keyword. Returns matching memory entries as JSON.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search query to match against memory entries" },
-          limit: { type: "number", description: "Maximum number of results to return (default: 10)" },
+          query: {
+            type: "string",
+            description: "Search string used to match memory keys, tags, or content",
+            examples: ["deployment approval", "customer abc", "incident 42"],
+          },
+          limit: {
+            type: "number",
+            description: "Maximum number of matches to return; defaults to 10",
+            minimum: 1,
+            examples: [5, 10, 25],
+          },
         },
         required: ["query"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__speak",
-      description: "Schedule TTS voice output to the operator with a configurable priority level",
+      description:
+        "Send text-to-speech output to the operator interface. Use this for spoken alerts or short status updates that need immediate attention; prefer concise text because the content is voiced aloud. Returns a JSON confirmation with the spoken text and priority.",
       inputSchema: {
         type: "object",
         properties: {
-          text: { type: "string", description: "Text to speak aloud to the operator" },
+          text: {
+            type: "string",
+            description: "Short text that will be spoken aloud to the operator",
+            examples: ["Approval needed for production deploy", "Battery level critical"],
+          },
           priority: {
             type: "string",
             enum: ["low", "normal", "urgent"],
-            description: "Voice output priority (default: normal)",
+            description: "Voice output priority; defaults to normal",
           },
         },
         required: ["text"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__show_hud",
-      description: "Update a HUD panel with new data. Emits an operator.hud.updated event.",
+      description:
+        "Show or refresh one HUD panel in the operator interface. Use this to surface approvals, audit details, context, or memory on screen; this updates the live interface but does not persist business data. Returns a JSON confirmation describing which panel was updated.",
       inputSchema: {
         type: "object",
         properties: {
           panel: {
             type: "string",
             enum: ["approvals", "audit", "context", "memory"],
-            description: "Which HUD panel to update",
+            description: "HUD panel to display or refresh",
           },
-          data: { description: "Data to display in the panel (any JSON value)" },
+          data: {
+            description: "Optional JSON payload for the panel; useful for supplying custom context alongside the panel change",
+          },
         },
         required: ["panel"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__store_memory",
-      description: "Store an entry in the memory bank with optional tags and persistence",
+      description:
+        "Store structured context in the operator memory bank for later retrieval. Use this for durable notes, human preferences, incident breadcrumbs, or other context worth recalling later. Returns a JSON confirmation with the stored key and persistence state.",
       inputSchema: {
         type: "object",
         properties: {
-          key: { type: "string", description: "Unique key for the memory entry" },
-          value: { description: "Value to store (any JSON value)" },
+          key: {
+            type: "string",
+            description: "Stable unique key for the memory entry",
+            examples: ["incident-42/root-cause", "customer/acme/preference"],
+          },
+          value: {
+            description: "Any JSON value to persist under the key",
+          },
           tags: {
             type: "array",
             items: { type: "string" },
-            description: "Optional tags for categorisation and search",
+            description: "Optional tags used for categorization and later search",
+            examples: [["incident", "prod"], ["customer", "billing"]],
           },
           persist: {
             type: "boolean",
-            description: "Whether to persist beyond this session (default: false)",
+            description: "Whether the entry should persist beyond the current session; defaults to false",
           },
         },
         required: ["key", "value"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__notify",
-      description: "Send a proactive notification to the operator, optionally with an actionable button",
+      description:
+        "Send a proactive notification to the operator interface, optionally with one follow-up action button. Use this for alerts or prompts that should remain visible in the UI; this is better than sint__speak when the operator needs something clickable or persistent. Returns a JSON confirmation with the notification timestamp.",
       inputSchema: {
         type: "object",
         properties: {
-          message: { type: "string", description: "Notification message text" },
+          message: {
+            type: "string",
+            description: "Visible notification text shown to the operator",
+            examples: ["Approval queue has 2 blocked actions", "GPU temperature exceeded threshold"],
+          },
           action: {
             type: "object",
             description: "Optional action button attached to the notification",
             properties: {
-              label: { type: "string", description: "Button label" },
-              tool: { type: "string", description: "MCP tool name to invoke on click" },
-              args: { description: "Arguments to pass to the tool" },
+              label: {
+                type: "string",
+                description: "Button label shown in the notification UI",
+                examples: ["Review approvals", "Open audit"],
+              },
+              tool: {
+                type: "string",
+                description: "MCP tool name to invoke when the button is clicked",
+                examples: ["sint__pending", "sint__approve"],
+              },
+              args: {
+                description: "Arguments passed to the MCP tool when the action button is clicked",
+              },
             },
             required: ["label", "tool", "args"],
+            additionalProperties: false,
           },
         },
         required: ["message"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__interface_mode",
       description:
-        "Change the operator interface display mode: hud, compact, voice-only, or silent",
+        "Change how the operator interface presents information. Use this when the situation calls for a denser HUD, a minimal compact view, spoken output only, or silence. Returns a JSON confirmation with the new mode and timestamp.",
       inputSchema: {
         type: "object",
         properties: {
           mode: {
             type: "string",
             enum: ["hud", "compact", "voice-only", "silent"],
-            description: "Target interface mode",
+            description: "Target operator interface mode",
           },
         },
         required: ["mode"],
+        additionalProperties: false,
       },
     },
   ];
