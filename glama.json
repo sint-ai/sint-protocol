@@ -37,11 +37,11 @@
     },
     {
       "name": "sint__pending",
-      "description": "List approval requests currently blocked for review. Use this before sint__approve or sint__deny; returns a JSON array of request IDs, resources, actions, reasons, and expiry times."
+      "description": "List approval requests currently blocked for review. Read-only. Use this before sint__approve or sint__deny; returns a JSON array of request IDs, resources, actions, reasons, and expiry times."
     },
     {
       "name": "sint__approve",
-      "description": "Approve one pending escalated action after review. Requires a requestId from sint__pending and returns confirmation or an error if the request is missing."
+      "description": "Approve one pending escalated action after review. Requires a requestId from sint__pending, records the approver identity, and returns confirmation or an error if the request is missing."
     },
     {
       "name": "sint__deny",
@@ -49,23 +49,23 @@
     },
     {
       "name": "sint__audit",
-      "description": "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Returns a JSON array of recent ledger events."
+      "description": "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Read-only. Returns a JSON array of recent ledger events."
     },
     {
       "name": "sint__add_server",
-      "description": "Register and connect a new downstream MCP server while SINT is running. Requires a unique server name and startup command, and returns the discovered tool count on success."
+      "description": "Register and connect a new downstream MCP server while SINT is running. Requires a unique server name and startup command, and returns the discovered tool count on success or an error if connection fails."
     },
     {
       "name": "sint__remove_server",
-      "description": "Disconnect and remove one downstream MCP server from the running proxy. Requires the server name as listed by sint__servers."
+      "description": "Disconnect and remove one downstream MCP server from the running proxy. Requires the server name as listed by sint__servers and returns confirmation or an error if the name is unknown."
     },
     {
       "name": "sint__issue_token",
-      "description": "Issue a new attenuated capability token for another subject. Requires subject, resource, and actions, and returns token metadata including tokenId and expiry."
+      "description": "Issue a new attenuated capability token for another subject. Requires subject, resource, and actions, stores the token immediately, and returns token metadata including tokenId and expiry."
     },
     {
       "name": "sint__revoke_token",
-      "description": "Revoke an active capability token so it can no longer authorize actions. Requires tokenId and records the reason in the audit trail."
+      "description": "Revoke an active capability token so it can no longer authorize actions. Requires tokenId, records the reason in the audit trail, and returns a confirmation message."
     },
     {
       "name": "sint__interface_status",
@@ -73,7 +73,7 @@
     },
     {
       "name": "sint__recall_memory",
-      "description": "Search the operator memory bank for relevant stored context. Requires a query string and returns matching memory entries as JSON."
+      "description": "Search the operator memory bank for relevant stored context. Read-only. Requires a query string and returns matching memory entries as JSON."
     },
     {
       "name": "sint__store_memory",
@@ -85,11 +85,11 @@
     },
     {
       "name": "sint__show_hud",
-      "description": "Show or refresh one HUD panel in the operator interface. Requires a target panel and optionally includes JSON data for that panel."
+      "description": "Show or refresh one HUD panel in the operator interface. Requires a target panel and optionally accepts JSON data for that panel. Returns a confirmation payload with the panel name and timestamp."
     },
     {
       "name": "sint__notify",
-      "description": "Send a proactive notification to the operator interface, optionally with one action button that invokes another MCP tool."
+      "description": "Send a proactive notification to the operator interface, optionally with one action button that invokes another MCP tool. Returns a confirmation payload with the notification timestamp."
     },
     {
       "name": "sint__interface_mode",
@@ -101,7 +101,7 @@
     },
     {
       "name": "sint__list_delegations",
-      "description": "List the active delegation tree rooted at the current token. Returns a JSON array of delegation nodes and scope relationships."
+      "description": "List the active delegation tree rooted at the current token. Read-only. Returns a JSON array of delegation nodes and scope relationships."
     },
     {
       "name": "sint__revoke_delegation_tree",
