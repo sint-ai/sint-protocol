@@ -25,87 +25,87 @@
   "tools": [
     {
       "name": "sint__status",
-      "description": "Show SINT MCP status: connected servers, agent identity, queue size, and system health"
+      "description": "Inspect the current SINT runtime state before taking action. Returns a JSON summary with server connectivity, aggregated tool counts, pending approvals, and ledger size."
     },
     {
       "name": "sint__servers",
-      "description": "List all downstream MCP servers with connection status, tool counts, and health"
+      "description": "List configured downstream MCP servers and their live connection state. Returns a JSON array with server names, health, and discovered tool counts."
     },
     {
       "name": "sint__whoami",
-      "description": "Show current agent identity: public key, active token, session info"
+      "description": "Show the active SINT identity for the current session. Returns the acting public key, token ID, and role."
     },
     {
       "name": "sint__pending",
-      "description": "List all pending approval requests awaiting human review"
+      "description": "List approval requests currently blocked for review. Use this before sint__approve or sint__deny; returns a JSON array of request IDs, resources, actions, reasons, and expiry times."
     },
     {
       "name": "sint__approve",
-      "description": "Approve a pending escalated action by its request ID"
+      "description": "Approve one pending escalated action after review. Requires a requestId from sint__pending and returns confirmation or an error if the request is missing."
     },
     {
       "name": "sint__deny",
-      "description": "Deny a pending escalated action by its request ID"
+      "description": "Reject one pending escalated action so it cannot proceed. Requires a requestId from sint__pending and optionally records a denial reason."
     },
     {
       "name": "sint__audit",
-      "description": "Query the SINT evidence ledger for recent decisions and events"
+      "description": "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Returns a JSON array of recent ledger events."
     },
     {
       "name": "sint__add_server",
-      "description": "Dynamically add a new downstream MCP server at runtime"
+      "description": "Register and connect a new downstream MCP server while SINT is running. Requires a unique server name and startup command, and returns the discovered tool count on success."
     },
     {
       "name": "sint__remove_server",
-      "description": "Remove a downstream MCP server by name"
+      "description": "Disconnect and remove one downstream MCP server from the running proxy. Requires the server name as listed by sint__servers."
     },
     {
       "name": "sint__issue_token",
-      "description": "Issue a new capability token with specified permissions and constraints"
+      "description": "Issue a new attenuated capability token for another subject. Requires subject, resource, and actions, and returns token metadata including tokenId and expiry."
     },
     {
       "name": "sint__revoke_token",
-      "description": "Revoke an active capability token"
+      "description": "Revoke an active capability token so it can no longer authorize actions. Requires tokenId and records the reason in the audit trail."
     },
     {
       "name": "sint__interface_status",
-      "description": "Show operator interface session state and mode"
+      "description": "Inspect the current operator interface state. Returns a JSON snapshot with mode, HUD panel state, and session context."
     },
     {
       "name": "sint__recall_memory",
-      "description": "Recall stored agent memory by key or search"
+      "description": "Search the operator memory bank for relevant stored context. Requires a query string and returns matching memory entries as JSON."
     },
     {
       "name": "sint__store_memory",
-      "description": "Store a key-value memory entry for agent persistence"
+      "description": "Store structured context in the operator memory bank for later retrieval. Requires key and value, with optional tags and persistence."
     },
     {
       "name": "sint__speak",
-      "description": "Send a message to the operator interface"
+      "description": "Send text-to-speech output to the operator interface. Requires short text and optionally a priority level."
     },
     {
       "name": "sint__show_hud",
-      "description": "Display a HUD overlay on the operator interface"
+      "description": "Show or refresh one HUD panel in the operator interface. Requires a target panel and optionally includes JSON data for that panel."
     },
     {
       "name": "sint__notify",
-      "description": "Send a notification to the operator"
+      "description": "Send a proactive notification to the operator interface, optionally with one action button that invokes another MCP tool."
     },
     {
       "name": "sint__interface_mode",
-      "description": "Switch operator interface mode (autonomous, supervised, manual)"
+      "description": "Change how the operator interface presents information. Requires one of hud, compact, voice-only, or silent."
     },
     {
       "name": "sint__delegate_to_agent",
-      "description": "Delegate a task to another agent with scoped capability token"
+      "description": "Issue a delegated capability token to a sub-agent with narrower scope than the current token. Returns token metadata including depth and expiry."
     },
     {
       "name": "sint__list_delegations",
-      "description": "List active delegation chains from this agent"
+      "description": "List the active delegation tree rooted at the current token. Returns a JSON array of delegation nodes and scope relationships."
     },
     {
       "name": "sint__revoke_delegation_tree",
-      "description": "Revoke an entire delegation subtree by root token"
+      "description": "Cascade-revoke a delegated token and all of its descendants. Requires the root delegated token ID and optionally a revocation reason."
     }
   ]
 }

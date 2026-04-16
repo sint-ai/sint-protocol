@@ -34,37 +34,64 @@ export function getDelegationToolDefinitions(): Array<{
     {
       name: "sint__delegate_to_agent",
       description:
-        "Issue an attenuated capability token to a sub-agent, granting it a reduced tool scope. Depth is parent.depth + 1; max depth 3. Returns the new tokenId.",
+        "Issue a delegated capability token to a sub-agent with narrower scope than the current token. Use this when one agent should perform a bounded sub-task without inheriting full access. Returns a JSON object containing the new token ID, delegated scope, depth, and expiry.",
       inputSchema: {
         type: "object",
         properties: {
-          subagentId: { type: "string", description: "Public key of the sub-agent to delegate to" },
+          subagentId: {
+            type: "string",
+            description: "Public key or stable identifier of the sub-agent receiving the delegated token",
+            examples: ["agent:reviewer-01", "ed25519:def456..."],
+          },
           toolScope: {
             type: "array",
             items: { type: "string" },
-            description: "Resource URI patterns the sub-agent may access (must be a subset of caller's scope)",
+            description: "Resource URI patterns the sub-agent may access; must be a subset of the caller's scope",
+            examples: [["mcp://filesystem/reports/*"], ["mcp://github/repos/sint-ai/sint-protocol/issues/*"]],
           },
-          expiresInHours: { type: "number", description: "Token lifetime in hours (default: 4)" },
-          maxCallsPerMinute: { type: "number", description: "Optional rate limit for sub-agent" },
+          expiresInHours: {
+            type: "number",
+            description: "Delegated token lifetime in hours; defaults to 4",
+            minimum: 1,
+            examples: [1, 4, 24],
+          },
+          maxCallsPerMinute: {
+            type: "number",
+            description: "Optional per-minute rate limit applied to the delegated token",
+            minimum: 1,
+            examples: [10, 60],
+          },
         },
         required: ["subagentId", "toolScope"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__list_delegations",
-      description: "List the active delegation tree rooted at the current operator token. Returns a JSON array of DelegationNode objects.",
-      inputSchema: { type: "object", properties: {}, required: [] },
+      description:
+        "List the active delegation tree rooted at the current token. Use this to audit which sub-agents currently hold delegated access, how deep the tree is, and what scope has been passed down. Returns a JSON array of delegation nodes.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__revoke_delegation_tree",
-      description: "Revoke an entire delegation subtree rooted at the given tokenId. All descendant tokens are cascade-revoked.",
+      description:
+        "Cascade-revoke a delegated token and all of its descendants. Use this for incident response or cleanup when an entire delegated execution branch should stop immediately. Returns a JSON summary describing how many tokens were revoked and why.",
       inputSchema: {
         type: "object",
         properties: {
-          rootTokenId: { type: "string", description: "Root tokenId of the subtree to revoke" },
-          reason: { type: "string", description: "Reason for revocation" },
+          rootTokenId: {
+            type: "string",
+            description: "Root delegated token ID whose entire subtree should be revoked",
+            examples: ["tok_01hxyz..."],
+          },
+          reason: {
+            type: "string",
+            description: "Reason recorded for the cascade revocation",
+            examples: ["Sub-agent exceeded its brief", "Incident response containment"],
+          },
         },
         required: ["rootTokenId"],
+        additionalProperties: false,
       },
     },
   ];

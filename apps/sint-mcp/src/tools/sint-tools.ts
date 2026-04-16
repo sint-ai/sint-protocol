@@ -23,116 +23,194 @@ export function getSintToolDefinitions(): Array<{
   return [
     {
       name: "sint__status",
-      description: "Show SINT MCP status: connected servers, agent identity, queue size, and system health",
-      inputSchema: { type: "object", properties: {}, required: [] },
+      description:
+        "Inspect the current SINT runtime state before taking action. Use this to confirm the server is healthy, see how many downstream servers are connected, and check pending approvals. Returns a JSON status summary with server counts, aggregated tools, pending approvals, and ledger size.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__servers",
-      description: "List all downstream MCP servers with connection status, tool counts, and health",
-      inputSchema: { type: "object", properties: {}, required: [] },
+      description:
+        "List all configured downstream MCP servers and their live connection state. Use this when you need to know which servers are connected, how many tools they expose, or whether an upstream integration is unavailable. Returns a JSON array of server health summaries.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__whoami",
-      description: "Show current agent identity: public key, active token, session info",
-      inputSchema: { type: "object", properties: {}, required: [] },
+      description:
+        "Show the active SINT identity for the current session. Use this before issuing tokens, approving requests, or debugging delegation so you can confirm the acting public key and token context. Returns a JSON object with the current public key, token ID, and role.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__pending",
-      description: "List all pending approval requests awaiting human review",
-      inputSchema: { type: "object", properties: {}, required: [] },
+      description:
+        "List approval requests that are blocked waiting for review. Use this before calling sint__approve or sint__deny so you can inspect request IDs, affected resources, actions, and expiration times. Returns a JSON array of pending approval summaries.",
+      inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
     },
     {
       name: "sint__approve",
-      description: "Approve a pending escalated action by its request ID",
+      description:
+        "Approve one pending escalated action after a human or operator review. Use this only with a requestId returned by sint__pending; approval releases the blocked action for execution. Returns a confirmation message, or an error if the request does not exist.",
       inputSchema: {
         type: "object",
         properties: {
-          requestId: { type: "string", description: "The approval request ID to approve" },
-          by: { type: "string", description: "Identifier of the approver (default: current agent)" },
+          requestId: {
+            type: "string",
+            description: "Approval request ID returned by sint__pending",
+            examples: ["apr_01hxyz..."],
+          },
+          by: {
+            type: "string",
+            description: "Human or operator identifier recorded as the approver; defaults to the current agent identity",
+            examples: ["alice@example.com", "ops-console"],
+          },
         },
         required: ["requestId"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__deny",
-      description: "Deny a pending escalated action by its request ID",
+      description:
+        "Reject one pending escalated action so it cannot proceed. Use this after review when the request is unsafe, out of policy, or no longer needed. Returns a confirmation message, or an error if the request ID is unknown.",
       inputSchema: {
         type: "object",
         properties: {
-          requestId: { type: "string", description: "The approval request ID to deny" },
-          reason: { type: "string", description: "Reason for denial" },
-          by: { type: "string", description: "Identifier of the denier (default: current agent)" },
+          requestId: {
+            type: "string",
+            description: "Approval request ID returned by sint__pending",
+            examples: ["apr_01hxyz..."],
+          },
+          reason: {
+            type: "string",
+            description: "Human-readable reason recorded in the audit trail and returned to the caller",
+            examples: ["Outside approved maintenance window"],
+          },
+          by: {
+            type: "string",
+            description: "Human or operator identifier recorded as the denying actor; defaults to the current agent identity",
+            examples: ["alice@example.com", "ops-console"],
+          },
         },
         required: ["requestId"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__audit",
-      description: "Query the SINT evidence ledger for recent decisions and events",
+      description:
+        "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Use this to inspect approvals, revocations, notifications, and other recorded actions without mutating state. Returns a JSON array of the most recent ledger events.",
       inputSchema: {
         type: "object",
         properties: {
-          limit: { type: "number", description: "Max events to return (default: 20)" },
+          limit: {
+            type: "number",
+            description: "Maximum number of newest ledger events to return; defaults to 20",
+            minimum: 1,
+            examples: [10, 50],
+          },
         },
         required: [],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__add_server",
-      description: "Dynamically add a new downstream MCP server at runtime",
+      description:
+        "Register and connect a new downstream MCP server while SINT is running. Use this to aggregate a new stdio server into the proxy without restarting the process. Returns a confirmation message including the discovered tool count when the connection succeeds.",
       inputSchema: {
         type: "object",
         properties: {
-          name: { type: "string", description: "Unique name for the server" },
-          command: { type: "string", description: "Command to spawn the server" },
+          name: {
+            type: "string",
+            description: "Unique short name used as the server prefix for aggregated tools",
+            examples: ["filesystem", "github"],
+          },
+          command: {
+            type: "string",
+            description: "Executable used to start the downstream stdio server",
+            examples: ["npx", "node"],
+          },
           args: {
             type: "array",
             items: { type: "string" },
-            description: "Arguments for the command",
+            description: "Optional command arguments passed to the downstream server process",
+            examples: [["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]],
           },
         },
         required: ["name", "command"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__remove_server",
-      description: "Remove a downstream MCP server by name",
+      description:
+        "Disconnect and remove one downstream MCP server from the running proxy. Use this to disable an integration cleanly when it is unhealthy, no longer needed, or should stop exposing tools. Returns a confirmation message after removal.",
       inputSchema: {
         type: "object",
         properties: {
-          name: { type: "string", description: "Name of the server to remove" },
+          name: {
+            type: "string",
+            description: "Server name as listed by sint__servers",
+            examples: ["filesystem", "github"],
+          },
         },
         required: ["name"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__issue_token",
-      description: "Issue a new capability token with restricted scope (admin). Returns tokenId on success.",
+      description:
+        "Issue a new attenuated capability token for another subject. Use this for controlled delegation or integration setup when a new actor needs scoped access to a resource and action set. Returns a JSON object with the new token ID, subject, resource, actions, and expiry.",
       inputSchema: {
         type: "object",
         properties: {
-          subject: { type: "string", description: "Public key of the token subject" },
-          resource: { type: "string", description: "Resource URI pattern (e.g. 'mcp://filesystem/*')" },
+          subject: {
+            type: "string",
+            description: "Public key or subject identifier that will own the new token",
+            examples: ["ed25519:abc123...", "agent:planner-01"],
+          },
+          resource: {
+            type: "string",
+            description: "Resource URI pattern the token may access",
+            examples: ["mcp://filesystem/*", "mcp://github/repos/sint-ai/*"],
+          },
           actions: {
             type: "array",
             items: { type: "string" },
-            description: "Allowed actions (e.g. ['call', 'exec.run'])",
+            description: "Allowed actions for the token on that resource",
+            examples: [["call"], ["call", "exec.run"]],
           },
-          expiresInHours: { type: "number", description: "Token lifetime in hours (default: 24)" },
+          expiresInHours: {
+            type: "number",
+            description: "Token lifetime in hours; defaults to 24",
+            minimum: 1,
+            examples: [1, 24, 168],
+          },
         },
         required: ["subject", "resource", "actions"],
+        additionalProperties: false,
       },
     },
     {
       name: "sint__revoke_token",
-      description: "Revoke an active capability token by its ID (admin)",
+      description:
+        "Revoke an active capability token so it can no longer authorize actions. Use this when access should end immediately because of policy change, incident response, or delegation cleanup. Returns a confirmation message and records the revocation in the ledger.",
       inputSchema: {
         type: "object",
         properties: {
-          tokenId: { type: "string", description: "ID of the token to revoke" },
-          reason: { type: "string", description: "Reason for revocation" },
+          tokenId: {
+            type: "string",
+            description: "Token ID to revoke",
+            examples: ["tok_01hxyz..."],
+          },
+          reason: {
+            type: "string",
+            description: "Reason recorded in the revocation store and ledger",
+            examples: ["Compromised credentials", "Delegation no longer needed"],
+          },
         },
         required: ["tokenId"],
+        additionalProperties: false,
       },
     },
   ];
