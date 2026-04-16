@@ -19,6 +19,7 @@ export function getSintToolDefinitions(): Array<{
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: Record<string, unknown>;
 }> {
   return [
     {
@@ -26,18 +27,21 @@ export function getSintToolDefinitions(): Array<{
       description:
         "Inspect the current SINT runtime state before taking action. Use this to confirm the server is healthy, see how many downstream servers are connected, and check pending approvals. Returns a JSON status summary with server counts, aggregated tools, pending approvals, and ledger size.",
       inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+      annotations: { title: "SINT Status", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__servers",
       description:
         "List all configured downstream MCP servers and their live connection state. Use this when you need to know which servers are connected, how many tools they expose, or whether an upstream integration is unavailable. Returns a JSON array of server health summaries.",
       inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+      annotations: { title: "List Downstream Servers", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__whoami",
       description:
         "Show the active SINT identity for the current session. Use this before issuing tokens, approving requests, or debugging delegation so you can confirm the acting public key and token context. Returns a JSON object with the current public key, token ID, and role.",
       inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+      annotations: { title: "Current Identity", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__pending",
@@ -50,6 +54,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{}],
       },
+      annotations: { title: "List Pending Approvals", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__approve",
@@ -76,6 +81,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ requestId: "apr_01hxyz...", by: "ops-console" }],
       },
+      annotations: { title: "Approve Request", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__deny",
@@ -108,6 +114,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ requestId: "apr_01hxyz...", reason: "Outside approved maintenance window", by: "alice@example.com" }],
       },
+      annotations: { title: "Deny Request", destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__audit",
@@ -129,6 +136,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ limit: 10 }],
       },
+      annotations: { title: "Read Audit Ledger", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__add_server",
@@ -163,6 +171,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ name: "filesystem", command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"] }],
       },
+      annotations: { title: "Add Downstream Server", destructiveHint: false, idempotentHint: false, openWorldHint: true },
     },
     {
       name: "sint__remove_server",
@@ -183,6 +192,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ name: "filesystem" }],
       },
+      annotations: { title: "Remove Downstream Server", destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__issue_token",
@@ -226,6 +236,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ subject: "agent:planner-01", resource: "mcp://github/repos/sint-ai/sint-protocol/*", actions: ["call"], expiresInHours: 24 }],
       },
+      annotations: { title: "Issue Capability Token", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__revoke_token",
@@ -252,6 +263,7 @@ export function getSintToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ tokenId: "tok_01hxyz...", reason: "Delegation no longer needed" }],
       },
+      annotations: { title: "Revoke Capability Token", destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
   ];
 }

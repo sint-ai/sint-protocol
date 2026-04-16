@@ -29,6 +29,7 @@ export function getDelegationToolDefinitions(): Array<{
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: Record<string, unknown>;
 }> {
   return [
     {
@@ -65,12 +66,14 @@ export function getDelegationToolDefinitions(): Array<{
         required: ["subagentId", "toolScope"],
         additionalProperties: false,
       },
+      annotations: { title: "Delegate To Agent", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__list_delegations",
       description:
         "List the active delegation tree rooted at the current token. Use this to audit which sub-agents currently hold delegated access, how deep the tree is, and what scope has been passed down. This tool is read-only and returns a JSON array of delegation nodes.",
       inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false, examples: [{}] },
+      annotations: { title: "List Delegations", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__revoke_delegation_tree",
@@ -93,6 +96,7 @@ export function getDelegationToolDefinitions(): Array<{
         required: ["rootTokenId"],
         additionalProperties: false,
       },
+      annotations: { title: "Revoke Delegation Tree", destructiveHint: true, idempotentHint: false, openWorldHint: false },
     },
   ];
 }

@@ -26,6 +26,7 @@ export function getInterfaceToolDefinitions(): Array<{
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  annotations?: Record<string, unknown>;
 }> {
   return [
     {
@@ -33,6 +34,7 @@ export function getInterfaceToolDefinitions(): Array<{
       description:
         "Inspect the current operator interface state before sending operator-facing updates. Use this to confirm the active mode, HUD panels, speaking/listening flags, and session context. Returns a JSON snapshot of the current interface state.",
       inputSchema: { type: "object", properties: {}, required: [], additionalProperties: false },
+      annotations: { title: "Interface Status", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__recall_memory",
@@ -61,6 +63,7 @@ export function getInterfaceToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ query: "incident 42", limit: 5 }],
       },
+      annotations: { title: "Recall Memory", readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__speak",
@@ -88,6 +91,7 @@ export function getInterfaceToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ text: "Approval needed for production deploy", priority: "urgent" }],
       },
+      annotations: { title: "Speak To Operator", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__show_hud",
@@ -111,6 +115,7 @@ export function getInterfaceToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ panel: "approvals" }, { panel: "context", data: { stage: "deploy", owner: "ops" } }],
       },
+      annotations: { title: "Show HUD Panel", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     {
       name: "sint__store_memory",
@@ -148,6 +153,7 @@ export function getInterfaceToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ key: "incident-42/root-cause", value: { service: "gateway", summary: "Token scope mismatch" }, tags: ["incident", "prod"], persist: true }],
       },
+      annotations: { title: "Store Memory", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__notify",
@@ -193,6 +199,7 @@ export function getInterfaceToolDefinitions(): Array<{
         additionalProperties: false,
         examples: [{ message: "Approval queue has blocked actions", action: { label: "Review approvals", tool: "sint__pending", args: {} } }],
       },
+      annotations: { title: "Send Notification", destructiveHint: false, idempotentHint: false, openWorldHint: false },
     },
     {
       name: "sint__interface_mode",
@@ -210,6 +217,7 @@ export function getInterfaceToolDefinitions(): Array<{
         required: ["mode"],
         additionalProperties: false,
       },
+      annotations: { title: "Change Interface Mode", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
   ];
 }
