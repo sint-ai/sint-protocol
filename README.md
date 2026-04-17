@@ -366,6 +366,8 @@ Token fields:
 
 Every policy decision is recorded in a SHA-256 hash-chained append-only log. Chain integrity: `ℓ_k.previousHash = SHA256(canonical(ℓ_{k-1}))`. A gap or hash mismatch constitutes tamper evidence.
 
+For portable verification across bridges and external tooling, SINT now routes receipt and tool-definition signing through a shared deterministic canonical JSON serializer instead of relying on insertion-order-sensitive `JSON.stringify()` behavior.
+
 **Retention policy:**
 
 | Tier | Retention |

@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { LedgerWriter } from "../src/writer.js";
 import { generateProofReceipt, verifyProofReceipt } from "../src/proof-receipt.js";
 import { generateKeypair, sign, verify } from "@pshkv/gate-capability-tokens";
+import { canonicalJsonStringify } from "@pshkv/core";
 
 describe("generateProofReceipt", () => {
   const authority = generateKeypair();
@@ -70,7 +71,7 @@ describe("generateProofReceipt", () => {
     );
 
     // Verify the signature over the receipt data
-    const receiptData = JSON.stringify({
+    const receiptData = canonicalJsonStringify({
       eventId: receipt.eventId,
       eventHash: receipt.eventHash,
       hashChain: receipt.hashChain,
