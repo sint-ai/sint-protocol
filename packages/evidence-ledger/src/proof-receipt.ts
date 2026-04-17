@@ -12,10 +12,15 @@
 import type {
   Ed25519PublicKey,
   SHA256,
+  SintBilateralProofReceipt,
+  SintBilateralProofReceiptPair,
   SintLedgerEvent,
   SintProofReceipt,
+  UUIDv7,
 } from "@pshkv/core";
 import { canonicalJsonStringify } from "@pshkv/core";
+import { sha256 } from "@noble/hashes/sha2";
+import { bytesToHex } from "@noble/hashes/utils";
 
 /**
  * Generate a Proof Receipt for a specific ledger event.
@@ -109,4 +114,153 @@ export function verifyProofReceipt(
     receipt.signature,
     receiptData,
   );
+}
+
+function inferCompletionOutcome(
+  event: SintLedgerEvent,
+): SintBilateralProofReceipt["outcome"] {
+  switch (event.eventType) {
+    case "action.completed":
+      return "completed";
+    case "action.failed":
+      return "failed";
+    case "action.rolledback":
+      return "rolledback";
+    default:
+      return "completed";
+  }
+}
+
+export function computeReceiptLinkageHash(
+  actionRef: string,
+  gateEventId: UUIDv7,
+  completionEventId: UUIDv7,
+): SHA256 {
+  const canonical = canonicalJsonStringify({
+    actionRef,
+    gateEventId,
+    completionEventId,
+  });
+  return bytesToHex(sha256(new TextEncoder().encode(canonical)));
+}
+
+function signBilateralReceipt(
+  receipt: Omit<SintBilateralProofReceipt, "signature">,
+  signFn: (data: string) => string,
+): SintBilateralProofReceipt {
+  const receiptData = canonicalJsonStringify(receipt);
+  return {
+    ...receipt,
+    signature: signFn(receiptData),
+  };
+}
+
+export function generateBilateralProofReceiptPair(params: {
+  readonly actionRef: string;
+  readonly gateEvent: SintLedgerEvent;
+  readonly gateChainEvents: readonly SintLedgerEvent[];
+  readonly gateOutcome?: Extract<SintBilateralProofReceipt["outcome"], "allow" | "deny" | "escalate">;
+  readonly completionEvent: SintLedgerEvent;
+  readonly completionChainEvents: readonly SintLedgerEvent[];
+  readonly completionOutcome?: Extract<SintBilateralProofReceipt["outcome"], "completed" | "failed" | "rolledback">;
+  readonly signerPublicKey: Ed25519PublicKey;
+  readonly signFn: (data: string) => string;
+}): SintBilateralProofReceiptPair {
+  const gateBase = generateProofReceipt(
+    params.gateEvent,
+    params.gateChainEvents,
+    params.signerPublicKey,
+    params.signFn,
+  );
+  const completionBase = generateProofReceipt(
+    params.completionEvent,
+    params.completionChainEvents,
+    params.signerPublicKey,
+    params.signFn,
+  );
+  const { signature: _gateSignature, ...gateUnsignedBase } = gateBase;
+  const { signature: _completionSignature, ...completionUnsignedBase } = completionBase;
+
+  const linkageHash = computeReceiptLinkageHash(
+    params.actionRef,
+    params.gateEvent.eventId,
+    params.completionEvent.eventId,
+  );
+
+  const gate = signBilateralReceipt(
+    {
+      ...gateUnsignedBase,
+      actionRef: params.actionRef,
+      stage: "gate",
+      counterpartEventId: params.completionEvent.eventId,
+      linkageHash,
+      outcome: params.gateOutcome ?? "allow",
+    },
+    params.signFn,
+  );
+
+  const completion = signBilateralReceipt(
+    {
+      ...completionUnsignedBase,
+      actionRef: params.actionRef,
+      stage: "completion",
+      counterpartEventId: params.gateEvent.eventId,
+      linkageHash,
+      outcome: params.completionOutcome ?? inferCompletionOutcome(params.completionEvent),
+    },
+    params.signFn,
+  );
+
+  return { gate, completion };
+}
+
+export function verifyBilateralProofReceipt(
+  receipt: SintBilateralProofReceipt,
+  verifySignatureFn: (publicKey: string, signature: string, data: string) => boolean,
+): boolean {
+  if (receipt.hashChain.length === 0) return false;
+  const lastHash = receipt.hashChain[receipt.hashChain.length - 1];
+  if (lastHash !== receipt.eventHash) return false;
+
+  const receiptData = canonicalJsonStringify({
+    eventId: receipt.eventId,
+    eventHash: receipt.eventHash,
+    hashChain: receipt.hashChain,
+    generatedAt: receipt.generatedAt,
+    signerPublicKey: receipt.signerPublicKey,
+    teeAttestation: receipt.teeAttestation,
+    actionRef: receipt.actionRef,
+    stage: receipt.stage,
+    counterpartEventId: receipt.counterpartEventId,
+    linkageHash: receipt.linkageHash,
+    outcome: receipt.outcome,
+  });
+
+  return verifySignatureFn(
+    receipt.signerPublicKey,
+    receipt.signature,
+    receiptData,
+  );
+}
+
+export function verifyBilateralReceiptPair(
+  pair: SintBilateralProofReceiptPair,
+  verifySignatureFn: (publicKey: string, signature: string, data: string) => boolean,
+): boolean {
+  if (!verifyBilateralProofReceipt(pair.gate, verifySignatureFn)) return false;
+  if (!verifyBilateralProofReceipt(pair.completion, verifySignatureFn)) return false;
+
+  if (pair.gate.stage !== "gate" || pair.completion.stage !== "completion") return false;
+  if (pair.gate.actionRef !== pair.completion.actionRef) return false;
+  if (pair.gate.linkageHash !== pair.completion.linkageHash) return false;
+  if (pair.gate.counterpartEventId !== pair.completion.eventId) return false;
+  if (pair.completion.counterpartEventId !== pair.gate.eventId) return false;
+
+  const recomputedLinkageHash = computeReceiptLinkageHash(
+    pair.gate.actionRef,
+    pair.gate.eventId,
+    pair.completion.eventId,
+  );
+
+  return pair.gate.linkageHash === recomputedLinkageHash;
 }

@@ -39,6 +39,7 @@ console.log(integrity.valid); // true — no entries tampered
 - **Tamper detection** — broken chain = evidence of modification
 - **SIEM export** — syslog, JSON-Lines, CEF output formats
 - **NIST chain-of-custody** — proof receipts for compliance
+- **Bilateral receipts for strong-tier flows** — linked gate/completion receipts with shared `actionRef` and `linkageHash`
 - **Semantic query API** — filter by session, action, time range, tier
 - **Pluggable storage** — in-memory, PostgreSQL, or custom adapters
 

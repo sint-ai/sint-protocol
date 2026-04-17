@@ -203,6 +203,31 @@ export interface SintProofReceipt {
 }
 
 /**
+ * Stage-specific receipt used for strong-tier flows that need both a gate receipt
+ * before execution and a completion receipt after execution settles.
+ */
+export interface SintBilateralProofReceipt extends SintProofReceipt {
+  /** Stable cross-system correlation identifier for the governed action. */
+  readonly actionRef: string;
+  /** Whether this receipt captures the authorization gate or the execution result. */
+  readonly stage: "gate" | "completion";
+  /** The paired event on the other side of the gate/completion lifecycle. */
+  readonly counterpartEventId: UUIDv7;
+  /** Shared deterministic linkage hash tying the pair together. */
+  readonly linkageHash: SHA256;
+  /** Stage-specific outcome associated with the receipt. */
+  readonly outcome: "allow" | "deny" | "escalate" | "completed" | "failed" | "rolledback";
+}
+
+/**
+ * Linked receipt pair for strong-tier execution governance.
+ */
+export interface SintBilateralProofReceiptPair {
+  readonly gate: SintBilateralProofReceipt;
+  readonly completion: SintBilateralProofReceipt;
+}
+
+/**
  * Formal DFA states for the SINT request lifecycle.
  *
  * Models physical consequence severity of every request through a deterministic

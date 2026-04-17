@@ -408,6 +408,12 @@ For T3 events and regulatory audit, a `SintProofReceipt` is generated:
 | `signerPublicKey` | Ed25519PublicKey | Signing authority's public key. |
 | `teeAttestation` | object? | Optional TEE attestation for regulatory-grade proof (Intel SGX, ARM TrustZone, AMD SEV). Required for T2/T3 events in certified deployments. |
 
+For strong-tier execution paths, deployments MAY emit a linked bilateral receipt pair instead of treating proof generation as a single terminal artifact:
+
+- **Gate receipt**: attests that the governing decision was recorded before execution was permitted to proceed.
+- **Completion receipt**: attests that the eventual execution outcome (`completed`, `failed`, or `rolledback`) was recorded.
+- Both receipts share a stable `actionRef` and deterministic `linkageHash`, and each names the counterpart event ID.
+
 ---
 
 ## 8. Bridge Adapter Contract
