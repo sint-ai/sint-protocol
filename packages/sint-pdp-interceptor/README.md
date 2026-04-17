@@ -85,3 +85,26 @@ If `action` is not supplied, the adapter defaults to `call`.
 This scaffold focuses on the adapter package and the core request/decision flow.
 Bilateral receipts and the richer demo path are intentionally tracked as follow-on
 flagship issues so the first package stays simple and installable.
+
+## Fail-closed guarded execution
+
+Hosts that want a stronger safety story can use `runGuarded()` instead of calling
+`evaluate()` directly. This helper:
+
+- stops immediately on `deny`
+- never runs downstream execution on `escalate`
+- can require a verified gate prerequisite before execution proceeds
+- returns `failed` rather than silently succeeding when downstream execution throws
+
+```ts
+const outcome = await interceptor.runGuarded(request, {
+  verifyGatePrerequisite: async () => ({
+    ok: true,
+    evidenceRef: "sint://ledger/gate-001",
+  }),
+  execute: async () => runRealToolCall(),
+});
+```
+
+If `verifyGatePrerequisite()` returns `{ ok: false }`, the helper fail-closes and
+returns a deny decision with `policyViolated = "GATE_PREREQUISITE_MISSING"`.

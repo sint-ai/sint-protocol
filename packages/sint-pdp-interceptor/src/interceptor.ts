@@ -2,6 +2,9 @@ import type { ISO8601, PolicyDecision, SintRequest, UUIDv7 } from "@pshkv/core";
 import { ApprovalTier, RiskTier } from "@pshkv/core";
 import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
 import type {
+  GatePrerequisiteResult,
+  GuardedExecutionOptions,
+  GuardedExecutionResult,
   PDPDecision,
   PDPInterceptorCall,
   PDPInterceptorRequest,
@@ -58,6 +61,32 @@ function normalizeDecision(decision: PolicyDecision): PDPDecision {
     verdict,
     tier: decision.assignedTier,
     reason: decision.denial?.reason ?? decision.escalation?.reason,
+    decision,
+  };
+}
+
+function denyFromGateFailure(
+  requestId: UUIDv7,
+  timestamp: ISO8601,
+  reason: string,
+): PDPDecision {
+  const decision: PolicyDecision = {
+    requestId,
+    timestamp,
+    action: "deny",
+    assignedTier: ApprovalTier.T3_COMMIT,
+    assignedRisk: RiskTier.T3_IRREVERSIBLE,
+    denial: {
+      reason,
+      policyViolated: "GATE_PREREQUISITE_MISSING",
+      suggestedAlternative: "Do not execute until a valid gate receipt or prerequisite is present.",
+    },
+  };
+
+  return {
+    verdict: "deny",
+    tier: decision.assignedTier,
+    reason,
     decision,
   };
 }
@@ -122,6 +151,51 @@ export class SINTPDPInterceptor {
           ? `SINT gateway unavailable: ${error.message}`
           : "SINT gateway unavailable";
       return denyFromError(requestId, timestamp, reason);
+    }
+  }
+
+  async runGuarded<Result = unknown>(
+    request: PDPInterceptorRequest,
+    options: GuardedExecutionOptions<Result> = {},
+  ): Promise<GuardedExecutionResult<Result>> {
+    const decision = await this.evaluate(request);
+
+    if (decision.verdict === "deny") {
+      return { stage: "denied", decision };
+    }
+
+    if (decision.verdict === "escalate") {
+      return { stage: "escalated", decision };
+    }
+
+    let gate: GatePrerequisiteResult | undefined;
+    if (options.verifyGatePrerequisite) {
+      gate = await options.verifyGatePrerequisite(decision, request);
+      if (!gate.ok) {
+        const requestId = request.context?.requestId ?? decision.decision.requestId;
+        const timestamp = request.context?.timestamp ?? decision.decision.timestamp;
+        return {
+          stage: "blocked",
+          decision: denyFromGateFailure(
+            requestId,
+            timestamp,
+            gate.reason ?? "Gate prerequisite verification failed",
+          ),
+          gate,
+        };
+      }
+    }
+
+    if (!options.execute) {
+      return { stage: "executed", decision, gate };
+    }
+
+    try {
+      const result = await options.execute();
+      return { stage: "executed", decision, gate, result };
+    } catch (error) {
+      await options.onExecutionError?.(error);
+      return { stage: "failed", decision, gate, error };
     }
   }
 }

@@ -145,4 +145,123 @@ describe("SINTPDPInterceptor", () => {
       }),
     ).rejects.toThrow(/tokenId/);
   });
+
+  it("does not execute downstream work when the decision escalates", async () => {
+    let executed = false;
+
+    const interceptor = new SINTPDPInterceptor({
+      gateway: {
+        async intercept() {
+          return {
+            requestId,
+            timestamp,
+            action: "escalate",
+            assignedTier: ApprovalTier.T3_COMMIT,
+            assignedRisk: RiskTier.T3_IRREVERSIBLE,
+            escalation: {
+              requiredTier: ApprovalTier.T3_COMMIT,
+              reason: "Human approval required",
+              timeoutMs: 120000,
+              fallbackAction: "deny",
+            },
+          };
+        },
+      },
+      defaultTokenId: tokenId,
+      now: () => timestamp,
+      createRequestId: () => requestId,
+    });
+
+    const result = await interceptor.runGuarded(
+      {
+        caller_identity: "did:key:z6MkAgent",
+        mcp_call: { serverName: "filesystem", toolName: "deleteFile" },
+      },
+      {
+        execute: async () => {
+          executed = true;
+          return "ok";
+        },
+      },
+    );
+
+    expect(result.stage).toBe("escalated");
+    expect(executed).toBe(false);
+  });
+
+  it("blocks execution when the gate prerequisite is missing", async () => {
+    let executed = false;
+
+    const interceptor = new SINTPDPInterceptor({
+      gateway: {
+        async intercept() {
+          return allowDecision();
+        },
+      },
+      defaultTokenId: tokenId,
+      now: () => timestamp,
+      createRequestId: () => requestId,
+    });
+
+    const result = await interceptor.runGuarded(
+      {
+        caller_identity: "did:key:z6MkAgent",
+        mcp_call: { serverName: "filesystem", toolName: "writeFile" },
+      },
+      {
+        verifyGatePrerequisite: async () => ({
+          ok: false,
+          reason: "Missing verified gate receipt",
+        }),
+        execute: async () => {
+          executed = true;
+          return "ok";
+        },
+      },
+    );
+
+    expect(result.stage).toBe("blocked");
+    expect(result.decision.verdict).toBe("deny");
+    expect(result.decision.decision.denial?.policyViolated).toBe("GATE_PREREQUISITE_MISSING");
+    expect(executed).toBe(false);
+  });
+
+  it("returns failed when downstream execution throws", async () => {
+    const seenErrors: unknown[] = [];
+
+    const interceptor = new SINTPDPInterceptor({
+      gateway: {
+        async intercept() {
+          return allowDecision();
+        },
+      },
+      defaultTokenId: tokenId,
+      now: () => timestamp,
+      createRequestId: () => requestId,
+    });
+
+    const result = await interceptor.runGuarded(
+      {
+        caller_identity: "did:key:z6MkAgent",
+        mcp_call: { serverName: "filesystem", toolName: "writeFile" },
+      },
+      {
+        verifyGatePrerequisite: async () => ({
+          ok: true,
+          evidenceRef: "sint://ledger/gate-001",
+        }),
+        execute: async () => {
+          throw new Error("downstream actuator timeout");
+        },
+        onExecutionError: async (error) => {
+          seenErrors.push(error);
+        },
+      },
+    );
+
+    expect(result.stage).toBe("failed");
+    expect(result.decision.verdict).toBe("allow");
+    expect((result.error as Error).message).toContain("downstream actuator timeout");
+    expect(seenErrors).toHaveLength(1);
+  });
 });
