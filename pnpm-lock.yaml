@@ -850,6 +850,22 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/sint-pdp-interceptor:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/token-registry:
     dependencies:
       '@pshkv/core':
