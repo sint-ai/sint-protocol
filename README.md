@@ -369,6 +369,8 @@ Every policy decision is recorded in a SHA-256 hash-chained append-only log. Cha
 
 For portable verification across bridges and external tooling, SINT now routes receipt and tool-definition signing through a shared deterministic canonical JSON serializer instead of relying on insertion-order-sensitive `JSON.stringify()` behavior.
 
+For strong-tier flows, SINT can emit a linked bilateral receipt pair: a gate receipt before execution is allowed to proceed and a completion receipt once execution settles. The pair shares a stable `actionRef` and `linkageHash` so auditors can verify both authorization and outcome as one governed action.
+
 **Retention policy:**
 
 | Tier | Retention |
