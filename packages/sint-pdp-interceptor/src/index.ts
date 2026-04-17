@@ -7,6 +7,9 @@
 
 export { SINTPDPInterceptor } from "./interceptor.js";
 export type {
+  GatePrerequisiteResult,
+  GuardedExecutionOptions,
+  GuardedExecutionResult,
   PDPDecision,
   PDPInterceptorCall,
   PDPInterceptorContext,
