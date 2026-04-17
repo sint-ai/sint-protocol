@@ -18,7 +18,7 @@
  */
 
 import type { CsmlCoefficients, SintLedgerEvent } from "@pshkv/core";
-import { DEFAULT_CSML_COEFFICIENTS } from "@pshkv/core";
+import { DEFAULT_CSML_COEFFICIENTS, canonicalJsonStringify } from "@pshkv/core";
 
 /**
  * Decomposed CSML component values for transparency and debugging.
@@ -65,7 +65,7 @@ import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from "@noble/hashes/utils";
 
 function canonicalHash(event: SintLedgerEvent): string {
-  const canonical = JSON.stringify({
+  const canonical = canonicalJsonStringify({
     eventId: event.eventId,
     sequenceNumber: event.sequenceNumber.toString(),
     timestamp: event.timestamp,

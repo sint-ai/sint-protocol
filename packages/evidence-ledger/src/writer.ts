@@ -22,7 +22,7 @@ import type {
   SintLedgerEvent,
   UUIDv7,
 } from "@pshkv/core";
-import { ok, err } from "@pshkv/core";
+import { ok, err, canonicalJsonStringify } from "@pshkv/core";
 import { randomBytes } from "node:crypto";
 
 /** Genesis hash — the hash chain starts here. */
@@ -34,7 +34,7 @@ const GENESIS_HASH: SHA256 =
  * Pure function — deterministic.
  */
 function computeEventHash(event: Omit<SintLedgerEvent, "hash">): SHA256 {
-  const canonical = JSON.stringify({
+  const canonical = canonicalJsonStringify({
     eventId: event.eventId,
     sequenceNumber: event.sequenceNumber.toString(),
     timestamp: event.timestamp,

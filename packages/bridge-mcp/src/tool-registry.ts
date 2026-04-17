@@ -9,6 +9,7 @@
  */
 
 import { hashSha256, sign, verify } from "@pshkv/gate-capability-tokens";
+import { canonicalJsonStringify } from "@pshkv/core";
 import type { MCPToolAnnotations } from "./types.js";
 
 /**
@@ -58,7 +59,7 @@ export interface ToolRegistry {
  * Compute the canonical JSON hash of a tool definition (sorted keys for determinism).
  */
 function canonicalHash(def: ToolDefinition): string {
-  const canonical = JSON.stringify({
+  const canonical = canonicalJsonStringify({
     serverId: def.serverId,
     toolName: def.toolName,
     description: def.description,

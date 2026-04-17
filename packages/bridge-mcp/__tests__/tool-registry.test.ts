@@ -82,6 +82,32 @@ describe("InMemoryToolRegistry", () => {
     expect(registry.detectDrift(def, signed)).toBe(false);
   });
 
+  it("produces the same definition hash regardless of inputSchema key insertion order", () => {
+    const left = makeDef({
+      inputSchema: {
+        type: "object",
+        properties: {
+          zeta: { type: "number" },
+          alpha: { type: "string" },
+        },
+      },
+    });
+    const right = makeDef({
+      inputSchema: {
+        properties: {
+          alpha: { type: "string" },
+          zeta: { type: "number" },
+        },
+        type: "object",
+      },
+    });
+
+    const leftSigned = registry.register(left, privateKey, publicKey);
+    const rightSigned = registry.register(right, privateKey, publicKey);
+
+    expect(leftSigned.definitionHash).toBe(rightSigned.definitionHash);
+  });
+
   it("get returns undefined for an unknown tool", () => {
     const result = registry.get("non-existent-server", "unknownTool");
     expect(result).toBeUndefined();

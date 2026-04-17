@@ -15,6 +15,7 @@ import type {
   SintLedgerEvent,
   SintProofReceipt,
 } from "@pshkv/core";
+import { canonicalJsonStringify } from "@pshkv/core";
 
 /**
  * Generate a Proof Receipt for a specific ledger event.
@@ -53,7 +54,7 @@ export function generateProofReceipt(
     .replace(/\.(\d{3})Z$/, ".$1000Z");
 
   // Create the receipt data to sign
-  const receiptData = JSON.stringify({
+  const receiptData = canonicalJsonStringify({
     eventId: targetEvent.eventId,
     eventHash: targetEvent.hash,
     hashChain,
@@ -96,7 +97,7 @@ export function verifyProofReceipt(
   if (lastHash !== receipt.eventHash) return false;
 
   // Verify the signature
-  const receiptData = JSON.stringify({
+  const receiptData = canonicalJsonStringify({
     eventId: receipt.eventId,
     eventHash: receipt.eventHash,
     hashChain: receipt.hashChain,

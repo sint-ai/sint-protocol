@@ -11,7 +11,7 @@
 
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from "@noble/hashes/utils";
-import type { SintLedgerEvent } from "@pshkv/core";
+import { canonicalJsonStringify, type SintLedgerEvent } from "@pshkv/core";
 
 export interface ChainOfCustodyProof {
   readonly eventId: string;
@@ -41,7 +41,7 @@ const GENESIS_HASH =
  * Must match the logic in writer.ts for consistency.
  */
 function recomputeHash(event: SintLedgerEvent): string {
-  const canonical = JSON.stringify({
+  const canonical = canonicalJsonStringify({
     eventId: event.eventId,
     sequenceNumber: event.sequenceNumber.toString(),
     timestamp: event.timestamp,

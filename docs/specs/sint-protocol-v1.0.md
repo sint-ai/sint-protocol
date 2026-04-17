@@ -363,7 +363,7 @@ SintRequest
 
 ### 7.2 Hash Chain Construction
 
-Events form a tamper-evident chain via SHA-256. The canonical form used for hashing:
+Events form a tamper-evident chain via SHA-256. The canonical form used for hashing must be deterministic across implementations: object keys are serialized in lexicographic order, arrays preserve order, and the same payload must yield the same byte sequence independent of insertion order. The canonical form used for hashing:
 
 ```json
 {
