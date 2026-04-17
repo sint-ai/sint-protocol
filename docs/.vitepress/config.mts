@@ -36,6 +36,7 @@ export default defineConfig({
       {
         text: "Guides",
         items: [
+          { text: "SINT PDP Interceptor Quickstart", link: "/guides/sint-pdp-interceptor-quickstart" },
           { text: "Docker Deployment", link: "/guides/docker-deployment" },
           { text: "Persistence Baseline", link: "/guides/persistence-baseline" },
           { text: "WebSocket Approvals", link: "/guides/websocket-approvals" },

@@ -2,6 +2,8 @@
 
 This guide gets you from clone to a complete `token -> intercept -> approval -> ledger` flow in about 10 minutes.
 
+If you want the fastest builder-facing walkthrough for the new interceptor flagship instead of the full local stack, start with [SINT PDP Interceptor Quickstart](./guides/sint-pdp-interceptor-quickstart.md). It shows `request -> decision -> receipt` plus the fail-closed path in one terminal run.
+
 ## Prerequisites
 
 - Node.js 22+

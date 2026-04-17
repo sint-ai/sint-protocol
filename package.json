@@ -11,6 +11,7 @@
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
     "demo": "pnpm --filter @sint/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
+    "demo:interceptor-quickstart": "node ./examples/sint-pdp-interceptor-quickstart.mjs",
     "cert:fixtures": "pnpm --filter ./packages/policy-gateway build && pnpm --filter ./packages/conformance-tests run test:fixtures && pnpm --filter ./packages/bridge-iot run test:fixtures && pnpm --filter ./sdks/typescript run test:contracts && pnpm --filter ./packages/persistence-postgres run test:fixtures",
     "cert:bundle": "node ./scripts/generate-certification-bundle.mjs",
     "nist:bundle": "node ./scripts/generate-nist-submission-bundle.mjs",

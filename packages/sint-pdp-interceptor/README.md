@@ -6,6 +6,16 @@ This package gives MCP hosts a thin `policy-pdp` interface on top of
 `PolicyGateway.intercept()`. The goal is to make SINT easy to plug into an
 interceptor framework without re-implementing SINT request construction.
 
+For the fastest repo-level walkthrough, run the 5-minute quickstart:
+
+```bash
+pnpm install
+pnpm run build
+pnpm run demo:interceptor-quickstart
+```
+
+Guide: [`docs/guides/sint-pdp-interceptor-quickstart.md`](../../docs/guides/sint-pdp-interceptor-quickstart.md)
+
 ## What it does
 
 - adapts `caller_identity` into `SintRequest.agentId`
@@ -82,9 +92,13 @@ If `action` is not supplied, the adapter defaults to `call`.
 
 ## Current milestone
 
-This scaffold focuses on the adapter package and the core request/decision flow.
-Bilateral receipts and the richer demo path are intentionally tracked as follow-on
-flagship issues so the first package stays simple and installable.
+This package now covers the core flagship path:
+
+- adapter request mapping
+- deterministic decision evaluation
+- bilateral receipt support in the ledger layer
+- fail-closed guarded execution for downstream calls
+- a repo-level 5-minute quickstart and transcript demo
 
 ## Fail-closed guarded execution
 
