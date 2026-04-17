@@ -227,6 +227,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
 | [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
 | [`@sint/bridge-grpc`](packages/bridge-grpc) | gRPC service/method profile mapping with default tier assignment | 5 |
+| [`@sint/sint-pdp-interceptor`](packages/sint-pdp-interceptor) | Reference SEP-1763 PDP adapter for MCP interceptor hosts backed by `PolicyGateway.intercept()` | 5 |
 | [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
 | [`@sint/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 15 |
 | [`@sint/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
