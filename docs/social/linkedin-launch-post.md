@@ -1,41 +1,34 @@
-# LinkedIn Launch Post — SINT Protocol
+# LinkedIn Launch Post — Interceptor Demo
 
-> **Instructions:** Post from personal or company account. Tone: professional, outcome-focused. Tag company pages where possible.
+> **Instructions:** Post from personal or company account. Tone: professional, technical, and concrete.
 
 ---
 
 ## Post Text
 
-AI agents are moving into production — controlling robots, executing code, managing infrastructure. But most deployments have a dangerous gap: **there's no authorization layer between the model's decision and the physical action.**
+AI agents are moving into production, but there is still a missing layer between “the model chose a tool” and “the side effect happened.”
 
-Today we're open-sourcing **SINT Protocol** — the security enforcement layer for production AI agents.
+We just shipped a concrete piece of that gap: a fail-closed reference interceptor for MCP-style tool calls in **SINT Protocol**.
 
-SINT sits between your AI agents and every tool they can call. Every action is authorized by a signed capability token, classified into an approval tier (auto-approve → human sign-off), and recorded in a tamper-evident audit log. Shell execution and irreversible operations require explicit human approval. Physics constraints — velocity, force, geofence — are enforced at the protocol level, not in application code.
+The builder-facing path is intentionally simple:
+- a request enters the interceptor
+- SINT returns `allow`, `escalate`, or `deny`
+- the allowed path gets a proof receipt
+- missing prerequisites fail closed before downstream execution runs
 
-**Why it matters for enterprises:**
-- **EU AI Act compliance** — Article 14(4)(e) human oversight requirement is built-in via the CircuitBreaker stop mechanism
-- **NIST AI RMF alignment** — GOVERN-1.1 (human oversight), MANAGE-4.2 (incident response), MEASURE-2.6 (monitoring) are directly addressed
-- **Audit-ready** — SHA-256 hash-chained evidence ledger with SIEM export. Every agent decision is cryptographically recorded
-- **MCP + ROS2 + IoT ready** — bridge adapters for Model Context Protocol, ROS 2, MAVLink, MQTT, OPC-UA out of the box
+We also turned it into a 5-minute quickstart so people can see the whole `request -> decision -> receipt` loop in one terminal run instead of reading around the repo.
 
-1,105 tests. 31 packages. Apache-2.0. Production-ready Docker Compose deployment.
+What I find most interesting is not just the allow/deny logic, but the explicit fail-closed behavior when the system lacks the prerequisite evidence to continue safely.
 
-Scan your MCP server's tools right now: `npx sint-scan`
+If you build agent tooling, infra, or security controls, I’d genuinely love feedback on whether this is the right shape for a reference interceptor.
 
 GitHub: https://github.com/sint-ai/sint-protocol
-Whitepaper: https://github.com/sint-ai/sint-protocol/blob/master/WHITEPAPER.md
+Quickstart guide: https://github.com/sint-ai/sint-protocol/blob/main/docs/guides/sint-pdp-interceptor-quickstart.md
 
-What gap in AI agent security keeps you up at night? Happy to discuss in the comments.
+What would you want to see before trusting a policy interceptor in front of real tools?
 
 ---
 
 ## Hashtags
 
-#AIAgents #AIGovernance #MCP #PhysicalAI #CyberSecurity #Robotics #EUAIAct #NIST #OpenSource #AgentSecurity
-
-## Tags to include (company pages)
-
-- Anthropic
-- Open Robotics
-- NIST
-
+#AIAgents #MCP #AgentSecurity #CyberSecurity #OpenSource #DeveloperTools
