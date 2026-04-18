@@ -19,7 +19,7 @@ services:
     command: >
       sh -c "npm install -g pnpm &&
              pnpm install --frozen-lockfile &&
-             pnpm --filter @sint/gateway-server build &&
+             pnpm --filter @pshkv/gateway-server build &&
              node apps/gateway-server/dist/index.js"
     environment:
       - SINT_STORE=memory
