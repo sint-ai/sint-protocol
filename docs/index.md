@@ -13,11 +13,11 @@ hero:
       text: Quick Start
       link: /getting-started
     - theme: alt
+      text: Interceptor Demo
+      link: /guides/sint-pdp-interceptor-quickstart
+    - theme: alt
       text: Protocol Spec v0.2
       link: /SINT_v0.2_SPEC
-    - theme: alt
-      text: Roadmap
-      link: /roadmap
 
 features:
   - title: Runtime Safety Enforcement
@@ -34,6 +34,7 @@ features:
 - Local docs dev server: `pnpm run docs:dev`
 - Build static docs site: `pnpm run docs:build`
 - Core onboarding: [Getting Started](./getting-started.md)
+- Flagship interceptor demo: [SINT PDP Interceptor Quickstart](./guides/sint-pdp-interceptor-quickstart.md)
 - Integration examples: [Tutorials](./tutorials/hello-world-agent.md)
 - Standalone certification tool: [Guide](./guides/standalone-certification-tool.md)
 - NIST submission playbook: [Guide](./guides/nist-submission-playbook.md)

@@ -36,6 +36,26 @@ docker build -t sint-mcp .
 docker run --rm -i sint-mcp
 ```
 
+## Try the interceptor flagship in 5 minutes
+
+If you want the fastest builder-facing path into the SEP-1763 interceptor work:
+
+```bash
+pnpm install
+pnpm run build
+pnpm run demo:interceptor-quickstart
+```
+
+That walkthrough shows the full flagship loop in one terminal transcript:
+- MCP-style request enters the interceptor
+- SINT returns `allow` or `escalate`
+- an audit receipt is generated for the allowed path
+- execution fail-closes when a gate prerequisite is missing
+
+Start here:
+- [`docs/guides/sint-pdp-interceptor-quickstart.md`](docs/guides/sint-pdp-interceptor-quickstart.md)
+- [`packages/sint-pdp-interceptor`](packages/sint-pdp-interceptor)
+
 ## Why SINT?
 
 AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
