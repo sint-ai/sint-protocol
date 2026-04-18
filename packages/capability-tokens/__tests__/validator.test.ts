@@ -68,6 +68,50 @@ describe("Capability Token Validator", () => {
     expect(result.error).toBe("INVALID_SIGNATURE");
   });
 
+  // Regression test for sint-ai/sint-protocol#166.
+  // Signing payload must be canonical at every depth so that nested objects
+  // survive round-trips through storage that doesn't preserve key order
+  // (Postgres JSONB, MessagePack without canonicalization, etc).
+  it("should validate a token whose nested constraint keys were reordered after issuance", () => {
+    const token = createValidToken({
+      constraints: {
+        maxVelocityMps: 0.5,
+        maxForceNewtons: 50,
+        requiresHumanPresence: true,
+      },
+    });
+    const reordered: SintCapabilityToken = {
+      ...token,
+      constraints: {
+        requiresHumanPresence: token.constraints.requiresHumanPresence!,
+        maxForceNewtons: token.constraints.maxForceNewtons!,
+        maxVelocityMps: token.constraints.maxVelocityMps!,
+      },
+    };
+    const result = validateCapabilityToken(reordered, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("should validate a token whose delegationChain keys were reordered after issuance", () => {
+    const token = createValidToken();
+    const reordered: SintCapabilityToken = {
+      ...token,
+      delegationChain: {
+        attenuated: token.delegationChain.attenuated,
+        depth: token.delegationChain.depth,
+        parentTokenId: token.delegationChain.parentTokenId,
+      },
+    };
+    const result = validateCapabilityToken(reordered, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(result.ok).toBe(true);
+  });
+
   it("should reject a token with tampered resource", () => {
     const token = createValidToken();
     const tampered = { ...token, resource: "ros2:///evil_topic" };

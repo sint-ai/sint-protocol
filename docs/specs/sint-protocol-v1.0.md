@@ -137,7 +137,19 @@ A `SintCapabilityToken` is the atomic unit of permission in SINT. All fields are
 | `tokenId` | UUIDv7 | Unique token identifier. Sortable by issuance time. |
 | `issuer` | Ed25519PublicKey (hex) | Public key of the issuing authority. The root key is a hardware-protected operator keypair. |
 | `subject` | Ed25519PublicKey (hex) | Public key of the receiving agent. Corresponds to the agent's `did:key` identity. |
-| `signature` | Ed25519Signature (hex) | Ed25519 signature over the canonical token payload, excluding the `signature` field itself. |
+| `signature` | Ed25519Signature (hex) | Ed25519 signature over the canonical token payload, excluding the `signature` field itself. See Section 4.1.1. |
+
+#### 4.1.1 Canonical Signing Payload
+
+The signing payload is a deterministic serialization of all token fields except `signature`. The canonical form must be identical across implementations and must survive round-trips through storage backends that do not preserve object key order (e.g. Postgres `JSONB`):
+
+- Object keys are serialized in lexicographic (Unicode code-point) order at every depth.
+- Array element order is preserved.
+- `undefined` properties are omitted (matching `JSON.stringify` semantics).
+- No whitespace between tokens.
+- Numbers, strings, booleans, and `null` are serialized per RFC 8259.
+
+This is the same rule applied to Evidence Ledger event hashing (Section 5). A verifier that fails to recurse into nested objects (e.g. `constraints`, `delegationChain`) will produce non-deterministic payloads and reject valid signatures.
 
 ### 4.2 Scope Fields
 

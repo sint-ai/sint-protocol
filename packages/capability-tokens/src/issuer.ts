@@ -23,7 +23,7 @@ import {
   ok,
 } from "@pshkv/core";
 import { sign } from "./crypto.js";
-import { generateUUIDv7, nowISO8601 } from "./utils.js";
+import { canonicalJSONStringify, generateUUIDv7, nowISO8601 } from "./utils.js";
 
 /**
  * Compute the canonical signing payload for a capability token.
@@ -38,26 +38,15 @@ import { generateUUIDv7, nowISO8601 } from "./utils.js";
  * ```
  */
 export function computeSigningPayload(
-  token: Omit<SintCapabilityToken, "signature">,
+  token: Omit<SintCapabilityToken, "signature"> | SintCapabilityToken,
 ): string {
-  // Canonical JSON: sorted keys, no whitespace, deterministic
-  return JSON.stringify({
-    actions: token.actions,
-    attestationRequirements: token.attestationRequirements,
-    constraints: token.constraints,
-    delegationChain: token.delegationChain,
-    expiresAt: token.expiresAt,
-    executionEnvelope: token.executionEnvelope,
-    issuedAt: token.issuedAt,
-    issuer: token.issuer,
-    modelConstraints: token.modelConstraints,
-    resource: token.resource,
-    revocable: token.revocable,
-    revocationEndpoint: token.revocationEndpoint,
-    subject: token.subject,
-    tokenId: token.tokenId,
-    verifiableComputeRequirements: token.verifiableComputeRequirements,
-  });
+  // Canonical JSON with recursive key sort so nested objects survive
+  // round-trips through storage that does not preserve key order
+  // (e.g. Postgres JSONB). Signature is always excluded so callers may
+  // pass either the unsigned or signed token interchangeably.
+  const { signature: _ignored, ...rest } =
+    token as SintCapabilityToken & { signature?: string };
+  return canonicalJSONStringify(rest);
 }
 
 /**
