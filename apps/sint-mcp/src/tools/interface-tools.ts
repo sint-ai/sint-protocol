@@ -109,6 +109,7 @@ export function getInterfaceToolDefinitions(): Array<{
           data: {
             title: "Panel payload",
             description: "Optional JSON payload for the panel; useful for supplying custom context alongside the panel change",
+            type: ["object", "array", "string", "number", "boolean", "null"],
           },
         },
         required: ["panel"],
@@ -134,6 +135,7 @@ export function getInterfaceToolDefinitions(): Array<{
           value: {
             title: "Memory value",
             description: "Any JSON value to persist under the key",
+            type: ["object", "array", "string", "number", "boolean", "null"],
           },
           tags: {
             title: "Tags",
@@ -189,6 +191,7 @@ export function getInterfaceToolDefinitions(): Array<{
               args: {
                 title: "Tool arguments",
                 description: "Arguments passed to the MCP tool when the action button is clicked",
+                type: ["object", "array", "string", "number", "boolean", "null"],
               },
             },
             required: ["label", "tool", "args"],
@@ -209,13 +212,16 @@ export function getInterfaceToolDefinitions(): Array<{
         type: "object",
         properties: {
           mode: {
+            title: "Mode",
             type: "string",
             enum: ["hud", "compact", "voice-only", "silent"],
             description: "Target operator interface mode",
+            examples: ["compact"],
           },
         },
         required: ["mode"],
         additionalProperties: false,
+        examples: [{ mode: "compact" }],
       },
       annotations: { title: "Change Interface Mode", destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },

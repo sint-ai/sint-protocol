@@ -1,16 +1,8 @@
+# Gateway service config
+# For badge service: set Dockerfile path to apps/badge-server/Dockerfile in Railway dashboard
+
 [build]
 dockerfilePath = "apps/gateway-server/Dockerfile"
-watchPatterns = [
-  "apps/gateway-server/**",
-  "packages/core/**",
-  "packages/capability-tokens/**",
-  "packages/evidence-ledger/**",
-  "packages/policy-gateway/**",
-  "packages/persistence/**",
-  "packages/avatar/**",
-  "packages/bridge-a2a/**",
-  "packages/bridge-economy/**",
-]
 
 [deploy]
 healthcheckPath = "/v1/health"

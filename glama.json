@@ -25,87 +25,258 @@
   "tools": [
     {
       "name": "sint__status",
-      "description": "Inspect the current SINT runtime state before taking action. Returns a JSON summary with server connectivity, aggregated tool counts, pending approvals, and ledger size."
+      "description": "Inspect the current SINT runtime state before taking action. Returns a JSON summary with server connectivity, aggregated tool counts, pending approvals, and ledger size.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false }
     },
     {
       "name": "sint__servers",
-      "description": "List configured downstream MCP servers and their live connection state. Returns a JSON array with server names, health, and discovered tool counts."
+      "description": "List configured downstream MCP servers and their live connection state. Returns a JSON array with server names, health, and discovered tool counts.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false }
     },
     {
       "name": "sint__whoami",
-      "description": "Show the active SINT identity for the current session. Returns the acting public key, token ID, and role."
+      "description": "Show the active SINT identity for the current session. Returns the acting public key, token ID, and role.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false }
     },
     {
       "name": "sint__pending",
-      "description": "List approval requests currently blocked for review. Read-only. Use this before sint__approve or sint__deny; returns a JSON array of request IDs, resources, actions, reasons, and expiry times."
+      "description": "List approval requests currently blocked for review. Read-only. Use this before sint__approve or sint__deny; returns a JSON array of request IDs, resources, actions, reasons, and expiry times.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false, "examples": [{}] }
     },
     {
       "name": "sint__approve",
-      "description": "Approve one pending escalated action after review. Requires a requestId from sint__pending, records the approver identity, and returns confirmation or an error if the request is missing."
+      "description": "Approve one pending escalated action after review. Requires a requestId from sint__pending, records the approver identity, and returns confirmation or an error if the request is missing.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requestId"],
+        "properties": {
+          "requestId": { "title": "Approval request ID", "type": "string", "minLength": 1, "description": "Approval request ID returned by sint__pending", "examples": ["apr_01hxyz..."] },
+          "by": { "title": "Approver", "type": "string", "description": "Human or operator identifier recorded as the approver; defaults to the current agent identity", "examples": ["alice@example.com", "ops-console"] }
+        },
+        "examples": [{ "requestId": "apr_01hxyz...", "by": "ops-console" }]
+      }
     },
     {
       "name": "sint__deny",
-      "description": "Reject one pending escalated action so it cannot proceed. Requires a requestId from sint__pending and optionally records a denial reason."
+      "description": "Reject one pending escalated action so it cannot proceed. Requires a requestId from sint__pending and optionally records a denial reason.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requestId"],
+        "properties": {
+          "requestId": { "title": "Approval request ID", "type": "string", "minLength": 1, "description": "Approval request ID returned by sint__pending", "examples": ["apr_01hxyz..."] },
+          "reason": { "title": "Denial reason", "type": "string", "description": "Human-readable reason recorded in the audit trail and returned to the caller", "examples": ["Outside approved maintenance window"] },
+          "by": { "title": "Denying actor", "type": "string", "description": "Human or operator identifier recorded as the denying actor; defaults to the current agent identity", "examples": ["alice@example.com", "ops-console"] }
+        },
+        "examples": [{ "requestId": "apr_01hxyz...", "reason": "Outside approved maintenance window", "by": "alice@example.com" }]
+      }
     },
     {
       "name": "sint__audit",
-      "description": "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Read-only. Returns a JSON array of recent ledger events."
+      "description": "Read recent events from the SINT evidence ledger for debugging, compliance review, or operator context. Read-only. Returns a JSON array of recent ledger events.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [],
+        "properties": {
+          "limit": { "title": "Event limit", "type": "number", "minimum": 1, "default": 20, "description": "Maximum number of newest ledger events to return; defaults to 20", "examples": [10, 50] }
+        },
+        "examples": [{ "limit": 10 }]
+      }
     },
     {
       "name": "sint__add_server",
-      "description": "Register and connect a new downstream MCP server while SINT is running. Requires a unique server name and startup command, and returns the discovered tool count on success or an error if connection fails."
+      "description": "Register and connect a new downstream MCP server while SINT is running. Requires a unique server name and startup command, and returns the discovered tool count on success or an error if connection fails.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "command"],
+        "properties": {
+          "name": { "title": "Server name", "type": "string", "minLength": 1, "description": "Unique short name used as the server prefix for aggregated tools", "examples": ["filesystem", "github"] },
+          "command": { "title": "Startup command", "type": "string", "minLength": 1, "description": "Executable used to start the downstream stdio server process", "examples": ["npx", "node"] },
+          "args": { "title": "Command arguments", "type": "array", "items": { "type": "string" }, "description": "Optional command arguments passed to the downstream server process", "examples": [["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]] }
+        },
+        "examples": [{ "name": "filesystem", "command": "npx", "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"] }]
+      }
     },
     {
       "name": "sint__remove_server",
-      "description": "Disconnect and remove one downstream MCP server from the running proxy. Requires the server name as listed by sint__servers and returns confirmation or an error if the name is unknown."
+      "description": "Disconnect and remove one downstream MCP server from the running proxy. Requires the server name as listed by sint__servers and returns confirmation or an error if the name is unknown.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "title": "Server name", "type": "string", "minLength": 1, "description": "Server name as listed by sint__servers", "examples": ["filesystem", "github"] }
+        },
+        "examples": [{ "name": "filesystem" }]
+      }
     },
     {
       "name": "sint__issue_token",
-      "description": "Issue a new attenuated capability token for another subject. Requires subject, resource, and actions, stores the token immediately, and returns token metadata including tokenId and expiry."
+      "description": "Issue a new attenuated capability token for another subject. Requires subject, resource, and actions, stores the token immediately, and returns token metadata including tokenId and expiry.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subject", "resource", "actions"],
+        "properties": {
+          "subject": { "title": "Token subject", "type": "string", "minLength": 1, "description": "Public key or subject identifier that will own the new token", "examples": ["ed25519:abc123...", "agent:planner-01"] },
+          "resource": { "title": "Resource pattern", "type": "string", "minLength": 1, "description": "Resource URI pattern the token may access", "examples": ["mcp://filesystem/*", "mcp://github/repos/sint-ai/*"] },
+          "actions": { "title": "Allowed actions", "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Allowed actions for the token on that resource", "examples": [["call"], ["call", "exec.run"]] },
+          "expiresInHours": { "title": "Lifetime in hours", "type": "number", "minimum": 1, "default": 24, "description": "Token lifetime in hours; defaults to 24", "examples": [1, 24, 168] }
+        },
+        "examples": [{ "subject": "agent:planner-01", "resource": "mcp://github/repos/sint-ai/sint-protocol/*", "actions": ["call"], "expiresInHours": 24 }]
+      }
     },
     {
       "name": "sint__revoke_token",
-      "description": "Revoke an active capability token so it can no longer authorize actions. Requires tokenId, records the reason in the audit trail, and returns a confirmation message."
+      "description": "Revoke an active capability token so it can no longer authorize actions. Requires tokenId, records the reason in the audit trail, and returns a confirmation message.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tokenId"],
+        "properties": {
+          "tokenId": { "title": "Token ID", "type": "string", "minLength": 1, "description": "Token ID to revoke", "examples": ["tok_01hxyz..."] },
+          "reason": { "title": "Revocation reason", "type": "string", "description": "Reason recorded in the revocation store and ledger", "examples": ["Compromised credentials", "Delegation no longer needed"] }
+        },
+        "examples": [{ "tokenId": "tok_01hxyz...", "reason": "Delegation no longer needed" }]
+      }
     },
     {
       "name": "sint__interface_status",
-      "description": "Inspect the current operator interface state. Returns a JSON snapshot with mode, HUD panel state, and session context."
+      "description": "Inspect the current operator interface state. Returns a JSON snapshot with mode, HUD panel state, and session context.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false }
     },
     {
       "name": "sint__recall_memory",
-      "description": "Search the operator memory bank for relevant stored context. Read-only. Requires a query string and returns matching memory entries as JSON."
+      "description": "Search the operator memory bank for relevant stored context. Read-only. Requires a query string and returns matching memory entries as JSON.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["query"],
+        "properties": {
+          "query": { "title": "Search query", "type": "string", "minLength": 1, "description": "Search string used to match memory keys, tags, or content", "examples": ["incident 42"] },
+          "limit": { "title": "Result limit", "type": "number", "minimum": 1, "default": 10, "description": "Maximum number of matches to return; defaults to 10", "examples": [5, 10, 25] }
+        },
+        "examples": [{ "query": "incident 42", "limit": 5 }]
+      }
     },
     {
       "name": "sint__store_memory",
-      "description": "Store structured context in the operator memory bank for later retrieval. Requires key and value, with optional tags and persistence."
+      "description": "Store structured context in the operator memory bank for later retrieval. Requires key and value, with optional tags and persistence.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "value"],
+        "properties": {
+          "key": { "title": "Memory key", "type": "string", "minLength": 1, "description": "Stable unique key for the memory entry", "examples": ["incident-42/root-cause"] },
+          "value": { "title": "Memory value", "type": ["object", "array", "string", "number", "boolean", "null"], "description": "Any JSON value to persist under the key" },
+          "tags": { "title": "Tags", "type": "array", "items": { "type": "string" }, "description": "Optional tags used for categorization and later search", "examples": [["incident", "prod"]] },
+          "persist": { "title": "Persist beyond session", "type": "boolean", "default": false, "description": "Whether the entry should persist beyond the current session; defaults to false" }
+        },
+        "examples": [{ "key": "incident-42/root-cause", "value": { "service": "gateway", "summary": "Token scope mismatch" }, "tags": ["incident", "prod"], "persist": true }]
+      }
     },
     {
       "name": "sint__speak",
-      "description": "Send text-to-speech output to the operator interface. Requires short text and optionally a priority level."
+      "description": "Send text-to-speech output to the operator interface. Requires short text and optionally a priority level.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["text"],
+        "properties": {
+          "text": { "title": "Spoken text", "type": "string", "minLength": 1, "description": "Short text that will be spoken aloud to the operator", "examples": ["Approval needed for production deploy"] },
+          "priority": { "title": "Priority", "type": "string", "enum": ["low", "normal", "urgent"], "default": "normal", "description": "Voice output priority; defaults to normal" }
+        },
+        "examples": [{ "text": "Approval needed for production deploy", "priority": "urgent" }]
+      }
     },
     {
       "name": "sint__show_hud",
-      "description": "Show or refresh one HUD panel in the operator interface. Requires a target panel and optionally accepts JSON data for that panel. Returns a confirmation payload with the panel name and timestamp."
+      "description": "Show or refresh one HUD panel in the operator interface. Requires a target panel and optionally accepts JSON data for that panel. Returns a confirmation payload with the panel name and timestamp.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["panel"],
+        "properties": {
+          "panel": { "title": "HUD panel", "type": "string", "enum": ["approvals", "audit", "context", "memory"], "description": "HUD panel to display or refresh" },
+          "data": { "title": "Panel payload", "type": ["object", "array", "string", "number", "boolean", "null"], "description": "Optional JSON payload for the panel" }
+        },
+        "examples": [{ "panel": "approvals" }, { "panel": "context", "data": { "stage": "deploy", "owner": "ops" } }]
+      }
     },
     {
       "name": "sint__notify",
-      "description": "Send a proactive notification to the operator interface, optionally with one action button that invokes another MCP tool. Returns a confirmation payload with the notification timestamp."
+      "description": "Send a proactive notification to the operator interface, optionally with one action button that invokes another MCP tool. Returns a confirmation payload with the notification timestamp.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message"],
+        "properties": {
+          "message": { "title": "Notification message", "type": "string", "minLength": 1, "description": "Visible notification text shown to the operator", "examples": ["Approval queue has 2 blocked actions"] },
+          "action": {
+            "title": "Optional action button",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "tool", "args"],
+            "properties": {
+              "label": { "title": "Button label", "type": "string", "description": "Button label shown in the notification UI", "examples": ["Review approvals"] },
+              "tool": { "title": "Tool to invoke", "type": "string", "description": "MCP tool name to invoke when the button is clicked", "examples": ["sint__pending"] },
+              "args": { "title": "Tool arguments", "type": ["object", "array", "string", "number", "boolean", "null"], "description": "Arguments passed to the MCP tool when the action button is clicked" }
+            }
+          }
+        },
+        "examples": [{ "message": "Approval queue has blocked actions", "action": { "label": "Review approvals", "tool": "sint__pending", "args": {} } }]
+      }
     },
     {
       "name": "sint__interface_mode",
-      "description": "Change how the operator interface presents information. Requires one of hud, compact, voice-only, or silent."
+      "description": "Change how the operator interface presents information. Requires one of hud, compact, voice-only, or silent.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode"],
+        "properties": {
+          "mode": { "title": "Mode", "type": "string", "enum": ["hud", "compact", "voice-only", "silent"], "description": "Target operator interface mode", "examples": ["compact"] }
+        },
+        "examples": [{ "mode": "compact" }]
+      }
     },
     {
       "name": "sint__delegate_to_agent",
-      "description": "Issue a delegated capability token to a sub-agent with narrower scope than the current token. Returns token metadata including depth and expiry."
+      "description": "Issue a delegated capability token to a sub-agent with narrower scope than the current token. Returns token metadata including depth and expiry.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subagentId", "toolScope"],
+        "properties": {
+          "subagentId": { "title": "Sub-agent ID", "type": "string", "minLength": 1, "description": "Public key or stable identifier of the sub-agent receiving the delegated token", "examples": ["agent:reviewer-01"] },
+          "toolScope": { "title": "Tool scope", "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Resource URI patterns the sub-agent may access; must be a subset of the caller's scope", "examples": [["mcp://filesystem/reports/*"]] },
+          "expiresInHours": { "title": "Expiry (hours)", "type": "number", "minimum": 1, "default": 4, "description": "Delegated token lifetime in hours; defaults to 4", "examples": [4] },
+          "maxCallsPerMinute": { "title": "Rate limit (calls/minute)", "type": "number", "minimum": 1, "description": "Optional per-minute rate limit applied to the delegated token", "examples": [10] }
+        },
+        "examples": [{ "subagentId": "agent:reviewer-01", "toolScope": ["mcp://filesystem/reports/*"], "expiresInHours": 4, "maxCallsPerMinute": 10 }]
+      }
     },
     {
       "name": "sint__list_delegations",
-      "description": "List the active delegation tree rooted at the current token. Read-only. Returns a JSON array of delegation nodes and scope relationships."
+      "description": "List the active delegation tree rooted at the current token. Read-only. Returns a JSON array of delegation nodes and scope relationships.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [], "additionalProperties": false, "examples": [{}] }
     },
     {
       "name": "sint__revoke_delegation_tree",
-      "description": "Cascade-revoke a delegated token and all of its descendants. Requires the root delegated token ID and optionally a revocation reason."
+      "description": "Cascade-revoke a delegated token and all of its descendants. Requires the root delegated token ID and optionally a revocation reason.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rootTokenId"],
+        "properties": {
+          "rootTokenId": { "title": "Root token ID", "type": "string", "minLength": 1, "description": "Root delegated token ID whose entire subtree should be revoked", "examples": ["tok_01hxyz..."] },
+          "reason": { "title": "Reason", "type": "string", "description": "Reason recorded for the cascade revocation", "examples": ["Incident response containment"] }
+        },
+        "examples": [{ "rootTokenId": "tok_01hxyz...", "reason": "Incident response containment" }]
+      }
     }
   ]
 }
