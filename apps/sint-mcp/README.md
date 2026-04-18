@@ -1,5 +1,7 @@
 # sint-mcp
 
+<!-- mcp-name: io.github.pshkv/sint-mcp -->
+
 **Security-first MCP proxy server.** Connects to any number of downstream MCP servers and enforces SINT capability-token policy on every tool call before it reaches the real tool. Provides human-in-the-loop approval for high-consequence actions, a hash-chained audit ledger, and operator interface controls — all through the MCP protocol.
 
 ## How it works
