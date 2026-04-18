@@ -24,6 +24,24 @@ function circlePolygon(
   return coords;
 }
 
+/**
+ * Library of reusable geofence polygons for common physical-AI deployments.
+ * Each entry is a `{ coordinates }` shape that can be dropped straight into
+ * a `SintPhysicalConstraints.geofence` field.
+ *
+ * Coordinates are `[x, y]` pairs in metres relative to the local frame origin.
+ * For GPS-based deployments, supply your own GeoJSON-convention polygon instead.
+ *
+ * @example
+ * ```ts
+ * import { GEOFENCE_TEMPLATES } from "@pshkv/core";
+ *
+ * const token = await issueCapabilityToken({
+ *   // ...
+ *   constraints: { geofence: GEOFENCE_TEMPLATES.WAREHOUSE_BAY_10M },
+ * }, issuerKey);
+ * ```
+ */
 export const GEOFENCE_TEMPLATES = {
   /**
    * Standard warehouse bay: 10 m × 10 m square.
@@ -76,4 +94,9 @@ export const GEOFENCE_TEMPLATES = {
   },
 } as const;
 
+/**
+ * Union of the keys in `GEOFENCE_TEMPLATES`. Useful for configuration
+ * surfaces where an operator picks a named template rather than supplying
+ * raw coordinates.
+ */
 export type GeofenceTemplateName = keyof typeof GEOFENCE_TEMPLATES;

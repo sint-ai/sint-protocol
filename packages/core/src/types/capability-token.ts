@@ -269,8 +269,11 @@ export interface SintDelegationChain {
  */
 export interface SintCapabilityToken {
   // --- Identity ---
+  /** Unique, time-ordered token identifier. Sortable by issuance time. */
   readonly tokenId: UUIDv7;
+  /** Ed25519 public key of the issuing authority. Used to verify `signature`. */
   readonly issuer: Ed25519PublicKey;
+  /** Ed25519 public key of the receiving agent. A request's `agentId` must match this for the token to apply. */
   readonly subject: Ed25519PublicKey;
 
   // --- Scope ---
@@ -311,28 +314,51 @@ export interface SintCapabilityToken {
   readonly delegationDepth?: number;
 
   // --- Delegation ---
+  /** Verifiable lineage of this token from its root issuer. */
   readonly delegationChain: SintDelegationChain;
 
   // --- Lifecycle ---
+  /** When the token was issued (ISO 8601 with microsecond precision). */
   readonly issuedAt: ISO8601;
+  /** When the token stops being valid. No grace period — `now >= expiresAt` fails validation. */
   readonly expiresAt: ISO8601;
+  /** Whether the issuer (or its delegate) may revoke this token before expiry. */
   readonly revocable: boolean;
+  /** Optional URL the gateway can call to propagate revocations (CRL/OCSP-style). */
   readonly revocationEndpoint?: string;
 
   // --- Cryptographic binding ---
+  /**
+   * Ed25519 signature over the canonical signing payload (every field above
+   * except `signature` itself, serialized via RFC-8785-style recursive key sort).
+   * See `computeSigningPayload` in `@pshkv/gate-capability-tokens`.
+   */
   readonly signature: Ed25519Signature;
 }
 
-/** Fields required to issue a new capability token (before signing). */
+/**
+ * Fields required to issue a new capability token. `tokenId`, `issuedAt`,
+ * and `signature` are filled in by the issuer; every other field mirrors
+ * `SintCapabilityToken`. Pass this shape to `issueCapabilityToken()`.
+ */
 export interface SintCapabilityTokenRequest {
+  /** Ed25519 public key of the issuing authority. */
   readonly issuer: Ed25519PublicKey;
+  /** Ed25519 public key of the receiving agent. */
   readonly subject: Ed25519PublicKey;
+  /** Resource URI this token grants access to. */
   readonly resource: string;
+  /** Permitted actions on the resource. */
   readonly actions: readonly string[];
+  /** Physical safety constraints enforced at runtime. */
   readonly constraints: SintPhysicalConstraints;
+  /** Optional model identity restrictions. */
   readonly modelConstraints?: SintModelConstraints;
+  /** Optional TEE attestation requirements. */
   readonly attestationRequirements?: SintAttestationRequirements;
+  /** Optional ZK/TEE verifiable-compute proof requirements. */
   readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
+  /** Optional pre-approved trajectory envelope for low-latency control. */
   readonly executionEnvelope?: SintExecutionEnvelope;
   /** Optional runtime behavioral constraints for this token. */
   readonly behavioralConstraints?: SintBehavioralConstraints;
@@ -340,9 +366,13 @@ export interface SintCapabilityTokenRequest {
   readonly passportId?: string;
   /** Delegation depth in the APS chain (0 = root). */
   readonly delegationDepth?: number;
+  /** Delegation lineage; supply `{ parentTokenId: null, depth: 0, attenuated: false }` for a root issuance. */
   readonly delegationChain: SintDelegationChain;
+  /** Absolute expiry timestamp (ISO 8601, microsecond precision). */
   readonly expiresAt: ISO8601;
+  /** Whether the issuer retains revocation authority. */
   readonly revocable: boolean;
+  /** Optional revocation propagation endpoint. */
   readonly revocationEndpoint?: string;
 }
 

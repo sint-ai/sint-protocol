@@ -51,7 +51,9 @@ export enum RiskTier {
 
 /** K-of-N approval quorum attached to escalated requests. */
 export interface SintApprovalQuorum {
+  /** Number of distinct approvals required before the request can proceed. */
   readonly required: number;
+  /** Approver identifiers (e.g. DIDs or public keys) permitted to sign off. */
   readonly authorized: readonly string[];
 }
 
@@ -64,33 +66,49 @@ export type SintSiteDeploymentProfile =
 
 /** Runtime identity metadata for the executor handling the request. */
 export interface SintExecutorIdentity {
+  /** Logical runtime identifier (e.g. "ros2-bridge", "mcp-server"). */
   readonly runtimeId?: string;
+  /** Physical or logical node this runtime is executing on. */
   readonly nodeId?: string;
+  /** Decentralized identifier (did:key / did:web) for the executor. */
   readonly did?: string;
+  /** Network hostname or address of the executor. */
   readonly host?: string;
 }
 
 /** Model runtime metadata attached to a request. */
 export interface SintModelRuntimeContext {
+  /** Model identifier (e.g. "claude-opus-4-7", "gpt-4.1"). Checked against `modelConstraints.allowedModelIds`. */
   readonly modelId?: string;
+  /** Model version string; compared against `modelConstraints.maxModelVersion` as semver. */
   readonly modelVersion?: string;
+  /** Model weight fingerprint for tamper detection. */
   readonly modelFingerprintHash?: string;
 }
 
 /** Attestation metadata attached to a request. */
 export interface SintAttestationContext {
+  /** Attestation grade: 0 none, 1 self-attested, 2 TEE-backed, 3 remote-attested TEE. */
   readonly grade?: 0 | 1 | 2 | 3;
+  /** Trusted execution environment backend reporting the attestation. */
   readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
+  /** Opaque reference to the TEE quote (URL, hash, or handle). */
   readonly quoteRef?: string;
 }
 
 /** Verifiable compute proof metadata attached to a request. */
 export interface SintVerifiableComputeContext {
+  /** Proof system in use (e.g. "risc0-groth16", "snark"). */
   readonly proofType?: SintVerifiableComputeProofType;
+  /** Reference to the serialized proof object (URL or storage handle). */
   readonly proofRef?: string;
+  /** SHA-256 hash of the proof bytes for integrity. */
   readonly proofHash?: string;
+  /** SHA-256 hash of the public-inputs tuple committed to by the proof. */
   readonly publicInputsHash?: string;
+  /** When the proof was generated (ISO 8601); used with `maxProofAgeMs`. */
   readonly generatedAt?: ISO8601;
+  /** Reference to the verifier used to check this proof. */
   readonly verifierRef?: string;
 }
 
@@ -113,23 +131,42 @@ export interface SintHardwareSafetyContext {
 
 /** Pre-approved execution corridor metadata attached to a request. */
 export interface SintPreapprovedCorridor {
+  /** Identifier of the corridor envelope previously approved for this agent. */
   readonly corridorId: string;
+  /** Corridor expiry; requests arriving after this must re-seek approval. */
   readonly expiresAt: ISO8601;
+  /** Maximum allowed deviation from the corridor centerline, in metres. */
   readonly maxDeviationMeters?: number;
+  /** Maximum allowed heading deviation from the corridor direction, in degrees. */
   readonly maxHeadingDeviationDeg?: number;
 }
 
-/** Execution context metadata for cross-bridge/audit interoperability. */
+/**
+ * Execution context metadata for cross-bridge/audit interoperability.
+ * Every field is optional — bridges populate whatever they know so the
+ * gateway can reason about model identity, attestation, safety interlocks,
+ * and pre-approved corridors when making tier assignments.
+ */
 export interface SintExecutionContext {
+  /** Named deployment profile driving policy defaults. */
   readonly deploymentProfile?: SintSiteDeploymentProfile;
+  /** Operator-assigned site identifier (facility, warehouse, cell). */
   readonly siteId?: string;
+  /** Identifier of the bridge that normalized the request. */
   readonly bridgeId?: string;
+  /** Wire protocol the bridge translates (e.g. "ros2", "mcp", "mqtt"). */
   readonly bridgeProtocol?: string;
+  /** Runtime identity of the process dispatching the action. */
   readonly executor?: SintExecutorIdentity;
+  /** Model runtime context for model-bound token constraints. */
   readonly model?: SintModelRuntimeContext;
+  /** TEE attestation context for attestation-bound token constraints. */
   readonly attestation?: SintAttestationContext;
+  /** Verifiable compute proof context for proof-bound token constraints. */
   readonly verifiableCompute?: SintVerifiableComputeContext;
+  /** Hardware safety interlock / permit state observed at request time. */
   readonly hardwareSafety?: SintHardwareSafetyContext;
+  /** Pre-approved execution corridor, if this request is executing under one. */
   readonly preapprovedCorridor?: SintPreapprovedCorridor;
 }
 
@@ -137,7 +174,9 @@ export interface SintExecutionContext {
  * A request entering the Policy Gateway for evaluation.
  */
 export interface SintRequest {
+  /** Unique, client-supplied request identifier. */
   readonly requestId: UUIDv7;
+  /** When the request was emitted by the bridge (ISO 8601, microsecond precision). */
   readonly timestamp: ISO8601;
 
   /** The agent making the request. */
