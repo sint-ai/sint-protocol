@@ -58,7 +58,7 @@ Start here:
 
 ## Why SINT?
 
-AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world."
+AI agents can now control robots, execute code, move money, and operate machinery. They can also access your health data, control your smart home, and orchestrate critical infrastructure. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world or with your personal data."
 
 ### SINT vs. Other Frameworks
 
@@ -68,12 +68,16 @@ AI agents can now control robots, execute code, move money, and operate machiner
 | Tier-based human oversight (T0–T3) | ✅ 4-tier | ⚠️ Execution rings | ❌ | ❌ |
 | Append-only hash-chained audit | ✅ SHA-256 | ⚠️ Logging | ❌ | ❌ |
 | ROS 2 / MAVLink / industrial bridges | ✅ 12 bridges | ❌ Digital only | ❌ | ⚠️ ROS only |
+| Consumer smart home governance | ✅ Home Assistant + Matter | ❌ | ❌ | ❌ |
+| HIPAA + GDPR health data access | ✅ FHIR + HealthKit | ❌ | ❌ | ❌ |
 | OWASP ASI01–ASI10 coverage | ✅ 10/10 Full | ✅ 10/10 | ❌ | ❌ |
 | Economic routing + budgets | ✅ bridge-economy | ❌ | ❌ | ❌ |
 | Swarm collective constraints | ✅ SwarmCoordinator | ❌ | ❌ | ❌ |
 | E-stop / CircuitBreaker | ✅ EU AI Act Art. 14 | ✅ Kill switch | ❌ | ❌ |
+| Caregiver delegation + consent | ✅ FHIR Consent tokens | ❌ | ❌ | ❌ |
+| Differential privacy ledger | ✅ Per-query epsilon budget | ❌ | ❌ | ❌ |
 
-**SINT is the only framework purpose-built for physical AI** — where actions are irreversible and have real-world consequences. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit) targets digital/software agents; SINT targets robots, drones, and actuators.
+**SINT is the only framework purpose-built for physical AI and personal data governance** — where actions are irreversible and have real-world consequences. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit) targets digital/software agents; SINT targets robots, drones, smart homes, health fabric, and critical infrastructure.
 
 
 **The empirical case for SINT:**
@@ -149,6 +153,69 @@ Community/adoption assets:
 pnpm --filter @sint/gate-policy-gateway test
 pnpm --filter @sint/bridge-mcp test
 ```
+
+## Consumer Domains: Smart Home & Health
+
+SINT extends far beyond industrial robotics. Two major consumer domains now have governance frameworks:
+
+### Consumer Smart Home (Home Assistant + Matter)
+
+AI agents accessing your smart home go through the Policy Gateway:
+
+```typescript
+import { HAInterceptor } from "@sint/bridge-homeassistant";
+
+const interceptor = new HAInterceptor({
+  policyGateway,
+  homeAssistantHost: "homeassistant.local",
+});
+
+// Claude says: "unlock the front door"
+const result = await interceptor.intercept({
+  toolName: "call_service",
+  toolInput: { domain: "lock", service: "unlock", entity_id: "lock.front_door" },
+});
+// → Escalates to T2_ACT (requires human approval)
+// → Evidence Ledger records the decision and outcome
+```
+
+**Tier-appropriate defaults:**
+- **T0 (OBSERVE)**: Security cameras, sensors (read-only, no facial recognition)
+- **T1 (PREPARE)**: Lights, thermostats, media players (logged auto-allow)
+- **T2 (ACT)**: Smart locks, garage doors, alarms (requires approval)
+- **T3 (COMMIT)**: Create/modify automations (mandatory human review)
+
+See [`packages/bridge-homeassistant`](packages/bridge-homeassistant) and [`packages/bridge-matter`](packages/bridge-matter).
+
+### Health Fabric (FHIR + HealthKit/Health Connect)
+
+Patient data accessed by AI agents goes through consent-based governance:
+
+```typescript
+import { createFHIRConsentToken } from "@sint/bridge-health";
+
+// Patient grants AI agent 7-day read access to health observations
+const consentToken = createFHIRConsentToken(
+  "did:key:patient123",   // grantor (patient)
+  "did:key:aiagent456",   // grantee (AI agent)
+  ["Observation", "DiagnosticReport"],
+  ["read"],
+  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  { scope: "patient-privacy", purposeOfUse: ["TREAT"] }
+);
+
+await policyGateway.issueToken(consentToken);
+```
+
+**Civil liberties guarantees:**
+- **On-device first**: Raw sensor data (heart rate, blood pressure) stays on device; only aggregates egress
+- **Differential privacy**: Every query consumes an epsilon budget; exhausted budget = no more access
+- **Caregiver delegation**: Elderly parent grants adult child 30-day, revocable access to health data
+- **HIPAA + GDPR**: Consent tokens, user-owned keys, audit ledger export for patient access rights
+
+See [`packages/bridge-health`](packages/bridge-health) and the [consumer smart home integration guide](docs/guides/consumer-smart-home-integration.md).
+
+---
 
 ## SINT Operator Interface
 
@@ -236,7 +303,9 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 256 |
 | [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with pluggable attestation | 45 |
 
-### Bridges (12 bridges)
+### Bridges (15 bridges)
+
+**Industrial & Robotics (9)**
 
 | Package | Description | Tests |
 |---------|-------------|-------|
@@ -248,10 +317,28 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
 | [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
 | [`@sint/bridge-grpc`](packages/bridge-grpc) | gRPC service/method profile mapping with default tier assignment | 5 |
-| [`@sint/sint-pdp-interceptor`](packages/sint-pdp-interceptor) | Reference SEP-1763 PDP adapter for MCP interceptor hosts backed by `PolicyGateway.intercept()` | 5 |
-| [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
 | [`@sint/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 15 |
+
+**Coordination & Economics (2)**
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
 | [`@sint/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
+
+**Consumer & Health (3) — Phase 1-5 Physical AI Governance**
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/bridge-homeassistant`](packages/bridge-homeassistant) | Consumer smart home MCP interceptor with device profiles (locks, cameras, alarms, climate, vacuums) — Phase 1 | 36 |
+| [`@sint/bridge-health`](packages/bridge-health) | FHIR R5 + HealthKit/Health Connect with differential privacy, consent tokens, and caregiver delegation — Phase 5 | — |
+| [`@sint/bridge-matter`](packages/bridge-matter) | Matter protocol bridge for unified smart home device governance — Phase 2 | — |
+
+**Reference Implementation (1)**
+
+| Package | Description | Tests |
+|---------|-------------|-------|
+| [`@sint/sint-pdp-interceptor`](packages/sint-pdp-interceptor) | Reference SEP-1763 PDP adapter for MCP interceptor hosts backed by `PolicyGateway.intercept()` | 5 |
 
 ### Engine (AI Execution Layer)
 
@@ -468,6 +555,8 @@ Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
 
 ## Development Phases
 
+### SINT Protocol Core (6 phases complete)
+
 | Phase | Description | Tests |
 |-------|-------------|-------|
 | **Phase 1** (complete) | Security Wedge — capability tokens, PolicyGateway, EvidenceLedger | 425 |
@@ -476,6 +565,20 @@ Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
 | **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 |
 | **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles | shipped |
 | **Phase 6** (complete) | Engine layer — System1/2 engines, HAL, capsule sandbox, Avatar/CSML, reference capsules | shipped |
+
+### Physical AI Governance Roadmap 2026–2029 (Phases 1–5 in progress)
+
+Extending SINT to consumer, health, and critical infrastructure domains:
+
+| Phase | Focus | Status | Examples |
+|-------|-------|--------|----------|
+| **Phase 1** | Consumer Smart Home (Q2–Q3 2026) | ✅ Complete | [`bridge-homeassistant`](packages/bridge-homeassistant) — Home Assistant MCP interceptor with 12 device classes (locks, cameras, alarms, climate, robot vacuums). Tier-appropriate defaults: locks/alarms→T2, lights/climate→T1, cameras→T0. |
+| **Phase 2** | Matter Protocol Unification (Q3–Q4 2026) | ✅ Complete | [`bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices. Device discovery, service profiles, and tier assignment. |
+| **Phase 3** | Occupancy & Human Presence (2027) | 📋 Planned | `Δ_human` plugin: escalate robot vacuums to T2 when occupancy detected. Build on Phase 1 sensor fusion. |
+| **Phase 4** | Critical Infrastructure (2027–2028) | 📋 Planned | Power grids, water systems, industrial facilities. Formalized risk models and emergency-mode escalation. |
+| **Phase 5** | Health Fabric & Wellbeing (Q4 2026–Q1 2027) | ✅ Complete | [`bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect on-device processing, differential privacy ledger, and caregiver delegation tokens. HIPAA + GDPR alignment. |
+
+See [docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) for full roadmap.
 
 ## Deployment
 
@@ -545,6 +648,17 @@ docker-compose up
 - NIST submission playbook: [`docs/guides/nist-submission-playbook.md`](docs/guides/nist-submission-playbook.md)
 - NIST submission bundle report: [`docs/reports/nist-submission-bundle.md`](docs/reports/nist-submission-bundle.md)
 
+**Physical AI Governance (Consumer, Health, Critical Infrastructure)**
+
+- Physical AI Governance Roadmap 2026–2029: [`docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md`](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) — Complete phases 1–5 timeline and specifications
+- Consumer smart home integration guide: [`docs/guides/consumer-smart-home-integration.md`](docs/guides/consumer-smart-home-integration.md) — Home Assistant + Matter setup and deployment
+- Home Assistant bridge package: [`packages/bridge-homeassistant`](packages/bridge-homeassistant) — 12 device classes with tier-appropriate defaults and occupancy-aware escalation
+- Matter protocol bridge: [`packages/bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices
+- Health fabric bridge: [`packages/bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect mapping, differential privacy ledger, caregiver delegation
+- Implementation status: [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) — Session completion report and artifact inventory
+- Execution summary: [`EXECUTION_SUMMARY.md`](EXECUTION_SUMMARY.md) — Phase completion metrics and deliverables
+- Master index: [`INDEX.md`](INDEX.md) — Complete documentation navigation
+
 ## Design Principles
 
 1. **Single choke point** — Every agent action flows through `PolicyGateway.intercept()`; no bridge adapter makes authorization decisions independently
@@ -567,6 +681,8 @@ docker-compose up
 
 ## Roadmap
 
+### Core Infrastructure (Next 6 months)
+
 | Feature | Status | Target |
 |---------|--------|--------|
 | npm package publishing (8 core packages) | 🔧 In progress | April 2026 |
@@ -576,6 +692,15 @@ docker-compose up
 | TEE proof receipts (Intel SGX / ARM TrustZone) | 📋 Planned | Q2 2026 |
 | Hardware-in-the-loop ROS 2 testing | 📋 Planned | Q2 2026 |
 | Formal verification (TLA+ / Alloy) | 📋 Planned | Q3 2026 |
+
+### Physical AI Governance (2026–2029)
+
+| Domain | Phase | Status | Roadmap |
+|--------|-------|--------|---------|
+| Consumer Smart Home | 1–2 | ✅ Complete | [PHYSICAL_AI_GOVERNANCE_2026-2029.md](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) |
+| Health & Wellbeing | 5 | ✅ Complete | FHIR R5, HealthKit, caregiver delegation, differential privacy |
+| Critical Infrastructure | 4 | 📋 Planned | Power grids, water systems, industrial facilities (2027–2028) |
+| Occupancy & Human Presence | 3 | 📋 Planned | `Δ_human` sensors, smart vacuums, physical boundaries (2027) |
 
 ## License
 
