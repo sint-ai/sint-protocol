@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.pshkv/sint-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "title": "SINT MCP",
   "description": "Security-first MCP proxy with policy enforcement, approvals, and audit receipts.",
   "websiteUrl": "https://github.com/sint-ai/sint-protocol/tree/main/apps/sint-mcp",
@@ -9,7 +9,7 @@
     {
       "registryType": "npm",
       "identifier": "sint-mcp",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "transport": { "type": "stdio" },
       "packageArguments": [],
       "environmentVariables": [
@@ -27,4 +27,3 @@
     "source": "github"
   }
 }
-

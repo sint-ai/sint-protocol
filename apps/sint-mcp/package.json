@@ -1,6 +1,7 @@
 {
   "name": "sint-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "mcpName": "io.github.pshkv/sint-mcp",
   "description": "SINT MCP — Security-first multi-MCP proxy server with policy enforcement",
   "type": "module",
   "main": "./dist/index.cjs",
