@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.pshkv/sint-mcp",
+  "version": "0.1.0",
+  "title": "SINT MCP",
+  "description": "Security-first MCP proxy with policy enforcement, approvals, and audit receipts.",
+  "websiteUrl": "https://github.com/sint-ai/sint-protocol/tree/main/apps/sint-mcp",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "sint-mcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "packageArguments": [],
+      "environmentVariables": [
+        { "name": "SINT_MCP_CONFIG", "required": false, "description": "Path to a sint-mcp JSON config file." },
+        { "name": "SINT_MCP_POLICY", "required": false, "description": "Default enforcement posture (permissive|cautious|strict)." },
+        { "name": "SINT_MCP_TRANSPORT", "required": false, "description": "Transport mode (stdio|sse). Defaults to stdio." },
+        { "name": "SINT_MCP_PORT", "required": false, "description": "Port used only when transport is sse." },
+        { "name": "SINT_MCP_APPROVAL_TIMEOUT", "required": false, "description": "Approval timeout in ms (default 120000)." },
+        { "name": "SINT_AGENT_PRIVATE_KEY", "required": false, "description": "Ed25519 private key hex (optional; omit to auto-generate)." }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/sint-ai/sint-protocol",
+    "source": "github"
+  }
+}
+
