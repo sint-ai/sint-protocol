@@ -6,6 +6,12 @@
  * @module @sint/core/constants/schema-catalog
  */
 
+/**
+ * Shape of a JSON Schema document carried by `SINT_SCHEMA_CATALOG`.
+ * A plain string-keyed record is used rather than a strict JSON Schema
+ * type so that draft-2020-12 features (such as `$dynamicRef`) remain
+ * representable as the spec evolves.
+ */
 export type JsonSchemaDoc = Record<string, unknown>;
 
 const CAPABILITY_TOKEN_SCHEMA: JsonSchemaDoc = {
@@ -461,6 +467,25 @@ const TIER_COMPLIANCE_CROSSWALK_SCHEMA: JsonSchemaDoc = {
   additionalProperties: false,
 };
 
+/**
+ * Registry of public JSON Schema documents for every SINT wire type.
+ *
+ * Keyed by short slug (e.g. `"capability-token"`, `"policy-decision"`).
+ * Consumers use this catalog to (a) publish the canonical machine-readable
+ * schema set for the protocol, (b) validate wire messages at boundaries
+ * where strict typing is unavailable, and (c) generate SDKs in non-TS
+ * languages.
+ *
+ * @example
+ * ```ts
+ * import Ajv from "ajv";
+ * import { SINT_SCHEMA_CATALOG } from "@pshkv/core";
+ *
+ * const ajv = new Ajv({ strict: false });
+ * const validateToken = ajv.compile(SINT_SCHEMA_CATALOG["capability-token"]);
+ * if (!validateToken(incoming)) throw new Error("invalid token");
+ * ```
+ */
 export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "capability-token": CAPABILITY_TOKEN_SCHEMA,
   request: REQUEST_SCHEMA,

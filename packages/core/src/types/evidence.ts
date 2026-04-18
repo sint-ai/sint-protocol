@@ -223,7 +223,9 @@ export interface SintBilateralProofReceipt extends SintProofReceipt {
  * Linked receipt pair for strong-tier execution governance.
  */
 export interface SintBilateralProofReceiptPair {
+  /** Receipt emitted at the authorization gate (before execution). */
   readonly gate: SintBilateralProofReceipt;
+  /** Receipt emitted at action completion (success, failure, or rollback). */
   readonly completion: SintBilateralProofReceipt;
 }
 
@@ -298,13 +300,21 @@ export const DEFAULT_CSML_COEFFICIENTS: CsmlCoefficients = {
  * Query parameters for reading from the Evidence Ledger.
  */
 export interface LedgerQuery {
+  /** Restrict results to events emitted for this agent. */
   readonly agentId?: Ed25519PublicKey;
+  /** Restrict results to a specific event type. */
   readonly eventType?: SintEventType;
+  /** Inclusive lower bound on `sequenceNumber`. */
   readonly fromSequence?: bigint;
+  /** Inclusive upper bound on `sequenceNumber`. */
   readonly toSequence?: bigint;
+  /** Inclusive lower bound on `timestamp` (ISO 8601). */
   readonly fromTimestamp?: ISO8601;
+  /** Inclusive upper bound on `timestamp` (ISO 8601). */
   readonly toTimestamp?: ISO8601;
+  /** Maximum number of events to return. */
   readonly limit?: number;
+  /** Number of matching events to skip (paging). */
   readonly offset?: number;
 }
 
