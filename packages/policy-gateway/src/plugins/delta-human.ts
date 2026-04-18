@@ -92,18 +92,26 @@ export async function fetchHAStates(
       throw new Error(`HA API error: ${response.status} ${response.statusText}`);
     }
     
-    const allStates = await response.json();
+    type HAEntityState = {
+      entity_id: string;
+      state: string;
+      last_updated: string;
+      attributes?: Record<string, unknown>;
+    };
+
+    const raw = (await response.json()) as unknown;
+    const allStates: HAEntityState[] = Array.isArray(raw) ? (raw as HAEntityState[]) : [];
     
     // Filter to requested entities if specified
     const states = entityIds
-      ? allStates.filter((s: any) => entityIds.includes(s.entity_id))
+      ? allStates.filter((s) => entityIds.includes(s.entity_id))
       : allStates;
     
-    return states.map((s: any) => ({
+    return states.map((s) => ({
       entityId: s.entity_id,
       state: s.state,
       lastUpdated: new Date(s.last_updated),
-      attributes: s.attributes,
+      attributes: s.attributes ?? {},
     }));
   } catch (error) {
     console.error("[DeltaHuman] Failed to fetch HA states:", error);
@@ -242,6 +250,7 @@ export function isPhysicalActuatorResource(resource: string): boolean {
     const match = resource.match(/ha:\/\/[^/]+\/(?:entity\/)?([^.]+)\./);
     if (match) {
       const domain = match[1];
+      if (!domain) return false;
       const physicalDomains = [
         "lock",
         "cover", // garage doors, blinds
@@ -297,7 +306,7 @@ export function escalateTier(baseTier: ApprovalTier, delta: number): ApprovalTie
     ApprovalTier.T3_COMMIT,
   ];
   
-  return tiers[escalatedValue];
+  return tiers[escalatedValue] ?? ApprovalTier.T3_COMMIT;
 }
 
 /**
