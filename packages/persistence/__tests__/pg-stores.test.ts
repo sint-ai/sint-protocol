@@ -10,12 +10,9 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import pg from "pg";
 import { PgLedgerStore } from "../src/pg-ledger-store.js";
 import { PgTokenStore } from "../src/pg-token-store.js";
+import { ensurePgSchema } from "../src/pg-schema.js";
 import type { SintLedgerEvent, SintCapabilityToken } from "@pshkv/core";
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATABASE_URL = process.env.DATABASE_URL;
 
 const describeWithPg = DATABASE_URL ? describe : describe.skip;
@@ -56,11 +53,7 @@ describeWithPg("PgLedgerStore", () => {
 
   beforeAll(async () => {
     pool = new pg.Pool({ connectionString: DATABASE_URL });
-    const migrationSql = readFileSync(
-      join(__dirname, "../migrations/001_create_ledger.sql"),
-      "utf-8",
-    );
-    await pool.query(migrationSql);
+    await ensurePgSchema(pool);
     store = new PgLedgerStore(pool);
   });
 
@@ -153,11 +146,7 @@ describeWithPg("PgTokenStore", () => {
 
   beforeAll(async () => {
     pool = new pg.Pool({ connectionString: DATABASE_URL });
-    const migrationSql = readFileSync(
-      join(__dirname, "../migrations/002_create_tokens.sql"),
-      "utf-8",
-    );
-    await pool.query(migrationSql);
+    await ensurePgSchema(pool);
     store = new PgTokenStore(pool);
   });
 
@@ -230,5 +219,70 @@ describeWithPg("PgTokenStore", () => {
     } as SintCapabilityToken);
     const retrieved = await store.get("tok-1");
     expect(retrieved!.actions).toEqual(["publish", "subscribe"]);
+  });
+
+  // Regression for #169: every optional SintCapabilityToken field must
+  // round-trip byte-identical, otherwise canonical-JSON signatures fail
+  // verification after a store -> get cycle.
+  it("preserves all optional fields losslessly (regression for #169)", async () => {
+    const token = {
+      ...makeToken("tok-opt"),
+      modelConstraints: {
+        allowedModelIds: ["claude-opus-4-7", "claude-sonnet-4-6"],
+        maxModelVersion: "4.7.0",
+        modelFingerprintHash: "a".repeat(64),
+      },
+      attestationRequirements: {
+        minAttestationGrade: 2 as const,
+        allowedTeeBackends: ["intel-sgx", "amd-sev"] as const,
+        requireForTiers: ["strong"] as const,
+      },
+      verifiableComputeRequirements: {
+        allowedProofTypes: ["risc0-groth16"] as const,
+        verifierRefs: ["verifier://risc0/v1"],
+        maxProofAgeMs: 60_000,
+        requirePublicInputsHash: true,
+        requireForTiers: ["strong"] as const,
+      },
+      executionEnvelope: {
+        corridorId: "corridor-abc",
+        expiresAt: "2026-03-16T23:00:00.000000Z",
+        maxDeviationMeters: 0.5,
+        maxHeadingDeviationDeg: 5,
+        maxVelocityMps: 1.5,
+        maxForceNewtons: 20,
+      },
+      behavioralConstraints: {
+        maxCallsPerMinute: 30,
+        allowedPatterns: ["^safe:"],
+        deniedPatterns: ["rm -rf"],
+        maxPayloadBytes: 65536,
+      },
+      passportId: "aps:passport:xyz",
+      delegationDepth: 2,
+      revocationEndpoint: "https://revocation.example/v1/crl",
+    } as unknown as SintCapabilityToken;
+
+    await store.store(token);
+    const retrieved = await store.get("tok-opt");
+    expect(retrieved).toBeDefined();
+    expect(retrieved).toEqual(token);
+  });
+
+  it("preserves nested constraints object structure", async () => {
+    const token = {
+      ...makeToken("tok-nested"),
+      constraints: {
+        maxVelocityMps: 0.5,
+        geofence: { coordinates: [[0, 0], [10, 0], [10, 10], [0, 10]] },
+        timeWindow: { start: "09:00", end: "17:00", timezone: "UTC" },
+        rateLimit: { maxPerMinute: 10 },
+        quorum: { required: 2, authorized: ["a", "b", "c"] },
+      },
+    } as unknown as SintCapabilityToken;
+
+    await store.store(token);
+    const retrieved = await store.get("tok-nested");
+    expect(retrieved).toEqual(token);
   });
 });
