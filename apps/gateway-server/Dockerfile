@@ -4,7 +4,7 @@
 # ── Stage 1: Install & Build ─────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 
-RUN npm i -g pnpm@9.15.0
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 WORKDIR /app
 
@@ -52,7 +52,7 @@ RUN apk add --no-cache curl
 WORKDIR /app
 
 # Reproduce the minimal pnpm workspace so Node can resolve package aliases
-RUN npm i -g pnpm@9.15.0
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 ENV NODE_ENV=production
 
