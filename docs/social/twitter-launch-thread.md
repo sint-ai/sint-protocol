@@ -1,87 +1,87 @@
-# X/Twitter Launch Thread — SINT Protocol
+# X/Twitter Launch Thread — Interceptor Demo
 
-> **Instructions:** Post as a thread. Each numbered section = one tweet. Add [VIDEO] asset to Tweet 1 (30s demo: dashboard + ROS2 robot denial). Screenshot of `npx sint-scan` output goes in Tweet 4.
+> **Instructions:** Post as a thread. Each numbered section = one tweet. Add [VIDEO] asset to Tweet 1 showing the interceptor quickstart transcript or terminal flow.
 
 ---
 
 **1/**
-We built the Policy Gateway MCP has been begging for.
+We built a fail-closed policy interceptor for MCP-style tool calls.
 
-Capability tokens. T0–T3 approval tiers. Physics constraints. Tamper-evident ledger.
+It gives one concrete path:
+request -> decision -> receipt
 
-Every agent action — tool calls, robot commands, code execution — flows through a single choke point before it touches the real world.
+And when a prerequisite is missing, downstream execution does not run.
 
-[VIDEO: 30s demo — dashboard + ROS2 robot denial]
+[VIDEO: quick terminal demo — allow, escalate, fail-closed]
 
 github.com/sint-ai/sint-protocol
 
 ---
 
 **2/**
-Here's the gap nobody talks about:
+The gap it tries to close:
 
-MCP gives AI agents powerful tools. But there's zero authorization between "the LLM decided to call bash()" and "bash() ran."
+an agent decides to call a tool, and the real side effect happens immediately.
 
-No token required. No audit trail. No rate limit. No human-in-the-loop.
-
-If the agent is compromised, you find out when the damage is done.
+That’s fine for some workloads, but not for destructive or irreversible ones.
 
 ---
 
 **3/**
-SINT maps authorization to physical consequence:
+The demo shows three outcomes:
 
-🟢 T0 OBSERVE — readFile, listDir → auto-allowed, logged
-🟡 T1 PREPARE — writeFile, saveConfig → auto-allowed, audited
-🟠 T2 ACT — deleteFile, moveRobot → requires escalation
-🔴 T3 COMMIT — bash, exec, eval → requires human sign-off
+1. `allow`
+2. `escalate`
+3. `deny` before execution when a required prerequisite is missing
 
-A robot arm moving at 3 m/s needs different governance than a read query. SINT encodes that difference.
+That last one was the behavior we cared about most.
 
 ---
 
 **4/**
-`npx sint-scan` — audit any MCP server for risks in 10 seconds:
+Fastest way to try it:
 
-[SCREENSHOT: terminal showing CRITICAL bash + HIGH deleteFile + recommendations]
+[SCREENSHOT: terminal showing quickstart transcript]
 
+```bash
+pnpm install
+pnpm run build
+pnpm run demo:interceptor-quickstart
 ```
-npx sint-scan --server myserver \
-  --tools '[{"name":"bash","description":"runs shell"}]'
-```
 
-Exit code 2 on CRITICAL. Drop it in your CI pipeline.
+The quickstart guide is in the repo and walks through the exact flow.
 
 ---
 
 **5/**
-Two features nobody else has:
+Two implementation details that mattered:
 
-**Physics constraints** — velocity caps, force limits, geofence polygons enforced at the protocol level. Not in application code that can be bypassed.
+Deterministic canonical hashing for signed decision and receipt paths.
 
-**Tamper-evident ledger** — SHA-256 hash-chained, append-only. Every decision recorded. Any tampering is cryptographically detectable.
-
-Your compliance team will thank you.
+Proof receipts so the allowed path has explicit audit evidence rather than “trust us, it was logged.”
 
 ---
 
 **6/**
-Full OWASP Agentic AI Top-10 coverage. All 10 ASI categories regression-tested:
+The broader repo goes further than the demo:
 
-ASI01 goal hijacking → GoalHijackPlugin (5-layer heuristics)
-ASI05 shell via tool calls → T3 classifier
-ASI06 memory poisoning → MemoryIntegrityChecker
-ASI10 rogue agent → CircuitBreakerPlugin (EU AI Act Art. 14(4)(e) stop button)
+- interceptor package
+- ledger layer
+- capability tokens
+- MCP / ROS2 / MAVLink / industrial bridges
 
-1,105 tests. 31 packages. Apache-2.0.
+But the quickstart is the shortest path to understanding the core model.
 
 ---
 
 **7/**
-If you're building with MCP, thinking about physical AI, or care about what happens when agents go wrong — this is for you.
+If you’re building agent tooling and care about what should happen between “tool selected” and “side effect happened,” I’d love feedback.
 
-Star, share, break it: github.com/sint-ai/sint-protocol
+Especially on:
+- fail-closed defaults
+- escalation ergonomics
+- what a reference interceptor should expose
 
-cc @jspahrsummers @doppenhe @Aurimas_Gr @M_haggis @SlowMist_Team
+github.com/sint-ai/sint-protocol
 
-#MCP #AgentSecurity #PhysicalAI #AIGovernance #OWASP
+#MCP #AgentSecurity #AIAgents #OpenSource
