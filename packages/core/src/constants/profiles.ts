@@ -110,6 +110,19 @@ export const SINT_BRIDGE_PROFILES: readonly BridgeProfile[] = [
     },
     notes: "Facility/fleet orchestration profile for multi-vendor robot operations.",
   },
+  {
+    bridgeId: "homeassistant",
+    protocol: "ha-mcp",
+    version: "2024.11+",
+    resourcePattern: "ha://*/**",
+    defaultTierByAction: {
+      observe: ApprovalTier.T0_OBSERVE,
+      prepare: ApprovalTier.T1_PREPARE,
+      act: ApprovalTier.T2_ACT,
+      commit: ApprovalTier.T3_COMMIT,
+    },
+    notes: "Consumer smart home ingress via Home Assistant MCP Server. Phase 1 physical AI governance.",
+  },
 ] as const;
 
 /** First-class site profiles for 2026 industrial wedge deployments. */
@@ -134,5 +147,12 @@ export const SINT_SITE_PROFILES: readonly SiteProfile[] = [
     bridges: ["grpc", "mqtt-sparkplug", "opcua", "open-rmf"],
     defaultEscalationTheta: 0.25,
     notes: "Local T0/T1 verification profile with central T2/T3 escalation.",
+  },
+  {
+    siteId: "home-safe",
+    deploymentProfile: "home-safe",
+    bridges: ["homeassistant", "mcp", "a2a"],
+    defaultEscalationTheta: 0.15,
+    notes: "Consumer smart home with family occupancy awareness. Phase 1 consumer deployment profile.",
   },
 ] as const;
