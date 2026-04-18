@@ -926,6 +926,14 @@ export class PolicyGateway {
   }
 
   /**
+   * Back-compat alias for older bridge code.
+   * Prefer `intercept()` in new code.
+   */
+  async evaluatePolicy(request: SintRequest): Promise<PolicyDecision> {
+    return this.intercept(request);
+  }
+
+  /**
    * Make a decision based on the assigned tier.
    */
   private decideBytier(

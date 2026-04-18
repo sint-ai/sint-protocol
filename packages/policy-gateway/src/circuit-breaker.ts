@@ -141,7 +141,10 @@ export class InMemoryCircuitBreaker implements CircuitBreakerPlugin {
     if (current === "HALF_OPEN") {
       // Failure in half-open → back to OPEN
       entry.state = "OPEN";
-      entry.openedAt = now;
+      // Backoff: after a failed probe, keep the circuit OPEN for another full
+      // half-open interval before allowing the next probe. This reduces flapping
+      // under scheduler jitter (and is the safer default for fail-closed systems).
+      entry.openedAt = now + this.halfOpenAfterMs;
       entry.halfOpenSuccesses = 0;
       return "OPEN"; // return directly — don't resolveState which would re-enter HALF_OPEN
     } else if (current === "CLOSED" && entry.failures.length >= this.failureThreshold) {

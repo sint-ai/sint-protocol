@@ -1,5 +1,6 @@
 export { generateKeypair, sign, verify, hashSha256, getPublicKey } from "./crypto.js";
 export { issueCapabilityToken, computeSigningPayload } from "./issuer.js";
+export type { SintCapabilityToken as CapabilityToken } from "@pshkv/core";
 export {
   validateCapabilityToken,
   validateTokenSchema,
