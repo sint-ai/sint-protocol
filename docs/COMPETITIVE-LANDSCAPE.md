@@ -18,7 +18,7 @@
 | **Delegation control** | ❌ | Basic | ❌ | ❌ | Hierarchical | ❌ | ✅ Attenuation-only chains |
 | **Robotics bridge** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ ROS 2 native |
 | **Adoption** | Very high | Growing (IBM backing) | Google ecosystem | Moderate | Early | Early | Pre-launch |
-| **Tests** | N/A (spec) | Reference impl | Reference impl | Spec only | Spec only | Reference impl | 370 tests |
+| **Implementation proof** | N/A (spec) | Reference impl | Reference impl | Spec only | Spec only | Reference impl | Public reference stack + conformance suite |
 
 ## Detailed Analysis
 
@@ -68,7 +68,7 @@
 
 ## SINT's Unique Position
 
-SINT is **not a competing agent protocol**. It is a **security enforcement layer** that sits between any agent protocol and the physical world. This positioning means:
+SINT is **not a competing agent protocol**. It is an **execution-governance layer** that sits between agent protocols and real execution surfaces. This positioning means:
 
 1. **No zero-sum competition** — SINT adds value to MCP, ACP, A2A, not replaces them
 2. **Clear adoption path** — Drop-in MCP proxy today, bridge adapters for others

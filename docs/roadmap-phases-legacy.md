@@ -1,5 +1,7 @@
 # SINT Protocol Roadmap
 
+> **Archive note:** This is a legacy phase plan retained for historical context. For the current public roadmap, use [`docs/roadmap.md`](./roadmap.md).
+
 **Last updated:** March 2026
 
 ---

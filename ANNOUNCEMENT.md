@@ -7,12 +7,12 @@
 ## X/Twitter Thread
 
 **Tweet 1 (hook):**
-AI agents can now control robots, execute code, and move money. But there's no security layer between "the LLM decided to do it" and "it happened in the real world."
+AI agents can now control robots, execute code, and move money. But most teams still lack a governance layer between "the model decided" and "the action happened."
 
 We built one. Introducing SINT Protocol.
 
 **Tweet 2 (what):**
-SINT is an open protocol that sits between AI agents and the physical world. Every tool call, robot command, and API invocation flows through a single Policy Gateway.
+SINT is an open protocol that sits between agent frameworks and execution surfaces. Every tool call, robot command, and protected API action flows through a single Policy Gateway.
 
 4 approval tiers. Ed25519 capability tokens. Hash-chained audit logs. Physical safety constraints.
 
@@ -45,12 +45,12 @@ github.com/sint-ai/sint-protocol
 
 ## Hacker News
 
-**Title:** SINT Protocol: An open security layer between AI agents and the physical world
+**Title:** SINT Protocol: An open protocol for governing AI agent execution
 
 **Text:**
-AI agents can now control robots, execute code, move money, and operate machinery. But there's no standard security layer between "the LLM decided to do X" and "X happened."
+AI agents can now control robots, execute code, move money, and operate machinery. But there's still no standard execution-governance layer between "the model decided to do X" and "X happened."
 
-SINT is that layer. It's an open protocol (Apache-2.0) that routes every agent action — MCP tool calls, ROS 2 commands, API invocations — through a single Policy Gateway.
+SINT is our attempt to build that layer. It's an open protocol (Apache-2.0) that routes every protected action — MCP tool calls, ROS 2 commands, API invocations — through a single Policy Gateway.
 
 Key ideas:
 
@@ -75,10 +75,10 @@ Protocol spec: https://github.com/sint-ai/sint-protocol/blob/main/PROTOCOL.md
 
 ## Reddit (r/artificial, r/MachineLearning, r/robotics)
 
-**Title:** We built an open security protocol for AI agents acting in the physical world (SINT Protocol)
+**Title:** We built an open protocol for governing AI agents with real-world consequences (SINT Protocol)
 
 **Body:**
-The problem: AI agents can now control robots, execute code, move money. There's no standard security layer between "the model decided" and "it happened in the real world."
+The problem: AI agents can now control robots, execute code, and move money. There is still no standard layer for deciding who is authorized, when a human must approve, and what evidence remains afterward.
 
 SINT Protocol is our attempt at solving this. It's a single Policy Gateway that every agent action flows through — whether that's an MCP tool call, a ROS 2 robot command, or an API request.
 

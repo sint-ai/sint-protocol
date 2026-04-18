@@ -326,9 +326,11 @@ describe("InMemoryCircuitBreaker — state machine", () => {
   });
 
   it("HALF_OPEN + failure → back to OPEN", async () => {
-    const cb = new InMemoryCircuitBreaker({ failureThreshold: 1, halfOpenAfterMs: 0 });
+    // Use a non-zero halfOpenAfterMs so OPEN is observable after a HALF_OPEN failure
+    // without being sensitive to millisecond scheduling jitter in CI.
+    const cb = new InMemoryCircuitBreaker({ failureThreshold: 1, halfOpenAfterMs: 20 });
     await cb.recordDenial("a", "x"); // trip via denial
-    await new Promise((r) => setTimeout(r, 2));
+    await new Promise((r) => setTimeout(r, 25));
     expect(await cb.getState("a")).toBe("HALF_OPEN");
     await cb.recordDenial("a", "probe failed");
     expect(await cb.getState("a")).toBe("OPEN");

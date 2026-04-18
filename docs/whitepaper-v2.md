@@ -1,5 +1,7 @@
 # SINT: Autonomous AI Infrastructure for the Physical World
 
+> **Archive note:** This document is an exploratory ecosystem-wide draft and is not the current marketing or product positioning for `sint-protocol`. For the current public protocol story, start with the [repository homepage](https://github.com/sint-ai/sint-protocol), the [pitch](./PITCH.md), the [getting started guide](./getting-started.md), and [docs.sint.gg](https://docs.sint.gg).
+
 ## A Comprehensive Technical Whitepaper
 
 **Version 2.0 — April 2026**
