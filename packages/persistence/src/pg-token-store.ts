@@ -1,6 +1,14 @@
 /**
  * SINT Persistence — PostgreSQL Token Store.
  *
+ * The full canonical token is persisted in a single JSONB `payload` column
+ * so new optional fields on `SintCapabilityToken` (modelConstraints,
+ * attestationRequirements, verifiableComputeRequirements, executionEnvelope,
+ * behavioralConstraints, passportId, delegationDepth, revocationEndpoint…)
+ * round-trip losslessly and signatures verify. A handful of scalar columns
+ * (token_id, subject, issuer, resource, expires_at) is denormalized for
+ * indexed lookup only. See #169.
+ *
  * @module @sint/persistence/pg-token-store
  */
 
@@ -8,21 +16,15 @@ import type pg from "pg";
 import type { SintCapabilityToken, UUIDv7 } from "@pshkv/core";
 import type { TokenStore } from "./interfaces.js";
 
-/** Map a database row to a SintCapabilityToken. */
-function rowToToken(row: any): SintCapabilityToken {
-  return {
-    tokenId: row.token_id,
-    issuer: row.issuer,
-    subject: row.subject,
-    resource: row.resource,
-    actions: row.actions,
-    constraints: row.constraints,
-    delegationChain: row.delegation_chain,
-    issuedAt: row.issued_at,
-    expiresAt: row.expires_at,
-    revocable: row.revocable,
-    signature: row.signature,
-  };
+/**
+ * Reconstruct a `SintCapabilityToken` from a `sint_tokens` row.
+ *
+ * The `payload` column is authoritative — scalar columns are denormalized
+ * for indexing only, so we ignore them here. `pg` already parses JSONB
+ * into a JS object for us.
+ */
+function rowToToken(row: { payload: unknown }): SintCapabilityToken {
+  return row.payload as SintCapabilityToken;
 }
 
 export class PgTokenStore implements TokenStore {
@@ -31,39 +33,28 @@ export class PgTokenStore implements TokenStore {
   async store(token: SintCapabilityToken): Promise<void> {
     await this.pool.query(
       `INSERT INTO sint_tokens
-        (token_id, issuer, subject, resource, actions, constraints,
-         delegation_chain, issued_at, expires_at, revocable, signature)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        (token_id, issuer, subject, resource, expires_at, payload)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (token_id) DO UPDATE SET
          issuer = EXCLUDED.issuer,
          subject = EXCLUDED.subject,
          resource = EXCLUDED.resource,
-         actions = EXCLUDED.actions,
-         constraints = EXCLUDED.constraints,
-         delegation_chain = EXCLUDED.delegation_chain,
-         issued_at = EXCLUDED.issued_at,
          expires_at = EXCLUDED.expires_at,
-         revocable = EXCLUDED.revocable,
-         signature = EXCLUDED.signature`,
+         payload = EXCLUDED.payload`,
       [
         token.tokenId,
         token.issuer,
         token.subject,
         token.resource,
-        JSON.stringify(token.actions),
-        JSON.stringify(token.constraints),
-        JSON.stringify(token.delegationChain),
-        token.issuedAt,
         token.expiresAt,
-        token.revocable,
-        token.signature,
+        JSON.stringify(token),
       ],
     );
   }
 
   async get(tokenId: UUIDv7): Promise<SintCapabilityToken | undefined> {
     const result = await this.pool.query(
-      "SELECT * FROM sint_tokens WHERE token_id = $1",
+      "SELECT payload FROM sint_tokens WHERE token_id = $1",
       [tokenId],
     );
     return result.rows.length > 0 ? rowToToken(result.rows[0]) : undefined;
@@ -71,7 +62,7 @@ export class PgTokenStore implements TokenStore {
 
   async getBySubject(subject: string): Promise<readonly SintCapabilityToken[]> {
     const result = await this.pool.query(
-      "SELECT * FROM sint_tokens WHERE subject = $1",
+      "SELECT payload FROM sint_tokens WHERE subject = $1",
       [subject],
     );
     return result.rows.map(rowToToken);
