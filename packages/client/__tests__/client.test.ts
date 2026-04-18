@@ -10,13 +10,13 @@ import {
   createApp,
   createContext,
   type ServerContext,
-} from "@pshkv/gateway-server";
+} from "@sint-ai/gateway-server";
 import type { Hono } from "hono";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+} from "@sint-ai/gate-capability-tokens";
+import type { SintCapabilityTokenRequest } from "@sint-ai/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

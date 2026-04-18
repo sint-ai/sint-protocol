@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { AnomalyDetector } from "../src/anomaly-detector.js";
-import type { SintWorldState, SintPerceivedObject, SintPose } from "@pshkv/core";
+import type { SintWorldState, SintPerceivedObject, SintPose } from "@sint-ai/core";
 
 const DEFAULT_POSE: SintPose = {
   position: { x: 0, y: 0, z: 0 },

@@ -8,7 +8,7 @@
  * @module @sint/engine-system1/action-predictor
  */
 
-import type { SintActionRecommendation, SintWorldState } from "@pshkv/core";
+import type { SintActionRecommendation, SintWorldState } from "@sint-ai/core";
 
 /**
  * Event payload emitted by the ActionPredictor.

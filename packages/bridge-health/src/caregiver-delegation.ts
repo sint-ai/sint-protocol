@@ -8,8 +8,8 @@
  * @module @pshkv/bridge-health/caregiver-delegation
  */
 
-import type { CapabilityToken } from "@pshkv/gate-capability-tokens";
-import { ApprovalTier } from "@pshkv/core";
+import type { CapabilityToken } from "@sint-ai/gate-capability-tokens";
+import { ApprovalTier } from "@sint-ai/core";
 import type { FHIRResourceType } from "./fhir-mapper.js";
 import type { HealthKitDataType, DataSensitivity } from "./healthkit-mapper.js";
 

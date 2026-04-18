@@ -12,7 +12,7 @@
  * @module @sint/bridge-economy/interfaces
  */
 
-import type { Result } from "@pshkv/core";
+import type { Result } from "@sint-ai/core";
 
 // ─── Balance Port ──────────────────────────────────────────────
 

@@ -7,7 +7,7 @@
  * @module @pshkv/bridge-mqtt
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 /**
  * MQTT Quality of Service levels.

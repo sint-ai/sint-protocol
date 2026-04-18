@@ -3,17 +3,17 @@
  */
 
 import { describe, expect, it, beforeEach } from "vitest";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint-ai/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import { PolicyGateway, type EdgeControlPlanePlugin } from "@pshkv/gate-policy-gateway";
-import { rmfDispatchResourceUri, rmfOperationToAction } from "@pshkv/bridge-open-rmf";
+} from "@sint-ai/gate-capability-tokens";
+import { PolicyGateway, type EdgeControlPlanePlugin } from "@sint-ai/gate-policy-gateway";
+import { rmfDispatchResourceUri, rmfOperationToAction } from "@sint-ai/bridge-open-rmf";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);

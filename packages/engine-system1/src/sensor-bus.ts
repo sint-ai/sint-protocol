@@ -15,8 +15,8 @@ import type {
   SintPose,
   SintSensorReading,
   SintWorldState,
-} from "@pshkv/core";
-import { err, ok } from "@pshkv/core";
+} from "@sint-ai/core";
+import { err, ok } from "@sint-ai/core";
 import type { SensorSource } from "./types.js";
 
 /**

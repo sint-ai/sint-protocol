@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/in-memory-trust-adapter
  */
 
-import { ok, type Result } from "@pshkv/core";
+import { ok, type Result } from "@sint-ai/core";
 import type {
   ITrustPort,
   TrustEvalParams,

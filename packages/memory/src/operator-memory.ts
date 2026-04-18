@@ -1,6 +1,6 @@
 import type { MemoryEntry } from "./types.js";
-import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
-import type { SintEventType } from "@pshkv/core";
+import { generateUUIDv7, nowISO8601 } from "@sint-ai/gate-capability-tokens";
+import type { SintEventType } from "@sint-ai/core";
 
 // Minimal interface for what we need from LedgerWriter
 // (avoids tight coupling to evidence-ledger internals)

@@ -11,7 +11,7 @@
  *    and request comes with bridgeProtocol "ros2", flag as suspicious
  */
 
-import type { SintRequest, SintCapabilityToken } from "@pshkv/core";
+import type { SintRequest, SintCapabilityToken } from "@sint-ai/core";
 
 export interface SupplyChainVerificationResult {
   readonly verified: boolean;

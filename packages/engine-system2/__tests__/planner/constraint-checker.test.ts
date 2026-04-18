@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { PlanConstraintChecker } from "../../src/planner/constraint-checker.js";
-import { ApprovalTier } from "@pshkv/core";
-import type { SintPlan } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
+import type { SintPlan } from "@sint-ai/core";
 
 function makePlan(stepParams: Record<string, unknown>[] = [{}]): SintPlan {
   return {

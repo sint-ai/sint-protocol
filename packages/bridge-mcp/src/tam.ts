@@ -15,11 +15,11 @@
  * @module @sint/bridge-mcp/tam
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import type {
   SintCapabilityToken,
   SintPhysicalConstraints,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import {
   validateDelegationDepth,
   isPointInPolygon,
 } from "../src/index.js";
-import type { SintCapabilityTokenRequest, SintCapabilityToken } from "@pshkv/core";
+import type { SintCapabilityTokenRequest, SintCapabilityToken } from "@sint-ai/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

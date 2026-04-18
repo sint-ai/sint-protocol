@@ -19,7 +19,7 @@
  */
 
 import { hexToBytes } from "@noble/hashes/utils";
-import type { Ed25519PublicKey } from "@pshkv/core";
+import type { Ed25519PublicKey } from "@sint-ai/core";
 
 // Base58btc alphabet (Bitcoin alphabet, no 0/O/I/l)
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";

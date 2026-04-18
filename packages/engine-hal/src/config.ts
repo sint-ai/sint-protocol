@@ -9,8 +9,8 @@
 
 import { readFile } from "node:fs/promises";
 
-import { ok, err } from "@pshkv/core";
-import type { Result } from "@pshkv/core";
+import { ok, err } from "@sint-ai/core";
+import type { Result } from "@sint-ai/core";
 import { z } from "zod";
 
 import type { EngineConfig } from "./types.js";

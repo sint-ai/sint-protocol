@@ -17,7 +17,7 @@ import {
   type UUIDv7,
   err,
   ok,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 import { nowISO8601 } from "./utils.js";
 
 /**

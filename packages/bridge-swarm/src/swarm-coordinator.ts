@@ -29,9 +29,9 @@
  * @module @sint/bridge-swarm/swarm-coordinator
  */
 
-import { ApprovalTier } from "@pshkv/core";
-import type { SintRequest, PolicyDecision } from "@pshkv/core";
-import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { ApprovalTier } from "@sint-ai/core";
+import type { SintRequest, PolicyDecision } from "@sint-ai/core";
+import type { PolicyGateway } from "@sint-ai/gate-policy-gateway";
 import type {
   SwarmConstraints,
   SwarmAgentState,

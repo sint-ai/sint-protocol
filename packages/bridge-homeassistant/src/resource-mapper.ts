@@ -7,7 +7,7 @@
  * @module @pshkv/bridge-homeassistant/resource-mapper
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import { getTierForService, getProfileForDomain } from "./consumer-profiles.js";
 
 export interface HAEntity {

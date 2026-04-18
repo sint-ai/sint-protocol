@@ -8,7 +8,7 @@
  * @module @sint/engine-system1/types
  */
 
-import type { Result, SintSensorModality } from "@pshkv/core";
+import type { Result, SintSensorModality } from "@sint-ai/core";
 
 /**
  * Describes a sensor source registered with the SensorBus.

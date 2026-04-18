@@ -9,7 +9,7 @@
  *
  * @example
  * ```typescript
- * import { SintOS } from "@pshkv/os-core";
+ * import { SintOS } from "@sint-ai/os-core";
  *
  * const os = new SintOS({
  *   gatewayUrl: "http://localhost:4100",
@@ -31,8 +31,8 @@ import type { SintOSConfig, SintOSStatus } from "./types.js";
 import {
   OpenClawAdapter,
   DEFAULT_PHYSICAL_POLICIES,
-} from "@pshkv/openclaw-adapter";
-import type { GovernanceResult } from "@pshkv/openclaw-adapter";
+} from "@sint-ai/openclaw-adapter";
+import type { GovernanceResult } from "@sint-ai/openclaw-adapter";
 import { AvatarBridge } from "./avatar-bridge.js";
 import { EvidenceHUD } from "./evidence-hud.js";
 import type { EvidenceEntry } from "./evidence-hud.js";

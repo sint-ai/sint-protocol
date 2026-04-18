@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { LedgerWriter } from "../src/writer.js";
 import { queryLedger, replayEvents } from "../src/reader.js";
-import type { SintLedgerEvent } from "@pshkv/core";
+import type { SintLedgerEvent } from "@sint-ai/core";
 
 describe("queryLedger", () => {
   const agent1 = "a".repeat(64);

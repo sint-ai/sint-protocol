@@ -7,7 +7,7 @@
  * @module @sint/engine-hal/profiler
  */
 
-import type { SintHardwareDeploymentProfile } from "@pshkv/core";
+import type { SintHardwareDeploymentProfile } from "@sint-ai/core";
 
 /**
  * Hardware specifications used for deployment profile selection.

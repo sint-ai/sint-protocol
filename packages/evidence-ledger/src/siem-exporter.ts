@@ -7,7 +7,7 @@
  * @module @sint/gate-evidence-ledger/siem-exporter
  */
 
-import type { SintLedgerEvent } from "@pshkv/core";
+import type { SintLedgerEvent } from "@sint-ai/core";
 
 export type SiemFormat = "syslog-rfc5424" | "json-lines" | "cef";
 

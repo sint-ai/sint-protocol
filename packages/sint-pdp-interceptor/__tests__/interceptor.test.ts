@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { PolicyDecision, SintRequest } from "@pshkv/core";
-import { ApprovalTier, RiskTier } from "@pshkv/core";
+import type { PolicyDecision, SintRequest } from "@sint-ai/core";
+import { ApprovalTier, RiskTier } from "@sint-ai/core";
 import { SINTPDPInterceptor } from "../src/interceptor.js";
 
 const timestamp = "2026-04-16T20:00:00.000Z";

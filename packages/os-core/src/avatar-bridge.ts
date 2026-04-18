@@ -7,7 +7,7 @@
  */
 
 import type { AvatarConfig } from "./types.js";
-import type { GovernanceResult, SintTier } from "@pshkv/openclaw-adapter";
+import type { GovernanceResult, SintTier } from "@sint-ai/openclaw-adapter";
 
 /** Widget command sent to the avatar. */
 export interface AvatarWidget {

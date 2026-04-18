@@ -16,11 +16,11 @@ import {
   delegateCapabilityToken,
   validateCapabilityToken,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import { PolicyGateway, checkForbiddenCombos } from "@pshkv/gate-policy-gateway";
-import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+} from "@sint-ai/gate-capability-tokens";
+import { PolicyGateway, checkForbiddenCombos } from "@sint-ai/gate-policy-gateway";
+import { LedgerWriter } from "@sint-ai/gate-evidence-ledger";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint-ai/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

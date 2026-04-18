@@ -11,9 +11,9 @@
  * @module @sint/avatar/avatar-registry
  */
 
-import { computeCsml } from "@pshkv/gate-evidence-ledger";
-import type { SintLedgerEvent } from "@pshkv/core";
-import { DEFAULT_CSML_COEFFICIENTS } from "@pshkv/core";
+import { computeCsml } from "@sint-ai/gate-evidence-ledger";
+import type { SintLedgerEvent } from "@sint-ai/core";
+import { DEFAULT_CSML_COEFFICIENTS } from "@sint-ai/core";
 import type { AvatarProfile, AgentPersona, CsmlSnapshot } from "./types.js";
 
 /** Default CSML escalation threshold (human workspace safety margin). */

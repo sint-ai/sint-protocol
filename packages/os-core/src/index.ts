@@ -23,7 +23,7 @@ export {
   OpenClawAdapter,
   SystemStateTracker,
   DEFAULT_PHYSICAL_POLICIES,
-} from "@pshkv/openclaw-adapter";
+} from "@sint-ai/openclaw-adapter";
 export type {
   OpenClawToolCall,
   OpenClawMCPCall,
@@ -32,4 +32,4 @@ export type {
   GovernanceResult,
   OpenClawAdapterConfig,
   CrossSystemPolicy,
-} from "@pshkv/openclaw-adapter";
+} from "@sint-ai/openclaw-adapter";

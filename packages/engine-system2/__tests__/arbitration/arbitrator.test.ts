@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { Arbitrator } from "../../src/arbitration/arbitrator.js";
-import type { SintActionRecommendation, SintWorldState } from "@pshkv/core";
+import type { SintActionRecommendation, SintWorldState } from "@sint-ai/core";
 
 function makeRec(overrides: Partial<SintActionRecommendation> = {}): SintActionRecommendation {
   return {

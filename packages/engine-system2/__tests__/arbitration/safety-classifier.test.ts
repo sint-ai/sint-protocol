@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { classifyActionSafety } from "../../src/arbitration/safety-classifier.js";
-import type { SintActionRecommendation } from "@pshkv/core";
+import type { SintActionRecommendation } from "@sint-ai/core";
 
 function makeRec(overrides: Partial<SintActionRecommendation> = {}): SintActionRecommendation {
   return {

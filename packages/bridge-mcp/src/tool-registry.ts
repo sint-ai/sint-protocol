@@ -8,8 +8,8 @@
  * @module @sint/bridge-mcp/tool-registry
  */
 
-import { hashSha256, sign, verify } from "@pshkv/gate-capability-tokens";
-import { canonicalJsonStringify } from "@pshkv/core";
+import { hashSha256, sign, verify } from "@sint-ai/gate-capability-tokens";
+import { canonicalJsonStringify } from "@sint-ai/core";
 import type { MCPToolAnnotations } from "./types.js";
 
 /**

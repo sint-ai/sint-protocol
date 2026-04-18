@@ -10,11 +10,11 @@ import {
   DEFAULT_MANIFESTS,
 } from "../src/tam.js";
 import type { ToolAuthManifest } from "../src/tam.js";
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@pshkv/gate-capability-tokens";
+} from "@sint-ai/gate-capability-tokens";
 
 function futureISO(h = 1): string {
   return new Date(Date.now() + h * 3_600_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");

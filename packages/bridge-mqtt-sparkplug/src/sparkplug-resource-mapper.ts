@@ -1,4 +1,4 @@
-import { ApprovalTier, type BridgeProfile } from "@pshkv/core";
+import { ApprovalTier, type BridgeProfile } from "@sint-ai/core";
 
 export const SPARKPLUG_NAMESPACE_PREFIX = "spBv";
 

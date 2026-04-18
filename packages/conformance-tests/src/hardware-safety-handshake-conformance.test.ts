@@ -15,24 +15,24 @@ import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
+} from "@sint-ai/gate-capability-tokens";
 import {
   PolicyGateway,
   type SafetyPermitPlugin,
   type SafetyPermitResult,
-} from "@pshkv/gate-policy-gateway";
+} from "@sint-ai/gate-policy-gateway";
 import {
   IotInterceptor,
   createDeviceProfile,
   hardwareSafetyContextFromPayload,
-} from "@pshkv/bridge-iot";
+} from "@sint-ai/bridge-iot";
 import { loadHardwareSafetyHandshakeFixture } from "./fixture-loader.js";
 
 // ---------------------------------------------------------------------------

@@ -9,7 +9,7 @@
  * handles the deny + ledger event for estop/interlock/permit violations.
  */
 
-import type { PolicyDecision, SintRequest, ApprovalTier, SintSiteDeploymentProfile } from "@pshkv/core";
+import type { PolicyDecision, SintRequest, ApprovalTier, SintSiteDeploymentProfile } from "@sint-ai/core";
 import type { IoTDeviceProfile } from "./device-profiles.js";
 import {
   isSafetyTopic,

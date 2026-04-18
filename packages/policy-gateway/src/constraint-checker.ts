@@ -14,12 +14,12 @@ import type {
   Result,
   SintCapabilityToken,
   SintRequest,
-} from "@pshkv/core";
-import { ok, err } from "@pshkv/core";
+} from "@sint-ai/core";
+import { ok, err } from "@sint-ai/core";
 import {
   validatePhysicalConstraints,
   type PhysicalActionContext,
-} from "@pshkv/gate-capability-tokens";
+} from "@sint-ai/gate-capability-tokens";
 
 /** Constraint check failure details. */
 export interface ConstraintViolation {

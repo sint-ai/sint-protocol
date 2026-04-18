@@ -24,7 +24,7 @@ import type {
   ISO8601,
   SintCapabilityToken,
   SintPhysicalConstraints,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 // ─── APS Delegation Scope types ───────────────────────────────────────────────
 

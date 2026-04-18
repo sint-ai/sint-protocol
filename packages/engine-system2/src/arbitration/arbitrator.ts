@@ -14,7 +14,7 @@ import type {
   SintActionRecommendation,
   SintArbitrationDecision,
   SintWorldState,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 /** Event emitted by the arbitrator. */
 export interface ArbitratorEvent {

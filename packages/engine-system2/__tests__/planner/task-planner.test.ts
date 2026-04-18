@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { TaskPlanner } from "../../src/planner/task-planner.js";
-import type { SintWorldState } from "@pshkv/core";
+import type { SintWorldState } from "@sint-ai/core";
 
 function makeWorldState(): SintWorldState {
   return {

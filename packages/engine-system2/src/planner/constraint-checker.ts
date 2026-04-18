@@ -7,8 +7,8 @@
  * @module @sint/engine-system2/planner/constraint-checker
  */
 
-import type { Result, SintPlan } from "@pshkv/core";
-import { ok, err } from "@pshkv/core";
+import type { Result, SintPlan } from "@sint-ai/core";
+import { ok, err } from "@sint-ai/core";
 
 /** Physical constraints derived from capability tokens. */
 export interface TokenConstraints {

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { CapsuleRegistry } from "../src/registry.js";
-import type { SintCapsuleManifest } from "@pshkv/core";
+import type { SintCapsuleManifest } from "@sint-ai/core";
 
 const CAPSULE_ID_1 = "01905f7c-0000-7000-8000-000000000001";
 const CAPSULE_ID_2 = "01905f7c-0000-7000-8000-000000000002";

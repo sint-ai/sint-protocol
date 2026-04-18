@@ -5,7 +5,7 @@ import type {
   SintExecutionContext,
   SintRequest,
   UUIDv7,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 /**
  * Minimal gateway contract used by the adapter.

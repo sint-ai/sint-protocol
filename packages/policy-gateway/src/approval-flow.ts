@@ -14,7 +14,7 @@ import type {
   PolicyDecision,
   SintRequest,
   UUIDv7,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 /**
  * Multi-party quorum requirement for an approval request.

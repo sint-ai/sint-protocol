@@ -16,7 +16,7 @@
  * @module @sint/bridge-swarm/swarm-types
  */
 
-import type { ApprovalTier, SintCapabilityToken } from "@pshkv/core";
+import type { ApprovalTier, SintCapabilityToken } from "@sint-ai/core";
 
 // ─── Swarm constraints ────────────────────────────────────────────────────────
 

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   CONSUMER_DEVICE_PROFILES,
   getProfileForDomain,

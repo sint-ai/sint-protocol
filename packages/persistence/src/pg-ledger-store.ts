@@ -11,7 +11,7 @@ import type {
   LedgerQuery,
   SintLedgerEvent,
   UUIDv7,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 import type { LedgerStore } from "./interfaces.js";
 
 /** Map a database row to a SintLedgerEvent. */

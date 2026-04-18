@@ -30,7 +30,7 @@ import {
   issueCapabilityToken,
   delegateCapabilityToken,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
+} from "@sint-ai/gate-capability-tokens";
 import {
   PolicyGateway,
   DefaultGoalHijackDetector,
@@ -38,11 +38,11 @@ import {
   DefaultSupplyChainVerifier,
   InMemoryCircuitBreaker,
   checkForbiddenCombos,
-} from "@pshkv/gate-policy-gateway";
-import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
-import { InMemoryRateLimitStore } from "@pshkv/persistence";
+} from "@sint-ai/gate-policy-gateway";
+import { LedgerWriter } from "@sint-ai/gate-evidence-ledger";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint-ai/core";
+import { ApprovalTier } from "@sint-ai/core";
+import { InMemoryRateLimitStore } from "@sint-ai/persistence";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

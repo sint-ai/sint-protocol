@@ -11,7 +11,7 @@
  * @module @sint/bridge-economy/adapters/http-client
  */
 
-import { ok, err, type Result } from "@pshkv/core";
+import { ok, err, type Result } from "@sint-ai/core";
 
 /**
  * HTTP client configuration.

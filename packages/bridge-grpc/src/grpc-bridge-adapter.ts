@@ -1,4 +1,4 @@
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   defaultTierForGrpcMethod,
   grpcMethodToResourceUri,

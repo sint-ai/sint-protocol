@@ -17,8 +17,8 @@
  * @module @sint/gate-evidence-ledger/csml
  */
 
-import type { CsmlCoefficients, SintLedgerEvent } from "@pshkv/core";
-import { DEFAULT_CSML_COEFFICIENTS, canonicalJsonStringify } from "@pshkv/core";
+import type { CsmlCoefficients, SintLedgerEvent } from "@sint-ai/core";
+import { DEFAULT_CSML_COEFFICIENTS, canonicalJsonStringify } from "@sint-ai/core";
 
 /**
  * Decomposed CSML component values for transparency and debugging.

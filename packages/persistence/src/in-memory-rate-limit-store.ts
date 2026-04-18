@@ -11,7 +11,7 @@
  * @module @sint/persistence/in-memory-rate-limit-store
  */
 
-import type { RateLimitStore } from "@pshkv/core";
+import type { RateLimitStore } from "@sint-ai/core";
 
 /**
  * In-memory implementation of RateLimitStore.

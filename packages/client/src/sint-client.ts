@@ -6,7 +6,7 @@
  * @module @sint/client/sint-client
  */
 
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import type { SintCapabilityTokenRequest } from "@sint-ai/core";
 
 export interface SintClientOptions {
   /** Gateway base URL (e.g. "http://localhost:3100"). */

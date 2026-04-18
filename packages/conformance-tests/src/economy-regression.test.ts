@@ -18,16 +18,16 @@ import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import { PolicyGateway } from "@pshkv/gate-policy-gateway";
-import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+} from "@sint-ai/gate-capability-tokens";
+import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+import { LedgerWriter } from "@sint-ai/gate-evidence-ledger";
 import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
   SintEventType,
-} from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+} from "@sint-ai/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   EconomyPlugin,
   InMemoryBalanceAdapter,
@@ -37,7 +37,7 @@ import {
   computeActionCost,
   BASE_TOOL_CALL_COST,
   GLOBAL_MARKUP_MULTIPLIER,
-} from "@pshkv/bridge-economy";
+} from "@sint-ai/bridge-economy";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

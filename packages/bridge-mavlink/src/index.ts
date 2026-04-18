@@ -10,7 +10,7 @@
  *
  * @example
  * ```ts
- * import { MAVLinkInterceptor, MAV_CMD, mapMavlinkToSint } from "@pshkv/bridge-mavlink";
+ * import { MAVLinkInterceptor, MAV_CMD, mapMavlinkToSint } from "@sint-ai/bridge-mavlink";
  *
  * const interceptor = new MAVLinkInterceptor({
  *   gateway, agentId, tokenId, humanPresent: false,

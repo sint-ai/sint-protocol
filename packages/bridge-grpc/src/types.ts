@@ -1,4 +1,4 @@
-import type { BridgeProfile } from "@pshkv/core";
+import type { BridgeProfile } from "@sint-ai/core";
 
 export type GrpcCallPattern = "unary" | "client_stream" | "server_stream" | "bidi_stream";
 

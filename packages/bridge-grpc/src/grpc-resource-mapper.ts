@@ -1,4 +1,4 @@
-import { ApprovalTier, type BridgeProfile } from "@pshkv/core";
+import { ApprovalTier, type BridgeProfile } from "@sint-ai/core";
 import type { GrpcCallPattern } from "./types.js";
 
 const SAFETY_CRITICAL_KEYWORDS = [

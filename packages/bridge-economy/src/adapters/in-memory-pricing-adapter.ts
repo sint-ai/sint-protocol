@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/in-memory-pricing-adapter
  */
 
-import { ok, type Result } from "@pshkv/core";
+import { ok, type Result } from "@sint-ai/core";
 import type { IPricingPort, PricingContext, PricingInfo } from "../interfaces.js";
 import { GLOBAL_MARKUP_MULTIPLIER, BASE_TOOL_CALL_COST } from "../pricing-calculator.js";
 

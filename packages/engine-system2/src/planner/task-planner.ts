@@ -12,8 +12,8 @@ import type {
   SintPlan,
   SintPlanStep,
   SintWorldState,
-} from "@pshkv/core";
-import { ok, err, ApprovalTier } from "@pshkv/core";
+} from "@sint-ai/core";
+import { ok, err, ApprovalTier } from "@sint-ai/core";
 
 /** Event emitted by the task planner. */
 export interface TaskPlannerEvent {

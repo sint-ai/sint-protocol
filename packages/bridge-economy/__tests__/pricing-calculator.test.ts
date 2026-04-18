@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { SintRequest } from "@pshkv/core";
+import type { SintRequest } from "@sint-ai/core";
 import {
   computeActionCost,
   getBaseCost,

@@ -6,32 +6,32 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
-import { ApprovalTier, type SintCapabilityToken, type SintCapabilityTokenRequest } from "@pshkv/core";
+import { ApprovalTier, type SintCapabilityToken, type SintCapabilityTokenRequest } from "@sint-ai/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+} from "@sint-ai/gate-capability-tokens";
+import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
 import {
   topicToResourceUri,
   gazeboTopicToResourceUri,
   isaacTopicToResourceUri,
-} from "@pshkv/bridge-ros2";
+} from "@sint-ai/bridge-ros2";
 import {
   rmfDispatchResourceUri,
   rmfOperationToAction,
-} from "@pshkv/bridge-open-rmf";
+} from "@sint-ai/bridge-open-rmf";
 import {
   sparkplugActionForMessageType,
   sparkplugTopicToResourceUri,
-} from "@pshkv/bridge-mqtt-sparkplug";
+} from "@sint-ai/bridge-mqtt-sparkplug";
 import {
   opcUaNodeToResourceUri,
   opcUaOperationToAction,
-} from "@pshkv/bridge-opcua";
+} from "@sint-ai/bridge-opcua";
 import { GrpcBridgeAdapter } from "../../bridge-grpc/src/grpc-bridge-adapter.js";
 
 function futureISO(hoursFromNow: number): string {

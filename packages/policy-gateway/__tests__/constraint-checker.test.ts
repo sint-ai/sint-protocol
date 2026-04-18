@@ -17,7 +17,7 @@ import {
   checkConstraints,
   extractPhysicalContext,
 } from "../src/constraint-checker.js";
-import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
+import type { SintCapabilityToken, SintRequest } from "@sint-ai/core";
 
 const agentId =
   "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6a7b8c9d0e1f2a3b4c5d6a7b8c9d0e1f2";

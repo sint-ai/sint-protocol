@@ -8,7 +8,7 @@
  * @module @pshkv/bridge-health/healthkit-mapper
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 /**
  * HealthKit quantity type identifiers (subset of most common types).

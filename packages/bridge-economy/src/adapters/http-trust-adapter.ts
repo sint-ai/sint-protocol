@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/http-trust-adapter
  */
 
-import { err, type Result } from "@pshkv/core";
+import { err, type Result } from "@sint-ai/core";
 import type { ITrustPort, TrustEvalParams, TrustEvalResult } from "../interfaces.js";
 import { HttpClient, type HttpClientConfig } from "./http-client.js";
 

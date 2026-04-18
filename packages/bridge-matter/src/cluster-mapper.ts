@@ -12,7 +12,7 @@
  * @module @pshkv/bridge-matter/cluster-mapper
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 /**
  * Matter cluster IDs (subset of most common clusters).

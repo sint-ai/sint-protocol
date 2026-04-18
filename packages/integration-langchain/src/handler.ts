@@ -39,7 +39,7 @@ function defaultActionMapper(_toolName: string): string {
  *
  * @example
  * ```typescript
- * import { SintGovernanceHandler } from "@pshkv/integration-langchain";
+ * import { SintGovernanceHandler } from "@sint-ai/integration-langchain";
  *
  * const handler = new SintGovernanceHandler({
  *   gatewayUrl: "http://localhost:4100",

@@ -22,7 +22,7 @@ import {
   capabilityTokenSchema,
   err,
   ok,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 import { computeSigningPayload } from "./issuer.js";
 import { verify } from "./crypto.js";
 

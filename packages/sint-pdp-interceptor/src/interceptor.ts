@@ -1,6 +1,6 @@
-import type { ISO8601, PolicyDecision, SintRequest, UUIDv7 } from "@pshkv/core";
-import { ApprovalTier, RiskTier } from "@pshkv/core";
-import { generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
+import type { ISO8601, PolicyDecision, SintRequest, UUIDv7 } from "@sint-ai/core";
+import { ApprovalTier, RiskTier } from "@sint-ai/core";
+import { generateUUIDv7, nowISO8601 } from "@sint-ai/gate-capability-tokens";
 import type {
   GatePrerequisiteResult,
   GuardedExecutionOptions,

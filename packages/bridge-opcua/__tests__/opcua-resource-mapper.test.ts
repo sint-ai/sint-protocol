@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 import {
   defaultTierForOpcUaOperation,
   isSafetyCriticalNode,

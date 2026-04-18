@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import { validateManifest } from "../src/manifest-validator.js";
-import type { SintCapsuleManifest } from "@pshkv/core";
+import type { SintCapsuleManifest } from "@sint-ai/core";
 
 /** A valid UUIDv7 for test fixtures. */
 const VALID_UUID = "01905f7c-0000-7000-8000-000000000001";

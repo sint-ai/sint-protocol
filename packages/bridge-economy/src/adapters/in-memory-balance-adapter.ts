@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/in-memory-balance-adapter
  */
 
-import { ok, err, type Result } from "@pshkv/core";
+import { ok, err, type Result } from "@sint-ai/core";
 import type { IBalancePort, BalanceInfo } from "../interfaces.js";
 
 /**

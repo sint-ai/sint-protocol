@@ -10,7 +10,7 @@
 import type {
   LedgerQuery,
   SintLedgerEvent,
-} from "@pshkv/core";
+} from "@sint-ai/core";
 
 /**
  * Query the ledger for events matching the given criteria.

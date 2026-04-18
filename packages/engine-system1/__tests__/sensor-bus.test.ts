@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { SensorBus } from "../src/sensor-bus.js";
-import type { SintSensorReading } from "@pshkv/core";
+import type { SintSensorReading } from "@sint-ai/core";
 import type { SensorSource } from "../src/types.js";
 
 function makeReading(

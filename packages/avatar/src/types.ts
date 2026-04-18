@@ -17,7 +17,7 @@
  * @module @sint/avatar/types
  */
 
-import type { ApprovalTier } from "@pshkv/core";
+import type { ApprovalTier } from "@sint-ai/core";
 
 // ─── Core Profile ─────────────────────────────────────────────────────────────
 

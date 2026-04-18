@@ -14,7 +14,7 @@
  * @module @sint/persistence-postgres/pg-rate-limit-store
  */
 
-import type { RateLimitStore } from "@pshkv/core";
+import type { RateLimitStore } from "@sint-ai/core";
 import type { PgPool } from "./pg-pool.js";
 
 /**

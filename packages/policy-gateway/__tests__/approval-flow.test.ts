@@ -7,8 +7,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApprovalQueue } from "../src/approval-flow.js";
 import type { ApprovalEvent } from "../src/approval-flow.js";
-import { ApprovalTier, RiskTier } from "@pshkv/core";
-import type { PolicyDecision, SintRequest } from "@pshkv/core";
+import { ApprovalTier, RiskTier } from "@sint-ai/core";
+import type { PolicyDecision, SintRequest } from "@sint-ai/core";
 
 function makeRequest(id = "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7"): SintRequest {
   return {

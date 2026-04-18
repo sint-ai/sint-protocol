@@ -6,13 +6,13 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
+} from "@sint-ai/gate-capability-tokens";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint-ai/core";
 import {
   A2AInterceptor,
   AgentCardRegistry,

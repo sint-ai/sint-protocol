@@ -11,7 +11,7 @@
  * @module @pshkv/gate-policy-gateway/plugins/delta-human
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 export interface OccupancyState {
   /** Entity ID (e.g., 'person.alice', 'binary_sensor.kitchen_motion') */

@@ -4,7 +4,7 @@
  * @module @sint/persistence/in-memory-token-store
  */
 
-import type { SintCapabilityToken, UUIDv7 } from "@pshkv/core";
+import type { SintCapabilityToken, UUIDv7 } from "@sint-ai/core";
 import type { TokenStore } from "./interfaces.js";
 
 export class InMemoryTokenStore implements TokenStore {

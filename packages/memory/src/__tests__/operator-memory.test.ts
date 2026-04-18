@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { OperatorMemory } from "../operator-memory.js";
 import type { LedgerWriterLike } from "../operator-memory.js";
-import type { SintEventType } from "@pshkv/core";
+import type { SintEventType } from "@sint-ai/core";
 
 interface LedgerCall {
   eventType: SintEventType;

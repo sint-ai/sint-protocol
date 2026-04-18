@@ -11,7 +11,7 @@
  * @module @sint/bridge-economy/pricing-calculator
  */
 
-import type { SintRequest } from "@pshkv/core";
+import type { SintRequest } from "@sint-ai/core";
 import type { PricingInfo } from "./interfaces.js";
 
 // ─── Constants matching the product API ────────────────────────

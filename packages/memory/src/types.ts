@@ -1,4 +1,4 @@
-import type { ISO8601, UUIDv7 } from "@pshkv/core";
+import type { ISO8601, UUIDv7 } from "@sint-ai/core";
 
 export interface MemoryEntry {
   readonly key: string;

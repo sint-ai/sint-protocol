@@ -6,7 +6,7 @@
  * before calling PolicyGateway.intercept().
  */
 
-import type { SintHardwareSafetyContext } from "@pshkv/core";
+import type { SintHardwareSafetyContext } from "@sint-ai/core";
 import type { IoTDeviceProfile } from "./device-profiles.js";
 
 export interface HardwareSafetyPayload {

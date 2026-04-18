@@ -4,7 +4,7 @@ import {
   issueCapabilityToken,
   RevocationStore,
 } from "../src/index.js";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import type { SintCapabilityTokenRequest } from "@sint-ai/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { PerceptionPipeline } from "../src/perception-pipeline.js";
 import { SensorBus } from "../src/sensor-bus.js";
 import { OnnxExecutor } from "../src/onnx-executor.js";
-import type { SintSensorReading } from "@pshkv/core";
+import type { SintSensorReading } from "@sint-ai/core";
 
 function makeSensorBusWithData(): SensorBus {
   const bus = new SensorBus();

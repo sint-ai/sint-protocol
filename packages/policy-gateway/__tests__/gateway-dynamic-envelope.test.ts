@@ -25,8 +25,8 @@ import type { DynamicEnvelopePlugin } from "../src/gateway.js";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
+} from "@sint-ai/gate-capability-tokens";
+import type { SintCapabilityToken, SintRequest } from "@sint-ai/core";
 
 function futureISO(h = 1): string {
   return new Date(Date.now() + h * 3_600_000)

@@ -6,14 +6,14 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { ROS2Interceptor } from "../src/ros2-interceptor.js";
-import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+} from "@sint-ai/gate-capability-tokens";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint-ai/core";
+import { ApprovalTier } from "@sint-ai/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

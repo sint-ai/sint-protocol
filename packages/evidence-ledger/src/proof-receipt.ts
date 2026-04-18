@@ -17,8 +17,8 @@ import type {
   SintLedgerEvent,
   SintProofReceipt,
   UUIDv7,
-} from "@pshkv/core";
-import { canonicalJsonStringify } from "@pshkv/core";
+} from "@sint-ai/core";
+import { canonicalJsonStringify } from "@sint-ai/core";
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex } from "@noble/hashes/utils";
 
