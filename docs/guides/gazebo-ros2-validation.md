@@ -60,3 +60,4 @@ The test `Gazebo model-scoped cmd_vel maps to equivalent ROS2 control-tier seman
 
 - This profile is for pre-production safety validation and integration testing.
 - For production control loops, use dedicated hardware-in-the-loop and safety-controller checks.
+- See also: `docs/guides/ros2-lifecycle-guard-demo.md` for a minimal runnable enforcement-context demo that calls `POST /v1/intercept` before a ROS 2 action executes.
