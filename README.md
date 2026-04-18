@@ -334,6 +334,8 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/bridge-health`](packages/bridge-health) | FHIR R5 + HealthKit/Health Connect with differential privacy, consent tokens, and caregiver delegation — Phase 5 | — |
 | [`@sint/bridge-matter`](packages/bridge-matter) | Matter protocol bridge for unified smart home device governance — Phase 2 | — |
 
+Note: some consumer/health bridges are currently in “prototype API” state. CI may temporarily skip their `build`/`typecheck`/`test` scripts until their public interfaces are aligned with the `@sint/core` request/decision model.
+
 **Reference Implementation (1)**
 
 | Package | Description | Tests |
