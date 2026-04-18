@@ -21,7 +21,7 @@ export type MQTTQoS = 0 | 1 | 2;
  * → T0_OBSERVE: Observation only, no action required
  *
  * QoS 1 (At least once): Guaranteed delivery, possible duplicates
- * → T1_SUGGEST: AI can suggest action, requires confirmation
+ * → T1_PREPARE: Idempotent writes / staging, auto-approved with audit
  *
  * QoS 2 (Exactly once): Guaranteed delivery, no duplicates
  * → T2_ACT: AI can act immediately, logged for review
@@ -45,7 +45,7 @@ export function mapQoSToTier(qos: MQTTQoS): ApprovalTier {
     case 0:
       return ApprovalTier.T0_OBSERVE; // Fire-and-forget
     case 1:
-      return ApprovalTier.T1_SUGGEST; // At-least-once
+      return ApprovalTier.T1_PREPARE; // At-least-once (staging / idempotent writes)
     case 2:
       return ApprovalTier.T2_ACT; // Exactly-once
     default:
@@ -75,7 +75,7 @@ export function mapTierToQoS(tier: ApprovalTier): MQTTQoS {
   switch (tier) {
     case ApprovalTier.T0_OBSERVE:
       return 0; // Best effort sufficient
-    case ApprovalTier.T1_SUGGEST:
+    case ApprovalTier.T1_PREPARE:
       return 1; // At-least-once
     case ApprovalTier.T2_ACT:
     case ApprovalTier.T3_COMMIT:
@@ -258,13 +258,13 @@ export const DEFAULT_SMART_HOME_RULES: MQTTTopicRule[] = [
   // Environmental controls
   {
     pattern: "home/+/thermostat/#",
-    tier: ApprovalTier.T1_SUGGEST,
-    rationale: "HVAC changes should be suggested, not automatic",
+    tier: ApprovalTier.T1_PREPARE,
+    rationale: "HVAC changes are low-impact staged writes; log + allow operator confirmation upstream",
   },
   {
     pattern: "home/+/light/#",
-    tier: ApprovalTier.T1_SUGGEST,
-    rationale: "Lighting changes are low-risk suggestions",
+    tier: ApprovalTier.T1_PREPARE,
+    rationale: "Lighting changes are low-impact staged writes; log for review",
   },
 
   // Sensors (read-only)
@@ -287,7 +287,7 @@ export const DEFAULT_SMART_HOME_RULES: MQTTTopicRule[] = [
   },
   {
     pattern: "home/+/appliance/+/off",
-    tier: ApprovalTier.T1_SUGGEST,
-    rationale: "Turning off appliances is lower risk",
+    tier: ApprovalTier.T1_PREPARE,
+    rationale: "Turning off appliances is lower risk; log for audit",
   },
 ];
