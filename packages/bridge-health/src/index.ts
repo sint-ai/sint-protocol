@@ -64,3 +64,12 @@ export {
   type CaregiverDelegationExtension,
   type CaregiverDelegationToken,
 } from "./caregiver-delegation.js";
+
+// Differential privacy ledger
+export {
+  DifferentialPrivacyLedger,
+  createDPAuditEntry,
+  type PrivacyBudget,
+  type DPQuery,
+  type DPLedgerState,
+} from "./differential-privacy.js";

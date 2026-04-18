@@ -171,6 +171,46 @@ const revocationProof = await revokeCaregiverDelegation(
 - **Max Sensitivity**: PUBLIC, PERSONAL, RAW, MEDICAL (sensitivity ceiling)
 - **Emergency Override**: Allows T3 actions in emergencies
 
+### ✅ Differential Privacy Ledger
+
+Privacy-preserving aggregate queries with epsilon budget tracking:
+
+```typescript
+import { DifferentialPrivacyLedger } from "@pshkv/bridge-health";
+
+const ledger = new DifferentialPrivacyLedger();
+
+// Initialize user budget (10.0 epsilon per month)
+ledger.initializeBudget('did:key:user123', 10.0, 'monthly');
+
+// Run aggregate query with Laplace noise
+const result = await ledger.query({
+  userId: 'did:key:user123',
+  querierId: 'did:key:researcher456',
+  dataType: 'HKQuantityTypeIdentifierStepCount',
+  aggregation: 'daily',
+  epsilon: 0.5, // Privacy cost
+  sensitivity: 'PERSONAL',
+});
+
+console.log(`Noisy answer: ${result.noisyAnswer}`);
+
+// Check remaining budget
+const budget = ledger.getBudget('did:key:user123');
+console.log(`Remaining: ${budget.remaining} epsilon`);
+
+// Patient can export audit trail
+const audit = ledger.exportAudit('did:key:user123');
+console.log(`Total queries: ${audit.queries.length}`);
+console.log(`Total epsilon consumed: ${audit.totalEpsilonConsumed}`);
+```
+
+**Privacy Budget:**
+- **Epsilon**: Privacy loss parameter (lower = more private)
+- **Budget Reset**: Daily, weekly, or monthly
+- **Query History**: All queries logged with epsilon consumed
+- **Public Audit**: Generalized query log (no raw data exposed)
+
 ## Installation
 
 ```bash
