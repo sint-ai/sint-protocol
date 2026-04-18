@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sint.gg/schemas/task-report.schema.json",
+  "title": "SINT Task Report (Action Ledger Event)",
+  "description": "Ledger event reporting the outcome of an agent action. Written to the Evidence Ledger after action.started, action.completed, action.failed, or action.rolledback. This is the SINT equivalent of a 'task report' — an immutable, hash-chained record of what the agent did and how it ended. Derived from SintLedgerEvent in packages/core/src/types/evidence.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["eventId", "sequenceNumber", "timestamp", "eventType", "agentId", "payload", "previousHash", "hash"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "UUID v7 unique identifier for this event."
+    },
+    "sequenceNumber": {
+      "type": ["string", "integer"],
+      "description": "Monotonic sequence number. Serialized as string when it exceeds JS Number.MAX_SAFE_INTEGER (BigInt transport)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp with microsecond precision in UTC (e.g. 2026-04-17T07:45:00.000000Z)."
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "action.started",
+        "action.completed",
+        "action.failed",
+        "action.rolledback"
+      ],
+      "description": "Which phase of the action lifecycle this report records. Only the action.* family is considered a task report; other ledger event types (policy.evaluated, risk.score.computed, etc.) have their own semantics."
+    },
+    "agentId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Ed25519 public key of the agent that executed the action (hex-encoded, 64 chars)."
+    },
+    "tokenId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "Capability token used to authorize the action. Optional for reports not tied to a specific token (e.g. an agent-level report)."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Event-specific payload. Shape varies by eventType but commonly includes requestId, resource, action, outcome fields (bytesWritten, error message, rollback reason).",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+          "description": "Correlates the report back to a SINT request that was previously intercepted."
+        },
+        "resource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "The resource the action was taken on (e.g. ros2:///cmd_vel)."
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "The action performed (e.g. publish, write, delete)."
+        },
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "failure", "rolledback"],
+          "description": "High-level outcome flag. Full detail in type-specific fields."
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message when eventType is action.failed."
+        },
+        "rollbackReason": {
+          "type": "string",
+          "description": "Reason for rollback when eventType is action.rolledback (e.g. 'estop.triggered', 'constraint.violated')."
+        }
+      }
+    },
+    "previousHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the previous event in the chain (hex-encoded). The genesis event uses 64 zeros."
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hash of this event, computed over the canonical JSON of all fields except hash itself. Provides tamper-evidence."
+    },
+    "rosclaw_audit_ref": {
+      "type": "string",
+      "description": "Cross-reference to a ROSClaw audit log entry for cross-system CSML computation (arXiv:2603.26997)."
+    },
+    "rosclaw_failure_mode": {
+      "type": "string",
+      "enum": ["malformed_params", "wrong_action_type", "replan_loop"],
+      "description": "ROSClaw-classified failure mode when eventType is action.failed."
+    },
+    "foundation_model_id": {
+      "type": "string",
+      "description": "Foundation model backend identifier, used for per-model CSML behavioral tracking."
+    }
+  },
+  "examples": [
+    {
+      "eventId": "01964000-5000-7000-8000-000000000003",
+      "sequenceNumber": "7",
+      "timestamp": "2026-04-17T07:45:01.000000Z",
+      "eventType": "action.completed",
+      "agentId": "e894f1b6e542c20cbe2afa7dfc5bf11dada1329927fc1a0ee303d1d4e3691a34",
+      "tokenId": "019d9f21-0c10-718c-b804-66f2ac19582b",
+      "payload": {
+        "requestId": "019d9f21-0c09-7bcb-8309-6296a4eb4a50",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "write",
+        "outcome": "success"
+      },
+      "previousHash": "236078de48cbdef25de171e409598f042d0559bcf4109b15f9b7a9c0bfa8d0cb",
+      "hash": "f5242fae02af9b7c8e1d6a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d"
+    }
+  ]
+}

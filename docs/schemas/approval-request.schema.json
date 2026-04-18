@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sint.gg/schemas/approval-request.schema.json",
+  "title": "SINT Approval Request Message",
+  "description": "Emitted on the approvals WebSocket / SSE stream when a T2_ACT or T3_COMMIT request has been escalated and awaits human review. Corresponds to the APPROVAL_REQUIRED event in apps/gateway-server/src/ws/ws-approval-stream.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "requestId", "agentId", "resource", "action", "tier", "timestamp"],
+  "properties": {
+    "type": {
+      "const": "APPROVAL_REQUIRED",
+      "description": "Message type discriminator."
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "description": "UUID v7 identifier of the intercepted SINT request."
+    },
+    "agentId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Ed25519 public key of the agent (hex-encoded, 64 chars)."
+    },
+    "resource": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Resource the agent is attempting to act on (e.g. ros2:///cmd_vel, mcp://filesystem/writeFile)."
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Action requested against the resource (e.g. publish, write, delete)."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["T2_act", "T3_commit"],
+      "description": "Approval tier that triggered escalation. Only T2+ tiers generate APPROVAL_REQUIRED events."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the escalation decision was made."
+    },
+    "replay": {
+      "type": "boolean",
+      "description": "True if this event was replayed to a newly-connected subscriber (via ?cursor= or ?since= query params). Absent/false for live events."
+    }
+  },
+  "examples": [
+    {
+      "type": "APPROVAL_REQUIRED",
+      "requestId": "019d9f21-0c09-7bcb-8309-6296a4eb4a50",
+      "agentId": "e894f1b6e542c20cbe2afa7dfc5bf11dada1329927fc1a0ee303d1d4e3691a34",
+      "resource": "mcp://filesystem/deleteFile",
+      "action": "delete",
+      "tier": "T3_commit",
+      "timestamp": "2026-04-17T12:00:00.000Z"
+    }
+  ]
+}
