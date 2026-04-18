@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import { A2AInterceptor, AgentCardRegistry } from "@sint-ai/bridge-a2a";
+ * import { A2AInterceptor, AgentCardRegistry } from "@pshkv/bridge-a2a";
  *
  * const registry = new AgentCardRegistry();
  * registry.register(await fetchAgentCard("https://agents.example.com/fleet-manager"));

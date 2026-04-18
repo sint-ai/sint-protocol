@@ -10,8 +10,8 @@
  * @module @sint/engine-capsule-sandbox/sandbox
  */
 
-import type { Result, SintCapsuleManifest, UUIDv7 } from "@sint-ai/core";
-import { ok, err } from "@sint-ai/core";
+import type { Result, SintCapsuleManifest, UUIDv7 } from "@pshkv/core";
+import { ok, err } from "@pshkv/core";
 import type { CapsuleApi, CapsuleError } from "./types.js";
 
 /** Configuration for the CapsuleSandbox. */
@@ -38,7 +38,7 @@ const WASM_PAGE_SIZE_BYTES = 65536;
  *
  * @example
  * ```ts
- * import { CapsuleSandbox } from "@sint-ai/engine-capsule-sandbox";
+ * import { CapsuleSandbox } from "@pshkv/engine-capsule-sandbox";
  *
  * const sandbox = new CapsuleSandbox();
  * const loadResult = sandbox.loadTypeScript(manifest, {

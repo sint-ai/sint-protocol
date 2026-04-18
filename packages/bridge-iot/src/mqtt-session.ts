@@ -18,7 +18,7 @@
  * ```
  */
 
-import type { PolicyDecision, SintRequest } from "@sint-ai/core";
+import type { PolicyDecision, SintRequest } from "@pshkv/core";
 import { mqttTopicToResourceUri } from "./iot-resource-mapper.js";
 
 /** Minimal gateway interface — avoids a package dependency on gate-policy-gateway. */

@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/conformance-tests",
+  "name": "@pshkv/conformance-tests",
   "version": "0.1.0",
   "description": "SINT Protocol conformance and security regression test suite",
   "type": "module",

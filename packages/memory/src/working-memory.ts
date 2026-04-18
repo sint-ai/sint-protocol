@@ -1,5 +1,5 @@
 import type { MemoryEntry } from "./types.js";
-import { nowISO8601 } from "@sint-ai/gate-capability-tokens";
+import { nowISO8601 } from "@pshkv/gate-capability-tokens";
 
 export class WorkingMemory {
   private readonly entries: MemoryEntry[] = [];

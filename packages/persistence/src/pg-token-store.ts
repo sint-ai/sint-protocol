@@ -5,7 +5,7 @@
  */
 
 import type pg from "pg";
-import type { SintCapabilityToken, UUIDv7 } from "@sint-ai/core";
+import type { SintCapabilityToken, UUIDv7 } from "@pshkv/core";
 import type { TokenStore } from "./interfaces.js";
 
 /** Map a database row to a SintCapabilityToken. */

@@ -6,7 +6,7 @@
  * in IotInterceptor.
  */
 
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 
 export type IotDeviceClass = 
   // Industrial IoT

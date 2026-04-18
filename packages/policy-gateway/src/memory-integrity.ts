@@ -13,7 +13,7 @@
  * 8. Action velocity loop (>15 actions with last 5 all on identical resource → hallucination loop)
  */
 
-import type { SintRequest } from "@sint-ai/core";
+import type { SintRequest } from "@pshkv/core";
 
 export interface MemoryIntegrityResult {
   readonly poisoned: boolean;

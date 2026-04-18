@@ -19,8 +19,8 @@ import type { SafetyPermitPlugin, SafetyPermitResult } from "../src/safety-permi
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint-ai/gate-capability-tokens";
-import type { SintCapabilityToken, SintRequest } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

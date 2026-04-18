@@ -16,8 +16,8 @@ import {
   type SintRequest,
   type TierAssignmentRule,
   DEFAULT_TIER_RULES,
-} from "@sint-ai/core";
-import type { AgentTrustLevel } from "@sint-ai/core";
+} from "@pshkv/core";
+import type { AgentTrustLevel } from "@pshkv/core";
 
 /** Result of tier assignment. */
 export interface TierAssignment {

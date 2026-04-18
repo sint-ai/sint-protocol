@@ -9,8 +9,8 @@
  * @module @sint/engine-system1/onnx-executor
  */
 
-import type { Result, SintHardwareDeploymentProfile } from "@sint-ai/core";
-import { err, ok } from "@sint-ai/core";
+import type { Result, SintHardwareDeploymentProfile } from "@pshkv/core";
+import { err, ok } from "@pshkv/core";
 import type { OnnxModelExecutor } from "./types.js";
 
 /**

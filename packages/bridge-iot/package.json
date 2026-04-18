@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-iot",
+  "name": "@pshkv/bridge-iot",
   "version": "0.1.0",
   "description": "SINT Bridge \u2014 MQTT/CoAP edge IoT bridge for constrained devices",
   "type": "module",

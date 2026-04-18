@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint-ai/core";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
 import {
   delegateCapabilityToken,
   type DelegationParams,
@@ -14,8 +14,8 @@ import {
   issueCapabilityToken,
   nowISO8601,
   validateCapabilityToken,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);

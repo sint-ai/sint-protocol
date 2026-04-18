@@ -8,7 +8,7 @@
  * @module @pshkv/bridge-health/fhir-mapper
  */
 
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 
 /**
  * FHIR R5 resource types supported by this bridge.

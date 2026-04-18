@@ -26,8 +26,8 @@
  * @module @sint/bridge-economy/economy-plugin
  */
 
-import type { PolicyDecision, SintRequest, ApprovalTier, RiskTier } from "@sint-ai/core";
-import type { LedgerEmitter } from "@sint-ai/gate-policy-gateway";
+import type { PolicyDecision, SintRequest, ApprovalTier, RiskTier } from "@pshkv/core";
+import type { LedgerEmitter } from "@pshkv/gate-policy-gateway";
 import type {
   IBalancePort,
   IBudgetPort,

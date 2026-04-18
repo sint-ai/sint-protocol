@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { generateKeypair } from "@sint-ai/gate-capability-tokens";
+import { generateKeypair } from "@pshkv/gate-capability-tokens";
 import { InMemoryToolRegistry } from "../src/tool-registry.js";
 import type { ToolDefinition } from "../src/tool-registry.js";
 

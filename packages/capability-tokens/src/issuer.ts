@@ -21,7 +21,7 @@ import {
   capabilityTokenRequestSchema,
   err,
   ok,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import { sign } from "./crypto.js";
 import { generateUUIDv7, nowISO8601 } from "./utils.js";
 

@@ -4,15 +4,15 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { createSintMiddleware } from "../src/mcp-middleware.js";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
   generateUUIDv7,
   nowISO8601,
-} from "@sint-ai/gate-capability-tokens";
-import { RevocationStore } from "@sint-ai/gate-capability-tokens";
-import type { SintCapabilityTokenRequest, SintCapabilityToken } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import { RevocationStore } from "@pshkv/gate-capability-tokens";
+import type { SintCapabilityTokenRequest, SintCapabilityToken } from "@pshkv/core";
 import type { MCPToolCall } from "../src/types.js";
 
 function futureISO(hours: number): string {

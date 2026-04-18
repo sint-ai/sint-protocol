@@ -14,8 +14,8 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
-import { ApprovalQueue } from "@sint-ai/gate-policy-gateway";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
@@ -23,20 +23,20 @@ import {
   keyToDid,
   didToKey,
   isValidDid,
-} from "@sint-ai/gate-capability-tokens";
+} from "@pshkv/gate-capability-tokens";
 import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import {
   A2AInterceptor,
   AgentCardRegistry,
   buildResourceUri,
   type A2AAgentCard,
   type A2ASendTaskParams,
-} from "@sint-ai/bridge-a2a";
-import { InMemoryRateLimitStore } from "@sint-ai/persistence";
+} from "@pshkv/bridge-a2a";
+import { InMemoryRateLimitStore } from "@pshkv/persistence";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

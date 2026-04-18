@@ -8,8 +8,8 @@
  * @module @pshkv/bridge-matter/interceptor
  */
 
-import type { PolicyGateway, PolicyContext } from "@sint-ai/gate-policy-gateway";
-import { ApprovalTier } from "@sint-ai/core";
+import type { PolicyGateway, PolicyContext } from "@pshkv/gate-policy-gateway";
+import { ApprovalTier } from "@pshkv/core";
 import {
   mapMatterToSint,
   isPhysicalActuatorCluster,

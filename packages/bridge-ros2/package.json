@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-ros2",
+  "name": "@pshkv/bridge-ros2",
   "version": "0.1.0",
   "description": "SINT Bridge \u2014 ROS 2 adapter: intercepts robot topic publishes and service calls through the security gate",
   "type": "module",

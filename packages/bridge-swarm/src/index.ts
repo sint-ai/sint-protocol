@@ -10,7 +10,7 @@
  *
  * @example
  * ```ts
- * import { SwarmCoordinator } from "@sint-ai/bridge-swarm";
+ * import { SwarmCoordinator } from "@pshkv/bridge-swarm";
  *
  * const coordinator = new SwarmCoordinator({
  *   agentGateways: new Map([

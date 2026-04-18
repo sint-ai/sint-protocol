@@ -27,7 +27,7 @@ interface ToolLike {
  *
  * @example
  * ```typescript
- * import { sintGovernedTool } from "@sint-ai/integration-langchain";
+ * import { sintGovernedTool } from "@pshkv/integration-langchain";
  *
  * const governedSearch = sintGovernedTool(searchTool, {
  *   gatewayUrl: "http://localhost:4100",
@@ -91,7 +91,7 @@ export function sintGovernedTool<T extends ToolLike>(
  *
  * @example
  * ```typescript
- * import { wrapToolsWithGovernance } from "@sint-ai/integration-langchain";
+ * import { wrapToolsWithGovernance } from "@pshkv/integration-langchain";
  *
  * const governedTools = wrapToolsWithGovernance(tools, {
  *   gatewayUrl: "http://localhost:4100",

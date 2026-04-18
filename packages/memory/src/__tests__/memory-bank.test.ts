@@ -3,7 +3,7 @@ import { MemoryBank } from "../memory-bank.js";
 import { WorkingMemory } from "../working-memory.js";
 import { OperatorMemory } from "../operator-memory.js";
 import type { LedgerWriterLike } from "../operator-memory.js";
-import type { SintEventType } from "@sint-ai/core";
+import type { SintEventType } from "@pshkv/core";
 
 function makeMockLedger(): LedgerWriterLike {
   return {

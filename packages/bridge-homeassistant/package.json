@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-homeassistant",
+  "name": "@pshkv/bridge-homeassistant",
   "version": "0.1.0",
   "description": "SINT Bridge — Home Assistant MCP interceptor: governs AI agent access to smart home devices",
   "type": "module",

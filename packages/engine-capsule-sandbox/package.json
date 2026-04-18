@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/engine-capsule-sandbox",
+  "name": "@pshkv/engine-capsule-sandbox",
   "version": "0.1.0",
   "description": "SINT Protocol Capsule Sandbox — WASM/TS capsule loading, validation, and sandboxed execution",
   "type": "module",

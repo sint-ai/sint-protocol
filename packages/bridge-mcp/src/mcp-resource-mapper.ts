@@ -9,7 +9,7 @@
  * @module @sint/bridge-mcp/mcp-resource-mapper
  */
 
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 import type { MCPRiskHint, MCPToolAnnotations, MCPToolCall } from "./types.js";
 
 export type { MCPToolAnnotations };

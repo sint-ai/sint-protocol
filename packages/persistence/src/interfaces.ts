@@ -13,7 +13,7 @@ import type {
   SintCapabilityToken,
   SintLedgerEvent,
   UUIDv7,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 
 /**
  * Persistent storage for ledger events.

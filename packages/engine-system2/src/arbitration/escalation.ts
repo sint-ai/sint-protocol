@@ -7,7 +7,7 @@
  * @module @sint/engine-system2/arbitration/escalation
  */
 
-import type { SintArbitrationDecision } from "@sint-ai/core";
+import type { SintArbitrationDecision } from "@pshkv/core";
 
 /** Event emitted by the escalation manager. */
 export interface EscalationEvent {

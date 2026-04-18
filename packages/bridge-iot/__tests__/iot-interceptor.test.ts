@@ -28,7 +28,7 @@ import { describe, it, expect, vi } from "vitest";
 import { IotInterceptor } from "../src/iot-interceptor.js";
 import type { IotGatewayLike } from "../src/iot-interceptor.js";
 import { createDeviceProfile } from "../src/device-profiles.js";
-import type { PolicyDecision, SintRequest } from "@sint-ai/core";
+import type { PolicyDecision, SintRequest } from "@pshkv/core";
 
 const AGENT_ID = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";
 const TOKEN_ID = "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7";

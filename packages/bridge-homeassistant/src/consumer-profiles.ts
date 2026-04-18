@@ -8,7 +8,7 @@
  * @module @pshkv/bridge-homeassistant/consumer-profiles
  */
 
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 
 export type ConsumerDeviceClass =
   | "smart-lock"

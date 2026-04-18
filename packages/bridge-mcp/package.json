@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-mcp",
+  "name": "@pshkv/bridge-mcp",
   "version": "0.1.0",
   "description": "SINT Bridge — MCP adapter: intercepts AI agent tool calls through the security gate",
   "type": "module",

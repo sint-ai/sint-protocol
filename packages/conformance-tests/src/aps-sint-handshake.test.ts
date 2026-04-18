@@ -24,11 +24,11 @@ import {
   RevocationStore,
   keyToDid,
   didToKey,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
-import { LedgerWriter } from "@sint-ai/gate-evidence-ledger";
-import { MCPInterceptor } from "@sint-ai/bridge-mcp";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
 import { loadAPSSINTHandshakeFixture } from "./fixture-loader.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

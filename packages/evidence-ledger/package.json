@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/gate-evidence-ledger",
+  "name": "@pshkv/gate-evidence-ledger",
   "version": "0.1.0",
   "description": "SINT Gate — Append-only tamper-evident Evidence Ledger",
   "type": "module",

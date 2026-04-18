@@ -8,7 +8,7 @@
  */
 
 import type { Redis } from "ioredis";
-import type { UUIDv7 } from "@sint-ai/core";
+import type { UUIDv7 } from "@pshkv/core";
 import type { RevocationBus, RevocationEvent } from "./interfaces.js";
 
 const CHANNEL = "sint:revocations";

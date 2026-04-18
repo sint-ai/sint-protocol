@@ -9,7 +9,7 @@ import {
   applyX402Quotes,
   selectCostAwareRoute,
   type IX402Port,
-} from "@sint-ai/bridge-economy";
+} from "@pshkv/bridge-economy";
 import { loadEconomyRoutingFixture } from "./fixture-loader.js";
 
 describe("Economy Fixture Conformance", () => {

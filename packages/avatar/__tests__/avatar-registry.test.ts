@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from "vitest";
 import { AvatarRegistry, DEFAULT_CSML_THETA } from "../src/avatar-registry.js";
-import type { SintLedgerEvent } from "@sint-ai/core";
+import type { SintLedgerEvent } from "@pshkv/core";
 
 const GENESIS = "0000000000000000000000000000000000000000000000000000000000000000";
 const AGENT_A = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";

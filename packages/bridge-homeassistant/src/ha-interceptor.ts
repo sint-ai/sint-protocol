@@ -11,9 +11,9 @@
  * @module @pshkv/bridge-homeassistant/interceptor
  */
 
-import type { PolicyGateway, PolicyContext, PolicyDecision } from "@sint-ai/gate-policy-gateway";
-import type { CapabilityToken } from "@sint-ai/gate-capability-tokens";
-import { ApprovalTier } from "@sint-ai/core";
+import type { PolicyGateway, PolicyContext, PolicyDecision } from "@pshkv/gate-policy-gateway";
+import type { CapabilityToken } from "@pshkv/gate-capability-tokens";
+import { ApprovalTier } from "@pshkv/core";
 import {
   parseEntityId,
   mapServiceCallToSint,

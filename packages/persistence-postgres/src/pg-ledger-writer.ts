@@ -18,8 +18,8 @@
  * @module @sint/persistence-postgres/pg-ledger-writer
  */
 
-import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@sint-ai/core";
-import type { LedgerStore } from "@sint-ai/persistence";
+import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@pshkv/core";
+import type { LedgerStore } from "@pshkv/persistence";
 import type { PgPool } from "./pg-pool.js";
 
 /** Map a raw database row to a SintLedgerEvent. */

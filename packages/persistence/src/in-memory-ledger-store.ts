@@ -7,7 +7,7 @@
  * @module @sint/persistence/in-memory-ledger-store
  */
 
-import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@sint-ai/core";
+import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@pshkv/core";
 import type { LedgerStore } from "./interfaces.js";
 
 export class InMemoryLedgerStore implements LedgerStore {

@@ -14,13 +14,13 @@ import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway, checkForbiddenCombos } from "@sint-ai/gate-policy-gateway";
-import { LedgerWriter } from "@sint-ai/gate-evidence-ledger";
-import { MCPInterceptor } from "@sint-ai/bridge-mcp";
-import type { MCPToolCall } from "@sint-ai/bridge-mcp";
-import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@sint-ai/core";
-import { ApprovalTier } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, checkForbiddenCombos } from "@pshkv/gate-policy-gateway";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { MCPInterceptor } from "@pshkv/bridge-mcp";
+import type { MCPToolCall } from "@pshkv/bridge-mcp";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
+import { ApprovalTier } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

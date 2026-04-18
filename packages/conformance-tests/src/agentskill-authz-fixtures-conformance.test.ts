@@ -12,15 +12,15 @@ import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
   RevocationStore,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   loadAgentSkillDelegatedAuthorityFixture,
   type AgentSkillDelegatedAuthorityFixture,

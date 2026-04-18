@@ -8,7 +8,7 @@
  */
 
 import type { CapabilityToken } from "../capability-token.js";
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 
 /**
  * Duress context indicators.

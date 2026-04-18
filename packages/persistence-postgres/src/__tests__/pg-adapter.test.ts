@@ -11,7 +11,7 @@ import { PgRevocationStore } from "../pg-revocation-store.js";
 import { PgRateLimitStore } from "../pg-rate-limit-store.js";
 import { runMigrations } from "../migrations.js";
 import type { PgPool, PgQueryResult } from "../pg-pool.js";
-import type { SintLedgerEvent, UUIDv7 } from "@sint-ai/core";
+import type { SintLedgerEvent, UUIDv7 } from "@pshkv/core";
 
 // ---------------------------------------------------------------------------
 // Mock pool factory

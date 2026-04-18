@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-a2a",
+  "name": "@pshkv/bridge-a2a",
   "version": "0.1.0",
   "description": "SINT Bridge \u2014 Google A2A adapter: secures agent-to-agent task delegation through the policy gateway",
   "type": "module",

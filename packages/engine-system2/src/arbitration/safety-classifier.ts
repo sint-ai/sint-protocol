@@ -7,7 +7,7 @@
  * @module @sint/engine-system2/arbitration/safety-classifier
  */
 
-import type { SintActionRecommendation } from "@sint-ai/core";
+import type { SintActionRecommendation } from "@pshkv/core";
 
 /** Result of a safety classification. */
 export interface SafetyClassification {

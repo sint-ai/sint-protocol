@@ -11,7 +11,7 @@
  * @module @sint/engine-system1/anomaly-detector
  */
 
-import type { SintAnomalyFlag, SintWorldState, Point3D } from "@sint-ai/core";
+import type { SintAnomalyFlag, SintWorldState, Point3D } from "@pshkv/core";
 import type { AnomalyConfig } from "./types.js";
 import { DEFAULT_ANOMALY_CONFIG } from "./types.js";
 

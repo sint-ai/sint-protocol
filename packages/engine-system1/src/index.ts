@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import { SensorBus, OnnxExecutor, PerceptionPipeline } from "@sint-ai/engine-system1";
+ * import { SensorBus, OnnxExecutor, PerceptionPipeline } from "@pshkv/engine-system1";
  *
  * const bus = new SensorBus();
  * const executor = OnnxExecutor.createMock();

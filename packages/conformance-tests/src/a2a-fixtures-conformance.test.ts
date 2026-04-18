@@ -13,18 +13,18 @@ import type {
   ApprovalTier,
   SintCapabilityToken,
   SintCapabilityTokenRequest,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   A2AInterceptor,
   type A2AAgentCard,
   type A2ASendTaskParams,
-} from "@sint-ai/bridge-a2a";
+} from "@pshkv/bridge-a2a";
 import { loadA2ASkillCapabilityEnforcementFixture } from "./fixture-loader.js";
 
 function futureISO(hoursFromNow: number): string {

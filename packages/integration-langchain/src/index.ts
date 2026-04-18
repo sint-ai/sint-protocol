@@ -6,7 +6,7 @@
  *
  * Usage (LangChain JS/TS):
  *
- *   import { SintGovernanceHandler } from "@sint-ai/integration-langchain";
+ *   import { SintGovernanceHandler } from "@pshkv/integration-langchain";
  *
  *   const handler = new SintGovernanceHandler({
  *     gatewayUrl: "http://localhost:4100",

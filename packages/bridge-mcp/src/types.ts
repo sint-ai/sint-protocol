@@ -14,9 +14,9 @@ import type {
   ISO8601,
   PolicyDecision,
   UUIDv7,
-} from "@sint-ai/core";
-import type { RevocationStore } from "@sint-ai/gate-capability-tokens";
-import type { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/core";
+import type { RevocationStore } from "@pshkv/gate-capability-tokens";
+import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 /**
  * MCP tool annotations as defined in the MCP specification §tool-annotations.

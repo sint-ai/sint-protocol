@@ -21,8 +21,8 @@ import type {
   SintEventType,
   SintLedgerEvent,
   UUIDv7,
-} from "@sint-ai/core";
-import { ok, err, canonicalJsonStringify } from "@sint-ai/core";
+} from "@pshkv/core";
+import { ok, err, canonicalJsonStringify } from "@pshkv/core";
 import { randomBytes } from "node:crypto";
 
 /** Genesis hash — the hash chain starts here. */

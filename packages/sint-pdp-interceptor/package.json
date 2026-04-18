@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/sint-pdp-interceptor",
+  "name": "@pshkv/sint-pdp-interceptor",
   "version": "0.1.0",
   "description": "SINT PDP interceptor adapter for MCP SEP-1763 style policy decision point integration",
   "type": "module",

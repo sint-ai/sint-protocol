@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/memory",
+  "name": "@pshkv/memory",
   "version": "0.1.0",
   "description": "Persistent operator memory with ledger-backed audit trail for SINT Protocol",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-mqtt",
+  "name": "@pshkv/bridge-mqtt",
   "version": "0.1.0",
   "description": "SINT Protocol MQTT bridge with QoS-to-tier mapping for IoT devices",
   "main": "src/index.ts",

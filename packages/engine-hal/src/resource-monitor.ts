@@ -10,8 +10,8 @@
 
 import os from "node:os";
 
-import { ok, err } from "@sint-ai/core";
-import type { Result, ISO8601 } from "@sint-ai/core";
+import { ok, err } from "@pshkv/core";
+import type { Result, ISO8601 } from "@pshkv/core";
 
 import type { ResourceSnapshot, ResourceThresholds } from "./types.js";
 import { DEFAULT_THRESHOLDS } from "./types.js";

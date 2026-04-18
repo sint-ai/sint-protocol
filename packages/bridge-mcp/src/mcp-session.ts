@@ -7,7 +7,7 @@
  * @module @sint/bridge-mcp/mcp-session
  */
 
-import type { Ed25519PublicKey, ISO8601, UUIDv7 } from "@sint-ai/core";
+import type { Ed25519PublicKey, ISO8601, UUIDv7 } from "@pshkv/core";
 import type { MCPSession } from "./types.js";
 
 /** Configuration for creating a new MCP session. */

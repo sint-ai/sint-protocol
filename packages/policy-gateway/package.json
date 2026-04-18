@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/gate-policy-gateway",
+  "name": "@pshkv/gate-policy-gateway",
   "version": "0.1.0",
   "description": "SINT Gate — Policy Gateway: the single choke point for all agent actions",
   "type": "module",

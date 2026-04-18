@@ -1,4 +1,4 @@
-import { ApprovalTier, type BridgeProfile } from "@sint-ai/core";
+import { ApprovalTier, type BridgeProfile } from "@pshkv/core";
 
 export type RmfOperation =
   | "fleet.status"

@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { AvatarRegistry, CsmlEscalator, DEFAULT_CSML_THETA } from "@sint-ai/avatar";
+ * import { AvatarRegistry, CsmlEscalator, DEFAULT_CSML_THETA } from "@pshkv/avatar";
  *
  * const registry = new AvatarRegistry();
  * const escalator = new CsmlEscalator({

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EscalationManager } from "../../src/arbitration/escalation.js";
-import type { SintArbitrationDecision } from "@sint-ai/core";
+import type { SintArbitrationDecision } from "@pshkv/core";
 
 function makeOverrideDecision(): SintArbitrationDecision {
   return {

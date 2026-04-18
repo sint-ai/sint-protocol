@@ -11,24 +11,24 @@ import {
   type SintCapabilityToken,
   type SintCapabilityTokenRequest,
   type SintRequest,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
   RevocationStore,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   sparkplugActionForMessageType,
   sparkplugTopicToResourceUri,
-} from "@sint-ai/bridge-mqtt-sparkplug";
+} from "@pshkv/bridge-mqtt-sparkplug";
 import {
   rmfDispatchResourceUri,
   rmfOperationToAction,
-} from "@sint-ai/bridge-open-rmf";
-import { opcUaNodeToResourceUri, opcUaOperationToAction } from "@sint-ai/bridge-opcua";
+} from "@pshkv/bridge-open-rmf";
+import { opcUaNodeToResourceUri, opcUaOperationToAction } from "@pshkv/bridge-opcua";
 import {
   loadHardwareSafetyHandshakeFixture,
   loadOpcUaSafetyControlFixture,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateKeypair, sign, verify } from "@sint-ai/gate-capability-tokens";
+import { generateKeypair, sign, verify } from "@pshkv/gate-capability-tokens";
 import { LedgerWriter } from "../src/writer.js";
 import {
   computeReceiptLinkageHash,

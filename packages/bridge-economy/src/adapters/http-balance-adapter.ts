@@ -9,7 +9,7 @@
  * @module @sint/bridge-economy/adapters/http-balance-adapter
  */
 
-import { err, type Result } from "@sint-ai/core";
+import { err, type Result } from "@pshkv/core";
 import type { IBalancePort, BalanceInfo } from "../interfaces.js";
 import { HttpClient, type HttpClientConfig } from "./http-client.js";
 

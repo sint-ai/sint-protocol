@@ -16,7 +16,7 @@
  * - OTA firmware update → T3_COMMIT (critical)
  */
 
-import { ApprovalTier } from "@sint-ai/core";
+import { ApprovalTier } from "@pshkv/core";
 
 export type IotProtocol = "mqtt" | "coap";
 export type IotQos = 0 | 1 | 2;

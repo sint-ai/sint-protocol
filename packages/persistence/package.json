@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/persistence",
+  "name": "@pshkv/persistence",
   "version": "0.1.0",
   "description": "SINT Persistence — storage interfaces and adapters for ledger, tokens, and revocation",
   "type": "module",

@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/http-pricing-adapter
  */
 
-import { ok, type Result } from "@sint-ai/core";
+import { ok, type Result } from "@pshkv/core";
 import type { IPricingPort, PricingContext, PricingInfo } from "../interfaces.js";
 import { HttpClient, type HttpClientConfig } from "./http-client.js";
 import { BASE_TOOL_CALL_COST, GLOBAL_MARKUP_MULTIPLIER } from "../pricing-calculator.js";

@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/persistence-postgres",
+  "name": "@pshkv/persistence-postgres",
   "version": "0.1.0",
   "description": "SINT Persistence — production PostgreSQL backend for EvidenceLedger and RevocationStore",
   "type": "module",

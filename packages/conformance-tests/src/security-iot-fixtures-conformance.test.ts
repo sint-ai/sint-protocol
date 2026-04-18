@@ -11,20 +11,20 @@ import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
-} from "@sint-ai/core";
+} from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
   issueCapabilityToken,
   nowISO8601,
-} from "@sint-ai/gate-capability-tokens";
-import { PolicyGateway, DefaultSupplyChainVerifier } from "@sint-ai/gate-policy-gateway";
+} from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, DefaultSupplyChainVerifier } from "@pshkv/gate-policy-gateway";
 import {
   MqttAuthorizationError,
   MqttGatewaySession,
   mqttTopicToResourceUri,
   type MqttClientAdapter,
-} from "@sint-ai/bridge-iot";
+} from "@pshkv/bridge-iot";
 import {
   loadMqttGatewaySessionFixture,
   loadSupplyChainVerificationFixture,

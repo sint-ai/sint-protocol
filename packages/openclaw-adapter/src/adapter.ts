@@ -10,7 +10,7 @@
  *
  * @example
  * ```typescript
- * import { OpenClawAdapter } from "@sint-ai/openclaw-adapter";
+ * import { OpenClawAdapter } from "@pshkv/openclaw-adapter";
  *
  * const adapter = new OpenClawAdapter({
  *   gatewayUrl: "http://localhost:4100",

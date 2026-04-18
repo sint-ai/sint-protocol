@@ -11,9 +11,9 @@ import {
   generateKeypair,
   issueCapabilityToken,
   RevocationStore,
-} from "@sint-ai/gate-capability-tokens";
-import { InMemoryRateLimitStore } from "@sint-ai/persistence";
-import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import { InMemoryRateLimitStore } from "@pshkv/persistence";
+import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);

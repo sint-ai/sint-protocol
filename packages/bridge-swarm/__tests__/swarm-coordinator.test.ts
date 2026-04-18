@@ -4,13 +4,13 @@
 
 import { describe, it, expect } from "vitest";
 import { SwarmCoordinator } from "../src/swarm-coordinator.js";
-import { PolicyGateway } from "@sint-ai/gate-policy-gateway";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
-} from "@sint-ai/gate-capability-tokens";
-import { ApprovalTier } from "@sint-ai/core";
-import type { SintCapabilityToken, SintRequest } from "@sint-ai/core";
+} from "@pshkv/gate-capability-tokens";
+import { ApprovalTier } from "@pshkv/core";
+import type { SintCapabilityToken, SintRequest } from "@pshkv/core";
 
 function futureISO(h = 1): string {
   return new Date(Date.now() + h * 3_600_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");

@@ -10,7 +10,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import pg from "pg";
 import { PgLedgerStore } from "../src/pg-ledger-store.js";
 import { PgTokenStore } from "../src/pg-token-store.js";
-import type { SintLedgerEvent, SintCapabilityToken } from "@sint-ai/core";
+import type { SintLedgerEvent, SintCapabilityToken } from "@pshkv/core";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

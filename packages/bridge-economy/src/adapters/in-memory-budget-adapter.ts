@@ -7,7 +7,7 @@
  * @module @sint/bridge-economy/adapters/in-memory-budget-adapter
  */
 
-import { ok, type Result } from "@sint-ai/core";
+import { ok, type Result } from "@pshkv/core";
 import type { IBudgetPort, BudgetCheckParams, BudgetCheckResult } from "../interfaces.js";
 
 /**

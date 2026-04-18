@@ -1,5 +1,5 @@
 {
-  "name": "@sint-ai/bridge-health",
+  "name": "@pshkv/bridge-health",
   "version": "0.1.0",
   "description": "SINT Bridge — Health & Wellbeing: FHIR + HealthKit/Health Connect governance with consent primitives",
   "type": "module",
