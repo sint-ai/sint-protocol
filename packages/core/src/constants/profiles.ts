@@ -123,6 +123,19 @@ export const SINT_BRIDGE_PROFILES: readonly BridgeProfile[] = [
     },
     notes: "Consumer smart home ingress via Home Assistant MCP Server. Phase 1 physical AI governance.",
   },
+  {
+    bridgeId: "matter",
+    protocol: "matter",
+    version: "1.3+",
+    resourcePattern: "matter://*/**",
+    defaultTierByAction: {
+      read: ApprovalTier.T0_OBSERVE,
+      write: ApprovalTier.T1_PREPARE,
+      invoke: ApprovalTier.T2_ACT,
+      subscribe: ApprovalTier.T0_OBSERVE,
+    },
+    notes: "Matter-certified smart home devices. Phase 2 physical AI governance. Cross-vendor interoperability.",
+  },
 ] as const;
 
 /** First-class site profiles for 2026 industrial wedge deployments. */
@@ -151,8 +164,8 @@ export const SINT_SITE_PROFILES: readonly SiteProfile[] = [
   {
     siteId: "home-safe",
     deploymentProfile: "home-safe",
-    bridges: ["homeassistant", "mcp", "a2a"],
+    bridges: ["homeassistant", "matter", "mcp", "a2a"],
     defaultEscalationTheta: 0.15,
-    notes: "Consumer smart home with family occupancy awareness. Phase 1 consumer deployment profile.",
+    notes: "Consumer smart home with family occupancy awareness. Phase 1-2 consumer deployment profile.",
   },
 ] as const;
