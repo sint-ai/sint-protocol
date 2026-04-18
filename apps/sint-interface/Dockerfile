@@ -25,7 +25,7 @@ COPY packages/bridge-economy/package.json     packages/bridge-economy/
 COPY apps/gateway-server/package.json         apps/gateway-server/
 
 # Install only dependencies needed for the interface
-RUN pnpm install --frozen-lockfile --filter @sint/interface...
+RUN pnpm install --frozen-lockfile --filter @pshkv/interface...
 
 # Copy interface source
 COPY apps/sint-interface/ apps/sint-interface/
