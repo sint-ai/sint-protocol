@@ -1,6 +1,6 @@
 FROM node:22-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN npm i -g pnpm@9.15.0
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ RUN pnpm --filter @pshkv/badge-server build
 FROM node:22-alpine AS runner
 
 RUN apk add --no-cache curl
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN npm i -g pnpm@9.15.0
 
 WORKDIR /app
 

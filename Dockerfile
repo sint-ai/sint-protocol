@@ -5,7 +5,9 @@ ENV PATH=$PNPM_HOME:$PATH
 
 WORKDIR /app
 
-RUN corepack enable
+# Glama and some minimal container environments don't ship `corepack` by default.
+# Install pnpm explicitly so `pnpm install --frozen-lockfile` is reliable everywhere.
+RUN npm i -g pnpm@9.15.0
 
 # Copy the minimal workspace surface needed to build and run sint-mcp.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.base.json ./

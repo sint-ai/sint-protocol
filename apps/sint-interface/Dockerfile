@@ -5,7 +5,7 @@
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN npm i -g pnpm@9.15.0
 
 WORKDIR /app
 
