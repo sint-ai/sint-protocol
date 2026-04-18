@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/client",
+  "name": "@sint-ai/client",
   "version": "0.1.0",
   "description": "SINT Client SDK — TypeScript client for the SINT Gateway",
   "type": "module",

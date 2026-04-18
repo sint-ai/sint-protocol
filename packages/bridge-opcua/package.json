@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-opcua",
+  "name": "@sint-ai/bridge-opcua",
   "version": "0.1.0",
   "description": "SINT Bridge — OPC UA profile adapter for PLC/OT interoperability with tiered physical safety",
   "type": "module",

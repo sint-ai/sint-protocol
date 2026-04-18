@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-mavlink",
+  "name": "@sint-ai/bridge-mavlink",
   "version": "0.1.0",
   "description": "SINT Protocol MAVLink bridge \u2014 UAV/drone command interception and safety enforcement",
   "type": "module",

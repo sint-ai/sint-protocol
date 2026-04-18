@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/avatar",
+  "name": "@sint-ai/avatar",
   "version": "0.1.0",
   "description": "SINT Protocol Avatar Layer (L5) — behavioral identity profiles, CSML-driven tier escalation",
   "type": "module",

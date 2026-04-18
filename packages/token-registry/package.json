@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/token-registry",
+  "name": "@sint-ai/token-registry",
   "version": "0.1.0",
   "type": "module",
   "exports": {

@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/integration-langchain",
+  "name": "@sint-ai/integration-langchain",
   "version": "0.1.0",
   "description": "SINT Protocol governance middleware for LangChain — capability tokens, policy enforcement, and evidence logging on every tool call.",
   "type": "module",

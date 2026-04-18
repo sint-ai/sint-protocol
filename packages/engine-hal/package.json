@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/engine-hal",
+  "name": "@sint-ai/engine-hal",
   "version": "0.1.0",
   "description": "SINT Protocol Hardware Abstraction Layer — auto-detect hardware, select deployment profile",
   "type": "module",

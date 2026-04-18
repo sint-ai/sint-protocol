@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/gate-capability-tokens",
+  "name": "@sint-ai/gate-capability-tokens",
   "version": "0.1.0",
   "description": "SINT Gate — Capability token issuance, validation, delegation, and revocation",
   "type": "module",

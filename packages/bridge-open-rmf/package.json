@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-open-rmf",
+  "name": "@sint-ai/bridge-open-rmf",
   "version": "0.1.0",
   "description": "SINT Bridge — Open-RMF profile adapter for multi-fleet dispatch and facility workflows",
   "type": "module",

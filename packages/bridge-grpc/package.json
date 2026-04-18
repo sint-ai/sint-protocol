@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-grpc",
+  "name": "@sint-ai/bridge-grpc",
   "version": "0.1.0",
   "description": "SINT Bridge — gRPC profile adapter for service/method governance with tier defaults",
   "type": "module",

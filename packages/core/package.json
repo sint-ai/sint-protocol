@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/core",
+  "name": "@sint-ai/core",
   "version": "0.1.0",
   "description": "SINT Protocol core types, schemas, and constants",
   "type": "module",

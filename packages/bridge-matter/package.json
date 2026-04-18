@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-matter",
+  "name": "@sint-ai/bridge-matter",
   "version": "0.1.0",
   "description": "SINT Bridge — Matter 1.3+ protocol: governs AI agent access to Matter-certified smart home devices",
   "type": "module",

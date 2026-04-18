@@ -1,5 +1,5 @@
 {
-  "name": "@pshkv/bridge-swarm",
+  "name": "@sint-ai/bridge-swarm",
   "version": "0.1.0",
   "description": "SINT Protocol swarm coordination bridge — collective constraint enforcement for multi-agent physical systems",
   "type": "module",
