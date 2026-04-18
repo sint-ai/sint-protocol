@@ -10,3 +10,6 @@ coverage/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/*.pdf
+.DS_Store
+__pycache__/
+*.pyc
