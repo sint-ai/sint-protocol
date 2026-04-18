@@ -21,6 +21,19 @@ const SHELL_EXEC_PATTERNS = [
   /\bsystem\s*call/i, /\bsubprocess/i, /\bspawn\b/i,
 ];
 
+const ONCHAIN_T3_PATTERNS = [
+  /\b(mint|burn|seize|freeze|unfreeze|force[_\s-]?burn|force[_\s-]?transfer)\b/i,
+  /\b(swap|stake|unstake|claim|withdraw|deposit|bridge|airdrop)\b/i,
+  /\b(on[-\s]?chain|smart\s+contract|signer|private\s+key|keypair)\b/i,
+];
+
+const PENTEST_T3_PATTERNS = [
+  /\b(exploit|payload|brute[-\s]?force|credential\s+stuff|password\s+crack)\b/i,
+  /\b(metasploit|msfconsole|meterpreter|reverse\s+shell|web\s+shell)\b/i,
+  /\b(privilege\s+escal|lateral\s+movement|persistence|rootkit|backdoor)\b/i,
+  /\b(sql\s+injection|xss|rce|csrf)\b/i,
+];
+
 const T3_PATTERNS = [
   /\b(delete|drop|destroy|remove|purge|wipe|truncate|format)\b/i,
   /\b(deploy|release|publish|push\s+to\s+prod)/i,
@@ -33,8 +46,9 @@ const T3_PATTERNS = [
 
 const T2_PATTERNS = [
   /\b(write|create|update|modify|edit|append|overwrite)\b/i,
+  /\b(adjust|toggle|tune|override|allowlist|blocklist|denylist|whitelist|blacklist)\b/i,
   /\b(move|rename|copy|upload)\b/i,
-  /\b(set|configure|install|enable|disable)\b/i,
+  /\b(set|configure|install|enable|disable|pause|unpause|activate|deactivate)\b/i,
   /\b(database|db|sql|postgres|mysql|mongo)\b/i,
   /\b(api\s+call|http\s+(post|put|patch|delete))\b/i,
   /\b(robot|actuator|servo|motor|gripper|arm)\b/i,
@@ -71,8 +85,15 @@ function classifyTool(tool) {
     if (pattern) owasp.push({ code, desc: check.desc });
   }
 
-  // Shell exec → always T3
-  if (SHELL_EXEC_PATTERNS.some(p => p.test(text))) {
+  // On-chain / financial operations → T3 (catch before generic shell-exec match
+  // so `sdp_execute_swap` is classified as on-chain, not shell exec)
+  if (ONCHAIN_T3_PATTERNS.some(p => p.test(text))) {
+    tier = 'T3';
+    reasons.push('On-chain / financial operation detected — irreversible value transfer');
+  } else if (PENTEST_T3_PATTERNS.some(p => p.test(text))) {
+    tier = 'T3';
+    reasons.push('Offensive security / exploitation capability detected');
+  } else if (SHELL_EXEC_PATTERNS.some(p => p.test(text))) {
     tier = 'T3';
     reasons.push('Shell/command execution detected — OWASP ASI05');
   } else if (T3_PATTERNS.some(p => p.test(text))) {
