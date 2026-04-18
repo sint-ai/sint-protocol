@@ -131,6 +131,46 @@ const revocationProof = await revokeFHIRConsent(
 // Caregiver's next access attempt fails with revocation proof in Evidence Ledger
 ```
 
+### ✅ Caregiver Delegation Tokens
+
+Time-bounded, scoped, revocable health access:
+
+```typescript
+import { createCaregiverDelegationToken, revokeCaregiverDelegation } from "@pshkv/bridge-health";
+
+// Elderly parent grants adult child access to health data
+const delegationToken = createCaregiverDelegationToken(
+  "did:key:elderly_parent",
+  "did:key:adult_child",
+  "family-member",
+  {
+    fhir: ["Observation", "MedicationRequest", "DiagnosticReport"],
+    healthkit: ["HKQuantityTypeIdentifierBloodPressure", "HKQuantityTypeIdentifierHeartRate"],
+  },
+  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+  {
+    scope: "read",
+    emergencyOverride: true,
+    maxSensitivity: "MEDICAL",
+  }
+);
+
+// Later: Patient revokes access
+const revocationProof = await revokeCaregiverDelegation(
+  delegationToken,
+  "did:key:elderly_parent" // revokedBy
+);
+// Caregiver's next access attempt fails with revocation proof in Evidence Ledger
+```
+
+**Delegation Fields:**
+- **Delegator**: Patient DID (data owner)
+- **Delegate**: Caregiver DID (data accessor)
+- **Relationship**: family-member, professional-nurse, physician, therapist, home-health-aide, emergency-contact
+- **Scope**: read, read-write, emergency-only
+- **Max Sensitivity**: PUBLIC, PERSONAL, RAW, MEDICAL (sensitivity ceiling)
+- **Emergency Override**: Allows T3 actions in emergencies
+
 ## Installation
 
 ```bash

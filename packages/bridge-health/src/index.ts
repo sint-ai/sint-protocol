@@ -50,3 +50,17 @@ export {
   type FHIRConsentExtension,
   type FHIRConsentToken,
 } from "./fhir-consent-token.js";
+
+// Caregiver delegation tokens
+export {
+  createCaregiverDelegationToken,
+  renewCaregiverDelegation,
+  revokeCaregiverDelegation,
+  matchesCaregiverDelegation,
+  explainCaregiverDelegation,
+  createCaregiverAuditEntry,
+  type CaregiverRelationship,
+  type AccessScope,
+  type CaregiverDelegationExtension,
+  type CaregiverDelegationToken,
+} from "./caregiver-delegation.js";
