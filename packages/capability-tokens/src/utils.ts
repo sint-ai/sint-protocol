@@ -68,3 +68,32 @@ export function nowISO8601(): ISO8601 {
   // Replace ".000Z" with ".000000Z" for microsecond format
   return ms.replace(/\.(\d{3})Z$/, ".$1000Z");
 }
+
+/**
+ * Serialize a value to canonical JSON per RFC 8785 (JCS), subset:
+ * object keys sorted alphabetically at every depth, arrays preserve order,
+ * `undefined` properties omitted.
+ *
+ * Deterministic output across identical inputs regardless of key insertion
+ * order. Required for signing payloads that round-trip through storage
+ * backends (e.g. Postgres JSONB) that do not preserve object key order.
+ */
+export function canonicalJSONStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return "[" + value.map((v) => canonicalJSONStringify(v)).join(",") + "]";
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj)
+    .filter((k) => obj[k] !== undefined)
+    .sort();
+  return (
+    "{" +
+    keys
+      .map((k) => JSON.stringify(k) + ":" + canonicalJSONStringify(obj[k]))
+      .join(",") +
+    "}"
+  );
+}
