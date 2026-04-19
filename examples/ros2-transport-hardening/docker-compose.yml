@@ -1,0 +1,125 @@
+version: "3.9"
+
+# Transport-level hardening demo.
+#
+# Layout:
+#   gateway          — SINT Policy Gateway (application-layer decision point)
+#   keystore-init    — one-shot: builds SROS2 keystore + enclaves in /keystore
+#   guarded-talker   — runs with ROS_SECURITY_ENABLE=true Enforce, mounted keystore
+#   attacker         — same network + domain, NO keystore / enclave
+#
+# The gateway proves application-layer enforcement; the attacker proves
+# transport-layer enforcement (SROS2/DDS Security) is what actually prevents
+# an out-of-guard publisher from reaching the guarded topic.
+
+services:
+  gateway:
+    build:
+      context: ../..
+      dockerfile: apps/gateway-server/Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      SINT_PORT: "3100"
+      SINT_STORE: postgres
+      SINT_CACHE: redis
+      DATABASE_URL: postgresql://sint:sint@postgres:5432/sint
+      REDIS_URL: redis://redis:6379
+      SINT_LOG_LEVEL: info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/v1/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 10
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sint
+      POSTGRES_PASSWORD: sint
+      POSTGRES_DB: sint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../packages/persistence/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sint -d sint"]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 10
+
+  # One-shot: populate /keystore with CA + per-enclave material.
+  keystore-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["bash", "-lc", "/demo/keystore-init.sh"]
+    volumes:
+      - keystore:/keystore
+
+  # Guarded node: app-level policy intercept + transport-level enclave.
+  guarded-talker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SINT_GATEWAY_URL: http://gateway:3100
+      ROS_SECURITY_ENABLE: "true"
+      ROS_SECURITY_STRATEGY: "Enforce"
+      ROS_SECURITY_KEYSTORE: /keystore
+      ROS_DOMAIN_ID: "0"
+    volumes:
+      - keystore:/keystore:ro
+    depends_on:
+      gateway:
+        condition: service_healthy
+      keystore-init:
+        condition: service_completed_successfully
+    command:
+      - "bash"
+      - "-lc"
+      - "source /opt/ros/humble/setup.bash && python3 /demo/guarded_talker.py && sleep infinity"
+
+  # Attacker: same LAN + domain, but NO keystore mount → no credentials.
+  # Conformance check expects this container to exit 2 or 3 (blocked).
+  attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ROS_SECURITY_ENABLE: "true"
+      ROS_SECURITY_STRATEGY: "Enforce"
+      # Intentionally point at a bogus keystore so the participant cannot
+      # authenticate. Deleting the var entirely also works (rmw picks up
+      # the default) but this is explicit.
+      ROS_SECURITY_KEYSTORE: /nonexistent
+      ROS_DOMAIN_ID: "0"
+    depends_on:
+      guarded-talker:
+        condition: service_started
+    profiles:
+      - attacker
+    command:
+      - "bash"
+      - "-lc"
+      - "source /opt/ros/humble/setup.bash && python3 /demo/attacker.py"
+
+volumes:
+  pgdata:
+  keystore:
