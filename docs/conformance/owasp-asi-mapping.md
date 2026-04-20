@@ -5,6 +5,7 @@
 **Status:** Certified (Phase 3 complete)
 **Companion fixture pack:** `packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json`
 **Companion test file:** `packages/conformance-tests/src/owasp-asi-conformance.test.ts`
+**Invariant-level breakdown:** [`runtime-enforcement-mapping.md`](./runtime-enforcement-mapping.md) — maps each fixture to the OWASP runtime-integrity invariant it exercises (transmission / authorization-at-execution / execution / intent)
 
 ---
 
