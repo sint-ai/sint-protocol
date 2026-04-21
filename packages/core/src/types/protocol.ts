@@ -74,6 +74,27 @@ export interface ConstraintEnvelopeAttestation {
 }
 
 /**
+ * CL-1.0 migration attestation — proves agent identity continuity across
+ * embodied-AI migrations (body swaps, wallet rotations, runtime handoffs).
+ *
+ * Shape aligns with the SBR-002 (Soulbound Robots) reference schema. When
+ * this field is present on an envelope, `continuityVerified` must be `true`
+ * for the envelope to validate. This makes entity_continuity a structural
+ * precondition for scope grant rather than an advisory signal.
+ *
+ * Refs:
+ * - aeoess/agent-governance-vocabulary#8 (entity_continuity signal type)
+ * - https://soulboundrobots.ai/schemas/sbr-002-v1.json (reference schema)
+ */
+export interface ConstraintEnvelopeMigrationAttestation {
+  readonly schema: string;
+  readonly attestationUri: string;
+  readonly agentWallet: string;
+  readonly continuityVerified: boolean;
+  readonly issuedAt: ISO8601;
+}
+
+/**
  * CL-1.0 constraint enforcement mode.
  */
 export type ConstraintEnvelopeMode = "static-token" | "dynamic-runtime" | "corridor-preapproved";
@@ -92,6 +113,7 @@ export interface ConstraintEnvelope extends Partial<SintPhysicalConstraints> {
   readonly behavioral?: ConstraintEnvelopeBehavioral;
   readonly model?: ConstraintEnvelopeModel;
   readonly attestation?: ConstraintEnvelopeAttestation;
+  readonly migrationAttestation?: ConstraintEnvelopeMigrationAttestation;
   readonly dynamic?: ConstraintEnvelopeDynamic;
   readonly execution?: ConstraintEnvelopeExecution;
   readonly extensions?: Readonly<Record<string, unknown>>;

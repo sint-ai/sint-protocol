@@ -61,6 +61,29 @@ export function validateConstraintEnvelope(envelope: ConstraintEnvelope): Constr
     }
   }
 
+  // migrationAttestation validation applies regardless of version — the field
+  // is forward-compatible and its presence always requires the full attestation
+  // shape with continuityVerified === true as the structural precondition for
+  // scope grant.
+  if (envelope.migrationAttestation !== undefined) {
+    const ma = envelope.migrationAttestation;
+    if (ma.continuityVerified !== true) {
+      errors.push("migrationAttestation.continuityVerified must be true for envelope to activate");
+    }
+    if (typeof ma.schema !== "string" || ma.schema.length === 0) {
+      errors.push("migrationAttestation.schema must be a non-empty string");
+    }
+    if (typeof ma.attestationUri !== "string" || ma.attestationUri.length === 0) {
+      errors.push("migrationAttestation.attestationUri must be a non-empty string");
+    }
+    if (typeof ma.agentWallet !== "string" || ma.agentWallet.length === 0) {
+      errors.push("migrationAttestation.agentWallet must be a non-empty string");
+    }
+    if (typeof ma.issuedAt !== "string" || ma.issuedAt.length === 0) {
+      errors.push("migrationAttestation.issuedAt must be a non-empty ISO8601 string");
+    }
+  }
+
   return { valid: errors.length === 0, errors, mode };
 }
 
