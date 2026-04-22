@@ -153,6 +153,8 @@ SINT is a security enforcement layer for physical AI. Every agent action — too
 
 **Enforcement detail:** Rate limiting is enforced via a sliding-window bucket keyed by `tokenId`. The circuit breaker tracks denials per agent; excess denials open the circuit and block all subsequent requests. The circuit auto-transitions to HALF_OPEN after `halfOpenAfterMs` to test recovery, unless it was manually tripped by an operator.
 
+**Testing note:** CI conformance coverage uses a slightly longer `halfOpenAfterMs` probe window so the HALF_OPEN recovery path stays deterministic across shared runners and does not flap on scheduler variance.
+
 ---
 
 ### ASI09 — Human Oversight Bypass
