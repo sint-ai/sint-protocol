@@ -4,11 +4,11 @@
 
 - Registry entry: `/tmp/open-agent-trust-registry/registry/issuers/sint-protocol.json` (PR #24 submitted)
 - Domain verification endpoint: `GET /.well-known/agent-trust.json` (implemented in gateway-server)
-- **Pending**: Live deployment at `https://sint.ai/.well-known/agent-trust.json`
+- **Pending**: Live deployment at `https://sint.gg/.well-known/agent-trust.json`
 
 ## Verification Flow
 
-1. OATR registry reads `https://sint.ai/.well-known/agent-trust.json`
+1. OATR registry reads `https://sint.gg/.well-known/agent-trust.json`
 2. Downloads our Ed25519 public key (`kid: sint-registry-2026-04`)
 3. Verifies signature over canonical message `oatr-proof-v1:sint-protocol`
 4. Marks entry as `domain_verified: true`

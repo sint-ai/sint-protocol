@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-[![Glama](https://glama.ai/mcp/servers/sint-ai/sint-protocol/badges/card.svg)](https://glama.ai/mcp/servers/sint-ai/sint-protocol)
+[![Glama](https://glama.ai/mcp/servers/sint-ai/sint-protocol/badge)](https://glama.ai/mcp/servers/sint-ai/sint-protocol)
 
 **Security, permission, and economic enforcement layer for physical AI.**
 
