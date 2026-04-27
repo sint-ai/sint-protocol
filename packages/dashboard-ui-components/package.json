@@ -1,0 +1,28 @@
+{
+  "name": "@pshkv/dashboard-ui-components",
+  "version": "0.5.0",
+  "description": "SINT Protocol compliance dashboard UI components",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "react": "^18.3.0",
+    "typescript": "^5.6.2"
+  }
+}
