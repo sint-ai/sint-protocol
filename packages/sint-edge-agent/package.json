@@ -1,0 +1,18 @@
+{
+  "name": "@pshkv/sint-edge-agent",
+  "version": "0.1.0",
+  "description": "Lightweight onboard agent runtime for SINT Protocol — fast, deterministic, small footprint",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run"
+  },
+  "devDependencies": { "typescript": "^5.7.0", "vitest": "^3.0.0" },
+  "files": ["dist", "README.md"],
+  "license": "Apache-2.0"
+}

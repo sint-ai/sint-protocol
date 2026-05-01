@@ -1,7 +1,7 @@
 {
   "name": "@pshkv/dashboard-ui-components",
-  "version": "0.5.0",
-  "description": "SINT Protocol compliance dashboard UI components",
+  "version": "0.6.0",
+  "description": "SINT Protocol compliance dashboard UI components — v0.6 adds Applied Intuition–inspired widgets (ReliabilityGauge, MTBFChart, SimulationPlayback, PlanExecutionTimeline, AdversarialFaultsWidget, LicenseTierBadge)",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "react": "^18.3.0",
+    "@types/react": "^18.3.0",
     "typescript": "^5.6.2"
   }
 }
