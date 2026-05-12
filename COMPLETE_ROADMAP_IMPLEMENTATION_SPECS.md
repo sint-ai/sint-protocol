@@ -1,5 +1,7 @@
 # SINT Protocol Complete Roadmap Implementation Specifications
 
+> Note: this document remains the feature-expansion backlog. The near-term execution order is now defined by [PRODUCTION_ROADMAP.md](./PRODUCTION_ROADMAP.md) and [NEXT_PRIORITIES.md](./NEXT_PRIORITIES.md). New feature phases should not jump ahead of core reliability, CI health, release gates, and the first supported production slice.
+
 **Target:** Complete all remaining deliverables to reach 73% roadmap completion (22/30 deliverables)
 
 **Current Status:** 30% complete (9/30) with 2 phases at 100%
@@ -875,4 +877,3 @@ After implementing all specifications:
 
 All technical details, code structures, and integration points documented.
 Ready for systematic implementation.
-
