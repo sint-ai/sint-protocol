@@ -1,20 +1,20 @@
 # SINT Protocol Physical AI Governance - Next Priorities
 
-**Current Status:** 30% complete (9 of 30 deliverables)
+**Current Status:** 37% complete (11 of 30 deliverables)
 - ✅ Phase 1: Consumer Smart Home (100% - 4/4 deliverables)
-- 🟡 Phase 2: Matter + Human-Aware (67% - 2/3 deliverables)
+- ✅ Phase 2: Matter + Human-Aware (100% - 3/3 deliverables)
 - ⚪ Phase 3: Edge/Nano (0% - 0/3 deliverables)
 - ⚪ Phase 4: HRI Foundation (0% - 0/3 deliverables)
 - ✅ Phase 5: Health Fabric (100% - 3/3 deliverables)
 - ⚪ Phase 6: Smart City (0% - 0/3 deliverables)
-- ⚪ Phase 7: Safety/Emergency (0% - 0/3 deliverables)
+- 🟡 Phase 7: Safety/Emergency (33% - 1/3 deliverables)
 
 ---
 
 ## Top 5 Immediate Priorities (By Strategic Value)
 
-### 1. 🔴 **MQTT QoS → Tier Mapping** (Score: 20, Phase 2)
-**Why Ship Next:** Completes Phase 2 to 100%, low effort, high impact
+### 1. ✅ **MQTT QoS → Tier Mapping** (Shipped)
+**Status:** Completed in `@pshkv/bridge-mqtt` with tests.
 
 **What to Build:**
 ```typescript
@@ -36,8 +36,7 @@ export function mapQoSToTier(qos: 0 | 1 | 2): ApprovalTier {
 - Integration with existing bridge-iot
 - Unit tests
 
-**Effort:** 🟢 LOW (1-2 hours)
-**Impact:** ✅ Completes Phase 2 (67% → 100%)
+**Impact:** ✅ Phase 2 complete (100%)
 **Strategic Value:** Foundation for industrial IoT
 
 ---
@@ -156,8 +155,8 @@ export class DuressToken extends CapabilityToken {
 
 ---
 
-### 5. 🟢 **Emergency Bypass Protocol** (Score: 21, Phase 7 - Tier 1)
-**Why Ship Next:** Critical safety feature, completes health fabric
+### 5. ✅ **Emergency Bypass Protocol** (In Progress / landing)
+**Status:** Implemented in `@pshkv/gate-policy-gateway` emergency bypass module with tests.
 
 **What to Build:**
 ```typescript
@@ -282,4 +281,3 @@ export class EmergencyBypassProtocol {
 ---
 
 **Ready to ship. Which priority do you want to tackle first?**
-
