@@ -306,11 +306,12 @@ describe("InMemoryCircuitBreaker — state machine", () => {
 
   it("OPEN → HALF_OPEN after halfOpenAfterMs", async () => {
     // Open via recordDenial (not trip) so manualTrip stays false
-    const cb = new InMemoryCircuitBreaker({ failureThreshold: 2, halfOpenAfterMs: 5 });
+    // Use a wider window so CI timing variance does not advance the state early.
+    const cb = new InMemoryCircuitBreaker({ failureThreshold: 2, halfOpenAfterMs: 100 });
     await cb.recordDenial("a", "x");
     await cb.recordDenial("a", "x");
     expect(await cb.getState("a")).toBe("OPEN");
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((r) => setTimeout(r, 120));
     expect(await cb.getState("a")).toBe("HALF_OPEN");
   });
 
