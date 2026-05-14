@@ -68,3 +68,32 @@ export function nowISO8601(): ISO8601 {
   // Replace ".000Z" with ".000000Z" for microsecond format
   return ms.replace(/\.(\d{3})Z$/, ".$1000Z");
 }
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => canonicalize(entry));
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, entry]) => entry !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+
+    return Object.fromEntries(
+      entries.map(([key, entry]) => [key, canonicalize(entry)]),
+    );
+  }
+
+  return value;
+}
+
+/**
+ * Deterministic JSON serialization with recursive key sorting.
+ *
+ * Arrays preserve element order. Object keys are sorted lexicographically and
+ * `undefined` values are omitted to keep the payload stable across runtimes and
+ * JSONB round-trips.
+ */
+export function canonicalJSONStringify(value: unknown): string {
+  return JSON.stringify(canonicalize(value));
+}

@@ -8,6 +8,8 @@ This guide describes the production baseline for SINT Gateway persistence.
 - Redis-backed cache + revocation bus (`SINT_CACHE=redis`)
 - Startup schema bootstrap (`ensurePgSchema`) for required tables/indexes
 - Redis fail-fast connectivity checks at gateway boot
+- Deterministic token-signing payload serialization via canonical JSON key ordering
+- PostgreSQL token persistence that round-trips the full signed token envelope (including optional capability fields)
 
 ## Required environment
 
@@ -29,3 +31,5 @@ REDIS_URL=redis://localhost:6379
 
 - Schema creation is idempotent and runs at startup when `SINT_STORE=postgres`.
 - Redis startup checks are fail-fast to avoid hidden partial-deploy failures.
+- Capability token signing payloads now use deterministic canonical JSON serialization, so equivalent payloads produce stable signatures across runtimes and object insertion orders.
+- Token persistence keeps optional signed fields (`modelConstraints`, `attestationRequirements`, `verifiableComputeRequirements`, `executionEnvelope`, `behavioralConstraints`, `passportId`, `delegationDepth`, `delegationChain`, `revocable`, `revocationEndpoint`) to avoid semantic drift between issuance and reload.
