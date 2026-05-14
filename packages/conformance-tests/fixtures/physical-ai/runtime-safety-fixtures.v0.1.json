@@ -1,0 +1,168 @@
+{
+  "fixtureId": "physical-ai-runtime-safety-v0.1",
+  "schemaVersion": "0.1.0",
+  "description": "Protocol-neutral fixtures for physical AI runtime safety boundaries: pre-action authorization, transport non-bypass, e-stop rollback, and decision evidence.",
+  "profile": {
+    "transport": "ros2/sros2",
+    "actionBoundary": "pre-actuation",
+    "decisionVocabulary": ["allow", "deny", "escalate", "rollback"],
+    "transportOutcomes": [
+      "forwarded",
+      "held_for_review",
+      "publish_rejected",
+      "discovery_rejected",
+      "execution_rolled_back"
+    ],
+    "evidenceRequirements": {
+      "decisionRefRequired": true,
+      "actionIntentRefRequired": true,
+      "hashChainRequired": true
+    }
+  },
+  "defaultToken": {
+    "resource": "ros2:///cmd_vel",
+    "actions": ["publish"],
+    "constraints": {
+      "maxVelocityMps": 0.5,
+      "maxForceNewtons": 50
+    }
+  },
+  "cases": [
+    {
+      "id": "ros2_cmd_vel_authorized_escalates",
+      "name": "Authorized /cmd_vel publish is held for T2 review",
+      "description": "The token scope and physical limits allow the command, but /cmd_vel is a physical-state-change action and must not auto-forward.",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear_velocity": 0.2
+        }
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T2_act",
+        "transportOutcome": "held_for_review",
+        "evidenceEventType": "policy.decision.escalate"
+      }
+    },
+    {
+      "id": "ros2_cmd_vel_denied_by_scope",
+      "name": "Movement publish is denied when token scope does not cover /cmd_vel",
+      "description": "A token scoped to sensor reads cannot authorize a movement command.",
+      "tokenOverride": {
+        "resource": "ros2:///sensor/*",
+        "actions": ["subscribe"],
+        "constraints": {}
+      },
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear_velocity": 0.2
+        }
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "INSUFFICIENT_PERMISSIONS",
+        "transportOutcome": "publish_rejected"
+      }
+    },
+    {
+      "id": "ros2_cmd_vel_escalates_human_present",
+      "name": "Human presence escalates /cmd_vel from T2 to T3",
+      "description": "A human detected in the workspace raises the consequence tier for motion commands.",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear_velocity": 0.1
+        },
+        "physicalContext": {
+          "humanDetected": true
+        }
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T3_commit",
+        "transportOutcome": "held_for_review",
+        "evidenceEventType": "policy.decision.escalate"
+      }
+    },
+    {
+      "id": "sros2_bypass_publish_fails",
+      "name": "Direct SROS2 publisher without topic permission cannot bypass the gate",
+      "description": "The transport layer rejects a direct publisher that lacks publish permission for /cmd_vel.",
+      "transportCheck": {
+        "enclave": {
+          "enclavePath": "/agents/reviewer",
+          "domainId": 42,
+          "allowPublish": ["/diagnostics"],
+          "allowSubscribe": ["/cmd_vel", "/diagnostics"],
+          "denyPublish": ["/cmd_vel"],
+          "denySubscribe": [],
+          "governanceEnforced": true
+        },
+        "topicName": "/cmd_vel",
+        "operation": "publish"
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "transportOutcome": "publish_rejected",
+        "transportDecision": "deny",
+        "evidenceEventType": "transport.sros2.publish_rejected"
+      }
+    },
+    {
+      "id": "estop_always_rolls_back",
+      "name": "E-stop rolls back regardless of token state",
+      "description": "Hardware e-stop preempts software approvals and token checks for any non-terminal physical path.",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear_velocity": 0.1
+        },
+        "executionContext": {
+          "deploymentProfile": "warehouse-amr",
+          "hardwareSafety": {
+            "permitState": "granted",
+            "interlockState": "closed",
+            "estopState": "triggered",
+            "observedAt": "__NOW__"
+          }
+        }
+      },
+      "expected": {
+        "decisionAction": "rollback",
+        "policyViolated": "HARDWARE_ESTOP_ACTIVE",
+        "transportOutcome": "execution_rolled_back",
+        "evidenceEventType": "safety.estop.triggered"
+      }
+    },
+    {
+      "id": "receipt_verifies_policy_decision",
+      "name": "Decision evidence binds request, action intent, and policy verdict",
+      "description": "A verifier can correlate the decision receipt to the attempted action without embedding provider-specific evidence in the fixture.",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "params": {
+          "linear_velocity": 0.2
+        }
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T2_act",
+        "transportOutcome": "held_for_review",
+        "evidenceEventType": "policy.decision.escalate",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "providerSpecificReceiptAllowed": true
+        }
+      }
+    }
+  ]
+}

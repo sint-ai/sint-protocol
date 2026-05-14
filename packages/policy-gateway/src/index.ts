@@ -44,6 +44,16 @@ export type {
   ApprovalQueueConfig,
   ApprovalQuorum,
 } from "./approval-flow.js";
+export { EmergencyBypassProtocol } from "./emergency-bypass.js";
+export type {
+  EmergencyBypassProtocolOptions,
+  EmergencyAction,
+  EmergencyJustification,
+  EmergencyTriggerReason,
+  EmergencyContextWindow,
+  BypassToken,
+  EmergencyAuditEntry,
+} from "./emergency-bypass.js";
 
 // Compatibility re-exports for bridge packages (Home Assistant, Matter, etc.).
 // The source of truth for these types lives in @pshkv/core, but downstream code

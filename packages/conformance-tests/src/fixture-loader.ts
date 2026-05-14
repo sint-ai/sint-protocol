@@ -16,6 +16,7 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = resolve(ROOT, "../fixtures");
 
 type DecisionAction = PolicyDecision["action"];
+type PhysicalAiDecisionAction = DecisionAction | "rollback";
 
 export interface TokenFixture {
   readonly resource: string;
@@ -103,6 +104,83 @@ export interface HardwareSafetyHandshakeFixture {
       readonly assignedTier?: ApprovalTier;
       readonly policyViolated?: string;
       readonly expectedEvidenceEvent?: string;
+    };
+  }>;
+}
+
+export interface PhysicalAiRuntimeSafetyFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profile: {
+    readonly transport: "ros2/sros2";
+    readonly actionBoundary: "pre-actuation";
+    readonly decisionVocabulary: readonly PhysicalAiDecisionAction[];
+    readonly transportOutcomes: readonly Array<
+      | "forwarded"
+      | "held_for_review"
+      | "publish_rejected"
+      | "discovery_rejected"
+      | "execution_rolled_back"
+    >;
+    readonly evidenceRequirements: {
+      readonly decisionRefRequired: boolean;
+      readonly actionIntentRefRequired: boolean;
+      readonly hashChainRequired: boolean;
+    };
+  };
+  readonly defaultToken: TokenFixture & {
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+      readonly maxForceNewtons?: number;
+    };
+  };
+  readonly cases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly description: string;
+    readonly tokenOverride?: TokenFixture & {
+      readonly constraints?: {
+        readonly maxVelocityMps?: number;
+        readonly maxForceNewtons?: number;
+      };
+    };
+    readonly request?: RequestTemplate & {
+      readonly resource: string;
+      readonly action: string;
+      readonly executionContext?: Record<string, unknown>;
+    };
+    readonly transportCheck?: {
+      readonly enclave: {
+        readonly enclavePath: string;
+        readonly domainId: number;
+        readonly allowPublish: readonly string[];
+        readonly allowSubscribe: readonly string[];
+        readonly denyPublish: readonly string[];
+        readonly denySubscribe: readonly string[];
+        readonly governanceEnforced: boolean;
+      };
+      readonly topicName: string;
+      readonly operation: "publish" | "subscribe";
+    };
+    readonly expected: {
+      readonly decisionAction: PhysicalAiDecisionAction;
+      readonly assignedTier?: ApprovalTier;
+      readonly policyViolated?: string;
+      readonly transportOutcome:
+        | "forwarded"
+        | "held_for_review"
+        | "publish_rejected"
+        | "discovery_rejected"
+        | "execution_rolled_back";
+      readonly transportDecision?: "allow" | "deny" | "not-covered";
+      readonly evidenceEventType?: string;
+      readonly evidence?: {
+        readonly decisionRefRequired?: boolean;
+        readonly actionIntentRefRequired?: boolean;
+        readonly hashChainRequired?: boolean;
+        readonly providerSpecificReceiptAllowed?: boolean;
+      };
     };
   }>;
 }
@@ -514,6 +592,12 @@ export function loadOpcUaSafetyControlFixture(): OpcUaSafetyControlFixture {
 export function loadHardwareSafetyHandshakeFixture(): HardwareSafetyHandshakeFixture {
   return loadFixture<HardwareSafetyHandshakeFixture>(
     "industrial/hardware-safety-handshake.v1.json",
+  );
+}
+
+export function loadPhysicalAiRuntimeSafetyFixture(): PhysicalAiRuntimeSafetyFixture {
+  return loadFixture<PhysicalAiRuntimeSafetyFixture>(
+    "physical-ai/runtime-safety-fixtures.v0.1.json",
   );
 }
 
