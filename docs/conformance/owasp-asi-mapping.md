@@ -214,6 +214,81 @@ SINT is a security enforcement layer for physical AI. Every agent action — too
 
 ---
 
+## Static Analysis Complement — Pre-Deployment Defense Posture
+
+SINT enforces security at **runtime** — every tool call flows through `PolicyGateway.intercept()`. But runtime detection assumes attacks *will* arrive. A complementary question is: **does the system prompt contain the defensive language that makes runtime attacks less likely to succeed in the first place?**
+
+Static prompt defense analysis answers "Is there a lock on the door?" — SINT's runtime detection answers "Does the lock work?" Both layers are necessary: a well-defended prompt reduces the attack surface that runtime detectors must handle, while runtime detectors catch what static defenses cannot prevent.
+
+### The 12 Defense Vectors
+
+Static analysis scans system prompts for the **presence** of defensive language against 12 attack vectors using pure regex pattern matching. Each vector maps to one or more ASI controls:
+
+| # | Static Defense Vector | ASI Mapping | Gap Rate (n=1,589) | What it checks |
+|---|----------------------|-------------|---------------------|----------------|
+| 1 | Role Boundary | **ASI01** | 93.8% missing | Role enforcement language (`stay in character`, `never break role`) |
+| 2 | Instruction Boundary | **ASI01** | 38.8% missing | Instruction override defense (`do not ignore`, `never override`) |
+| 3 | Data Protection | **ASI01** | 9.8% missing | System prompt / data leakage protection |
+| 4 | Indirect Injection | **ASI01**, ASI06 | 97.9% missing | External content sanitization instructions |
+| 5 | Harmful Content | ASI05 | 88.7% missing | Harmful/illegal content generation prevention |
+| 6 | Output Control | **ASI01** | 36.2% missing | Output format integrity enforcement |
+| 7 | Multi-language | **ASI01** | 64.1% missing | Cross-language attack protection |
+| 8 | Unicode | **ASI01** | 97.2% missing | Homoglyph / zero-width character defense |
+| 9 | Length Limits | ASI08 | 90.7% missing | Input length constraints |
+| 10 | Social Engineering | **ASI01** | 71.7% missing | Emotional manipulation / fake urgency defense |
+| 11 | Input Validation | ASI05 | 10.8% missing | Input sanitization (SQL/XSS/injection) |
+| 12 | Abuse Prevention | ASI08, ASI10 | 78.5% missing | Rate limiting / auth controls |
+
+**Data source:** 1,589 real-world system prompts from 4 public datasets (jailbreak-contaminated prompts removed). Average score: 15/100. 78.3% score F (0–29/100).
+
+### Correlation Layer — Static Posture → Runtime Detection
+
+The hypothesis: when a static defense vector is **absent** from the system prompt, the corresponding SINT runtime detector fires more frequently on attack payloads. This creates a testable prediction:
+
+| Static Vector Absent | SINT Runtime Detector | Predicted Effect |
+|---------------------|----------------------|------------------|
+| Role Boundary missing (93.8%) | `DefaultGoalHijackDetector` — role override family | Higher confidence on role-override attacks |
+| Instruction Boundary missing (38.8%) | `DefaultGoalHijackDetector` — prompt injection family | Model more likely to follow injected instructions |
+| Indirect Injection missing (97.9%) | `DefaultGoalHijackDetector` — cross-agent injection | External content treated as trusted |
+| Unicode missing (97.2%) | Pre-detection NFKC normalization | Homoglyph substitutions not caught at prompt level |
+| Length Limits missing (90.7%) | `InMemoryRateLimitStore` / circuit breaker | Context overflow attacks reach runtime layer |
+| Abuse Prevention missing (78.5%) | `InMemoryCircuitBreaker` + rate limiting | No prompt-level rate awareness |
+
+### ASI01 Deep Mapping
+
+ASI01 (Goal Hijack / Prompt Injection) maps to the most static vectors because prompt injection exploits the **absence** of defensive instructions. SINT's `DefaultGoalHijackDetector` covers 5 heuristic families at runtime; the static analysis checks whether the prompt *discourages* these attack patterns before the model processes them:
+
+| SINT Heuristic Family | Static Vectors That Reduce Attack Surface |
+|----------------------|------------------------------------------|
+| Prompt injection (`ignore previous instructions`) | Instruction Boundary (38.8% gap), Data Protection (9.8% gap) |
+| Role override (`you are now a different agent`) | Role Boundary (93.8% gap) |
+| Cross-agent injection (external content) | Indirect Injection (97.9% gap) |
+| Semantic escalation (social pressure) | Social Engineering (71.7% gap) |
+| System-prompt exfiltration (`reveal your instructions`) | Data Protection (9.8% gap) |
+
+### Using SINT Fixture Vectors for Static Analysis Calibration
+
+The ASI01 attack payloads in `owasp-asi-conformance.v1.json` can serve as regression seeds for static defense rule calibration:
+
+- `ASI01-attack-prompt-injection-ignore-previous` → tests `instruction-override` detection
+- `ASI01-attack-role-override-you-are-now` → tests `role-escape` detection
+
+When a system prompt scores 0/100 on static analysis, these fixture attacks should succeed against the model at a higher rate than when the prompt scores 90/100. This creates a measurable correlation between static defense posture and runtime attack success rate.
+
+### Cross-References
+
+| Project | Layer | What it does |
+|---------|-------|-------------|
+| [SINT Protocol](https://github.com/sint-ai/sint-protocol) | Runtime | `PolicyGateway.intercept()` — enforces security on every tool call |
+| [UltraProbe](https://github.com/ppcvote/ultraprobe) | Static (CLI) | `npx ultraprobe scan` — 12-vector prompt defense audit |
+| [prompt-defense-audit](https://github.com/ppcvote/prompt-defense-audit) | Static (npm) | Same engine as npm package |
+| [Cisco MCP Scanner](https://github.com/cisco-ai-defense/mcp-scanner) | Static (Python) | `PromptDefenseAnalyzer` — merged via PR #146 |
+| [Microsoft Agent Governance](https://github.com/microsoft/agent-governance-toolkit) | Static (Python) | `PromptDefenseEvaluator` — merged via PR #854 |
+| [Guardrails AI Hub](https://github.com/ppcvote/prompt-defense-audit-guardrails) | Static (Python) | Guardrails validator — pre-LLM gate |
+| [HeadyZhang/agent-audit](https://github.com/HeadyZhang/agent-audit) | Mapping | 49 audit rules → OWASP Agentic Top 10 |
+
+---
+
 ## Certification Notes
 
 - All 10 ASI controls are addressed. All 10 of 10 are fully covered.
