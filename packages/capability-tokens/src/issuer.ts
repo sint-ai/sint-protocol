@@ -23,7 +23,7 @@ import {
   ok,
 } from "@pshkv/core";
 import { sign } from "./crypto.js";
-import { generateUUIDv7, nowISO8601 } from "./utils.js";
+import { canonicalJSONStringify, generateUUIDv7, nowISO8601 } from "./utils.js";
 
 /**
  * Compute the canonical signing payload for a capability token.
@@ -38,19 +38,21 @@ import { generateUUIDv7, nowISO8601 } from "./utils.js";
  * ```
  */
 export function computeSigningPayload(
-  token: Omit<SintCapabilityToken, "signature">,
+  token: Omit<SintCapabilityToken, "signature"> | SintCapabilityToken,
 ): string {
-  // Canonical JSON: sorted keys, no whitespace, deterministic
-  return JSON.stringify({
+  return canonicalJSONStringify({
     actions: token.actions,
     attestationRequirements: token.attestationRequirements,
+    behavioralConstraints: token.behavioralConstraints,
     constraints: token.constraints,
     delegationChain: token.delegationChain,
+    delegationDepth: token.delegationDepth,
     expiresAt: token.expiresAt,
     executionEnvelope: token.executionEnvelope,
     issuedAt: token.issuedAt,
     issuer: token.issuer,
     modelConstraints: token.modelConstraints,
+    passportId: token.passportId,
     resource: token.resource,
     revocable: token.revocable,
     revocationEndpoint: token.revocationEndpoint,
@@ -122,6 +124,9 @@ export function issueCapabilityToken(
     attestationRequirements: request.attestationRequirements,
     verifiableComputeRequirements: request.verifiableComputeRequirements,
     executionEnvelope: request.executionEnvelope,
+    behavioralConstraints: request.behavioralConstraints,
+    passportId: request.passportId,
+    delegationDepth: request.delegationDepth,
     delegationChain: request.delegationChain,
     issuedAt,
     expiresAt: request.expiresAt,
