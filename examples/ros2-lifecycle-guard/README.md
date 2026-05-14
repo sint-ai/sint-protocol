@@ -28,4 +28,10 @@ Expected output includes a short transcript from the ROS 2 container showing:
   publishes to ROS topics requires system-level containment (SROS2 enclaves,
   network isolation, or a transport-level interceptor). The purpose here is to
   make the enforcement-context pattern concrete and runnable.
+- For the matching **transport-level** recipe — SROS2 keystore + enclaves,
+  `ROS_SECURITY_STRATEGY=Enforce`, and a runnable bypass-attempt conformance
+  check — see [`../ros2-transport-hardening`](../ros2-transport-hardening/).
+  The two demos are intended to be read together: this one answers "what is
+  the policy decision surface?"; the other answers "what makes it
+  non-bypassable at the wire?".
 
