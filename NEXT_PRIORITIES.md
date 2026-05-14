@@ -48,6 +48,10 @@ Status in this checkout:
   `verifiableComputeRequirements`, `executionEnvelope`,
   and `revocationEndpoint`.
 - Regression tests now cover canonical payload stability and full token persistence.
+- `apps/gateway-server/__tests__/production-slice.test.ts` now covers the
+  minimal supported HTTP path:
+  token issuance, policy enforcement, ledger persistence, proof generation,
+  and revocation fail-closed behavior.
 
 ### 2. Production Slice Definition
 
@@ -108,7 +112,7 @@ That means Phase 3/4/6 work stays valuable, but it moves behind reliability and 
 
 - keep token canonicalization and persistence fixes merged and verified
 - fresh CI pass on `main`
-- add one end-to-end production-slice verification path
+- keep the end-to-end production-slice verification path green
 - confirm docs build and package build from clean checkout
 
 ### Sprint B
