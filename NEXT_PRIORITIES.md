@@ -2,6 +2,12 @@
 
 The repo has enough breadth now that the next milestone should not be "another bridge." The next milestone should be "a production-worthy first surface."
 
+Current roadmap state:
+
+- Consumer smart home, Matter/human-aware, health fabric, and MQTT QoS slices are shipped.
+- Emergency bypass and duress-token controls are implemented and documented.
+- The remaining roadmap should run through a production-readiness gate before more breadth is added.
+
 This file replaces the earlier feature-first ordering with a production-first sequence:
 
 1. Make the current core trustworthy.
@@ -94,7 +100,7 @@ After the production slice is stable, resume roadmap expansion in this order:
 2. improve observability and operator workflows
 3. ship one new domain at a time with tests and docs
 
-That means Phase 3/4/6/7 work stays valuable, but it moves behind reliability and supportability.
+That means Phase 3/4/6 work stays valuable, but it moves behind reliability and supportability. Phase 7 safety work that has already landed should be treated as part of the supported core only after the release gates verify it.
 
 ## Immediate Execution Queue
 
