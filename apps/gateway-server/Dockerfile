@@ -98,13 +98,12 @@ ENV SINT_PORT=3100 \
     SINT_LOG_LEVEL=info \
     DATABASE_URL="" \
     REDIS_URL="" \
-    SINT_API_KEY="" \
-    SINT_MAX_TIER="T3_COMMIT"
+    SINT_API_KEY=""
 
 EXPOSE 3100
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:${SINT_PORT:-3100}/v1/health || exit 1
+  CMD curl -f http://localhost:${SINT_PORT:-3100}/v1/ready || exit 1
 
 # Drop to non-root user for runtime
 USER node

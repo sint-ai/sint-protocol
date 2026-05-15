@@ -56,6 +56,30 @@ Start here:
 - [`docs/guides/sint-pdp-interceptor-quickstart.md`](docs/guides/sint-pdp-interceptor-quickstart.md)
 - [`packages/sint-pdp-interceptor`](packages/sint-pdp-interceptor)
 
+## Production-Ready Core
+
+For production deployments, SINT now fails closed unless the gateway is started
+with durable stores and explicit authentication:
+
+```bash
+SINT_ENV=production
+SINT_STORE=postgres
+SINT_CACHE=redis
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://...
+SINT_API_KEY=...
+SINT_REQUIRE_SIGNATURES=true
+SINT_WS_ALLOW_QUERY_API_KEY=false
+```
+
+Use `/v1/ready` as the orchestration health gate; it verifies the configured
+store and cache, while `/v1/health` only proves the process is alive.
+
+Production references:
+- [`docs/guides/gateway-production-hardening.md`](docs/guides/gateway-production-hardening.md)
+- [`docs/guides/production-slice-verification.md`](docs/guides/production-slice-verification.md)
+- [`docs/guides/docker-deployment.md`](docs/guides/docker-deployment.md)
+
 ## Why SINT?
 
 AI agents can now control robots, execute code, move money, and operate machinery. They can also access your health data, control your smart home, and orchestrate critical infrastructure. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world or with your personal data."

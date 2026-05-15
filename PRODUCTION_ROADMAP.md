@@ -64,6 +64,14 @@ Exit criteria:
 - startup schema bootstrap is idempotent
 - upgrade notes exist for persistence-affecting changes
 
+Status:
+
+- production gateway startup now enforces the documented durable-store and auth
+  contract when `SINT_ENV=production` or `NODE_ENV=production`
+- required environment variables, readiness checks, release checklist, and
+  rollback notes are documented in
+  `docs/guides/gateway-production-hardening.md`
+
 ### M4. Operability
 
 Exit criteria:
@@ -72,6 +80,11 @@ Exit criteria:
 - structured logs exist for core enforcement outcomes
 - operator troubleshooting path exists
 - one deployment topology is documented end-to-end
+
+Status:
+
+- `prod-lite` compose runs the gateway in production mode and probes
+  `/v1/ready`, which checks the configured store and cache backends
 
 ### M5. Release Discipline
 

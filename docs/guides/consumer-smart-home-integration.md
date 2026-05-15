@@ -399,9 +399,9 @@ const deltaHumanPlugin = createDeltaHumanMiddleware({
 ## Related Documentation
 
 - [Physical AI Governance Roadmap 2026-2029](../roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md)
-- [bridge-homeassistant README](../../packages/bridge-homeassistant/README.md)
-- [Δ_human Plugin Source](../../packages/policy-gateway/src/plugins/delta-human.ts)
-- [Consumer Device Profiles](../../packages/bridge-homeassistant/src/consumer-profiles.ts)
+- [bridge-homeassistant README](https://github.com/sint-ai/sint-protocol/blob/main/packages/bridge-homeassistant/README.md)
+- [Delta Human Plugin Source](https://github.com/sint-ai/sint-protocol/blob/main/packages/policy-gateway/src/plugins/delta-human.ts)
+- [Consumer Device Profiles](https://github.com/sint-ai/sint-protocol/blob/main/packages/bridge-homeassistant/src/consumer-profiles.ts)
 
 ---
 

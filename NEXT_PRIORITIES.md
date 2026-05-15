@@ -52,6 +52,9 @@ Status in this checkout:
   minimal supported HTTP path:
   token issuance, policy enforcement, ledger persistence, proof generation,
   and revocation fail-closed behavior.
+- `SINT_ENV=production` now fails closed unless durable storage, Redis,
+  admin API key auth, signed agent requests, and safe WebSocket auth settings
+  are configured.
 
 ### 2. Production Slice Definition
 
@@ -84,6 +87,13 @@ Do not call the project production-ready until all of these are true:
 - docs site build succeeds
 - release checklist exists and is used
 - rollback / migration notes exist for persistence changes
+
+Status in this checkout:
+
+- `docs/guides/gateway-production-hardening.md` defines the production
+  environment contract, release checklist, readiness gate, and rollback notes.
+- `docker/compose/prod-lite.yml` starts the gateway in production mode and
+  probes `/v1/ready`.
 
 ### 4. Operational Hardening
 
@@ -119,7 +129,7 @@ That means Phase 3/4/6 work stays valuable, but it moves behind reliability and 
 
 - document supported production topology
 - add release checklist and migration notes
-- tighten gateway health/readiness and operator-facing failure modes
+- keep gateway production boot checks and `/v1/ready` behavior green
 
 ### Sprint C
 

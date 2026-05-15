@@ -39,6 +39,8 @@ export default defineConfig({
           { text: "SINT PDP Interceptor Quickstart", link: "/guides/sint-pdp-interceptor-quickstart" },
           { text: "Docker Deployment", link: "/guides/docker-deployment" },
           { text: "Persistence Baseline", link: "/guides/persistence-baseline" },
+          { text: "Gateway Production Hardening", link: "/guides/gateway-production-hardening" },
+          { text: "Production Slice Verification", link: "/guides/production-slice-verification" },
           { text: "WebSocket Approvals", link: "/guides/websocket-approvals" },
           { text: "Gazebo ROS2 Validation", link: "/guides/gazebo-ros2-validation" },
           { text: "Isaac Sim Integration", link: "/guides/isaac-sim-integration" },
