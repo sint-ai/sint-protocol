@@ -64,6 +64,14 @@ export default defineConfig({
         ],
       },
       {
+        text: "Roadmaps",
+        items: [
+          { text: "AAIF Resubmission 2026", link: "/roadmaps/aaif-resubmission-2026" },
+          { text: "Ecosystem Outreach 2026", link: "/roadmaps/ecosystem-outreach-2026" },
+          { text: "Physical AI Governance", link: "/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029" },
+        ],
+      },
+      {
         text: "Security Bulletins",
         items: [
           { text: "April 2026 Bulletin", link: "/security-bulletins/2026-04" },

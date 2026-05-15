@@ -29,6 +29,12 @@ The release candidate should support:
 - recording auditable decisions in durable storage
 - exposing a documented gateway or interceptor workflow
 
+This production roadmap also feeds the AAIF resubmission path. The foundation
+feedback made the gating issue explicit: SINT must pair technical readiness with
+independent production adoption, independent maintainership, and already-running
+reference / conformance artifacts. The evidence roadmap is tracked in
+`docs/roadmaps/aaif-resubmission-2026.md`.
+
 The release candidate should not promise:
 
 - every bridge package as production-supported
@@ -94,6 +100,19 @@ Exit criteria:
 - docs build is part of release validation
 - at least one end-to-end script or walkthrough is maintained
 - versioning and rollback expectations are explicit
+
+### M6. Foundation Evidence Readiness
+
+Exit criteria:
+
+- independent production adopters are documented separately from pilots and
+  co-design partners
+- at least one independent maintainer has 90+ days of sustained merge activity
+- the reference gateway and conformance tooling are released before any
+  foundation resubmission
+- OpenSSF Best Practices work is started and gaps are public
+- resubmission evidence is assembled from completed artifacts, not roadmap
+  promises
 
 ## Recommended Implementation Order
 

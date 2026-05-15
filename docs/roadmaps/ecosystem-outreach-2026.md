@@ -64,9 +64,13 @@
 - Include: @noble/ed25519 audit link + our conformance suite
 
 ### 4b. Linux Foundation / AAIF
-- Submit SINT to: lfaidata.foundation (LF AI & Data)
-- Position: governance extension for MCP-based multi-agent systems
-- Tie to: OpenSSF sigstore (our token signing is compatible)
+- AAIF resubmission is gated by independent evidence, not proposal language.
+- Build toward: named production adopters, independent 90+ day maintainer
+  activity, running reference gateway, packaged conformance tooling, and
+  OpenSSF readiness.
+- Track the operating plan in `docs/roadmaps/aaif-resubmission-2026.md`.
+- Position after those gates are met: governance extension for MCP-based
+  multi-agent systems and physical AI.
 
 ### 4c. Whitepaper update for launch
 - Add: NIST/MCP/SROS2 explicit mapping tables
@@ -93,3 +97,6 @@
 - SPAI 2026 abstract submitted (deadline: May 7, 2026)
 - OATR domain_verified: true (target: after sint.gg/protocol deployment)
 - ROSCon 2026 talk accepted
+- independent production adopters documented separately from pilots
+- independent maintainer 90-day activity window started
+- OpenSSF Best Practices gaps tracked publicly
