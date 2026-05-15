@@ -1,0 +1,95 @@
+name: Production Adopter / Pilot Record
+description: Document an independent SINT deployment, pilot, or evaluation
+title: "adopter: <organization or deployment name>"
+labels: ["adopter", "aaif-gate/adoption"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to document real-world SINT usage. Be precise about status:
+        evaluation, pilot, and production are different evidence levels.
+  - type: input
+    id: organization
+    attributes:
+      label: Organization or deployment name
+      description: Use the public organization name when possible. Private deployments can use a redacted name.
+      placeholder: "Example Robotics Lab / ACME Warehouse AMR pilot"
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Deployment status
+      options:
+        - Evaluation
+        - Pilot
+        - Production
+    validations:
+      required: true
+  - type: dropdown
+    id: independence
+    attributes:
+      label: Independent from current SINT co-design / interop network?
+      description: Do not mark yes for APS, MolTrust, vocabulary-crosswalk participants, or current co-design contributors.
+      options:
+        - Yes
+        - No
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: components
+    attributes:
+      label: SINT components used
+      description: Which component is deployed or evaluated?
+      placeholder: |
+        - apps/gateway-server
+        - packages/sint-pdp-interceptor
+        - packages/bridge-ros2
+        - packages/conformance-tests
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Deployment environment
+      description: Describe the environment without secrets or sensitive architecture.
+      placeholder: "Warehouse AMR staging fleet, MCP operations gateway, lab ROS2 robot, etc."
+    validations:
+      required: true
+  - type: input
+    id: first-deployed
+    attributes:
+      label: Date first deployed or evaluated
+      placeholder: "YYYY-MM-DD"
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification evidence
+      description: Link public issues, logs with secrets removed, screenshots, conformance reports, or release notes.
+      placeholder: |
+        - Conformance report:
+        - Deployment notes:
+        - Contact:
+    validations:
+      required: true
+  - type: textarea
+    id: why-sint
+    attributes:
+      label: Why SINT?
+      description: What gap does SINT cover that local custom policy code did not?
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Evidence boundaries
+      options:
+        - label: This issue does not claim production adoption unless status is explicitly Production.
+          required: true
+        - label: This issue does not claim endorsement, partnership, or foundation acceptance.
+          required: true
+        - label: Sensitive data, secrets, customer data, and private infrastructure details have been removed.
+          required: true

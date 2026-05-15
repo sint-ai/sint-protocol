@@ -1,0 +1,91 @@
+name: Independent Maintainer Nomination
+description: Nominate an independent maintainer candidate and track the 90-day activity window
+title: "maintainer-nomination: <github handle or scope>"
+labels: ["governance", "aaif-gate/maintainership"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to start a visible maintainer path. A nomination is not the
+        same as maintainership; the project tracks sustained, substantive activity
+        over time before treating it as maintainership evidence.
+  - type: input
+    id: nominee
+    attributes:
+      label: Nominee GitHub handle
+      placeholder: "@handle"
+    validations:
+      required: true
+  - type: input
+    id: organization
+    attributes:
+      label: Independent organization or affiliation
+      description: Use "independent individual" if there is no organization.
+      placeholder: "Organization / independent individual"
+    validations:
+      required: true
+  - type: dropdown
+    id: independence
+    attributes:
+      label: Independent from current SINT maintainer team and co-design network?
+      options:
+        - Yes
+        - No
+        - Unsure
+    validations:
+      required: true
+  - type: dropdown
+    id: proposed-scope
+    attributes:
+      label: Proposed ownership scope
+      options:
+        - Capability tokens
+        - Policy gateway
+        - Evidence ledger
+        - Conformance tests
+        - Bridge package
+        - Gateway server / deployment
+        - Documentation / specifications
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: contributions
+    attributes:
+      label: Relevant contributions
+      description: Link PRs, reviews, issues, specs, or external work.
+      placeholder: |
+        - PR:
+        - Review:
+        - Issue:
+        - External implementation:
+    validations:
+      required: true
+  - type: textarea
+    id: responsibilities
+    attributes:
+      label: Proposed responsibilities during the 90-day window
+      placeholder: |
+        - Review PRs touching ...
+        - Own fixture/schema updates for ...
+        - Maintain docs for ...
+    validations:
+      required: true
+  - type: input
+    id: window-start
+    attributes:
+      label: Proposed 90-day window start
+      placeholder: "YYYY-MM-DD"
+    validations:
+      required: true
+  - type: checkboxes
+    id: evidence-boundaries
+    attributes:
+      label: Evidence boundaries
+      options:
+        - label: This nomination does not make the nominee a maintainer by itself.
+          required: true
+        - label: The 90-day window will be evaluated through public, substantive activity.
+          required: true
+        - label: Maintainer evidence will distinguish comments, reviews, commits, and merges.
+          required: true
