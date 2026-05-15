@@ -752,3 +752,31 @@ export function loadAPSSINTHandshakeFixture(): APSSINTHandshakeFixture {
     "interop/aps-sint-handshake.v1.json",
   );
 }
+
+export interface PostQuantumCryptoAgilityFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profiles: readonly Array<{
+    readonly cryptoProfile:
+      | "classic-ed25519"
+      | "hybrid-ed25519-mldsa65"
+      | "pq-mldsa65"
+      | "pq-slh-dsa";
+    readonly signatureFamilies: readonly string[];
+    readonly expectedValidation: "allow" | "deny";
+    readonly expectedError?: "UNSUPPORTED_CRYPTO_PROFILE";
+  }>;
+  readonly requirements: {
+    readonly signingPayloadBindsCryptoProfile: boolean;
+    readonly unsupportedMandatoryProfilesFailClosed: boolean;
+    readonly postQuantumSignatureMetadataPreserved: boolean;
+    readonly preferredFirstProductionProfile: "hybrid-ed25519-mldsa65";
+  };
+}
+
+export function loadPostQuantumCryptoAgilityFixture(): PostQuantumCryptoAgilityFixture {
+  return loadFixture<PostQuantumCryptoAgilityFixture>(
+    "security/post-quantum-crypto-agility.v1.json",
+  );
+}

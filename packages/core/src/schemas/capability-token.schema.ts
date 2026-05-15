@@ -19,6 +19,20 @@ export const ed25519SignatureSchema = z.string().regex(HEX_REGEX).length(128, "E
 export const sha256Schema = z.string().regex(HEX_REGEX).length(64, "SHA-256 hash must be 64 hex chars");
 export const uuidV7Schema = z.string().regex(UUID_V7_REGEX, "Must be a valid UUID v7");
 
+export const cryptoProfileSchema = z.enum([
+  "classic-ed25519",
+  "hybrid-ed25519-mldsa65",
+  "pq-mldsa65",
+  "pq-slh-dsa",
+]);
+
+export const postQuantumSignatureSchema = z.object({
+  algorithm: z.enum(["ML-DSA-65", "SLH-DSA-SHA2-128s"]),
+  publicKeyRef: z.string().min(1).max(512),
+  signature: z.string().min(1).max(131_072),
+  verifierRef: z.string().min(1).max(512).optional(),
+}).strict();
+
 export const geoPolygonSchema = z.object({
   coordinates: z.array(
     z.tuple([
@@ -136,6 +150,8 @@ export const capabilityTokenSchema = z.object({
   expiresAt: iso8601Schema,
   revocable: z.boolean(),
   revocationEndpoint: z.string().url().optional(),
+  cryptoProfile: cryptoProfileSchema.optional(),
+  postQuantumSignatures: z.array(postQuantumSignatureSchema).min(1).max(4).optional(),
   signature: ed25519SignatureSchema,
 }).strict();
 
@@ -160,6 +176,8 @@ export const capabilityTokenRequestSchema = z.object({
   expiresAt: iso8601Schema,
   revocable: z.boolean(),
   revocationEndpoint: z.string().url().optional(),
+  cryptoProfile: cryptoProfileSchema.optional(),
+  postQuantumSignatures: z.array(postQuantumSignatureSchema).min(1).max(4).optional(),
 }).strict();
 
 export type ValidatedCapabilityToken = z.infer<typeof capabilityTokenSchema>;

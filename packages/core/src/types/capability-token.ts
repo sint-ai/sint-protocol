@@ -230,6 +230,31 @@ export interface SintExecutionEnvelope {
 }
 
 /**
+ * Cryptographic profile used to bind a capability token.
+ *
+ * SINT starts in `classic-ed25519` for compatibility. Post-quantum profiles are
+ * explicit so validators can fail closed until a deployment has wired a real
+ * ML-DSA/SLH-DSA implementation and key-management path.
+ */
+export type SintCryptoProfile =
+  | "classic-ed25519"
+  | "hybrid-ed25519-mldsa65"
+  | "pq-mldsa65"
+  | "pq-slh-dsa";
+
+/** Post-quantum signature metadata attached to hybrid/PQ token profiles. */
+export interface SintPostQuantumSignature {
+  /** Signature algorithm identifier, aligned with NIST PQC names. */
+  readonly algorithm: "ML-DSA-65" | "SLH-DSA-SHA2-128s";
+  /** Public-key reference or registry URI used by external verifiers. */
+  readonly publicKeyRef: string;
+  /** Hex or base64url signature bytes. Format is implementation-specific. */
+  readonly signature: string;
+  /** Optional verifier/version label for audit and migration records. */
+  readonly verifierRef?: string;
+}
+
+/**
  * Delegation chain tracking — who authorized this token, all the way up.
  * Maximum delegation depth is enforced by policy (default: 3 hops).
  */
@@ -329,6 +354,14 @@ export interface SintCapabilityToken {
 
   // --- Cryptographic binding ---
   /**
+   * Signature policy for this token. Omitted means `classic-ed25519` for
+   * backward compatibility. Non-classic profiles are mandatory and fail closed
+   * until the corresponding PQ verifier is available.
+   */
+  readonly cryptoProfile?: SintCryptoProfile;
+  /** Optional PQ signature material for hybrid or PQ-only profiles. */
+  readonly postQuantumSignatures?: readonly SintPostQuantumSignature[];
+  /**
    * Ed25519 signature over the canonical signing payload (every field above
    * except `signature` itself, serialized via RFC-8785-style recursive key sort).
    * See `computeSigningPayload` in `@pshkv/gate-capability-tokens`.
@@ -374,11 +407,16 @@ export interface SintCapabilityTokenRequest {
   readonly revocable: boolean;
   /** Optional revocation propagation endpoint. */
   readonly revocationEndpoint?: string;
+  /** Optional signature policy. Defaults to `classic-ed25519`. */
+  readonly cryptoProfile?: SintCryptoProfile;
+  /** Optional PQ signature material for hybrid or PQ-only profiles. */
+  readonly postQuantumSignatures?: readonly SintPostQuantumSignature[];
 }
 
 /** Validation error codes for capability tokens. */
 export type CapabilityTokenError =
   | "INVALID_SIGNATURE"
+  | "UNSUPPORTED_CRYPTO_PROFILE"
   | "TOKEN_EXPIRED"
   | "TOKEN_REVOKED"
   | "DELEGATION_DEPTH_EXCEEDED"

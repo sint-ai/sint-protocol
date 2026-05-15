@@ -44,6 +44,14 @@ function makeToken(): SintCapabilityToken {
     expiresAt: "2026-03-16T22:00:00.000000Z",
     revocable: true,
     revocationEndpoint: "https://example.com/revoke",
+    cryptoProfile: "classic-ed25519",
+    postQuantumSignatures: [
+      {
+        algorithm: "ML-DSA-65",
+        publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+        signature: "pq-signature-placeholder",
+      },
+    ],
     signature: "a".repeat(128),
   };
 }
@@ -64,12 +72,16 @@ describe("PgTokenStore", () => {
     expect(sql).toContain("passport_id");
     expect(sql).toContain("delegation_depth");
     expect(sql).toContain("revocation_endpoint");
-    expect(values).toHaveLength(19);
+    expect(sql).toContain("crypto_profile");
+    expect(sql).toContain("post_quantum_signatures");
+    expect(values).toHaveLength(21);
     expect(values[6]).toBe(JSON.stringify(token.modelConstraints));
     expect(values[10]).toBe(JSON.stringify(token.behavioralConstraints));
     expect(values[11]).toBe(token.passportId);
     expect(values[12]).toBe(token.delegationDepth);
     expect(values[17]).toBe(token.revocationEndpoint);
+    expect(values[18]).toBe(token.cryptoProfile);
+    expect(values[19]).toBe(JSON.stringify(token.postQuantumSignatures));
   });
 
   it("reconstructs optional fields on read", async () => {
@@ -95,6 +107,8 @@ describe("PgTokenStore", () => {
           expires_at: token.expiresAt,
           revocable: token.revocable,
           revocation_endpoint: token.revocationEndpoint,
+          crypto_profile: token.cryptoProfile,
+          post_quantum_signatures: token.postQuantumSignatures,
           signature: token.signature,
         },
       ],

@@ -114,6 +114,25 @@ Exit criteria:
 - resubmission evidence is assembled from completed artifacts, not roadmap
   promises
 
+### M7. Post-Quantum Crypto Agility
+
+Exit criteria:
+
+- token and receipt formats are crypto-agile
+- unsupported mandatory PQ profiles fail closed
+- hybrid Ed25519 + ML-DSA validation is available behind a verifier interface
+- EvidenceLedger hash algorithms are explicit and migration-safe
+- docs avoid claiming quantum resistance until a PQ verifier and release gate
+  are complete
+
+Status:
+
+- token-level `cryptoProfile` and `postQuantumSignatures` metadata are defined
+- non-classic token profiles currently fail closed with
+  `UNSUPPORTED_CRYPTO_PROFILE`
+- detailed migration plan lives in
+  `docs/roadmaps/post-quantum-crypto-agility.md`
+
 ## Recommended Implementation Order
 
 1. Finish data-integrity and persistence fixes.

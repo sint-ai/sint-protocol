@@ -65,6 +65,7 @@ describe("computeSigningPayload", () => {
         allowedPatterns: ["^publishVelocity$"],
         maxCallsPerMinute: 30,
       },
+      cryptoProfile: "classic-ed25519",
       passportId: "aps:passport:robot-7",
       delegationDepth: 2,
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
@@ -96,6 +97,7 @@ describe("computeSigningPayload", () => {
         maxCallsPerMinute: 30,
         allowedPatterns: ["^publishVelocity$"],
       },
+      cryptoProfile: "classic-ed25519",
       signature: "f".repeat(128),
     };
 

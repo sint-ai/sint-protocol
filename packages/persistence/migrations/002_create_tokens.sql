@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS sint_tokens (
   expires_at        TEXT NOT NULL,
   revocable         BOOLEAN NOT NULL DEFAULT TRUE,
   revocation_endpoint TEXT,
+  crypto_profile   TEXT,
+  post_quantum_signatures JSONB,
   signature         TEXT NOT NULL
 );
 
@@ -30,7 +32,9 @@ ALTER TABLE sint_tokens
   ADD COLUMN IF NOT EXISTS behavioral_constraints JSONB,
   ADD COLUMN IF NOT EXISTS passport_id TEXT,
   ADD COLUMN IF NOT EXISTS delegation_depth INTEGER,
-  ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT;
+  ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT,
+  ADD COLUMN IF NOT EXISTS crypto_profile TEXT,
+  ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_tokens_subject ON sint_tokens (subject);
 CREATE INDEX IF NOT EXISTS idx_tokens_issuer ON sint_tokens (issuer);

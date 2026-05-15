@@ -29,6 +29,8 @@ function rowToToken(row: any): SintCapabilityToken {
     expiresAt: row.expires_at,
     revocable: row.revocable,
     revocationEndpoint: row.revocation_endpoint,
+    cryptoProfile: row.crypto_profile ?? undefined,
+    postQuantumSignatures: row.post_quantum_signatures ?? undefined,
     signature: row.signature,
   };
 }
@@ -42,8 +44,9 @@ export class PgTokenStore implements TokenStore {
         (token_id, issuer, subject, resource, actions, constraints,
          model_constraints, attestation_requirements, verifiable_compute_requirements,
          execution_envelope, behavioral_constraints, passport_id, delegation_depth,
-         delegation_chain, issued_at, expires_at, revocable, revocation_endpoint, signature)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+         delegation_chain, issued_at, expires_at, revocable, revocation_endpoint,
+         crypto_profile, post_quantum_signatures, signature)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
        ON CONFLICT (token_id) DO UPDATE SET
          issuer = EXCLUDED.issuer,
          subject = EXCLUDED.subject,
@@ -62,6 +65,8 @@ export class PgTokenStore implements TokenStore {
          expires_at = EXCLUDED.expires_at,
          revocable = EXCLUDED.revocable,
          revocation_endpoint = EXCLUDED.revocation_endpoint,
+         crypto_profile = EXCLUDED.crypto_profile,
+         post_quantum_signatures = EXCLUDED.post_quantum_signatures,
          signature = EXCLUDED.signature`,
       [
         token.tokenId,
@@ -82,6 +87,8 @@ export class PgTokenStore implements TokenStore {
         token.expiresAt,
         token.revocable,
         token.revocationEndpoint,
+        token.cryptoProfile,
+        JSON.stringify(token.postQuantumSignatures),
         token.signature,
       ],
     );

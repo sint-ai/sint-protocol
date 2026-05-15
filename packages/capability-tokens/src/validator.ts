@@ -88,6 +88,11 @@ export function validateTokenSchema(
 export function validateTokenSignature(
   token: SintCapabilityToken,
 ): Result<true, CapabilityTokenError> {
+  const profile = token.cryptoProfile ?? "classic-ed25519";
+  if (profile !== "classic-ed25519") {
+    return err("UNSUPPORTED_CRYPTO_PROFILE");
+  }
+
   const { signature, ...rest } = token;
   const payload = computeSigningPayload(rest);
   const valid = verify(token.issuer, signature, payload);

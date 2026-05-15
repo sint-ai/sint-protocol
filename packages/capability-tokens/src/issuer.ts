@@ -45,6 +45,7 @@ export function computeSigningPayload(
     attestationRequirements: token.attestationRequirements,
     behavioralConstraints: token.behavioralConstraints,
     constraints: token.constraints,
+    cryptoProfile: token.cryptoProfile,
     delegationChain: token.delegationChain,
     delegationDepth: token.delegationDepth,
     expiresAt: token.expiresAt,
@@ -53,6 +54,7 @@ export function computeSigningPayload(
     issuer: token.issuer,
     modelConstraints: token.modelConstraints,
     passportId: token.passportId,
+    postQuantumSignatures: token.postQuantumSignatures,
     resource: token.resource,
     revocable: token.revocable,
     revocationEndpoint: token.revocationEndpoint,
@@ -108,6 +110,12 @@ export function issueCapabilityToken(
     return err("TOKEN_EXPIRED");
   }
 
+  // PQ/hybrid profiles are mandatory once selected. Do not mint a token that
+  // claims PQ assurance until a real PQ signer/verifier is wired.
+  if ((request.cryptoProfile ?? "classic-ed25519") !== "classic-ed25519") {
+    return err("UNSUPPORTED_CRYPTO_PROFILE");
+  }
+
   // Generate token ID and timestamp
   const tokenId = generateUUIDv7();
   const issuedAt = nowISO8601();
@@ -132,6 +140,8 @@ export function issueCapabilityToken(
     expiresAt: request.expiresAt,
     revocable: request.revocable,
     revocationEndpoint: request.revocationEndpoint,
+    cryptoProfile: request.cryptoProfile,
+    postQuantumSignatures: request.postQuantumSignatures,
   };
 
   // Sign the canonical payload

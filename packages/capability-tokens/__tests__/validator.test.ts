@@ -80,6 +80,28 @@ describe("Capability Token Validator", () => {
     expect(result.error).toBe("INVALID_SIGNATURE");
   });
 
+  it("should fail closed when a token declares a mandatory hybrid PQ profile", () => {
+    const token = createValidToken();
+    const hybrid = {
+      ...token,
+      cryptoProfile: "hybrid-ed25519-mldsa65",
+      postQuantumSignatures: [
+        {
+          algorithm: "ML-DSA-65",
+          publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+          signature: "pq-signature-placeholder",
+        },
+      ],
+    } as SintCapabilityToken;
+    const result = validateCapabilityToken(hybrid, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("UNSUPPORTED_CRYPTO_PROFILE");
+  });
+
   it("should reject an expired token (no grace period)", () => {
     const token = createValidToken();
     const futureDate = new Date(Date.now() + 24 * 3600_000);
