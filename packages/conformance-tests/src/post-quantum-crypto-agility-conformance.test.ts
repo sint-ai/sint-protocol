@@ -10,9 +10,10 @@ import { describe, expect, it } from "vitest";
 import {
   generateKeypair,
   issueCapabilityToken,
+  sign,
   validateCapabilityToken,
 } from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
 import { computeSigningPayload } from "@pshkv/gate-capability-tokens";
 import { loadPostQuantumCryptoAgilityFixture } from "./fixture-loader.js";
 
@@ -91,6 +92,41 @@ describe("Post-quantum crypto agility fixture v1", () => {
       if (result.ok) continue;
       expect(result.error).toBe(profile.expectedError);
     }
+  });
+
+  it("allows explicit verifier providers to handle reserved profiles", () => {
+    const { request, issuerPrivateKey } = baseRequest();
+    const result = issueCapabilityToken(request, issuerPrivateKey);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    const unsignedHybrid = {
+      ...result.value,
+      cryptoProfile: "hybrid-ed25519-mldsa65",
+      postQuantumSignatures: [
+        {
+          algorithm: "ML-DSA-65",
+          publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+          signature: "pq-signature-placeholder",
+        },
+      ],
+    } as Omit<SintCapabilityToken, "signature">;
+    const hybrid = {
+      ...unsignedHybrid,
+      signature: sign(issuerPrivateKey, computeSigningPayload(unsignedHybrid)),
+    } as SintCapabilityToken;
+
+    const validation = validateCapabilityToken(hybrid, {
+      resource: request.resource,
+      action: "call",
+      cryptoProfileVerifiers: {
+        "hybrid-ed25519-mldsa65": ({ signingPayload }) => {
+          expect(signingPayload).toContain("hybrid-ed25519-mldsa65");
+          return { ok: true, value: true };
+        },
+      },
+    });
+    expect(validation.ok).toBe(true);
   });
 
   it("binds crypto profile fields into the signing payload", () => {

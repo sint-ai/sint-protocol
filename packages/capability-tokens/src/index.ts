@@ -1,4 +1,14 @@
 export { generateKeypair, sign, verify, hashSha256, getPublicKey } from "./crypto.js";
+export {
+  CLASSIC_ED25519_PROFILE,
+  DEFAULT_CRYPTO_PROFILE_VERIFIERS,
+  verifyTokenCryptoProfile,
+} from "./crypto-profile.js";
+export type {
+  CryptoProfileVerificationInput,
+  CryptoProfileVerifier,
+  CryptoProfileVerifierRegistry,
+} from "./crypto-profile.js";
 export { issueCapabilityToken, computeSigningPayload } from "./issuer.js";
 export type { SintCapabilityToken as CapabilityToken } from "@pshkv/core";
 export {

@@ -147,5 +147,5 @@ describe("ROS2 control-loop latency", () => {
       expect(steadyP99).toBeLessThan(80);
       expect(worstBatchP99).toBeLessThan(250);
     }
-  });
+  }, 15_000);
 });

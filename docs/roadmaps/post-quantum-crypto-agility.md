@@ -17,6 +17,7 @@ Implemented today:
 - SHA-256 hash-chained EvidenceLedger entries
 - explicit token-level `cryptoProfile` metadata
 - token-level `postQuantumSignatures` metadata for future hybrid/PQ profiles
+- a pluggable token crypto-profile verifier registry
 - fail-closed validation for mandatory non-classic token profiles until a real
   PQ verifier is wired
 
@@ -58,7 +59,7 @@ post-quantum signature evidence for long-lived authorization records.
 
 ### Gate 1. Crypto-Agile Token Contract
 
-Status: started.
+Status: implemented.
 
 Exit criteria:
 
@@ -67,8 +68,12 @@ Exit criteria:
 - signing payload includes crypto-profile fields
 - persistence preserves crypto-profile fields
 - unsupported mandatory profiles fail closed
+- validation accepts explicit crypto-profile verifier providers without changing
+  the default Ed25519-only security posture
 
 ### Gate 2. PQ Verification Provider
+
+Status: started.
 
 Exit criteria:
 
