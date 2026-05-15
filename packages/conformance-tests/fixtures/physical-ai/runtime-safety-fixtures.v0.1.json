@@ -16,7 +16,17 @@
     "evidenceRequirements": {
       "decisionRefRequired": true,
       "actionIntentRefRequired": true,
-      "hashChainRequired": true
+      "hashChainRequired": true,
+      "receiptRequiredForNegativeOutcomes": true,
+      "authorityPointer": {
+        "field": "delegation_ref",
+        "form": "opaque_content_addressed",
+        "nullable": true
+      },
+      "actionPointer": {
+        "field": "action_ref",
+        "form": "deterministic_public_derivation"
+      }
     }
   },
   "defaultToken": {
@@ -43,7 +53,15 @@
         "decisionAction": "escalate",
         "assignedTier": "T2_act",
         "transportOutcome": "held_for_review",
-        "evidenceEventType": "policy.decision.escalate"
+        "evidenceEventType": "policy.decision.escalate",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "receiptRequired": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true
+        }
       }
     },
     {
@@ -65,7 +83,15 @@
       "expected": {
         "decisionAction": "deny",
         "policyViolated": "INSUFFICIENT_PERMISSIONS",
-        "transportOutcome": "publish_rejected"
+        "transportOutcome": "publish_rejected",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "receiptRequired": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true
+        }
       }
     },
     {
@@ -86,7 +112,15 @@
         "decisionAction": "escalate",
         "assignedTier": "T3_commit",
         "transportOutcome": "held_for_review",
-        "evidenceEventType": "policy.decision.escalate"
+        "evidenceEventType": "policy.decision.escalate",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "receiptRequired": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true
+        }
       }
     },
     {
@@ -110,7 +144,15 @@
         "decisionAction": "deny",
         "transportOutcome": "publish_rejected",
         "transportDecision": "deny",
-        "evidenceEventType": "transport.sros2.publish_rejected"
+        "evidenceEventType": "transport.sros2.publish_rejected",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "receiptRequired": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true
+        }
       }
     },
     {
@@ -137,7 +179,16 @@
         "decisionAction": "rollback",
         "policyViolated": "HARDWARE_ESTOP_ACTIVE",
         "transportOutcome": "execution_rolled_back",
-        "evidenceEventType": "safety.estop.triggered"
+        "evidenceEventType": "safety.estop.triggered",
+        "evidence": {
+          "decisionRefRequired": true,
+          "actionIntentRefRequired": true,
+          "hashChainRequired": true,
+          "receiptRequired": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true,
+          "rollbackTargetRefRequired": true
+        }
       }
     },
     {
@@ -160,7 +211,14 @@
           "decisionRefRequired": true,
           "actionIntentRefRequired": true,
           "hashChainRequired": true,
-          "providerSpecificReceiptAllowed": true
+          "receiptRequired": true,
+          "providerSpecificReceiptAllowed": true,
+          "authorityPointerRequired": true,
+          "actionPointerRequired": true,
+          "samplePointers": {
+            "delegation_ref": "sha256:3a1f2a9f4f965b1f3af9f9d8f3ab7a6e7d19efb53f7e2c7b8b814f9f5e7a1a2b",
+            "action_ref": "sha256:9db97fb4d86bf76f6d3e6f4f8d2c7486f90a42dfe02c35d1dd232f7c3b7b7d0e"
+          }
         }
       }
     }

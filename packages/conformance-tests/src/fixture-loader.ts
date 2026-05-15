@@ -127,6 +127,16 @@ export interface PhysicalAiRuntimeSafetyFixture {
       readonly decisionRefRequired: boolean;
       readonly actionIntentRefRequired: boolean;
       readonly hashChainRequired: boolean;
+      readonly receiptRequiredForNegativeOutcomes: boolean;
+      readonly authorityPointer: {
+        readonly field: "delegation_ref";
+        readonly form: "opaque_content_addressed";
+        readonly nullable: boolean;
+      };
+      readonly actionPointer: {
+        readonly field: "action_ref";
+        readonly form: "deterministic_public_derivation";
+      };
     };
   };
   readonly defaultToken: TokenFixture & {
@@ -179,7 +189,15 @@ export interface PhysicalAiRuntimeSafetyFixture {
         readonly decisionRefRequired?: boolean;
         readonly actionIntentRefRequired?: boolean;
         readonly hashChainRequired?: boolean;
+        readonly receiptRequired?: boolean;
         readonly providerSpecificReceiptAllowed?: boolean;
+        readonly authorityPointerRequired?: boolean;
+        readonly actionPointerRequired?: boolean;
+        readonly rollbackTargetRefRequired?: boolean;
+        readonly samplePointers?: {
+          readonly delegation_ref: string | null;
+          readonly action_ref: string;
+        };
       };
     };
   }>;

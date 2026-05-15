@@ -101,6 +101,16 @@ describe("Physical AI runtime safety fixtures v0.1", () => {
       decisionRefRequired: true,
       actionIntentRefRequired: true,
       hashChainRequired: true,
+      receiptRequiredForNegativeOutcomes: true,
+      authorityPointer: {
+        field: "delegation_ref",
+        form: "opaque_content_addressed",
+        nullable: true,
+      },
+      actionPointer: {
+        field: "action_ref",
+        form: "deterministic_public_derivation",
+      },
     });
 
     const ids = fixture.cases.map((c) => c.id);
@@ -134,6 +144,9 @@ describe("Physical AI runtime safety fixtures v0.1", () => {
       expect(c.expected.decisionAction).toBe("deny");
       expect(c.expected.transportOutcome).toBe("publish_rejected");
       expect(c.expected.evidenceEventType).toBe("transport.sros2.publish_rejected");
+      expect(c.expected.evidence?.receiptRequired).toBe(true);
+      expect(c.expected.evidence?.authorityPointerRequired).toBe(true);
+      expect(c.expected.evidence?.actionPointerRequired).toBe(true);
     },
   );
 
@@ -179,11 +192,42 @@ describe("Physical AI runtime safety fixtures v0.1", () => {
       }
 
       if (c.expected.evidence) {
-        expect(events.length).toBeGreaterThan(0);
+        if (c.transportCheck === undefined) {
+          expect(events.length).toBeGreaterThan(0);
+        }
         expect(c.expected.evidence.decisionRefRequired).toBe(true);
         expect(c.expected.evidence.actionIntentRefRequired).toBe(true);
         expect(c.expected.evidence.hashChainRequired).toBe(true);
+        expect(c.expected.evidence.receiptRequired).toBe(true);
+        expect(c.expected.evidence.authorityPointerRequired).toBe(true);
+        expect(c.expected.evidence.actionPointerRequired).toBe(true);
+        if (c.expected.decisionAction === "rollback") {
+          expect(c.expected.evidence.rollbackTargetRefRequired).toBe(true);
+        }
+        if (c.expected.evidence.samplePointers) {
+          expect(c.expected.evidence.samplePointers.action_ref).toMatch(/^sha256:[0-9a-f]{64}$/);
+          expect(c.expected.evidence.samplePointers.delegation_ref).toMatch(/^sha256:[0-9a-f]{64}$/);
+        }
       }
     },
   );
+
+  it("requires receipts and evidence pointers for every physical boundary case", () => {
+    for (const c of fixture.cases) {
+      expect(c.expected.evidence?.receiptRequired).toBe(true);
+      expect(c.expected.evidence?.authorityPointerRequired).toBe(true);
+      expect(c.expected.evidence?.actionPointerRequired).toBe(true);
+
+      if (
+        c.expected.decisionAction === "deny"
+        || c.expected.decisionAction === "rollback"
+        || c.expected.transportOutcome === "publish_rejected"
+        || c.expected.transportOutcome === "execution_rolled_back"
+      ) {
+        expect(fixture.profile.evidenceRequirements.receiptRequiredForNegativeOutcomes).toBe(true);
+        expect(c.expected.evidence?.decisionRefRequired).toBe(true);
+        expect(c.expected.evidence?.actionIntentRefRequired).toBe(true);
+      }
+    }
+  });
 });
