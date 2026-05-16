@@ -133,6 +133,26 @@ Status:
 - detailed migration plan lives in
   `docs/roadmaps/post-quantum-crypto-agility.md`
 
+### M8. Humanoid Robotics Integration Readiness
+
+Exit criteria:
+
+- common humanoid intents have canonical resource URIs, tier mappings, and
+  conformance fixtures
+- warehouse / RaaS pilot guidance reuses existing ROS 2, Open-RMF, OPC UA, and
+  Sparkplug bridges
+- EU AI Act and ISO 13482 evidence exports are generated from fixture and
+  ledger data rather than hand-written claims
+- multi-vendor fleet handoffs produce auditable receipts across humanoids, AMRs,
+  conveyors, and safety controllers
+- vendor-specific adapters are added only after partner API access or simulator
+  contracts exist
+
+Status:
+
+- integration roadmap lives in
+  `docs/roadmaps/humanoid-robotics-integrations-2026.md`
+
 ## Recommended Implementation Order
 
 1. Finish data-integrity and persistence fixes.
@@ -140,7 +160,9 @@ Status:
 3. Freeze the first supported production slice.
 4. Document runtime contract and deployment.
 5. Add release gates.
-6. Resume feature expansion one domain at a time.
+6. Build the humanoid profile fixture and warehouse pilot kit on top of the
+   existing bridge surface.
+7. Resume feature expansion one domain at a time.
 
 ## Feature Roadmap Reframing
 

@@ -68,6 +68,7 @@ export default defineConfig({
         items: [
           { text: "AAIF Resubmission 2026", link: "/roadmaps/aaif-resubmission-2026" },
           { text: "Ecosystem Outreach 2026", link: "/roadmaps/ecosystem-outreach-2026" },
+          { text: "Humanoid Robotics Integrations", link: "/roadmaps/humanoid-robotics-integrations-2026" },
           { text: "Post-Quantum Crypto Agility", link: "/roadmaps/post-quantum-crypto-agility" },
           { text: "Physical AI Governance", link: "/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029" },
         ],

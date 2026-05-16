@@ -38,6 +38,7 @@ See detailed plans in:
 - [Legacy phase plan](./roadmap-phases-legacy.md)
 - [Ecosystem outreach 2026](./roadmaps/ecosystem-outreach-2026.md)
 - [Hardware safety controller integration roadmap](./roadmaps/hardware-safety-controller-integration.md)
+- [Humanoid robotics integrations 2026](./roadmaps/humanoid-robotics-integrations-2026.md)
 
 ## Ecosystem Outreach (Q2–Q3 2026)
 
