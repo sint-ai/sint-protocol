@@ -242,13 +242,21 @@ Exit criteria:
 
 Target: Q1 2027.
 
+Status: started.
+
 Deliverables:
 
+- `docs/guides/regulated-consent-extensions.md` (published)
 - multimodal consent event schema
 - patient / worker / resident consent scopes
 - privacy-preserving evidence rules for cameras, microphones, and biometric
   sensors
 - medical and consumer incident-reporting export prototypes
+
+Executable artifacts:
+
+- `packages/conformance-tests/fixtures/compliance/regulated-consent-extensions.v1.json`
+- `packages/conformance-tests/src/regulated-consent-extensions-conformance.test.ts`
 
 Exit criteria:
 

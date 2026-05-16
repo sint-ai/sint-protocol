@@ -1145,3 +1145,75 @@ export function loadIndustrialCellSafetyPackFixture(): IndustrialCellSafetyPackF
     "industrial/industrial-cell-safety-pack.v1.json",
   );
 }
+
+export interface RegulatedConsentExtensionsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly status: "experimental";
+  readonly scopeNote: string;
+  readonly consentEventSchema: {
+    readonly requiredFields: readonly string[];
+    readonly allowedModalities: readonly string[];
+    readonly privacyRules: {
+      readonly rawAudioStored: false;
+      readonly rawVideoStored: false;
+      readonly biometricTemplateStored: false;
+      readonly digestAlgorithm: "sha-256";
+      readonly minimizeGrantorRef: boolean;
+    };
+  };
+  readonly consentScopes: readonly Array<{
+    readonly scopeId: string;
+    readonly subjectRole: "patient" | "worker" | "resident";
+    readonly grantorRef: string;
+    readonly delegateRef?: string;
+    readonly resourcePattern: string;
+    readonly actions: readonly string[];
+    readonly maxAgeSeconds: number;
+    readonly revocable: boolean;
+  }>;
+  readonly sampleEvents: readonly Array<{
+    readonly name: string;
+    readonly consentId: string;
+    readonly grantorRef: string;
+    readonly subjectRole: "patient" | "worker" | "resident";
+    readonly scopeId: string;
+    readonly tokenId: string;
+    readonly resource: string;
+    readonly action: string;
+    readonly modalities: readonly string[];
+    readonly evidenceDigest: string;
+    readonly rawEvidenceStored: boolean;
+    readonly expiresAt: string;
+    readonly revocable: boolean;
+    readonly revokedAt?: string;
+    readonly expectedDecision: "allow" | "deny" | "escalate";
+    readonly assignedTier: ApprovalTier;
+    readonly policyViolated?: string;
+  }>;
+  readonly privacyPreservingEvidenceRules: readonly Array<{
+    readonly sensor: "camera" | "microphone" | "biometric";
+    readonly allowedEvidence: readonly string[];
+    readonly forbiddenEvidence: readonly string[];
+  }>;
+  readonly incidentExportPrototypes: readonly Array<{
+    readonly domain: "home" | "medical";
+    readonly name: string;
+    readonly requiredFields: readonly string[];
+    readonly experimental: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly consentEvidenceTokenBound: boolean;
+    readonly consentEvidenceRevocable: boolean;
+    readonly rawSensitiveMediaNeverRequired: boolean;
+    readonly incidentExportsMarkedExperimental: boolean;
+    readonly regulatedDomainClaimsRequirePartnerValidation: boolean;
+  };
+}
+
+export function loadRegulatedConsentExtensionsFixture(): RegulatedConsentExtensionsFixture {
+  return loadFixture<RegulatedConsentExtensionsFixture>(
+    "compliance/regulated-consent-extensions.v1.json",
+  );
+}
