@@ -44,6 +44,7 @@ export default defineConfig({
           { text: "WebSocket Approvals", link: "/guides/websocket-approvals" },
           { text: "Gazebo ROS2 Validation", link: "/guides/gazebo-ros2-validation" },
           { text: "Isaac Sim Integration", link: "/guides/isaac-sim-integration" },
+          { text: "Humanoid Warehouse Pilot", link: "/guides/humanoid-warehouse-pilot" },
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
           { text: "AutoGen Interop Fixtures", link: "/guides/autogen-interop-fixtures" },

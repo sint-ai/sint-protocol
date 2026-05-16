@@ -836,3 +836,56 @@ export function loadHumanoidProfileFixture(): HumanoidProfileFixture {
     "physical-ai/humanoid-profile.v1.json",
   );
 }
+
+export interface HumanoidWarehousePilotFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly pilot: {
+    readonly siteId: string;
+    readonly shiftId: string;
+    readonly fleetId: string;
+    readonly robotIds: readonly string[];
+    readonly deploymentProfile: "warehouse-amr";
+    readonly targetRobotCount: {
+      readonly min: number;
+      readonly max: number;
+    };
+  };
+  readonly exportSchema: {
+    readonly format: "json-lines";
+    readonly requiredFields: readonly string[];
+    readonly optionalFields: readonly string[];
+  };
+  readonly successCriteria: {
+    readonly chainVerificationRequired: boolean;
+    readonly allT2T3HaveApprovalOrDenialEvidence: boolean;
+    readonly handoffRequiresReceipt: boolean;
+    readonly estopRequiresRollbackOrDenyEvidence: boolean;
+    readonly exportAcceptedByExternalReviewer: boolean;
+  };
+  readonly sampleEvents: readonly Array<{
+    readonly name: string;
+    readonly robotId: string;
+    readonly eventType: string;
+    readonly resource: string;
+    readonly action: string;
+    readonly decision: "allow" | "deny" | "escalate";
+    readonly assignedTier: ApprovalTier;
+    readonly approvalId?: string;
+    readonly operatorId?: string;
+    readonly incidentId?: string;
+    readonly handoffReceiptId?: string;
+    readonly safetyControllerId?: string;
+    readonly latencyMs?: number;
+    readonly denialPolicy?: string;
+    readonly receiptRequired: boolean;
+    readonly rollbackTargetRef?: string;
+  }>;
+}
+
+export function loadHumanoidWarehousePilotFixture(): HumanoidWarehousePilotFixture {
+  return loadFixture<HumanoidWarehousePilotFixture>(
+    "physical-ai/humanoid-warehouse-pilot.v1.json",
+  );
+}

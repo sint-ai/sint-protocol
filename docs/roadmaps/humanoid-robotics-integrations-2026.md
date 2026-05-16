@@ -137,14 +137,21 @@ Exit criteria:
 
 Target: next production adoption push.
 
+Status: started.
+
 Deliverables:
 
-- `docs/guides/humanoid-warehouse-pilot.md`
-- deployment topology for 10-50 robots behind a gateway
+- `docs/guides/humanoid-warehouse-pilot.md` (published)
+- deployment topology for 10-50 robots behind a gateway (published)
 - per-shift audit export: robot, operator, token, assigned tier, approval,
   denial, rollback, e-stop, latency
 - incident replay procedure with EvidenceLedger chain verification
-- insurance / workers' comp evidence CSV or JSON export
+- insurance / workers' comp evidence JSON Lines export
+
+Executable artifacts:
+
+- `packages/conformance-tests/fixtures/physical-ai/humanoid-warehouse-pilot.v1.json`
+- `packages/conformance-tests/src/humanoid-warehouse-pilot-conformance.test.ts`
 
 Exit criteria:
 
@@ -254,4 +261,3 @@ Exit criteria:
 - one multi-vendor fleet scenario with reproducible conformance tests
 - one external maintainer or adopter contributing integration fixtures for at
   least 90 days
-
