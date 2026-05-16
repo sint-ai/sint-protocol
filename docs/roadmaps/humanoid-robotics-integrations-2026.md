@@ -164,13 +164,21 @@ Exit criteria:
 
 Target: Q3 2026.
 
+Status: started.
+
 Deliverables:
 
+- `docs/guides/eu-ai-act-conformity-pack.md` (published)
 - Article 13 transparency export from SINT schema and policy metadata
 - Article 14 human-oversight export from T2/T3 approval evidence
 - Annex IV checklist template referencing SINT token, gateway, ledger, and
   rollback artifacts
 - ISO 13482 crosswalk section for service robots operating near humans
+
+Executable artifacts:
+
+- `packages/conformance-tests/fixtures/compliance/eu-ai-act-conformity-pack.v1.json`
+- `packages/conformance-tests/src/eu-ai-act-conformity-pack-conformance.test.ts`
 
 Exit criteria:
 

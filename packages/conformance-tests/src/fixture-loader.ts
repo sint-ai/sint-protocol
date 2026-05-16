@@ -889,3 +889,86 @@ export function loadHumanoidWarehousePilotFixture(): HumanoidWarehousePilotFixtu
     "physical-ai/humanoid-warehouse-pilot.v1.json",
   );
 }
+
+export interface EuAiActConformityPackFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly regulation: {
+    readonly name: "Regulation (EU) 2024/1689";
+    readonly officialTextDate: string;
+    readonly scopeNote: string;
+    readonly references: readonly Array<{
+      readonly id:
+        | "eu-ai-act-article-13"
+        | "eu-ai-act-article-14"
+        | "eu-ai-act-annex-iv";
+      readonly title: string;
+      readonly url: string;
+    }>;
+  };
+  readonly deployment: {
+    readonly systemName: string;
+    readonly intendedPurpose: string;
+    readonly operatorRole: string;
+    readonly robotCategory: "service-robot-near-humans";
+    readonly riskAssumptions: readonly string[];
+  };
+  readonly article13TransparencyExport: {
+    readonly requiredFields: readonly string[];
+    readonly resourceCatalog: readonly Array<{
+      readonly resourcePattern: string;
+      readonly action: string;
+      readonly tier: ApprovalTier;
+      readonly deployersShouldKnow: string;
+    }>;
+    readonly knownLimitations: readonly string[];
+    readonly logAccessProcedure: string;
+  };
+  readonly article14HumanOversightExport: {
+    readonly requiredFields: readonly string[];
+    readonly oversightRole: string;
+    readonly interventionPoints: readonly Array<{
+      readonly tier: ApprovalTier;
+      readonly mechanism: string;
+      readonly evidenceSource: string;
+    }>;
+    readonly stopControl: {
+      readonly type: "unconditional-estop";
+      readonly ledgerEvent: "safety.estop.triggered";
+      readonly requiresTokenValidation: false;
+      readonly rollbackEvidenceRequired: boolean;
+    };
+    readonly operatorTrainingEvidence: {
+      readonly required: boolean;
+      readonly artifactRef: string;
+    };
+    readonly postIncidentReview: {
+      readonly required: boolean;
+      readonly artifactRef: string;
+    };
+  };
+  readonly annexIVChecklist: readonly Array<{
+    readonly id: string;
+    readonly title: string;
+    readonly sintArtifactRefs: readonly string[];
+  }>;
+  readonly iso13482Crosswalk: readonly Array<{
+    readonly topic: string;
+    readonly sintControl: string;
+    readonly evidenceSource: string;
+  }>;
+  readonly successCriteria: {
+    readonly article13GeneratedFromFixtureData: boolean;
+    readonly article14T2T3EvidenceRequired: boolean;
+    readonly annexIVArtifactsReferenced: boolean;
+    readonly iso13482CrosswalkIncluded: boolean;
+    readonly externalReviewerReady: boolean;
+  };
+}
+
+export function loadEuAiActConformityPackFixture(): EuAiActConformityPackFixture {
+  return loadFixture<EuAiActConformityPackFixture>(
+    "compliance/eu-ai-act-conformity-pack.v1.json",
+  );
+}
