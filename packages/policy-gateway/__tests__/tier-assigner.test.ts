@@ -174,6 +174,23 @@ describe("assignTier", () => {
     expect(result.riskTier).toBe(RiskTier.T3_IRREVERSIBLE);
   });
 
+  it("maps humanoid profile resources to the expected approval tiers", () => {
+    const cases = [
+      ["humanoid://fleet/warehouse/robot/digit-07/status", "observe", ApprovalTier.T0_OBSERVE],
+      ["humanoid://fleet/warehouse/robot/digit-07/plan", "prepare", ApprovalTier.T1_PREPARE],
+      ["humanoid://fleet/warehouse/robot/digit-07/base/cmd_vel", "publish", ApprovalTier.T2_ACT],
+      ["humanoid://fleet/warehouse/robot/digit-07/arm/left/joint_commands", "publish", ApprovalTier.T2_ACT],
+      ["humanoid://fleet/warehouse/robot/digit-07/handoff", "call", ApprovalTier.T2_ACT],
+      ["humanoid://fleet/warehouse/robot/digit-07/workspace/novel/enter", "call", ApprovalTier.T3_COMMIT],
+      ["humanoid://fleet/warehouse/robot/digit-07/estop", "override", ApprovalTier.T3_COMMIT],
+    ] as const;
+
+    for (const [resource, action, expectedTier] of cases) {
+      const result = assignTier(makeRequest({ resource, action }));
+      expect(result.approvalTier, resource).toBe(expectedTier);
+    }
+  });
+
   it("escalates on human presence detection", () => {
     const result = assignTier(makeRequest({
       resource: "ros2:///cmd_vel",

@@ -53,6 +53,12 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     baseTier: ApprovalTier.T0_OBSERVE,
     baseRisk: RiskTier.T0_READ,
   },
+  {
+    resourcePattern: "ros2://*/status",
+    actions: ["subscribe"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
 
   // Navigation planning — PREPARE
   {
@@ -89,6 +95,84 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     baseTier: ApprovalTier.T2_ACT,
     baseRisk: RiskTier.T2_STATEFUL,
     escalateOnHumanPresence: true,
+  },
+
+  // Humanoid robotics profile — canonical, vendor-neutral resources
+  {
+    resourcePattern: "humanoid://*/status",
+    actions: ["observe"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "humanoid://*/battery",
+    actions: ["observe"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "humanoid://*/plan",
+    actions: ["prepare"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+  {
+    resourcePattern: "humanoid://*/workspace/*/reserve",
+    actions: ["prepare"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+  {
+    resourcePattern: "humanoid://*/base/cmd_vel",
+    actions: ["publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "humanoid://*/arm/*/joint_commands",
+    actions: ["publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "humanoid://*/end-effector/*",
+    actions: ["publish", "call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "humanoid://*/handoff",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "humanoid://*/battery/swap",
+    actions: ["call"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "humanoid://*/workspace/novel/enter",
+    actions: ["call"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+  {
+    resourcePattern: "humanoid://*/safety/envelope",
+    actions: ["call", "override"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+  {
+    resourcePattern: "humanoid://*/estop",
+    actions: ["override"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
   },
 
   // Mode changes / E-stop — COMMIT (irreversible consequences)

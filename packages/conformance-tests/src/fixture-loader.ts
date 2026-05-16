@@ -780,3 +780,59 @@ export function loadPostQuantumCryptoAgilityFixture(): PostQuantumCryptoAgilityF
     "security/post-quantum-crypto-agility.v1.json",
   );
 }
+
+export interface HumanoidProfileFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly resourcePrefix: string;
+  readonly requirements: {
+    readonly singleGatewayChokePoint: boolean;
+    readonly ros2OpenRmfEquivalentTiering: boolean;
+    readonly handoffRequiresReceipt: boolean;
+    readonly estopIsT3Override: boolean;
+  };
+  readonly intents: readonly Array<{
+    readonly name: string;
+    readonly humanoidResource: string;
+    readonly humanoidAction: string;
+    readonly expectedTier: ApprovalTier;
+    readonly expectedDecisionAction: DecisionAction;
+    readonly requiresReceipt?: boolean;
+    readonly physicalContext?: {
+      readonly currentVelocityMps?: number;
+      readonly currentForceNewtons?: number;
+      readonly humanDetected?: boolean;
+    };
+    readonly bridgeMappings?: {
+      readonly ros2?: {
+        readonly kind: "topic" | "service" | "action";
+        readonly name: string;
+        readonly action: string;
+        readonly expectedTier: ApprovalTier;
+      };
+      readonly openRmf?: {
+        readonly fleetName: string;
+        readonly robotName?: string;
+        readonly operation:
+          | "fleet.status"
+          | "robot.status"
+          | "task.dispatch"
+          | "task.cancel"
+          | "traffic.reserve"
+          | "door.command"
+          | "lift.command"
+          | "emergency.stop"
+          | "emergency.release";
+        readonly expectedAction: "observe" | "prepare" | "call" | "override";
+        readonly expectedTier: ApprovalTier;
+      };
+    };
+  }>;
+}
+
+export function loadHumanoidProfileFixture(): HumanoidProfileFixture {
+  return loadFixture<HumanoidProfileFixture>(
+    "physical-ai/humanoid-profile.v1.json",
+  );
+}
