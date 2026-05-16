@@ -216,12 +216,20 @@ Exit criteria:
 
 Target: Q4 2026 to Q1 2027.
 
+Status: started.
+
 Deliverables:
 
+- `docs/guides/industrial-cell-safety-pack.md` (published)
 - industrial humanoid policy templates
 - FMEA export from SINT event categories
 - safety-controller permit timing report
 - SOTIF / ISO 26262 mapping draft for AI-generated physical actions
+
+Executable artifacts:
+
+- `packages/conformance-tests/fixtures/industrial/industrial-cell-safety-pack.v1.json`
+- `packages/conformance-tests/src/industrial-cell-safety-pack-conformance.test.ts`
 
 Exit criteria:
 

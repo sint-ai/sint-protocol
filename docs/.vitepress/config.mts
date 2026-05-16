@@ -47,6 +47,7 @@ export default defineConfig({
           { text: "Humanoid Warehouse Pilot", link: "/guides/humanoid-warehouse-pilot" },
           { text: "EU AI Act Conformity Pack", link: "/guides/eu-ai-act-conformity-pack" },
           { text: "Multi-Vendor Fleet Governance", link: "/guides/multivendor-fleet-governance" },
+          { text: "Industrial Cell Safety Pack", link: "/guides/industrial-cell-safety-pack" },
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },
           { text: "API Documentation Site", link: "/guides/api-documentation-site" },
           { text: "AutoGen Interop Fixtures", link: "/guides/autogen-interop-fixtures" },

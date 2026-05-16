@@ -1042,3 +1042,106 @@ export function loadEuAiActConformityPackFixture(): EuAiActConformityPackFixture
     "compliance/eu-ai-act-conformity-pack.v1.json",
   );
 }
+
+export interface HardwareSafetyPhaseAKpisFixture {
+  readonly version: string;
+  readonly phase: string;
+  readonly quarter: string;
+  readonly description: string;
+  readonly kpis: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly target: string;
+    readonly targetMs?: number;
+    readonly targetCount?: number;
+    readonly benchmarkSuite?: string;
+    readonly invariant?: string;
+  }>;
+}
+
+export function loadHardwareSafetyPhaseAKpisFixture(): HardwareSafetyPhaseAKpisFixture {
+  return loadFixture<HardwareSafetyPhaseAKpisFixture>(
+    "industrial/hardware-safety-phase-a-kpis.json",
+  );
+}
+
+export interface IndustrialCellSafetyPackFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scopeNote: string;
+  readonly deployment: {
+    readonly siteId: string;
+    readonly cellId: string;
+    readonly profile: "industrial-humanoid-cell";
+    readonly actors: readonly string[];
+    readonly resources: readonly string[];
+  };
+  readonly policyTemplates: readonly Array<{
+    readonly templateId: string;
+    readonly resourcePattern: string;
+    readonly requiredHardwareSafety: {
+      readonly permitState: "granted";
+      readonly interlockState: "closed";
+      readonly estopState: "clear";
+      readonly maxObservedAgeMs: number;
+    };
+    readonly defaultTier: ApprovalTier;
+  }>;
+  readonly cellScenarios: readonly Array<{
+    readonly id: string;
+    readonly description: string;
+    readonly resource: string;
+    readonly action: "prepare" | "publish" | "override";
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+    };
+    readonly hardwareSafety: {
+      readonly permitState: "granted" | "denied" | "unknown" | "stale";
+      readonly interlockState: "closed" | "open" | "fault" | "unknown";
+      readonly estopState: "clear" | "triggered" | "unknown";
+      readonly controllerId: string;
+      readonly observedAgeMs: number;
+    };
+    readonly expectedDecision: "allow" | "deny" | "escalate" | "rollback";
+    readonly expectedTier: ApprovalTier;
+    readonly policyViolated: string;
+    readonly evidenceEvent: string;
+    readonly rollbackTargetRef?: string;
+  }>;
+  readonly fmeaExport: readonly Array<{
+    readonly failureMode: string;
+    readonly sourceScenarioId: string;
+    readonly hazard: string;
+    readonly sintDetection: string;
+    readonly sintControl: string;
+    readonly severity: number;
+    readonly occurrence: number;
+    readonly detection: number;
+    readonly requiredEvidence: readonly string[];
+  }>;
+  readonly sotifIso26262Mapping: readonly Array<{
+    readonly topic: string;
+    readonly sintSupport: string;
+    readonly claimBoundary: string;
+  }>;
+  readonly timingReport: {
+    readonly kpiFixtureRef: string;
+    readonly requiredKpis: readonly string[];
+    readonly requiresBenchmarkReport: boolean;
+  };
+  readonly successCriteria: {
+    readonly guardDoorInterlockCovered: boolean;
+    readonly zoneOccupancyCovered: boolean;
+    readonly permitRevocationCovered: boolean;
+    readonly emergencyStopCovered: boolean;
+    readonly fmeaRowsReferenceScenarios: boolean;
+    readonly claimsRemainSupportOnly: boolean;
+  };
+}
+
+export function loadIndustrialCellSafetyPackFixture(): IndustrialCellSafetyPackFixture {
+  return loadFixture<IndustrialCellSafetyPackFixture>(
+    "industrial/industrial-cell-safety-pack.v1.json",
+  );
+}
