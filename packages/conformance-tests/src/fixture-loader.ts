@@ -890,6 +890,76 @@ export function loadHumanoidWarehousePilotFixture(): HumanoidWarehousePilotFixtu
   );
 }
 
+export interface HumanoidMultivendorFleetFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly deployment: {
+    readonly siteId: string;
+    readonly fleetId: string;
+    readonly robots: readonly Array<{
+      readonly id: string;
+      readonly kind: "humanoid" | "amr" | "conveyor";
+      readonly vendor: string;
+    }>;
+    readonly humanZones: readonly string[];
+  };
+  readonly requirements: {
+    readonly handoffRequiresReceipt: boolean;
+    readonly sharedZoneConflictFailsClosed: boolean;
+    readonly crossBridgeReplayPreservesIntent: boolean;
+    readonly crossBridgeReplayPreservesHighConsequenceTier: boolean;
+    readonly dashboardQueriesDefinedForThousandRobotAudit: boolean;
+  };
+  readonly handoffReceiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly sharedZoneClaims: readonly Array<{
+    readonly claimId: string;
+    readonly robotId: string;
+    readonly workspaceId: string;
+    readonly resource: string;
+    readonly action: "prepare";
+    readonly window: {
+      readonly start: string;
+      readonly end: string;
+    };
+    readonly expectedDecision: "allow" | "deny";
+    readonly expectedTier: ApprovalTier;
+    readonly policyViolated?: "FLEET_ZONE_CONFLICT";
+  }>;
+  readonly crossBridgeReplay: {
+    readonly intentId: string;
+    readonly semanticIntent: "move_payload_to_packout";
+    readonly expectedAssignedTier: ApprovalTier;
+    readonly expectedDecisionAction: DecisionAction;
+    readonly paths: readonly Array<{
+      readonly bridge: "ros2" | "open-rmf" | "opcua" | "sparkplug";
+      readonly resource: string;
+      readonly action: "publish" | "call";
+      readonly mapperInput: Record<string, string>;
+    }>;
+  };
+  readonly dashboardAuditQueries: readonly Array<{
+    readonly name: string;
+    readonly purpose: string;
+    readonly requiredFilters: readonly string[];
+  }>;
+  readonly successCriteria: {
+    readonly handoffWithoutReceiptRejected: boolean;
+    readonly conflictingWorkspaceClaimsDenied: boolean;
+    readonly crossBridgeReplayAllEscalates: boolean;
+    readonly dashboardQueriesHaveBoundedFilters: boolean;
+  };
+}
+
+export function loadHumanoidMultivendorFleetFixture(): HumanoidMultivendorFleetFixture {
+  return loadFixture<HumanoidMultivendorFleetFixture>(
+    "physical-ai/humanoid-multivendor-fleet.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

@@ -190,13 +190,21 @@ Exit criteria:
 
 Target: Q4 2026.
 
+Status: started.
+
 Deliverables:
 
+- `docs/guides/multivendor-fleet-governance.md` (published)
 - Open-RMF handoff receipts for humanoid-to-AMR workflows
 - shared-zone policy fixture for humanoid + AMR + conveyor + human worker
 - cross-bridge replay showing the same intent through ROS 2, Open-RMF, OPC UA,
   and Sparkplug
 - fleet dashboard requirements document for 1,000+ robot audit queries
+
+Executable artifacts:
+
+- `packages/conformance-tests/fixtures/physical-ai/humanoid-multivendor-fleet.v1.json`
+- `packages/conformance-tests/src/humanoid-multivendor-fleet-conformance.test.ts`
 
 Exit criteria:
 
