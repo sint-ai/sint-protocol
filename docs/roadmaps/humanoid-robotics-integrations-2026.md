@@ -111,6 +111,8 @@ Required integrations:
 
 Target: immediate.
 
+Status: completed.
+
 Deliverables:
 
 - define `humanoid://` resource URI conventions for robot, limb, end-effector,
@@ -137,7 +139,7 @@ Exit criteria:
 
 Target: next production adoption push.
 
-Status: started.
+Status: completed.
 
 Deliverables:
 
@@ -164,7 +166,7 @@ Exit criteria:
 
 Target: Q3 2026.
 
-Status: started.
+Status: completed.
 
 Deliverables:
 
@@ -190,7 +192,7 @@ Exit criteria:
 
 Target: Q4 2026.
 
-Status: started.
+Status: completed.
 
 Deliverables:
 
@@ -216,7 +218,7 @@ Exit criteria:
 
 Target: Q4 2026 to Q1 2027.
 
-Status: started.
+Status: completed.
 
 Deliverables:
 
@@ -242,7 +244,7 @@ Exit criteria:
 
 Target: Q1 2027.
 
-Status: started.
+Status: completed.
 
 Deliverables:
 
@@ -266,17 +268,24 @@ Exit criteria:
 - medical and consumer modules are clearly marked experimental until partner
   validation exists
 
-## This Week
+## Next Execution Window
 
-1. Open GitHub issues for H1, H2, and H3.
-2. Implement the humanoid profile fixture before creating new bridge packages.
-3. Draft the warehouse pilot guide around existing ROS 2, Open-RMF, OPC UA, and
-   Sparkplug paths.
-4. Build the first EU AI Act export from current conformance fixture data.
-5. Prepare three outreach packages:
-   - warehouse / RaaS liability
-   - EU AI Act conformity
-   - post-security-incident fleet hardening
+1. Run external validation on the completed packs with independent reviewers:
+   - warehouse/RaaS safety stakeholder
+   - EU AI Act documentation reviewer
+   - industrial cell safety reviewer
+2. Publish benchmark-backed dashboard query envelopes for multi-vendor fleet
+   audits at 1,000+ robot scale.
+3. Open a dedicated maintainer-onboarding track and collect 90-day contribution
+   evidence from at least one independent organization.
+4. Convert guide-level prototypes into API-level export contracts for:
+   - Article 13/14 and Annex IV packs
+   - industrial FMEA and timing reports
+   - regulated-domain consent incident exports (experimental)
+5. Capture adopter-ready pilot starter kits for:
+   - warehouse/RaaS
+   - industrial cell
+   - regulated-domain consent workflows
 
 ## Non-Goals
 
