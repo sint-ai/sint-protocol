@@ -140,7 +140,7 @@ Tasks:
 - [x] open a "maintainer nomination" issue template
 - [x] create an adopters page with explicit statuses:
   evaluation, pilot, production
-- label roadmap issues with `aaif-gate/adoption`,
+- [x] label roadmap issues with `aaif-gate/adoption`,
   `aaif-gate/maintainership`, `aaif-gate/reference-implementation`,
   `aaif-gate/conformance`, and `aaif-gate/openssf`
 
