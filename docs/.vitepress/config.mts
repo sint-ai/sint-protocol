@@ -61,6 +61,7 @@ export default defineConfig({
       {
         text: "Community",
         items: [
+          { text: "AAIF Gate Labels", link: "/community/aaif-gate-labels" },
           { text: "Adopters And Evidence", link: "/community/adopters" },
           { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
           { text: "Discord Launch Kit", link: "/community/discord-launch-kit" },
