@@ -157,11 +157,11 @@ without private context.
 
 Tasks:
 
-- finish a one-command production-slice verification script
-- document signed request examples for at least one client
-- harden migration and rollback docs
-- publish conformance runner usage
-- create a release candidate checklist issue for each tagged release candidate
+- [x] finish a one-command production-slice verification script
+- [x] document signed request examples for at least one client
+- [x] harden migration and rollback docs
+- [x] publish conformance runner usage
+- [x] create a release candidate checklist issue for each tagged release candidate
 - run OpenSSF Best Practices assessment and file gaps
 
 Exit criteria:
