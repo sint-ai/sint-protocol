@@ -21,6 +21,7 @@
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "community:starter-board": "node ./scripts/generate-community-starter-board.mjs",
     "community:maintainer-scorecard": "node ./scripts/update-maintainer-scorecard.mjs",
+    "aaif:evidence:new": "node ./scripts/new-aaif-evidence-item.mjs",
     "aaif:release-gate": "pnpm run build && pnpm run test && pnpm run docs:build && pnpm --filter @pshkv/conformance-tests test",
     "bench": "pnpm --filter @sint/gate-policy-gateway bench",
     "sintctl": "pnpm --filter @sint/sintctl exec sintctl --help",

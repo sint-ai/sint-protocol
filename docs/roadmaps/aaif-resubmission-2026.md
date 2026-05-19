@@ -228,6 +228,8 @@ Evidence:
 Proposal assembly reference:
 
 - `docs/community/aaif-resubmission-proposal-template.md`
+- `docs/community/aaif-evidence-dossier.md`
+- `pnpm run aaif:evidence:new <type> <slug> [YYYY-MM-DD]`
 
 ## Operating Principle
 
