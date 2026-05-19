@@ -64,6 +64,7 @@ export default defineConfig({
           { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
           { text: "Discord Launch Kit", link: "/community/discord-launch-kit" },
           { text: "External Contributor Onboarding", link: "/community/external-contributor-onboarding" },
+          { text: "Independent Maintainer Scorecard", link: "/community/independent-maintainer-scorecard" },
           { text: "Good First Issues Board", link: "/community/good-first-issues-board" },
           { text: "Collaboration Reply Playbook", link: "/community/open-source-collaboration-replies" },
         ],
