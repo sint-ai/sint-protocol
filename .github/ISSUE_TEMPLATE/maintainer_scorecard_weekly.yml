@@ -1,0 +1,103 @@
+name: Maintainer Scorecard Weekly Update
+description: Weekly update for the independent maintainer 90-day scorecard
+title: "maintainer-scorecard: week ending YYYY-MM-DD"
+labels: ["governance", "aaif-gate/maintainership"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue once per week to keep the independent maintainer scorecard
+        current and evidence-backed.
+  - type: input
+    id: week-ending
+    attributes:
+      label: Week ending date
+      placeholder: "YYYY-MM-DD"
+    validations:
+      required: true
+  - type: input
+    id: maintainer
+    attributes:
+      label: Candidate maintainer handle
+      placeholder: "@handle"
+    validations:
+      required: true
+  - type: input
+    id: organization
+    attributes:
+      label: Independent organization
+      placeholder: "Organization / independent individual"
+    validations:
+      required: true
+  - type: input
+    id: prs-opened
+    attributes:
+      label: PRs opened this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: input
+    id: prs-merged
+    attributes:
+      label: PRs merged this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: input
+    id: reviews-submitted
+    attributes:
+      label: Reviews submitted this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: input
+    id: issues-triaged
+    attributes:
+      label: Issues triaged this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: input
+    id: security-conformance
+    attributes:
+      label: Security / conformance-impacting changes this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: input
+    id: docs-guides
+    attributes:
+      label: Docs / guides changes this week
+      placeholder: "0"
+    validations:
+      required: true
+  - type: textarea
+    id: evidence-links
+    attributes:
+      label: Evidence links
+      description: Link PRs, reviews, and issues supporting this weekly row.
+      placeholder: |
+        - PR:
+        - Review:
+        - Issue:
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and risks
+      placeholder: "Any independence, continuity, or scope risks to call out this week."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Weekly checklist
+      options:
+        - label: I updated docs/community/independent-maintainer-scorecard.md for this week.
+          required: true
+        - label: Evidence links are public and reviewer-verifiable.
+          required: true
+        - label: Activity is from an independent organization, not only core maintainers.
+          required: true
+

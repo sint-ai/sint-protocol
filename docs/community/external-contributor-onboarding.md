@@ -53,3 +53,16 @@ within 1-2 days.
 ## Maintainer Reply Support
 
 Use `docs/community/open-source-collaboration-replies.md` for collaborative, low-pressure response templates in GitHub threads.
+
+## Independent Maintainer Path
+
+Weekly evidence for independent maintainership should be recorded in
+`docs/community/independent-maintainer-scorecard.md`.
+
+Use:
+
+```bash
+pnpm run community:maintainer-scorecard
+```
+
+to add the next weekly row before filing the weekly update issue.
