@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import type { ApprovalTier, PolicyDecision } from "@pshkv/core";
 import type { OpcUaOperation } from "@pshkv/bridge-opcua";
 import type { RouteCandidate } from "@pshkv/bridge-economy";
+import type { RmfOperation } from "@pshkv/bridge-open-rmf";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const FIXTURE_ROOT = resolve(ROOT, "../fixtures");
@@ -957,6 +958,67 @@ export interface HumanoidMultivendorFleetFixture {
 export function loadHumanoidMultivendorFleetFixture(): HumanoidMultivendorFleetFixture {
   return loadFixture<HumanoidMultivendorFleetFixture>(
     "physical-ai/humanoid-multivendor-fleet.v1.json",
+  );
+}
+
+export interface OpenRmfHandoffPolicyReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "open-rmf";
+    readonly boundary: "fleet handoff and facility workflow";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly handoffRequiresReceipt: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+    readonly facilityCommandsRequireReview: boolean;
+    readonly emergencyOverridesRemainAuditable: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly sourceFleet: string;
+    readonly targetFleet: string;
+    readonly sourceRobotId: string;
+    readonly targetRobotId: string;
+    readonly workspaceId: string;
+    readonly payloadRef: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly cases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly operation: RmfOperation;
+    readonly fleetName?: string;
+    readonly robotName?: string;
+    readonly resourceKind?: "door" | "lift" | "zone";
+    readonly resourceId?: string;
+    readonly expectedResource: string;
+    readonly expectedAction: "observe" | "prepare" | "call" | "override";
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly receiptRequired: boolean;
+    readonly receiptPresent?: boolean;
+    readonly policyViolated?: "HANDOFF_RECEIPT_REQUIRED";
+    readonly evidenceEventType?: "rmf.emergency.stop";
+  }>;
+  readonly successCriteria: {
+    readonly allCasesHaveReceipts: boolean;
+    readonly dispatchHandoffEscalates: boolean;
+    readonly handoffWithoutReceiptDenied: boolean;
+    readonly facilityCommandIsHighConsequence: boolean;
+    readonly emergencyStopHasEvidence: boolean;
+  };
+}
+
+export function loadOpenRmfHandoffPolicyReceiptsFixture(): OpenRmfHandoffPolicyReceiptsFixture {
+  return loadFixture<OpenRmfHandoffPolicyReceiptsFixture>(
+    "physical-ai/open-rmf-handoff-policy-receipts.v1.json",
   );
 }
 

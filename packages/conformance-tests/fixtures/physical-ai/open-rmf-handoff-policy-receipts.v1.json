@@ -1,0 +1,134 @@
+{
+  "fixtureId": "open-rmf-handoff-policy-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral Open-RMF handoff fixture for testing policy receipts across fleet dispatch, traffic reservation, facility commands, and emergency overrides.",
+  "scope": {
+    "bridge": "open-rmf",
+    "boundary": "fleet handoff and facility workflow",
+    "goal": "Test whether handoff and facility-control actions can carry auditable policy receipts without making SINT a required Open-RMF runtime dependency.",
+    "nonGoal": "This fixture does not propose changes to Open-RMF core APIs."
+  },
+  "requirements": {
+    "handoffRequiresReceipt": true,
+    "negativeOutcomesCarryReceipt": true,
+    "facilityCommandsRequireReview": true,
+    "emergencyOverridesRemainAuditable": true
+  },
+  "deployment": {
+    "siteId": "warehouse-lab-01",
+    "sourceFleet": "humanoid-fleet",
+    "targetFleet": "amr-fleet",
+    "sourceRobotId": "humanoid-07",
+    "targetRobotId": "amr-17",
+    "workspaceId": "transfer-cell-a",
+    "payloadRef": "sint://payload/tote-4481"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "payloadRef",
+      "sourceFleet",
+      "targetFleet",
+      "sourceRobotId",
+      "targetRobotId",
+      "workspaceId",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "rmf-handoff:warehouse-lab-01:humanoid-07:amr-17:tote-4481",
+      "actionRef": "action:rmf:handoff:warehouse-lab-01:transfer-cell-a:tote-4481",
+      "resource": "open-rmf://fleet/amr-fleet/dispatch",
+      "operation": "task.dispatch",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "payloadRef": "sint://payload/tote-4481",
+      "sourceFleet": "humanoid-fleet",
+      "targetFleet": "amr-fleet",
+      "sourceRobotId": "humanoid-07",
+      "targetRobotId": "amr-17",
+      "workspaceId": "transfer-cell-a",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-05-21T17:00:00.000Z"
+    }
+  },
+  "cases": [
+    {
+      "id": "reserve_transfer_cell_allowed",
+      "name": "Reserve transfer cell before handoff",
+      "operation": "traffic.reserve",
+      "resourceKind": "zone",
+      "resourceId": "transfer-cell-a",
+      "expectedResource": "open-rmf://site/warehouse-lab-01/zone/transfer-cell-a",
+      "expectedAction": "prepare",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "dispatch_handoff_requires_review",
+      "name": "Dispatch AMR to receive payload handoff",
+      "operation": "task.dispatch",
+      "fleetName": "amr-fleet",
+      "expectedResource": "open-rmf://fleet/amr-fleet/dispatch",
+      "expectedAction": "call",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "handoff_without_receipt_rejected",
+      "name": "Reject handoff evidence without receipt",
+      "operation": "task.dispatch",
+      "fleetName": "amr-fleet",
+      "expectedResource": "open-rmf://fleet/amr-fleet/dispatch",
+      "expectedAction": "call",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "receiptRequired": true,
+      "policyViolated": "HANDOFF_RECEIPT_REQUIRED",
+      "receiptPresent": false
+    },
+    {
+      "id": "door_command_requires_review",
+      "name": "Open loading-bay door for cross-fleet handoff",
+      "operation": "door.command",
+      "resourceKind": "door",
+      "resourceId": "loading-bay-3",
+      "expectedResource": "open-rmf://site/warehouse-lab-01/door/loading-bay-3",
+      "expectedAction": "call",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "emergency_stop_override_audited",
+      "name": "Emergency stop remains auditable",
+      "operation": "emergency.stop",
+      "fleetName": "amr-fleet",
+      "robotName": "amr-17",
+      "expectedResource": "open-rmf://fleet/amr-fleet/robot/amr-17",
+      "expectedAction": "override",
+      "expectedDecision": "allow",
+      "expectedTier": "T3_commit",
+      "receiptRequired": true,
+      "evidenceEventType": "rmf.emergency.stop"
+    }
+  ],
+  "successCriteria": {
+    "allCasesHaveReceipts": true,
+    "dispatchHandoffEscalates": true,
+    "handoffWithoutReceiptDenied": true,
+    "facilityCommandIsHighConsequence": true,
+    "emergencyStopHasEvidence": true
+  }
+}
