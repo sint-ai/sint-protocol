@@ -63,6 +63,7 @@ export default defineConfig({
         items: [
           { text: "AAIF Gate Labels", link: "/community/aaif-gate-labels" },
           { text: "Adopters And Evidence", link: "/community/adopters" },
+          { text: "OpenSSF Gap Tracker", link: "/community/openssf-gap-tracker" },
           { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
           { text: "Discord Launch Kit", link: "/community/discord-launch-kit" },
           { text: "External Contributor Onboarding", link: "/community/external-contributor-onboarding" },

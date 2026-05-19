@@ -168,7 +168,7 @@ Exit criteria:
 
 - external evaluator can run gateway, issue token, intercept request, verify
   ledger proof, revoke token, and observe fail-closed behavior
-- OpenSSF gaps are tracked publicly
+- [x] OpenSSF gaps are tracked publicly
 
 ### Days 46-90: Earn Independent Evidence
 
