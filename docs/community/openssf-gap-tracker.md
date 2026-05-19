@@ -15,10 +15,10 @@ what still blocks release-readiness claims.
 
 | Area | Current status | Evidence | Owner | Target date | Notes |
 | --- | --- | --- | --- | --- | --- |
-| OpenSSF Best Practices project profile started | todo | TBD | TBD | TBD | Link public OpenSSF profile/checklist |
+| OpenSSF Best Practices project profile started | in-progress | [Issue #191](https://github.com/sint-ai/sint-protocol/issues/191) | core maintainers | 2026-06-01 | Baseline assessment and gap filing task opened |
 | Security policy and vuln reporting path verified | in-progress | [SECURITY.md](https://github.com/sint-ai/sint-protocol/blob/main/SECURITY.md) | core maintainers | 2026-06-01 | Confirm disclosure contact and response SLA |
 | Release candidate checklist used on tagged RC | in-progress | `.github/ISSUE_TEMPLATE/release_candidate_checklist.yml` | release owner | 2026-06-15 | First completed issue should link CI and conformance evidence |
-| SBOM or dependency review path documented | todo | TBD | TBD | TBD | Add guide or automated generation path |
+| SBOM or dependency review path documented | in-progress | [Issue #191](https://github.com/sint-ai/sint-protocol/issues/191) | core maintainers | 2026-06-15 | Track follow-up issue from baseline assessment |
 | Signed production-slice validation artifact published | in-progress | [Production Slice Verification](../guides/production-slice-verification) | gateway team | 2026-06-15 | Link a concrete run from external evaluator once available |
 
 ## Update Cadence
