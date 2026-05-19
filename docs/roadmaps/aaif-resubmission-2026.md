@@ -225,6 +225,10 @@ Evidence:
   Notes:
 ```
 
+Proposal assembly reference:
+
+- `docs/community/aaif-resubmission-proposal-template.md`
+
 ## Operating Principle
 
 The technical content can be strong before the ecosystem evidence is strong.

@@ -63,6 +63,7 @@ export default defineConfig({
         text: "Community",
         items: [
           { text: "AAIF Gate Labels", link: "/community/aaif-gate-labels" },
+          { text: "AAIF Proposal Template", link: "/community/aaif-resubmission-proposal-template" },
           { text: "Adopters And Evidence", link: "/community/adopters" },
           { text: "OpenSSF Gap Tracker", link: "/community/openssf-gap-tracker" },
           { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
