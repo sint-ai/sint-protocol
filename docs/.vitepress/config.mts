@@ -72,6 +72,7 @@ export default defineConfig({
           { text: "Discord Launch Kit", link: "/community/discord-launch-kit" },
           { text: "External Contributor Onboarding", link: "/community/external-contributor-onboarding" },
           { text: "Independent Maintainer Scorecard", link: "/community/independent-maintainer-scorecard" },
+          { text: "Robotics Collaboration Outreach", link: "/community/robotics-collaboration-outreach-schedule" },
           { text: "Good First Issues Board", link: "/community/good-first-issues-board" },
           { text: "Collaboration Reply Playbook", link: "/community/open-source-collaboration-replies" },
         ],
