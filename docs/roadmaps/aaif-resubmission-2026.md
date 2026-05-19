@@ -133,12 +133,12 @@ criteria and starts asking for the exact evidence it needs.
 
 Tasks:
 
-- publish this roadmap
-- update public proposal language to separate technical maturity from adoption
+- [x] publish this roadmap
+- [x] update public proposal language to separate technical maturity from adoption
   maturity
-- open a "production adopter program" issue template
-- open a "maintainer nomination" issue template
-- create an adopters page with explicit statuses:
+- [x] open a "production adopter program" issue template
+- [x] open a "maintainer nomination" issue template
+- [x] create an adopters page with explicit statuses:
   evaluation, pilot, production
 - label roadmap issues with `aaif-gate/adoption`,
   `aaif-gate/maintainership`, `aaif-gate/reference-implementation`,
