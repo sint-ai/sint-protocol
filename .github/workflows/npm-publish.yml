@@ -18,17 +18,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9.15.0
+
       - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@9.15.0 --activate
-          pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
