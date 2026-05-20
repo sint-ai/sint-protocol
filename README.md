@@ -402,7 +402,7 @@ Note: some consumer/health bridges are currently in “prototype API” state. C
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
 | [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
 
-**Total: 41 workspace members · 1,772 tests passing**
+**Total: 49 repo packages, apps, examples, and capsules · CI-backed full-suite and conformance coverage**
 
 > **Note:** Run `pnpm test` to get the current exact passing test count.
 
@@ -707,26 +707,20 @@ docker-compose up
 
 ## Roadmap
 
-### Core Infrastructure (Next 6 months)
+The active execution pages are:
 
-| Feature | Status | Target |
-|---------|--------|--------|
-| npm package publishing (8 core packages) | 🔧 In progress | April 2026 |
-| Python SDK (PyNaCl + Pydantic) | 🔧 In progress | April 2026 |
-| Production gateway deployment | 📋 Planned | April 2026 |
-| Getting Started tutorial | ✅ Complete | [docs/getting-started.md](docs/getting-started.md) |
-| TEE proof receipts (Intel SGX / ARM TrustZone) | 📋 Planned | Q2 2026 |
-| Hardware-in-the-loop ROS 2 testing | 📋 Planned | Q2 2026 |
-| Formal verification (TLA+ / Alloy) | 📋 Planned | Q3 2026 |
+- [Protocol overview](docs/protocol.md)
+- [Active roadmap](docs/roadmap.md)
+- [End-of-year 2026 execution plan](docs/roadmaps/end-of-year-2026-execution-plan.md)
+- [AAIF resubmission 2026](docs/roadmaps/aaif-resubmission-2026.md)
+- [Physical AI Governance 2026–2029](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md)
 
-### Physical AI Governance (2026–2029)
+The current emphasis is straightforward:
 
-| Domain | Phase | Status | Roadmap |
-|--------|-------|--------|---------|
-| Consumer Smart Home | 1–2 | ✅ Complete | [PHYSICAL_AI_GOVERNANCE_2026-2029.md](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) |
-| Health & Wellbeing | 5 | ✅ Complete | FHIR R5, HealthKit, caregiver delegation, differential privacy |
-| Critical Infrastructure | 4 | 📋 Planned | Power grids, water systems, industrial facilities (2027–2028) |
-| Occupancy & Human Presence | 3 | 📋 Planned | `Δ_human` sensors, smart vacuums, physical boundaries (2027) |
+- production-ready gateway behavior
+- release and evidence discipline
+- collaborator-facing integration artifacts
+- stronger external adoption and maintainership signals
 
 ## License
 

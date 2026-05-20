@@ -28,6 +28,7 @@ export default defineConfig({
         text: "Start Here",
         items: [
           { text: "Overview", link: "/" },
+          { text: "Protocol", link: "/protocol" },
           { text: "Getting Started", link: "/getting-started" },
           { text: "Protocol Spec v0.2", link: "/SINT_v0.2_SPEC" },
           { text: "Roadmap", link: "/roadmap" },
@@ -82,6 +83,7 @@ export default defineConfig({
           { text: "Robotics Collaboration Outreach", link: "/community/robotics-collaboration-outreach-schedule" },
           { text: "Sunnybotics Collaboration Brief", link: "/community/sunnybotics-collaboration-brief" },
           { text: "Sunnybotics Outreach Drafts", link: "/community/sunnybotics-outreach-drafts" },
+          { text: "Lovable Site Refresh Prompt", link: "/community/lovable-sint-gg-refresh-prompt" },
           { text: "Good First Issues Board", link: "/community/good-first-issues-board" },
           { text: "Collaboration Reply Playbook", link: "/community/open-source-collaboration-replies" },
         ],
@@ -89,6 +91,7 @@ export default defineConfig({
       {
         text: "Roadmaps",
         items: [
+          { text: "End-of-Year 2026 Execution Plan", link: "/roadmaps/end-of-year-2026-execution-plan" },
           { text: "AAIF Resubmission 2026", link: "/roadmaps/aaif-resubmission-2026" },
           { text: "Ecosystem Outreach 2026", link: "/roadmaps/ecosystem-outreach-2026" },
           { text: "Humanoid Robotics Integrations", link: "/roadmaps/humanoid-robotics-integrations-2026" },
