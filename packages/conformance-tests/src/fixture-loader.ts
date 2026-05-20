@@ -1091,6 +1091,79 @@ export function loadMoveItManipulationPolicyReceiptsFixture(): MoveItManipulatio
   );
 }
 
+export interface Nav2NavigationPolicyReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "ros2";
+    readonly projectContext: "nav2";
+    readonly boundary: "navigation intent to physical motion";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly routePlansArePrepareTier: boolean;
+    readonly navigationGoalsRouteThroughGateway: boolean;
+    readonly motionCommandsRequireReview: boolean;
+    readonly humanWorkspaceEscalates: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly robotId: string;
+    readonly routeRef: string;
+    readonly zoneAccessRef: string;
+    readonly dockingStationId: string;
+    readonly workspaceId: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly mappingCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly actionName: string;
+    readonly operation: "call";
+    readonly expectedResource: string;
+    readonly receiptRequired: boolean;
+  }>;
+  readonly policyCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly topicName: string;
+    readonly operation: "publish";
+    readonly expectedResource: string;
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly params?: Record<string, string>;
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+    };
+    readonly zoneAccessReceiptPresent?: boolean;
+    readonly policyViolated?: "NAV2_ZONE_ACCESS_RECEIPT_REQUIRED";
+    readonly receiptRequired: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly navigationGoalsCarryReceipts: boolean;
+    readonly routePlanningIsPrepareTier: boolean;
+    readonly dockingMotionIsHighConsequence: boolean;
+    readonly humanWorkspaceEscalatesToCommit: boolean;
+    readonly missingZoneReceiptDenied: boolean;
+  };
+}
+
+export function loadNav2NavigationPolicyReceiptsFixture(): Nav2NavigationPolicyReceiptsFixture {
+  return loadFixture<Nav2NavigationPolicyReceiptsFixture>(
+    "physical-ai/nav2-navigation-policy-receipts.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

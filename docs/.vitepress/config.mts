@@ -51,6 +51,7 @@ export default defineConfig({
           { text: "Regulated Consent Extensions", link: "/guides/regulated-consent-extensions" },
           { text: "Open-RMF Handoff Policy Receipts", link: "/guides/open-rmf-handoff-policy-receipts" },
           { text: "MoveIt Manipulation Policy Receipts", link: "/guides/moveit-manipulation-policy-receipts" },
+          { text: "Nav2 Navigation Policy Receipts", link: "/guides/nav2-navigation-policy-receipts" },
           { text: "AAIF Release Gate", link: "/guides/aaif-release-gate" },
           { text: "Dependency Review And SBOM Path", link: "/guides/dependency-review-and-sbom" },
           { text: "Secure MCP Deployments", link: "/guides/secure-mcp-deployments" },

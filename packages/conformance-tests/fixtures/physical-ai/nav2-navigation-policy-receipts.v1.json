@@ -1,0 +1,135 @@
+{
+  "fixtureId": "nav2-navigation-policy-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral Nav2 collaboration fixture for testing policy receipts around navigation goals, route staging, docking motion, and human-workspace escalation.",
+  "scope": {
+    "bridge": "ros2",
+    "projectContext": "nav2",
+    "boundary": "navigation intent to physical motion",
+    "goal": "Test whether navigation goals and docking-related motion can carry auditable policy receipts without making SINT a required Nav2 runtime dependency.",
+    "nonGoal": "This fixture does not propose changes to Nav2 core APIs."
+  },
+  "requirements": {
+    "routePlansArePrepareTier": true,
+    "navigationGoalsRouteThroughGateway": true,
+    "motionCommandsRequireReview": true,
+    "humanWorkspaceEscalates": true,
+    "negativeOutcomesCarryReceipt": true
+  },
+  "deployment": {
+    "siteId": "warehouse-nav-lab-01",
+    "robotId": "amr-17",
+    "routeRef": "sint://route/nav2/amr-17/dock-3",
+    "zoneAccessRef": "sint://zone-access/nav2/amr-17/loading-aisle",
+    "dockingStationId": "Dock-3",
+    "workspaceId": "loading-aisle"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "robotId",
+      "routeRef",
+      "workspaceId",
+      "dockingStationId",
+      "zoneAccessRef",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "nav2-dock:warehouse-nav-lab-01:amr-17:Dock-3",
+      "actionRef": "action:nav2:dock:warehouse-nav-lab-01:amr-17:Dock-3",
+      "resource": "ros2:///cmd_vel",
+      "operation": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "robotId": "amr-17",
+      "routeRef": "sint://route/nav2/amr-17/dock-3",
+      "workspaceId": "loading-aisle",
+      "dockingStationId": "Dock-3",
+      "zoneAccessRef": "sint://zone-access/nav2/amr-17/loading-aisle",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-05-28T17:00:00.000Z"
+    }
+  },
+  "mappingCases": [
+    {
+      "id": "navigate_to_pose_routes_through_gateway",
+      "name": "NavigateToPose action goal routes through the gateway",
+      "actionName": "/navigate_to_pose",
+      "operation": "call",
+      "expectedResource": "ros2:///navigate_to_pose",
+      "receiptRequired": true
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "stage_route_waypoints",
+      "name": "Stage route as waypoints before motion",
+      "topicName": "/waypoints",
+      "operation": "publish",
+      "expectedResource": "ros2:///waypoints",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "dock_motion_requires_review",
+      "name": "Docking motion command remains high consequence",
+      "topicName": "/cmd_vel",
+      "operation": "publish",
+      "expectedResource": "ros2:///cmd_vel",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "params": {
+        "command": "dock_to_station",
+        "destination": "Dock-3"
+      },
+      "constraints": {
+        "maxVelocityMps": 0.35
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "human_in_workspace_escalates_navigation_motion",
+      "name": "Human in the aisle raises motion consequence",
+      "topicName": "/cmd_vel",
+      "operation": "publish",
+      "expectedResource": "ros2:///cmd_vel",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 0.12
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "dock_motion_without_zone_receipt_rejected",
+      "name": "Reject docking motion when zone-access receipt is missing",
+      "topicName": "/cmd_vel",
+      "operation": "publish",
+      "expectedResource": "ros2:///cmd_vel",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "zoneAccessReceiptPresent": false,
+      "policyViolated": "NAV2_ZONE_ACCESS_RECEIPT_REQUIRED",
+      "receiptRequired": true
+    }
+  ],
+  "successCriteria": {
+    "navigationGoalsCarryReceipts": true,
+    "routePlanningIsPrepareTier": true,
+    "dockingMotionIsHighConsequence": true,
+    "humanWorkspaceEscalatesToCommit": true,
+    "missingZoneReceiptDenied": true
+  }
+}

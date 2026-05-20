@@ -51,7 +51,7 @@ Do not send another project message the same day.
 | --- | --- | --- | --- | --- |
 | 2026-05-21 | Open-RMF | GitHub project discussion or issue | Policy receipts for fleet handoffs | Garry thread has no negative signal and the Open-RMF fixture remains green |
 | 2026-05-26 | MoveIt | GitHub Discussion | Policy receipts around manipulation execution | Open-RMF thread is posted, no maintainers object, and the MoveIt fixture remains green |
-| 2026-05-28 | Nav2 | GitHub Discussion | Policy receipts for navigation goals and docking | Fewer than two unanswered threads are active |
+| 2026-05-28 | Nav2 | GitHub Discussion | Policy receipts for navigation goals and docking | Fewer than two unanswered threads are active and the Nav2 fixture remains green |
 | 2026-06-02 | PX4 | GitHub Issue | Capability gated MAVLink and offboard actions | We can point to a concrete MAVLink fixture |
 | 2026-06-04 | LeRobot | GitHub Issue | Runtime gate between learned policies and hardware | We can point to a minimal learned-policy actuation fixture |
 | 2026-06-09 | Gazebo | GitHub Issue | Simulation-first SINT safety fixtures | We can show a Gazebo validation path |
@@ -189,6 +189,14 @@ policy gateway
 allow, deny, or escalate
 proof receipt
 ```
+
+I put the question into a tiny fixture so it is easier to critique:
+
+https://github.com/sint-ai/sint-protocol/blob/main/packages/conformance-tests/fixtures/physical-ai/nav2-navigation-policy-receipts.v1.json
+
+Guide:
+
+https://github.com/sint-ai/sint-protocol/blob/main/docs/guides/nav2-navigation-policy-receipts.md
 
 A small first integration could be:
 
