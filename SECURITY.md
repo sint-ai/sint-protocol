@@ -4,6 +4,10 @@
 
 SINT Protocol is currently in active development. Security fixes are applied to the latest `main` branch.
 
+## Bug Bounty Launch Plan
+
+The public bounty program is not live until maintainers choose a platform, approve funding, and publish the final scope. The current non-binding launch draft is tracked in [docs/security/bug-bounty-launch-plan.md](docs/security/bug-bounty-launch-plan.md).
+
 ## Reporting a Vulnerability
 
 If you discover a vulnerability, do not open a public issue.
