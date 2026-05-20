@@ -267,4 +267,62 @@ describe("ROS2Interceptor", () => {
     // Should pass constraints (0.5 < 2.0) but escalate because T2_ACT
     expect(result.action).toBe("escalate");
   });
+
+  it("normalizes differential-drive wheel command topics and escalates under limit", async () => {
+    const token = issueToken({
+      resource: "ros2:///cmd_wheels",
+      actions: ["publish"],
+      constraints: { maxVelocityMps: 0.5 },
+    });
+
+    const interceptor = new ROS2Interceptor({
+      gateway,
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      robotMassKg: 20,
+      differentialDriveNormalize: true,
+      differentialDriveWheelRadiusM: 0.1,
+    });
+
+    const result = await interceptor.interceptPublish({
+      topicName: "/robot/cmd_wheels",
+      messageType: "common/msg/Wheels",
+      data: {
+        header: { frame_id: "robot_7" },
+        param: [4, 4],
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    expect(result.action).toBe("escalate");
+    expect(result.decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("denies differential-drive wheel commands exceeding velocity constraint", async () => {
+    const token = issueToken({
+      resource: "ros2:///cmd_wheels",
+      actions: ["publish"],
+      constraints: { maxVelocityMps: 0.5 },
+    });
+
+    const interceptor = new ROS2Interceptor({
+      gateway,
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      differentialDriveNormalize: true,
+      differentialDriveWheelRadiusM: 0.1,
+    });
+
+    const result = await interceptor.interceptPublish({
+      topicName: "/robot/cmd_wheels",
+      messageType: "common/msg/Wheels",
+      data: {
+        header: { frame_id: "robot_7" },
+        param: [6, 4],
+      },
+      timestamp: new Date().toISOString(),
+    });
+
+    expect(result.action).toBe("deny");
+  });
 });

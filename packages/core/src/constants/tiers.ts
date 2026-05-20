@@ -83,11 +83,24 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     escalateOnHumanPresence: true,
   },
   {
+    resourcePattern: "ros2:///cmd_wheels",
+    actions: ["publish"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+    escalateOnHumanPresence: true,
+  },
+  {
     resourcePattern: "ros2:///joint_commands",
     actions: ["publish"],
     baseTier: ApprovalTier.T2_ACT,
     baseRisk: RiskTier.T2_STATEFUL,
     escalateOnHumanPresence: true,
+  },
+  {
+    resourcePattern: "ros2:///enc_wheels",
+    actions: ["subscribe"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
   },
   {
     resourcePattern: "ros2:///gripper/*",

@@ -44,6 +44,13 @@ export const wrenchSchema = z.object({
 });
 export type Wrench = z.infer<typeof wrenchSchema>;
 
+export const differentialWheelCommandSchema = z
+  .object({
+    param: z.tuple([z.number(), z.number()]),
+  })
+  .passthrough();
+export type DifferentialWheelCommand = z.infer<typeof differentialWheelCommandSchema>;
+
 // ── sensor_msgs ──
 
 export const jointStateSchema = z.object({
@@ -95,5 +102,52 @@ export function extractPhysicalContextFromWrench(wrench: Wrench): {
   const fz = wrench.force.z;
   return {
     forceNewtons: Math.sqrt(fx * fx + fy * fy + fz * fz),
+  };
+}
+
+export interface DifferentialWheelCommandPhysicalContextOptions {
+  /**
+   * Wheel radius in meters.
+   *
+   * Sunnybotics' public T800 repo exposes wheel commands as two angular wheel
+   * velocities. A radius is required to turn that into a linear speed bound.
+   */
+  readonly wheelRadiusM?: number;
+  /** Optional robot mass for the same coarse force estimate used in Twist paths. */
+  readonly robotMassKg?: number;
+}
+
+/**
+ * Extract physical context from a differential-drive wheel command.
+ *
+ * This uses the larger-magnitude wheel speed as a conservative bound for
+ * physical motion so turning-in-place still shows up as active motion.
+ */
+export function extractPhysicalContextFromDifferentialWheelCommand(
+  command: DifferentialWheelCommand,
+  options: DifferentialWheelCommandPhysicalContextOptions = {},
+): {
+  wheelVelocityRadPerSecMax: number;
+  velocityMps?: number;
+  forceNewtons?: number;
+} {
+  const [rightWheelVelocityRadPerSec, leftWheelVelocityRadPerSec] = command.param;
+  const wheelVelocityRadPerSecMax = Math.max(
+    Math.abs(rightWheelVelocityRadPerSec),
+    Math.abs(leftWheelVelocityRadPerSec),
+  );
+
+  if (options.wheelRadiusM === undefined) {
+    return { wheelVelocityRadPerSecMax };
+  }
+
+  const velocityMps = wheelVelocityRadPerSecMax * options.wheelRadiusM;
+  return {
+    wheelVelocityRadPerSecMax,
+    velocityMps,
+    forceNewtons:
+      options.robotMassKg !== undefined
+        ? velocityMps * options.robotMassKg
+        : undefined,
   };
 }

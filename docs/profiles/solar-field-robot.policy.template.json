@@ -1,0 +1,20 @@
+{
+  "profile": "solar-field-robot",
+  "description": "Solar field differential-drive robot baseline for inspection, cleaning, and installation-support operations.",
+  "tierRules": [
+    { "resourcePattern": "ros2:///camera/*", "actions": ["subscribe"], "baseTier": "T0_observe" },
+    { "resourcePattern": "ros2:///enc_wheels", "actions": ["subscribe"], "baseTier": "T0_observe" },
+    { "resourcePattern": "ros2:///plan", "actions": ["publish"], "baseTier": "T1_prepare" },
+    { "resourcePattern": "ros2:///cmd_wheels", "actions": ["publish"], "baseTier": "T2_act", "escalateOnHumanPresence": true },
+    { "resourcePattern": "ros2:///cmd_vel", "actions": ["publish"], "baseTier": "T2_act", "escalateOnHumanPresence": true },
+    { "resourcePattern": "ros2:///joint_commands", "actions": ["publish"], "baseTier": "T2_act", "escalateOnHumanPresence": true },
+    { "resourcePattern": "ros2:///mode_change", "actions": ["call"], "baseTier": "T3_commit" }
+  ],
+  "tokenDefaults": {
+    "constraints": {
+      "maxVelocityMps": 0.45,
+      "maxForceNewtons": 90,
+      "rateLimit": { "maxCalls": 24, "windowMs": 60000 }
+    }
+  }
+}

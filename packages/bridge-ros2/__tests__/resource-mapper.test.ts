@@ -7,6 +7,7 @@ import {
   topicToResourceUri,
   gazeboTopicToResourceUri,
   isaacTopicToResourceUri,
+  differentialDriveTopicToResourceUri,
   serviceToResourceUri,
   actionToResourceUri,
   extractPhysicalContext,
@@ -14,6 +15,7 @@ import {
 import {
   extractPhysicalContextFromTwist,
   extractPhysicalContextFromWrench,
+  extractPhysicalContextFromDifferentialWheelCommand,
 } from "../src/ros2-message-types.js";
 import type { ROS2TopicMessage } from "../src/types.js";
 
@@ -44,6 +46,14 @@ describe("topicToResourceUri", () => {
     expect(topicToResourceUri("/isaac/ur10/cmd_vel", { isaacNormalize: true }))
       .toBe("ros2:///cmd_vel");
   });
+
+  it("normalizes namespaced differential-drive topics when enabled", () => {
+    expect(
+      topicToResourceUri("/robot/cmd_wheels", {
+        differentialDriveNormalize: true,
+      }),
+    ).toBe("ros2:///cmd_wheels");
+  });
 });
 
 describe("gazeboTopicToResourceUri", () => {
@@ -70,6 +80,20 @@ describe("isaacTopicToResourceUri", () => {
   it("maps Isaac namespaced joint command topic to canonical resource", () => {
     expect(isaacTopicToResourceUri("/robots/cell_bot_01/joint_commands")).toBe(
       "ros2:///joint_commands",
+    );
+  });
+});
+
+describe("differentialDriveTopicToResourceUri", () => {
+  it("maps namespaced wheel command topic to canonical resource", () => {
+    expect(differentialDriveTopicToResourceUri("/robot/cmd_wheels")).toBe(
+      "ros2:///cmd_wheels",
+    );
+  });
+
+  it("maps namespaced wheel encoder topic to canonical resource", () => {
+    expect(differentialDriveTopicToResourceUri("/robot/enc_wheels")).toBe(
+      "ros2:///enc_wheels",
     );
   });
 });
@@ -126,6 +150,21 @@ describe("extractPhysicalContextFromWrench", () => {
   });
 });
 
+describe("extractPhysicalContextFromDifferentialWheelCommand", () => {
+  it("computes a conservative linear speed bound from wheel speeds", () => {
+    const command = {
+      param: [6, 4] as [number, number],
+    };
+    const ctx = extractPhysicalContextFromDifferentialWheelCommand(command, {
+      wheelRadiusM: 0.1,
+      robotMassKg: 20,
+    });
+    expect(ctx.wheelVelocityRadPerSecMax).toBe(6);
+    expect(ctx.velocityMps).toBeCloseTo(0.6, 5);
+    expect(ctx.forceNewtons).toBeCloseTo(12, 5);
+  });
+});
+
 describe("extractPhysicalContext", () => {
   it("extracts velocity from Twist message", () => {
     const message: ROS2TopicMessage = {
@@ -157,6 +196,44 @@ describe("extractPhysicalContext", () => {
     const ctx = extractPhysicalContext(message);
     expect(ctx).toBeDefined();
     expect(ctx!.currentForceNewtons).toBeCloseTo(10, 5);
+  });
+
+  it("extracts velocity from namespaced differential-drive wheel commands", () => {
+    const message: ROS2TopicMessage = {
+      topicName: "/robot/cmd_wheels",
+      messageType: "common/msg/Wheels",
+      data: {
+        header: { frame_id: "robot_7" },
+        param: [5, 4],
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    const ctx = extractPhysicalContext(message, {
+      robotMassKg: 20,
+      differentialDriveWheelRadiusM: 0.1,
+    });
+    expect(ctx).toBeDefined();
+    expect(ctx!.currentVelocityMps).toBeCloseTo(0.5, 5);
+    expect(ctx!.currentForceNewtons).toBeCloseTo(10, 5);
+  });
+
+  it("does not treat wheel telemetry as actuation context", () => {
+    const message: ROS2TopicMessage = {
+      topicName: "/robot/enc_wheels",
+      messageType: "common/msg/Wheels",
+      data: {
+        header: { frame_id: "robot_7" },
+        param: [5, 4],
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    const ctx = extractPhysicalContext(message, {
+      robotMassKg: 20,
+      differentialDriveWheelRadiusM: 0.1,
+    });
+    expect(ctx).toBeUndefined();
   });
 
   it("returns undefined for unrecognized message types", () => {
