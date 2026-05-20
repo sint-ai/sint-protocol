@@ -7,9 +7,6 @@ on:
   pull_request:
     branches: [main, master]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   generate-benchmark-report:
     runs-on: ubuntu-latest
