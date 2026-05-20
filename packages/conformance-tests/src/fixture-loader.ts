@@ -1245,6 +1245,86 @@ export function loadPx4OffboardPolicyReceiptsFixture(): Px4OffboardPolicyReceipt
   );
 }
 
+export interface LeRobotPolicyActuationReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "ros2";
+    readonly projectContext: "lerobot";
+    readonly boundary: "learned policy rollout to hardware actuation";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly rolloutPlansArePrepareTier: boolean;
+    readonly learnedExecutionRequiresReview: boolean;
+    readonly actuationReceiptsBindCheckpointAndHardwareProfile: boolean;
+    readonly humanWorkspaceEscalates: boolean;
+    readonly checkpointMismatchDenied: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly robotId: string;
+    readonly checkpointRef: string;
+    readonly datasetRef: string;
+    readonly rolloutRef: string;
+    readonly hardwareProfileRef: string;
+    readonly workspaceId: string;
+    readonly endEffectorId: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly mappingCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resourceSource: "engine" | "topic";
+    readonly resource?: string;
+    readonly topicName?: string;
+    readonly operation: "create" | "execute" | "publish";
+    readonly expectedResource: string;
+    readonly expectedTier: ApprovalTier;
+    readonly receiptRequired: boolean;
+  }>;
+  readonly policyCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resource: string;
+    readonly operation: "create" | "execute" | "publish";
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+      readonly maxForceNewtons?: number;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+      readonly currentForceNewtons?: number;
+    };
+    readonly checkpointFingerprintMatches?: boolean;
+    readonly policyViolated?: "CONSTRAINT_VIOLATION";
+    readonly receiptRequired: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly rolloutPlanningIsPrepareTier: boolean;
+    readonly learnedExecutionIsHighConsequence: boolean;
+    readonly actuationBindsCheckpointAndHardwareProfile: boolean;
+    readonly humanWorkspaceEscalatesToCommit: boolean;
+    readonly checkpointMismatchDenied: boolean;
+    readonly allOutcomesCarryReceipts: boolean;
+  };
+}
+
+export function loadLeRobotPolicyActuationReceiptsFixture(): LeRobotPolicyActuationReceiptsFixture {
+  return loadFixture<LeRobotPolicyActuationReceiptsFixture>(
+    "physical-ai/lerobot-policy-actuation-receipts.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

@@ -53,7 +53,7 @@ Do not send another project message the same day.
 | 2026-05-26 | MoveIt | GitHub Discussion | Policy receipts around manipulation execution | Open-RMF thread is posted, no maintainers object, and the MoveIt fixture remains green |
 | 2026-05-28 | Nav2 | GitHub Discussion | Policy receipts for navigation goals and docking | Fewer than two unanswered threads are active and the Nav2 fixture remains green |
 | 2026-06-02 | PX4 | GitHub Issue | Capability gated MAVLink and offboard actions | Fewer than two unanswered threads are active and the PX4 fixture remains green |
-| 2026-06-04 | LeRobot | GitHub Issue | Runtime gate between learned policies and hardware | We can point to a minimal learned-policy actuation fixture |
+| 2026-06-04 | LeRobot | GitHub Issue | Runtime gate between learned policies and hardware | Fewer than two unanswered threads are active and the LeRobot fixture remains green |
 | 2026-06-09 | Gazebo | GitHub Issue | Simulation-first SINT safety fixtures | We can show a Gazebo validation path |
 | 2026-06-11 | ros2_control | GitHub Issue | Policy boundary before hardware command writes | We have a crisp controller-boundary question |
 | 2026-06-16 | Autoware | GitHub Discussion | Evidence receipts for ODD and autonomous mode changes | We have an Autoware-specific framing ready |
@@ -259,6 +259,58 @@ A small PX4-shaped integration could be:
 The technical question:
 
 Does this boundary belong at the MAVLink router or companion-computer layer, or is that the wrong abstraction for PX4 operators and integrators?
+
+Repo for context:
+
+https://github.com/sint-ai/sint-protocol
+````
+
+### LeRobot
+
+Title:
+
+```text
+Design discussion: policy receipts between learned policies and robot hardware
+```
+
+Body:
+
+````markdown
+Hi LeRobot maintainers,
+
+I am working on SINT Protocol, an open source runtime gate for agent and robot actions.
+
+The boundary I am trying to sanity check with LeRobot is where a learned policy checkpoint and rollout become hardware execution on a real robot.
+
+The SINT loop is:
+
+```text
+robot or agent intent
+capability token
+policy gateway
+allow, deny, or escalate
+proof receipt
+```
+
+I put the question into a tiny fixture so it is easier to critique:
+
+https://github.com/sint-ai/sint-protocol/blob/main/packages/conformance-tests/fixtures/physical-ai/lerobot-policy-actuation-receipts.v1.json
+
+Guide:
+
+https://github.com/sint-ai/sint-protocol/blob/main/docs/guides/lerobot-policy-actuation-receipts.md
+
+A small LeRobot-shaped integration could be:
+
+1. Keep rollout planning distinct from live execution.
+2. Bind a checkpoint, dataset lineage, and hardware profile into the execution receipt.
+3. Escalate real hardware actuation when humans are in the workspace.
+4. Deny silent checkpoint swaps after approval.
+5. Start as a conformance fixture rather than a LeRobot dependency.
+
+The technical question:
+
+Does this boundary belong between learned-policy inference and hardware writes, or should it live somewhere higher in the task stack around experiment and rollout orchestration?
 
 Repo for context:
 

@@ -1,0 +1,157 @@
+{
+  "fixtureId": "lerobot-policy-actuation-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral LeRobot collaboration fixture for testing policy receipts around learned policy checkpoints, rollout execution, and hardware actuation.",
+  "scope": {
+    "bridge": "ros2",
+    "projectContext": "lerobot",
+    "boundary": "learned policy rollout to hardware actuation",
+    "goal": "Test whether learned-policy execution can carry auditable policy receipts without making SINT a required LeRobot runtime dependency.",
+    "nonGoal": "This fixture does not propose changes to LeRobot training pipelines or model architectures."
+  },
+  "requirements": {
+    "rolloutPlansArePrepareTier": true,
+    "learnedExecutionRequiresReview": true,
+    "actuationReceiptsBindCheckpointAndHardwareProfile": true,
+    "humanWorkspaceEscalates": true,
+    "checkpointMismatchDenied": true,
+    "negativeOutcomesCarryReceipt": true
+  },
+  "deployment": {
+    "siteId": "learning-lab-01",
+    "robotId": "so100-01",
+    "checkpointRef": "hf://lerobot/so100-pick-place-v3",
+    "datasetRef": "hf://datasets/lerobot/pick-place-warehouse-v2",
+    "rolloutRef": "sint://rollout/lerobot/so100-01/pick-4481",
+    "hardwareProfileRef": "sint://hardware/so100/gripper-v1",
+    "workspaceId": "cell-b",
+    "endEffectorId": "gripper"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "robotId",
+      "checkpointRef",
+      "datasetRef",
+      "rolloutRef",
+      "hardwareProfileRef",
+      "workspaceId",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "lerobot-rollout:learning-lab-01:so100-01:pick-4481",
+      "actionRef": "action:lerobot:execute:learning-lab-01:so100-01:pick-4481",
+      "resource": "ros2:///joint_commands",
+      "operation": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "robotId": "so100-01",
+      "checkpointRef": "hf://lerobot/so100-pick-place-v3",
+      "datasetRef": "hf://datasets/lerobot/pick-place-warehouse-v2",
+      "rolloutRef": "sint://rollout/lerobot/so100-01/pick-4481",
+      "hardwareProfileRef": "sint://hardware/so100/gripper-v1",
+      "workspaceId": "cell-b",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-06-04T17:00:00.000Z"
+    }
+  },
+  "mappingCases": [
+    {
+      "id": "stage_rollout_plan_routes_through_prepare_boundary",
+      "name": "Stage learned-policy rollout before execution",
+      "resourceSource": "engine",
+      "resource": "engine://system2/plan",
+      "operation": "create",
+      "expectedResource": "engine://system2/plan",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "learned_rollout_execution_routes_through_gateway",
+      "name": "Learned-policy execution routes through the engine execute boundary",
+      "resourceSource": "engine",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedResource": "engine://system2/execute",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "joint_command_actuation_routes_through_gateway",
+      "name": "Learned actuation resolves to the ROS 2 joint command boundary",
+      "resourceSource": "topic",
+      "topicName": "/joint_commands",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_commands",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "rollout_plan_is_prepare_tier",
+      "name": "Rollout planning stays below physical execution",
+      "resource": "engine://system2/plan",
+      "operation": "create",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "learned_execution_requires_review",
+      "name": "Learned-policy execution remains a reviewed action",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 0.2,
+        "maxForceNewtons": 80
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "human_in_workspace_escalates_joint_actuation",
+      "name": "Human presence raises learned-policy actuation consequence",
+      "resource": "ros2:///joint_commands",
+      "operation": "publish",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 0.08,
+        "currentForceNewtons": 35
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "checkpoint_swap_without_reapproval_rejected",
+      "name": "Reject silent checkpoint swap after rollout approval",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "checkpointFingerprintMatches": false,
+      "policyViolated": "CONSTRAINT_VIOLATION",
+      "receiptRequired": true
+    }
+  ],
+  "successCriteria": {
+    "rolloutPlanningIsPrepareTier": true,
+    "learnedExecutionIsHighConsequence": true,
+    "actuationBindsCheckpointAndHardwareProfile": true,
+    "humanWorkspaceEscalatesToCommit": true,
+    "checkpointMismatchDenied": true,
+    "allOutcomesCarryReceipts": true
+  }
+}
