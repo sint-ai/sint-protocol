@@ -1,0 +1,143 @@
+{
+  "fixtureId": "moveit-manipulation-policy-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral MoveIt collaboration fixture for testing policy receipts around the boundary between manipulation planning and physical execution.",
+  "scope": {
+    "bridge": "ros2",
+    "projectContext": "moveit",
+    "boundary": "manipulation plan to physical execution",
+    "goal": "Test whether manipulation execution requests can carry auditable policy receipts without making SINT a required MoveIt runtime dependency.",
+    "nonGoal": "This fixture does not propose changes to MoveIt core APIs."
+  },
+  "requirements": {
+    "plansArePrepareTier": true,
+    "executionRequiresReview": true,
+    "humanWorkspaceEscalates": true,
+    "negativeOutcomesCarryReceipt": true,
+    "receiptBindsPlanAndTrajectory": true
+  },
+  "deployment": {
+    "siteId": "manipulation-lab-01",
+    "robotId": "arm-07",
+    "planningGroup": "manipulator",
+    "workspaceId": "cell-a",
+    "endEffectorId": "gripper",
+    "planRef": "sint://plan/moveit/arm-07/pick-4481",
+    "trajectoryRef": "sint://trajectory/moveit/arm-07/pick-4481"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "robotId",
+      "planningGroup",
+      "workspaceId",
+      "endEffectorId",
+      "planRef",
+      "trajectoryRef",
+      "constraintsDigest",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "moveit-exec:manipulation-lab-01:arm-07:pick-4481",
+      "actionRef": "action:moveit:execute:manipulation-lab-01:arm-07:pick-4481",
+      "resource": "ros2:///joint_commands",
+      "operation": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "robotId": "arm-07",
+      "planningGroup": "manipulator",
+      "workspaceId": "cell-a",
+      "endEffectorId": "gripper",
+      "planRef": "sint://plan/moveit/arm-07/pick-4481",
+      "trajectoryRef": "sint://trajectory/moveit/arm-07/pick-4481",
+      "constraintsDigest": "digest:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-05-26T17:00:00.000Z"
+    }
+  },
+  "cases": [
+    {
+      "id": "stage_manipulation_plan",
+      "name": "Stage manipulation plan before execution",
+      "resourceSource": "topic",
+      "topicName": "/plan",
+      "operation": "publish",
+      "expectedResource": "ros2:///plan",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "execute_joint_trajectory_requires_review",
+      "name": "Execute trajectory via joint command boundary",
+      "resourceSource": "topic",
+      "topicName": "/joint_commands",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_commands",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 0.25,
+        "maxForceNewtons": 150
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "execute_action_goal_requires_review",
+      "name": "Execute trajectory action goal remains receipt-backed",
+      "resourceSource": "action",
+      "actionName": "/execute_trajectory",
+      "operation": "call",
+      "expectedResource": "ros2:///execute_trajectory",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "human_in_workspace_escalates_execution",
+      "name": "Human in workspace raises execution consequence",
+      "resourceSource": "topic",
+      "topicName": "/joint_commands",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_commands",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 0.1,
+        "currentForceNewtons": 40
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "execution_without_plan_receipt_rejected",
+      "name": "Reject execution when the plan receipt is missing",
+      "resourceSource": "topic",
+      "topicName": "/joint_commands",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_commands",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "receiptRequired": true,
+      "planReceiptPresent": false,
+      "policyViolated": "MOVEIT_PLAN_RECEIPT_REQUIRED"
+    }
+  ],
+  "successCriteria": {
+    "planningIsPrepareTier": true,
+    "executionIsHighConsequence": true,
+    "humanWorkspaceEscalatesToCommit": true,
+    "missingPlanReceiptDenied": true,
+    "allOutcomesCarryReceipts": true
+  }
+}

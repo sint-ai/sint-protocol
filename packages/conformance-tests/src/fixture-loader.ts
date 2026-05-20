@@ -1022,6 +1022,75 @@ export function loadOpenRmfHandoffPolicyReceiptsFixture(): OpenRmfHandoffPolicyR
   );
 }
 
+export interface MoveItManipulationPolicyReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "ros2";
+    readonly projectContext: "moveit";
+    readonly boundary: "manipulation plan to physical execution";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly plansArePrepareTier: boolean;
+    readonly executionRequiresReview: boolean;
+    readonly humanWorkspaceEscalates: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+    readonly receiptBindsPlanAndTrajectory: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly robotId: string;
+    readonly planningGroup: string;
+    readonly workspaceId: string;
+    readonly endEffectorId: string;
+    readonly planRef: string;
+    readonly trajectoryRef: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly cases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resourceSource: "topic" | "action";
+    readonly topicName?: string;
+    readonly actionName?: string;
+    readonly operation: "publish" | "call";
+    readonly expectedResource: string;
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly receiptRequired: boolean;
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+      readonly maxForceNewtons?: number;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+      readonly currentForceNewtons?: number;
+    };
+    readonly planReceiptPresent?: boolean;
+    readonly policyViolated?: "MOVEIT_PLAN_RECEIPT_REQUIRED";
+  }>;
+  readonly successCriteria: {
+    readonly planningIsPrepareTier: boolean;
+    readonly executionIsHighConsequence: boolean;
+    readonly humanWorkspaceEscalatesToCommit: boolean;
+    readonly missingPlanReceiptDenied: boolean;
+    readonly allOutcomesCarryReceipts: boolean;
+  };
+}
+
+export function loadMoveItManipulationPolicyReceiptsFixture(): MoveItManipulationPolicyReceiptsFixture {
+  return loadFixture<MoveItManipulationPolicyReceiptsFixture>(
+    "physical-ai/moveit-manipulation-policy-receipts.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
