@@ -9,7 +9,7 @@ This page is a launch-ready planning draft for a public SINT Protocol bug bounty
 | Item | Draft recommendation | Owner before launch |
 | --- | --- | --- |
 | Platform | Immunefi for crypto/economic-security reach; HackerOne if broader industrial/robotics researchers are the priority. | Engineering management |
-| First scope | Protocol packages, policy gateway, conformance fixtures, SDK request signing, and public docs that affect safety/security claims. | Security lead |
+| First scope | Protocol packages, policy gateway, SDK request signing, and narrowly scoped conformance/docs issues that could change a real security, safety, or certification boundary. | Security lead |
 | Funding | Ring-fence the first 90-day reward budget before public launch. | Finance / foundation |
 | Intake | Private platform reports only; no public GitHub vulnerability reports. | Security triage owner |
 | Launch gate | Dry-run one report from intake to disclosure decision before announcing. | Engineering management |
@@ -19,10 +19,10 @@ This page is a launch-ready planning draft for a public SINT Protocol bug bounty
 ### In scope
 
 - `packages/policy-gateway`: authorization, decision caching, replay handling, and enforcement boundaries.
-- `packages/conformance-tests`: fixtures that determine whether an integration is certified/safe.
+- `packages/conformance-tests`: fixtures whose incorrect pass/fail result could create a false certification signal, hide an unsafe integration path, or materially weaken a security boundary.
 - `packages/bridge-iot` and related hardware-safety bridge code: permit/deny handshakes, stale-signal handling, and fail-safe behavior.
 - `sdks/typescript`: request signing, client-side validation, policy metadata handling, and SDK examples that could create unsafe deployments.
-- `docs/guides`, `docs/specs`, and `docs/compliance`: security or safety claims that could mislead integrators if materially wrong.
+- `docs/guides`, `docs/specs`, and `docs/compliance`: documentation defects only when they create a concrete insecure deployment path, materially incorrect safety/security claim, or realistic exploit or misconfiguration path.
 
 ### Out of scope for the first 90 days
 
@@ -31,6 +31,7 @@ This page is a launch-ready planning draft for a public SINT Protocol bug bounty
 - Social engineering, phishing, spam, credential stuffing, or attacks on maintainers and users.
 - Issues only present in unsupported forks, debug-only builds, or local configurations that contradict documented deployment guidance.
 - Generic dependency reports without a SINT-specific exploit path or reachable impact.
+- General documentation correctness, wording, typo, or test-harness issues that do not change a real security, safety, certification, or deployment boundary.
 
 ## Draft severity and reward tiers
 
@@ -40,7 +41,7 @@ These are placeholders for budgeting and platform configuration. Publish final a
 | --- | --- | --- |
 | Critical | Unauthorized policy bypass that can allow unsafe physical action, forged certification evidence, or remote compromise of a production gateway. | USD 10,000-50,000 |
 | High | Privilege escalation, signature/replay flaw, or conformance bypass that materially weakens safety or economic controls. | USD 2,500-10,000 |
-| Medium | Security boundary confusion, unsafe default, or docs/API mismatch likely to cause insecure deployment. | USD 500-2,500 |
+| Medium | Security boundary confusion, unsafe default, conformance false positive, or docs/API mismatch likely to cause insecure deployment. | USD 500-2,500 |
 | Low | Hardening issue with limited exploitability, missing validation, or minor disclosure/process weakness. | USD 100-500 |
 
 ## Report template
