@@ -7,6 +7,9 @@ Current roadmap state:
 - Consumer smart home, Matter/human-aware, health fabric, and MQTT QoS slices are shipped.
 - Emergency bypass and duress-token controls are implemented and documented.
 - The remaining roadmap should run through a production-readiness gate before more breadth is added.
+- The AAIF review clarified that foundation readiness also requires independent
+  production adopters, sustained independent maintainership, and completed
+  reference / conformance artifacts before resubmission.
 
 This file replaces the earlier feature-first ordering with a production-first sequence:
 
@@ -14,6 +17,7 @@ This file replaces the earlier feature-first ordering with a production-first se
 2. Define the smallest supported production slice.
 3. Add release and operational gates around that slice.
 4. Only then resume broader roadmap expansion.
+5. Earn independent ecosystem evidence before resubmitting to AAIF.
 
 ## Current Direction
 
@@ -52,6 +56,9 @@ Status in this checkout:
   minimal supported HTTP path:
   token issuance, policy enforcement, ledger persistence, proof generation,
   and revocation fail-closed behavior.
+- `SINT_ENV=production` now fails closed unless durable storage, Redis,
+  admin API key auth, signed agent requests, and safe WebSocket auth settings
+  are configured.
 
 ### 2. Production Slice Definition
 
@@ -85,6 +92,13 @@ Do not call the project production-ready until all of these are true:
 - release checklist exists and is used
 - rollback / migration notes exist for persistence changes
 
+Status in this checkout:
+
+- `docs/guides/gateway-production-hardening.md` defines the production
+  environment contract, release checklist, readiness gate, and rollback notes.
+- `docker/compose/prod-lite.yml` starts the gateway in production mode and
+  probes `/v1/ready`.
+
 ### 4. Operational Hardening
 
 Next hardening work should focus on:
@@ -106,6 +120,21 @@ After the production slice is stable, resume roadmap expansion in this order:
 
 That means Phase 3/4/6 work stays valuable, but it moves behind reliability and supportability. Phase 7 safety work that has already landed should be treated as part of the supported core only after the release gates verify it.
 
+### 6. AAIF Evidence Gates
+
+The AAIF resubmission path is now tracked in
+`docs/roadmaps/aaif-resubmission-2026.md`.
+
+Do not resubmit until:
+
+- two or more independent production adopters are documented
+- at least one independent maintainer has 90+ days of sustained merge activity
+- the reference gateway is released and runnable from public docs
+- conformance tooling is packaged for external users
+- OpenSSF Best Practices work has started and gaps are public
+- the proposal clearly separates co-design, interop, pilot, and production
+  evidence
+
 ## Immediate Execution Queue
 
 ### Sprint A
@@ -119,12 +148,19 @@ That means Phase 3/4/6 work stays valuable, but it moves behind reliability and 
 
 - document supported production topology
 - add release checklist and migration notes
-- tighten gateway health/readiness and operator-facing failure modes
+- keep gateway production boot checks and `/v1/ready` behavior green
 
 ### Sprint C
 
 - pick exactly one next expansion area after the core slice is stable
 - prefer adjacent work over entirely new market surfaces
+
+### Sprint D
+
+- publish the AAIF resubmission evidence roadmap
+- create adopter and maintainer onboarding issues
+- start OpenSSF Best Practices gap tracking
+- recruit independent pilot users without counting them as production adopters
 
 ## Decision Rule
 

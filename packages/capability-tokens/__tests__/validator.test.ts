@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  computeSigningPayload,
   generateKeypair,
   issueCapabilityToken,
+  sign,
   validateCapabilityToken,
   validatePhysicalConstraints,
   validateDelegationDepth,
@@ -56,6 +58,18 @@ describe("Capability Token Validator", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("should keep the default Ed25519 verifier when custom profile verifiers are supplied", () => {
+    const token = createValidToken();
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      cryptoProfileVerifiers: {
+        "hybrid-ed25519-mldsa65": () => ({ ok: true, value: true }),
+      },
+    });
+    expect(result.ok).toBe(true);
+  });
+
   it("should reject a token with tampered signature", () => {
     const token = createValidToken();
     const tampered = { ...token, signature: "a".repeat(128) };
@@ -78,6 +92,81 @@ describe("Capability Token Validator", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error).toBe("INVALID_SIGNATURE");
+  });
+
+  it("should fail closed when a token declares a mandatory hybrid PQ profile", () => {
+    const token = createValidToken();
+    const hybrid = {
+      ...token,
+      cryptoProfile: "hybrid-ed25519-mldsa65",
+      postQuantumSignatures: [
+        {
+          algorithm: "ML-DSA-65",
+          publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+          signature: "pq-signature-placeholder",
+        },
+      ],
+    } as SintCapabilityToken;
+    const result = validateCapabilityToken(hybrid, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("UNSUPPORTED_CRYPTO_PROFILE");
+  });
+
+  it("should allow a hybrid PQ profile only when an explicit verifier is supplied", () => {
+    const issuer = generateKeypair();
+    const subject = generateKeypair();
+    const issueResult = issueCapabilityToken(
+      {
+        issuer: issuer.publicKey,
+        subject: subject.publicKey,
+        resource: "ros2:///cmd_vel",
+        actions: ["publish"],
+        constraints: { maxVelocityMps: 0.5 },
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: futureISO(12),
+        revocable: true,
+      },
+      issuer.privateKey,
+    );
+    expect(issueResult.ok).toBe(true);
+    if (!issueResult.ok) return;
+
+    const unsignedHybrid = {
+      ...issueResult.value,
+      cryptoProfile: "hybrid-ed25519-mldsa65",
+      postQuantumSignatures: [
+        {
+          algorithm: "ML-DSA-65",
+          publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+          signature: "pq-signature-placeholder",
+        },
+      ],
+    } as Omit<SintCapabilityToken, "signature">;
+    const hybrid = {
+      ...unsignedHybrid,
+      signature: sign(issuer.privateKey, computeSigningPayload(unsignedHybrid)),
+    } as SintCapabilityToken;
+
+    let verifierSawPayload = false;
+    const result = validateCapabilityToken(hybrid, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      cryptoProfileVerifiers: {
+        "hybrid-ed25519-mldsa65": ({ token, signingPayload }) => {
+          verifierSawPayload =
+            token.cryptoProfile === "hybrid-ed25519-mldsa65" &&
+            signingPayload.includes("hybrid-ed25519-mldsa65");
+          return { ok: true, value: true };
+        },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(verifierSawPayload).toBe(true);
   });
 
   it("should reject an expired token (no grace period)", () => {

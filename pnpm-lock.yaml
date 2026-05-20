@@ -647,6 +647,9 @@ importers:
       '@pshkv/bridge-iot':
         specifier: workspace:*
         version: link:../bridge-iot
+      '@pshkv/bridge-mavlink':
+        specifier: workspace:*
+        version: link:../bridge-mavlink
       '@pshkv/bridge-mcp':
         specifier: workspace:*
         version: link:../bridge-mcp

@@ -448,7 +448,19 @@ export class PolicyGateway {
         : undefined,
     });
     if (!tokenValidation.ok) {
-      return this.deny(requestId, timestamp, tokenValidation.error, `Token validation failed: ${tokenValidation.error}`);
+      const decision = this.deny(
+        requestId,
+        timestamp,
+        tokenValidation.error,
+        `Token validation failed: ${tokenValidation.error}`,
+      );
+      this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+        decision: decision.action,
+        tier: decision.assignedTier,
+        risk: decision.assignedRisk,
+        policyViolated: tokenValidation.error,
+      });
+      return decision;
     }
 
     // 4d. Execution envelope corridor checks (optional, additive guardrail).

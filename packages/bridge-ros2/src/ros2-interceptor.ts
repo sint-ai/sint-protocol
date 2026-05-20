@@ -33,6 +33,20 @@ export interface ROS2InterceptorConfig {
   readonly tokenId: string;
   /** Robot mass in kg (for force estimation from velocity). */
   readonly robotMassKg?: number;
+  /** Normalize Gazebo-scoped control topics into canonical ROS2 resources. */
+  readonly gazeboNormalize?: boolean;
+  /** Normalize Isaac/Sim namespaced control topics into canonical ROS2 resources. */
+  readonly isaacNormalize?: boolean;
+  /**
+   * Normalize namespaced differential-drive wheel topics such as
+   * `/robot/cmd_wheels` into canonical ROS2 resources.
+   */
+  readonly differentialDriveNormalize?: boolean;
+  /**
+   * Wheel radius in meters for differential-drive wheel commands.
+   * When set, SINT can estimate linear speed from custom wheel messages.
+   */
+  readonly differentialDriveWheelRadiusM?: number;
 }
 
 /**
@@ -60,26 +74,41 @@ export class ROS2Interceptor {
   private readonly agentId: string;
   private readonly tokenId: string;
   private readonly robotMassKg?: number;
+  private readonly gazeboNormalize: boolean;
+  private readonly isaacNormalize: boolean;
+  private readonly differentialDriveNormalize: boolean;
+  private readonly differentialDriveWheelRadiusM?: number;
 
   constructor(config: ROS2InterceptorConfig) {
     this.gateway = config.gateway;
     this.agentId = config.agentId;
     this.tokenId = config.tokenId;
     this.robotMassKg = config.robotMassKg;
+    this.gazeboNormalize = config.gazeboNormalize ?? false;
+    this.isaacNormalize = config.isaacNormalize ?? false;
+    this.differentialDriveNormalize = config.differentialDriveNormalize ?? false;
+    this.differentialDriveWheelRadiusM = config.differentialDriveWheelRadiusM;
   }
 
   /**
    * Intercept a topic publish operation.
    */
   async interceptPublish(message: ROS2TopicMessage): Promise<ROS2InterceptResult> {
-    const physicalCtx = extractPhysicalContext(message, this.robotMassKg);
+    const physicalCtx = extractPhysicalContext(message, {
+      robotMassKg: this.robotMassKg,
+      differentialDriveWheelRadiusM: this.differentialDriveWheelRadiusM,
+    });
 
     const request: SintRequest = {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
       agentId: this.agentId,
       tokenId: this.tokenId,
-      resource: topicToResourceUri(message.topicName),
+      resource: topicToResourceUri(message.topicName, {
+        gazeboNormalize: this.gazeboNormalize,
+        isaacNormalize: this.isaacNormalize,
+        differentialDriveNormalize: this.differentialDriveNormalize,
+      }),
       action: "publish",
       params: message.data,
       physicalContext: physicalCtx
@@ -102,7 +131,11 @@ export class ROS2Interceptor {
       timestamp: nowISO8601(),
       agentId: this.agentId,
       tokenId: this.tokenId,
-      resource: topicToResourceUri(topicName),
+      resource: topicToResourceUri(topicName, {
+        gazeboNormalize: this.gazeboNormalize,
+        isaacNormalize: this.isaacNormalize,
+        differentialDriveNormalize: this.differentialDriveNormalize,
+      }),
       action: "subscribe",
       params: {},
     };

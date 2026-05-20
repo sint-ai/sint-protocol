@@ -5,7 +5,7 @@
 | Domain | Purpose | Status |
 |---|---|---|
 | `sint.gg` | Primary product homepage | ✅ Live (Lovable) |
-| `docs.sint.gg` | Documentation | ✅ Live (VitePress) |
+| `docs.sint.gg` | Repo-backed documentation surface | ✅ Live (builds from `/docs` via VitePress and GitHub Pages) |
 | `badge.sint.gg` | Badge endpoint for READMEs | 🔧 Build next |
 | `sint.work` | SINT Commons — Work Cell marketplace | → Point to sint.gg/commons for now |
 | `sint.foundation` | Protocol Commons / standards org | → Point to sint.gg/protocol for now |

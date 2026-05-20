@@ -1,0 +1,36 @@
+{
+  "fixtureId": "post-quantum-crypto-agility-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Conformance profile for SINT token crypto agility: classic Ed25519 compatibility and fail-closed handling for mandatory hybrid/PQ profiles until PQ verifier support is wired.",
+  "profiles": [
+    {
+      "cryptoProfile": "classic-ed25519",
+      "signatureFamilies": ["Ed25519"],
+      "expectedValidation": "allow"
+    },
+    {
+      "cryptoProfile": "hybrid-ed25519-mldsa65",
+      "signatureFamilies": ["Ed25519", "ML-DSA-65"],
+      "expectedValidation": "deny",
+      "expectedError": "UNSUPPORTED_CRYPTO_PROFILE"
+    },
+    {
+      "cryptoProfile": "pq-mldsa65",
+      "signatureFamilies": ["ML-DSA-65"],
+      "expectedValidation": "deny",
+      "expectedError": "UNSUPPORTED_CRYPTO_PROFILE"
+    },
+    {
+      "cryptoProfile": "pq-slh-dsa",
+      "signatureFamilies": ["SLH-DSA-SHA2-128s"],
+      "expectedValidation": "deny",
+      "expectedError": "UNSUPPORTED_CRYPTO_PROFILE"
+    }
+  ],
+  "requirements": {
+    "signingPayloadBindsCryptoProfile": true,
+    "unsupportedMandatoryProfilesFailClosed": true,
+    "postQuantumSignatureMetadataPreserved": true,
+    "preferredFirstProductionProfile": "hybrid-ed25519-mldsa65"
+  }
+}

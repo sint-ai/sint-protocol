@@ -24,7 +24,11 @@ import {
   ok,
 } from "@pshkv/core";
 import { computeSigningPayload } from "./issuer.js";
-import { verify } from "./crypto.js";
+import {
+  type CryptoProfileVerifierRegistry,
+  DEFAULT_CRYPTO_PROFILE_VERIFIERS,
+  verifyTokenCryptoProfile,
+} from "./crypto-profile.js";
 
 /**
  * Physical context of the current action, used for constraint checking.
@@ -87,14 +91,15 @@ export function validateTokenSchema(
  */
 export function validateTokenSignature(
   token: SintCapabilityToken,
+  cryptoProfileVerifiers: CryptoProfileVerifierRegistry = {},
 ): Result<true, CapabilityTokenError> {
   const { signature, ...rest } = token;
   const payload = computeSigningPayload(rest);
-  const valid = verify(token.issuer, signature, payload);
-  if (!valid) {
-    return err("INVALID_SIGNATURE");
-  }
-  return ok(true);
+  return verifyTokenCryptoProfile(
+    { ...rest, signature },
+    payload,
+    { ...DEFAULT_CRYPTO_PROFILE_VERIFIERS, ...cryptoProfileVerifiers },
+  );
 }
 
 /**
@@ -424,6 +429,7 @@ export function validateCapabilityToken(
     modelContext?: ModelRuntimeContext;
     now?: Date;
     maxDelegationDepth?: number;
+    cryptoProfileVerifiers?: CryptoProfileVerifierRegistry;
   },
 ): Result<true, CapabilityTokenError> {
   // 1. Schema validation
@@ -431,7 +437,7 @@ export function validateCapabilityToken(
   if (!schemaResult.ok) return schemaResult;
 
   // 2. Signature verification
-  const sigResult = validateTokenSignature(token);
+  const sigResult = validateTokenSignature(token, params.cryptoProfileVerifiers);
   if (!sigResult.ok) return sigResult;
 
   // 3. Expiry check

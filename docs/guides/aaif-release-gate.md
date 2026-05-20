@@ -1,0 +1,38 @@
+# AAIF Release Gate
+
+Use this guide to produce repeatable release-readiness evidence for AAIF
+resubmission.
+
+## Command
+
+Run the full gate from repo root:
+
+```bash
+pnpm run aaif:release-gate
+```
+
+This command executes:
+
+1. workspace build
+2. workspace tests
+3. docs build
+4. conformance test suite
+
+## Why This Exists
+
+AAIF Gate 5 requires evidence that a release candidate passed build, test, docs
+and conformance checks together, not as separate informal runs.
+
+## Evidence Capture
+
+For each release candidate issue:
+
+1. link the CI run or terminal transcript showing `pnpm run aaif:release-gate`
+   succeeded
+2. include conformance output location (CI artifact or paste)
+3. link docs build output
+4. link any related OpenSSF gap updates
+
+Use the issue template:
+
+- `.github/ISSUE_TEMPLATE/release_candidate_checklist.yml`

@@ -61,16 +61,20 @@ SQL migration files in `packages/persistence/migrations/` are applied automatica
 | Variable                  | Default         | Description                                               |
 |---------------------------|-----------------|-----------------------------------------------------------|
 | `SINT_PORT`               | `3100`          | HTTP server port                                          |
+| `SINT_ENV`                | `development`   | Runtime mode: `development`, `test`, or `production`      |
 | `DATABASE_URL`            | _(required)_    | PostgreSQL connection string when `SINT_STORE=postgres`   |
 | `REDIS_URL`               | _(required)_    | Redis connection string when `SINT_CACHE=redis`           |
 | `SINT_STORE`              | `memory`        | Storage backend: `memory` or `postgres`                   |
 | `SINT_CACHE`              | `memory`        | Cache backend: `memory` or `redis`                        |
 | `SINT_LOG_LEVEL`          | `info`          | Log verbosity: `debug`, `info`, `warn`, `error`           |
 | `SINT_API_KEY`            | _(unset)_       | Admin API key; if unset, auth is disabled (dev mode)      |
-| `SINT_MAX_TIER`           | `T3_COMMIT`     | Maximum approval tier the gateway will accept             |
 | `SINT_REQUIRE_SIGNATURES` | `false`         | Require Ed25519-signed requests                           |
 | `SINT_RATE_LIMIT`         | `100`           | Max requests per minute per client                        |
 | `SINT_WS_ALLOW_QUERY_API_KEY` | `true` (dev) / `false` (prod recommended) | Allow `?apiKey=` auth on `/v1/approvals/ws` |
+
+When `SINT_ENV=production` or `NODE_ENV=production`, the gateway requires
+`SINT_STORE=postgres`, `SINT_CACHE=redis`, a non-empty `SINT_API_KEY`,
+`SINT_REQUIRE_SIGNATURES=true`, and `SINT_WS_ALLOW_QUERY_API_KEY=false`.
 
 ### Dashboard (`dashboard` service)
 
@@ -141,17 +145,6 @@ services:
 ```
 
 Agents must then sign every `SintRequest` with their Ed25519 private key.
-
-### Capping the maximum approval tier
-
-To prevent T3 (irreversible) actions in a deployment:
-
-```yaml
-services:
-  gateway:
-    environment:
-      SINT_MAX_TIER: T2_ACT
-```
 
 ### Persistent Redis data
 

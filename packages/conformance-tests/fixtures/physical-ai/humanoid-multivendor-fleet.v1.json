@@ -1,0 +1,193 @@
+{
+  "fixtureId": "humanoid-multivendor-fleet-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Multi-vendor fleet governance fixture for humanoid, AMR, conveyor, and human-worker shared-zone operations.",
+  "deployment": {
+    "siteId": "warehouse-eu-demo-01",
+    "fleetId": "mixed-fleet-alpha",
+    "robots": [
+      {
+        "id": "digit-07",
+        "kind": "humanoid",
+        "vendor": "humanoid-vendor-a"
+      },
+      {
+        "id": "amr-17",
+        "kind": "amr",
+        "vendor": "amr-vendor-b"
+      },
+      {
+        "id": "conveyor-3",
+        "kind": "conveyor",
+        "vendor": "plc-vendor-c"
+      }
+    ],
+    "humanZones": [
+      "zone-packout-3",
+      "zone-aisle-a17"
+    ]
+  },
+  "requirements": {
+    "handoffRequiresReceipt": true,
+    "sharedZoneConflictFailsClosed": true,
+    "crossBridgeReplayPreservesIntent": true,
+    "crossBridgeReplayPreservesHighConsequenceTier": true,
+    "dashboardQueriesDefinedForThousandRobotAudit": true
+  },
+  "handoffReceiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "sourceRobotId",
+      "targetRobotId",
+      "workspaceId",
+      "payloadRef",
+      "approvalId",
+      "operatorId",
+      "eventHash",
+      "previousHash"
+    ],
+    "sample": {
+      "receiptId": "handoff:digit-07:amr-17:tote-4481",
+      "sourceRobotId": "digit-07",
+      "targetRobotId": "amr-17",
+      "workspaceId": "zone-aisle-a17",
+      "payloadRef": "sint://payload/tote-4481",
+      "approvalId": "approval-handoff-001",
+      "operatorId": "operator-shift-a",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "sharedZoneClaims": [
+    {
+      "claimId": "claim-digit-07-a17",
+      "robotId": "digit-07",
+      "workspaceId": "zone-aisle-a17",
+      "resource": "humanoid://fleet/warehouse/robot/digit-07/workspace/zone-aisle-a17/reserve",
+      "action": "prepare",
+      "window": {
+        "start": "2026-08-02T10:00:00.000000Z",
+        "end": "2026-08-02T10:05:00.000000Z"
+      },
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare"
+    },
+    {
+      "claimId": "claim-amr-17-a17-conflict",
+      "robotId": "amr-17",
+      "workspaceId": "zone-aisle-a17",
+      "resource": "open-rmf://site/warehouse-eu-demo-01/zone/zone-aisle-a17",
+      "action": "prepare",
+      "window": {
+        "start": "2026-08-02T10:02:00.000000Z",
+        "end": "2026-08-02T10:07:00.000000Z"
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T1_prepare",
+      "policyViolated": "FLEET_ZONE_CONFLICT"
+    },
+    {
+      "claimId": "claim-amr-17-b02",
+      "robotId": "amr-17",
+      "workspaceId": "zone-aisle-b02",
+      "resource": "open-rmf://site/warehouse-eu-demo-01/zone/zone-aisle-b02",
+      "action": "prepare",
+      "window": {
+        "start": "2026-08-02T10:02:00.000000Z",
+        "end": "2026-08-02T10:07:00.000000Z"
+      },
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare"
+    }
+  ],
+  "crossBridgeReplay": {
+    "intentId": "intent-move-tote-4481-to-packout",
+    "semanticIntent": "move_payload_to_packout",
+    "expectedAssignedTier": "T2_act",
+    "expectedDecisionAction": "escalate",
+    "paths": [
+      {
+        "bridge": "ros2",
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "mapperInput": {
+          "topic": "/cmd_vel"
+        }
+      },
+      {
+        "bridge": "open-rmf",
+        "resource": "open-rmf://fleet/warehouse-fleet/dispatch",
+        "action": "call",
+        "mapperInput": {
+          "fleetName": "warehouse-fleet",
+          "operation": "task.dispatch"
+        }
+      },
+      {
+        "bridge": "opcua",
+        "resource": "opcua://ot-gw:4840/ns%3D2%3Bs%3DWarehouse%2FConveyor%2F3%2FTransferPermit",
+        "action": "call",
+        "mapperInput": {
+          "endpoint": "opc.tcp://ot-gw:4840",
+          "nodeId": "ns=2;s=Warehouse/Conveyor/3/TransferPermit",
+          "operation": "call"
+        }
+      },
+      {
+        "bridge": "sparkplug",
+        "resource": "mqtt-sparkplug:///warehouse/edge-gateway-1/amr-17/dcmd",
+        "action": "call",
+        "mapperInput": {
+          "topic": "spBv1.0/warehouse/DCMD/edge-gateway-1/amr-17",
+          "messageType": "DCMD"
+        }
+      }
+    ]
+  },
+  "dashboardAuditQueries": [
+    {
+      "name": "high_consequence_by_robot",
+      "purpose": "Find all T2/T3 approvals, denials, and rollbacks for one robot over a shift.",
+      "requiredFilters": [
+        "robotId",
+        "assignedTier",
+        "timestampRange"
+      ]
+    },
+    {
+      "name": "workspace_conflicts_by_zone",
+      "purpose": "Find denied or escalated shared-zone conflicts across humanoids, AMRs, conveyors, and human zones.",
+      "requiredFilters": [
+        "workspaceId",
+        "policyViolated",
+        "timestampRange"
+      ]
+    },
+    {
+      "name": "handoff_receipts_by_payload",
+      "purpose": "Trace payload custody across humanoid-to-AMR handoffs.",
+      "requiredFilters": [
+        "payloadRef",
+        "handoffReceiptId",
+        "eventHash",
+        "timestampRange"
+      ]
+    },
+    {
+      "name": "estop_and_rollback_by_fleet",
+      "purpose": "Review emergency-stop and rollback events across a 1,000+ robot fleet.",
+      "requiredFilters": [
+        "fleetId",
+        "eventType",
+        "incidentId",
+        "timestampRange"
+      ]
+    }
+  ],
+  "successCriteria": {
+    "handoffWithoutReceiptRejected": true,
+    "conflictingWorkspaceClaimsDenied": true,
+    "crossBridgeReplayAllEscalates": true,
+    "dashboardQueriesHaveBoundedFilters": true
+  }
+}

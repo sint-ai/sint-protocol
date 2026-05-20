@@ -1,0 +1,236 @@
+{
+  "fixtureId": "industrial-cell-safety-pack-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Automotive and industrial-cell safety pack for humanoid-in-the-loop operations.",
+  "scopeNote": "SINT provides runtime governance and evidence for safety-case support. This fixture is not an ISO 26262, SOTIF, or machinery-safety certification.",
+  "deployment": {
+    "siteId": "automotive-cell-demo-01",
+    "cellId": "cell-door-trim-7",
+    "profile": "industrial-humanoid-cell",
+    "actors": [
+      "humanoid-assembly-agent",
+      "safety-plc",
+      "cell-operator",
+      "line-supervisor"
+    ],
+    "resources": [
+      "opcua://safety-plc.local/ns%3D2%3Bs%3DCell7%2FGuardDoor%2FInterlock",
+      "opcua://safety-plc.local/ns%3D2%3Bs%3DCell7%2FRobot%2FPermit",
+      "humanoid://fleet/industrial/robot/humanoid-12/workspace/cell-door-trim-7/reserve",
+      "humanoid://fleet/industrial/robot/humanoid-12/arm/right/joint_commands",
+      "humanoid://fleet/industrial/robot/humanoid-12/estop"
+    ]
+  },
+  "policyTemplates": [
+    {
+      "templateId": "industrial-cell-guard-door",
+      "resourcePattern": "opcua://*/GuardDoor/*",
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 5000
+      },
+      "defaultTier": "T3_commit"
+    },
+    {
+      "templateId": "industrial-cell-zone-reservation",
+      "resourcePattern": "humanoid://*/workspace/*/reserve",
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 5000
+      },
+      "defaultTier": "T1_prepare"
+    },
+    {
+      "templateId": "industrial-cell-manipulation",
+      "resourcePattern": "humanoid://*/arm/*/joint_commands",
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 5000
+      },
+      "defaultTier": "T2_act"
+    }
+  ],
+  "cellScenarios": [
+    {
+      "id": "guard-door-open",
+      "description": "Guard door opens while a humanoid manipulation request is pending.",
+      "resource": "humanoid://fleet/industrial/robot/humanoid-12/arm/right/joint_commands",
+      "action": "publish",
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "open",
+        "estopState": "clear",
+        "controllerId": "safety-plc-cell-7",
+        "observedAgeMs": 80
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "policyViolated": "HARDWARE_INTERLOCK_OPEN",
+      "evidenceEvent": "safety.hardware.interlock.open"
+    },
+    {
+      "id": "zone-occupied",
+      "description": "Shared cell zone is occupied by a human worker during robot entry.",
+      "resource": "humanoid://fleet/industrial/robot/humanoid-12/workspace/cell-door-trim-7/reserve",
+      "action": "prepare",
+      "physicalContext": {
+        "humanDetected": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-cell-7",
+        "observedAgeMs": 90
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T1_prepare",
+      "policyViolated": "ZONE_OCCUPIED_BY_HUMAN",
+      "evidenceEvent": "safety.human.detected"
+    },
+    {
+      "id": "permit-revoked-before-actuation",
+      "description": "Safety PLC revokes the hardware permit after approval but before actuation.",
+      "resource": "humanoid://fleet/industrial/robot/humanoid-12/arm/right/joint_commands",
+      "action": "publish",
+      "hardwareSafety": {
+        "permitState": "denied",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-cell-7",
+        "observedAgeMs": 75
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "policyViolated": "HARDWARE_PERMIT_REQUIRED",
+      "evidenceEvent": "safety.hardware.permit.denied"
+    },
+    {
+      "id": "emergency-stop-under-load",
+      "description": "Emergency stop is triggered while the cell is carrying load.",
+      "resource": "humanoid://fleet/industrial/robot/humanoid-12/estop",
+      "action": "override",
+      "hardwareSafety": {
+        "permitState": "denied",
+        "interlockState": "closed",
+        "estopState": "triggered",
+        "controllerId": "safety-plc-cell-7",
+        "observedAgeMs": 20
+      },
+      "expectedDecision": "rollback",
+      "expectedTier": "T3_commit",
+      "policyViolated": "ESTOP_UNCONDITIONAL",
+      "evidenceEvent": "safety.estop.triggered",
+      "rollbackTargetRef": "sint://action/humanoid-12/cell-door-trim-7/last-safe-state"
+    }
+  ],
+  "fmeaExport": [
+    {
+      "failureMode": "guard door opened during motion",
+      "sourceScenarioId": "guard-door-open",
+      "hazard": "human enters active cell",
+      "sintDetection": "hardware interlock open",
+      "sintControl": "deny before actuation and emit safety.hardware.interlock.open",
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 2,
+      "requiredEvidence": [
+        "policyViolated",
+        "controllerId",
+        "eventHash",
+        "previousHash"
+      ]
+    },
+    {
+      "failureMode": "human occupies planned workspace",
+      "sourceScenarioId": "zone-occupied",
+      "hazard": "collision or unsafe proximity",
+      "sintDetection": "humanDetected physical context",
+      "sintControl": "deny or escalate shared-zone reservation",
+      "severity": 8,
+      "occurrence": 4,
+      "detection": 3,
+      "requiredEvidence": [
+        "physicalContext.humanDetected",
+        "policyViolated",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "permit revoked after approval",
+      "sourceScenarioId": "permit-revoked-before-actuation",
+      "hazard": "actuation proceeds after safety PLC revocation",
+      "sintDetection": "permitState denied",
+      "sintControl": "fail closed and require fresh permit before execution",
+      "severity": 10,
+      "occurrence": 2,
+      "detection": 2,
+      "requiredEvidence": [
+        "permitState",
+        "controllerId",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "emergency stop under load",
+      "sourceScenarioId": "emergency-stop-under-load",
+      "hazard": "unsafe continuation after operator stop",
+      "sintDetection": "estopState triggered",
+      "sintControl": "unconditional rollback to safe state",
+      "severity": 10,
+      "occurrence": 2,
+      "detection": 1,
+      "requiredEvidence": [
+        "incidentId",
+        "rollbackTargetRef",
+        "eventHash",
+        "previousHash"
+      ]
+    }
+  ],
+  "sotifIso26262Mapping": [
+    {
+      "topic": "AI-generated physical action",
+      "sintSupport": "PolicyGateway assigns consequence tier and blocks T2/T3 execution until required oversight is present.",
+      "claimBoundary": "runtime authorization support only"
+    },
+    {
+      "topic": "reasonably foreseeable misuse",
+      "sintSupport": "Forbidden combinations, zone occupancy, and hardware safety context create deny evidence for unsafe command sequences.",
+      "claimBoundary": "requires assessor validation for final safety case"
+    },
+    {
+      "topic": "functional-safety interaction",
+      "sintSupport": "Safety PLC permit/interlock/e-stop state is checked before physical execution and recorded in the EvidenceLedger.",
+      "claimBoundary": "does not replace certified safety PLC or safety controller"
+    },
+    {
+      "topic": "post-incident traceability",
+      "sintSupport": "Denial, escalation, rollback, and e-stop events are hash-chained for incident reconstruction.",
+      "claimBoundary": "evidence support, not independent root-cause certification"
+    }
+  ],
+  "timingReport": {
+    "kpiFixtureRef": "packages/conformance-tests/fixtures/industrial/hardware-safety-phase-a-kpis.json",
+    "requiredKpis": [
+      "Hardware permit handshake p99",
+      "E-stop propagation p99",
+      "T2/T3 fail-open incidents"
+    ],
+    "requiresBenchmarkReport": true
+  },
+  "successCriteria": {
+    "guardDoorInterlockCovered": true,
+    "zoneOccupancyCovered": true,
+    "permitRevocationCovered": true,
+    "emergencyStopCovered": true,
+    "fmeaRowsReferenceScenarios": true,
+    "claimsRemainSupportOnly": true
+  }
+}

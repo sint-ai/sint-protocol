@@ -1,0 +1,94 @@
+{
+  "fixtureId": "humanoid-warehouse-pilot-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Per-shift warehouse/RaaS pilot evidence export contract for humanoid deployments using SINT.",
+  "pilot": {
+    "siteId": "gxo-flowery-branch-style-lab",
+    "shiftId": "shift-2026-08-02-a",
+    "fleetId": "warehouse",
+    "robotIds": ["digit-07", "amr-17"],
+    "deploymentProfile": "warehouse-amr",
+    "targetRobotCount": {
+      "min": 10,
+      "max": 50
+    }
+  },
+  "exportSchema": {
+    "format": "json-lines",
+    "requiredFields": [
+      "shiftId",
+      "siteId",
+      "robotId",
+      "eventId",
+      "sequenceNumber",
+      "timestamp",
+      "eventType",
+      "agentId",
+      "tokenId",
+      "decision",
+      "assignedTier",
+      "resource",
+      "action",
+      "approvalId",
+      "operatorId",
+      "incidentId",
+      "receiptRequired",
+      "eventHash",
+      "previousHash"
+    ],
+    "optionalFields": [
+      "handoffReceiptId",
+      "safetyControllerId",
+      "latencyMs",
+      "denialPolicy",
+      "rollbackTargetRef"
+    ]
+  },
+  "successCriteria": {
+    "chainVerificationRequired": true,
+    "allT2T3HaveApprovalOrDenialEvidence": true,
+    "handoffRequiresReceipt": true,
+    "estopRequiresRollbackOrDenyEvidence": true,
+    "exportAcceptedByExternalReviewer": true
+  },
+  "sampleEvents": [
+    {
+      "name": "navigation_escalated",
+      "robotId": "digit-07",
+      "eventType": "policy.evaluated",
+      "resource": "humanoid://fleet/warehouse/robot/digit-07/base/cmd_vel",
+      "action": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "approvalId": "approval-nav-001",
+      "receiptRequired": true,
+      "latencyMs": 8
+    },
+    {
+      "name": "handoff_receipt",
+      "robotId": "digit-07",
+      "eventType": "action.completed",
+      "resource": "humanoid://fleet/warehouse/robot/digit-07/handoff",
+      "action": "call",
+      "decision": "allow",
+      "assignedTier": "T2_act",
+      "approvalId": "approval-handoff-001",
+      "handoffReceiptId": "handoff:digit-07:amr-17:tote-4481",
+      "receiptRequired": true,
+      "latencyMs": 12
+    },
+    {
+      "name": "estop_denied",
+      "robotId": "digit-07",
+      "eventType": "safety.estop.triggered",
+      "resource": "humanoid://fleet/warehouse/robot/digit-07/estop",
+      "action": "override",
+      "decision": "deny",
+      "assignedTier": "T3_commit",
+      "operatorId": "safety-operator-1",
+      "incidentId": "incident-estop-001",
+      "receiptRequired": true,
+      "rollbackTargetRef": "action:digit-07:base:cmd_vel:prev"
+    }
+  ]
+}

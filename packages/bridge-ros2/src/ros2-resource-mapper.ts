@@ -13,8 +13,10 @@ import type { ROS2TopicMessage } from "./types.js";
 import {
   twistSchema,
   wrenchSchema,
+  differentialWheelCommandSchema,
   extractPhysicalContextFromTwist,
   extractPhysicalContextFromWrench,
+  extractPhysicalContextFromDifferentialWheelCommand,
 } from "./ros2-message-types.js";
 
 export interface TopicToResourceOptions {
@@ -29,12 +31,20 @@ export interface TopicToResourceOptions {
    * (e.g. `/isaac/ur10/cmd_vel`) into canonical control resources.
    */
   isaacNormalize?: boolean;
+  /**
+   * Normalize namespaced differential-drive topics such as
+   * `/robot/cmd_wheels` and `/robot/enc_wheels` into canonical SINT
+   * resources. This matches the public control surface used by the
+   * Sunnybotics T800 ROS2 + micro-ROS example.
+   */
+  differentialDriveNormalize?: boolean;
 }
 
 const GAZEBO_CONTROL_TOPIC_SUFFIX =
   /\/(cmd_vel|joint_commands|mode_change|plan|waypoints|navigate_to_pose)$/;
 const ISAAC_NAMESPACED_CONTROL_TOPIC =
   /^\/(isaac|sim|robots)\/[^/]+\/(cmd_vel|joint_commands|mode_change|plan|waypoints|navigate_to_pose)$/;
+const DIFFERENTIAL_DRIVE_TOPIC_SUFFIX = /\/(cmd_wheels|enc_wheels)$/;
 
 function normalizeTopicName(topicName: string, options?: TopicToResourceOptions): string {
   const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
@@ -68,6 +78,21 @@ function normalizeIsaacTopicName(topicName: string, options?: TopicToResourceOpt
   return `/${match[2]}`;
 }
 
+function normalizeDifferentialDriveTopicName(
+  topicName: string,
+  options?: TopicToResourceOptions,
+): string {
+  const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
+  if (!options?.differentialDriveNormalize) {
+    return normalized;
+  }
+  const match = normalized.match(DIFFERENTIAL_DRIVE_TOPIC_SUFFIX);
+  if (!match?.[1]) {
+    return normalized;
+  }
+  return `/${match[1]}`;
+}
+
 /**
  * Map a ROS 2 topic name to a SINT resource URI.
  *
@@ -81,8 +106,11 @@ export function topicToResourceUri(
   topicName: string,
   options?: TopicToResourceOptions,
 ): string {
-  const normalized = normalizeIsaacTopicName(
-    normalizeTopicName(topicName, options),
+  const normalized = normalizeDifferentialDriveTopicName(
+    normalizeIsaacTopicName(
+      normalizeTopicName(topicName, options),
+      options,
+    ),
     options,
   );
   return `ros2:///${normalized.slice(1)}`;
@@ -115,6 +143,20 @@ export function isaacTopicToResourceUri(topicName: string): string {
 }
 
 /**
+ * Map a namespaced differential-drive wheel topic to a canonical SINT
+ * resource URI.
+ *
+ * @example
+ * ```ts
+ * differentialDriveTopicToResourceUri("/robot/cmd_wheels") // => "ros2:///cmd_wheels"
+ * differentialDriveTopicToResourceUri("/robot_12/enc_wheels") // => "ros2:///enc_wheels"
+ * ```
+ */
+export function differentialDriveTopicToResourceUri(topicName: string): string {
+  return topicToResourceUri(topicName, { differentialDriveNormalize: true });
+}
+
+/**
  * Map a ROS 2 service name to a SINT resource URI.
  */
 export function serviceToResourceUri(serviceName: string): string {
@@ -144,6 +186,32 @@ export function serviceAction(): string {
   return "call";
 }
 
+export interface PhysicalContextOptions {
+  readonly robotMassKg?: number;
+  readonly differentialDriveWheelRadiusM?: number;
+  readonly differentialDriveControlTopicPattern?: RegExp;
+}
+
+function resolvePhysicalContextOptions(
+  robotMassKgOrOptions?: number | PhysicalContextOptions,
+): PhysicalContextOptions {
+  if (typeof robotMassKgOrOptions === "number") {
+    return { robotMassKg: robotMassKgOrOptions };
+  }
+  return robotMassKgOrOptions ?? {};
+}
+
+function isDifferentialDriveControlTopic(
+  topicName: string,
+  pattern?: RegExp,
+): boolean {
+  const normalized = topicName.startsWith("/") ? topicName : `/${topicName}`;
+  if (pattern) {
+    return pattern.test(normalized);
+  }
+  return normalized.endsWith("/cmd_wheels") || normalized === "/cmd_wheels";
+}
+
 /**
  * Extract physical context from a ROS 2 topic message payload.
  *
@@ -152,15 +220,20 @@ export function serviceAction(): string {
  */
 export function extractPhysicalContext(
   message: ROS2TopicMessage,
-  robotMassKg?: number,
+  robotMassKgOrOptions?: number | PhysicalContextOptions,
 ): {
   currentVelocityMps?: number;
   currentForceNewtons?: number;
 } | undefined {
+  const options = resolvePhysicalContextOptions(robotMassKgOrOptions);
+
   // Try to parse as Twist (cmd_vel)
   const twistResult = twistSchema.safeParse(message.data);
   if (twistResult.success) {
-    const ctx = extractPhysicalContextFromTwist(twistResult.data, robotMassKg);
+    const ctx = extractPhysicalContextFromTwist(
+      twistResult.data,
+      options.robotMassKg,
+    );
     return {
       currentVelocityMps: ctx.velocityMps,
       currentForceNewtons: ctx.forceNewtons,
@@ -174,6 +247,29 @@ export function extractPhysicalContext(
     return {
       currentForceNewtons: ctx.forceNewtons,
     };
+  }
+
+  const differentialWheelResult = differentialWheelCommandSchema.safeParse(message.data);
+  if (
+    differentialWheelResult.success &&
+    isDifferentialDriveControlTopic(
+      message.topicName,
+      options.differentialDriveControlTopicPattern,
+    )
+  ) {
+    const ctx = extractPhysicalContextFromDifferentialWheelCommand(
+      differentialWheelResult.data,
+      {
+        wheelRadiusM: options.differentialDriveWheelRadiusM,
+        robotMassKg: options.robotMassKg,
+      },
+    );
+    if (ctx.velocityMps !== undefined || ctx.forceNewtons !== undefined) {
+      return {
+        currentVelocityMps: ctx.velocityMps,
+        currentForceNewtons: ctx.forceNewtons,
+      };
+    }
   }
 
   return undefined;

@@ -1,0 +1,138 @@
+{
+  "fixtureId": "humanoid-profile-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Vendor-neutral humanoid robotics profile covering status, planning, actuation, handoff, workspace entry, and emergency stop semantics.",
+  "resourcePrefix": "humanoid://fleet/warehouse/robot/digit-07",
+  "requirements": {
+    "singleGatewayChokePoint": true,
+    "ros2OpenRmfEquivalentTiering": true,
+    "handoffRequiresReceipt": true,
+    "estopIsT3Override": true
+  },
+  "intents": [
+    {
+      "name": "observe_status",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/status",
+      "humanoidAction": "observe",
+      "expectedTier": "T0_observe",
+      "expectedDecisionAction": "allow",
+      "bridgeMappings": {
+        "ros2": {
+          "kind": "topic",
+          "name": "/digit_07/status",
+          "action": "subscribe",
+          "expectedTier": "T0_observe"
+        },
+        "openRmf": {
+          "fleetName": "warehouse",
+          "robotName": "digit-07",
+          "operation": "robot.status",
+          "expectedAction": "observe",
+          "expectedTier": "T0_observe"
+        }
+      }
+    },
+    {
+      "name": "stage_grasp_plan",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/plan",
+      "humanoidAction": "prepare",
+      "expectedTier": "T1_prepare",
+      "expectedDecisionAction": "allow",
+      "bridgeMappings": {
+        "ros2": {
+          "kind": "topic",
+          "name": "/plan",
+          "action": "publish",
+          "expectedTier": "T1_prepare"
+        },
+        "openRmf": {
+          "fleetName": "warehouse",
+          "operation": "traffic.reserve",
+          "expectedAction": "prepare",
+          "expectedTier": "T1_prepare"
+        }
+      }
+    },
+    {
+      "name": "navigate_base",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/base/cmd_vel",
+      "humanoidAction": "publish",
+      "expectedTier": "T2_act",
+      "expectedDecisionAction": "escalate",
+      "physicalContext": {
+        "currentVelocityMps": 0.45,
+        "currentForceNewtons": 18
+      },
+      "bridgeMappings": {
+        "ros2": {
+          "kind": "topic",
+          "name": "/cmd_vel",
+          "action": "publish",
+          "expectedTier": "T2_act"
+        },
+        "openRmf": {
+          "fleetName": "warehouse",
+          "operation": "task.dispatch",
+          "expectedAction": "call",
+          "expectedTier": "T2_act"
+        }
+      }
+    },
+    {
+      "name": "move_arm",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/arm/left/joint_commands",
+      "humanoidAction": "publish",
+      "expectedTier": "T2_act",
+      "expectedDecisionAction": "escalate",
+      "physicalContext": {
+        "currentForceNewtons": 32
+      },
+      "bridgeMappings": {
+        "ros2": {
+          "kind": "topic",
+          "name": "/joint_commands",
+          "action": "publish",
+          "expectedTier": "T2_act"
+        }
+      }
+    },
+    {
+      "name": "handoff_to_amr",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/handoff",
+      "humanoidAction": "call",
+      "expectedTier": "T2_act",
+      "expectedDecisionAction": "escalate",
+      "requiresReceipt": true,
+      "bridgeMappings": {
+        "openRmf": {
+          "fleetName": "warehouse",
+          "operation": "task.dispatch",
+          "expectedAction": "call",
+          "expectedTier": "T2_act"
+        }
+      }
+    },
+    {
+      "name": "enter_novel_workspace",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/workspace/novel/enter",
+      "humanoidAction": "call",
+      "expectedTier": "T3_commit",
+      "expectedDecisionAction": "escalate"
+    },
+    {
+      "name": "emergency_stop",
+      "humanoidResource": "humanoid://fleet/warehouse/robot/digit-07/estop",
+      "humanoidAction": "override",
+      "expectedTier": "T3_commit",
+      "expectedDecisionAction": "escalate",
+      "bridgeMappings": {
+        "openRmf": {
+          "fleetName": "warehouse",
+          "operation": "emergency.stop",
+          "expectedAction": "override",
+          "expectedTier": "T3_commit"
+        }
+      }
+    }
+  ]
+}

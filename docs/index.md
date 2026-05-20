@@ -30,6 +30,8 @@ features:
 
 ## Developer Quick Links
 
+- Protocol overview: [Protocol](./protocol.md)
+- Active roadmap: [Roadmap](./roadmap.md)
 - Gateway API docs: `/v1/docs`
 - Local docs dev server: `pnpm run docs:dev`
 - Build static docs site: `pnpm run docs:build`
@@ -46,8 +48,10 @@ features:
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
 - Formal threat model: [Security/Formal Threat Model](./security/formal-threat-model.md)
 - NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
-- Latest security bulletin: [April 2026](./security-bulletins/2026-04.md)
+- Latest security bulletin: [May 2026](./security-bulletins/2026-05.md)
 
 ## Documentation Scope
 
-This site is the canonical public docs surface for `docs.sint.gg`. It is generated from the `/docs` directory in this repository and deployed by GitHub Actions.
+This site is the canonical repo-backed docs surface for `docs.sint.gg`. It is
+generated from the `/docs` directory in this repository and deployed by GitHub
+Actions.

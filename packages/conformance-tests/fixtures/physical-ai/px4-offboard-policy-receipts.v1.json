@@ -1,0 +1,236 @@
+{
+  "fixtureId": "px4-offboard-policy-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral PX4 collaboration fixture for testing policy receipts around arming, offboard mode, geofence changes, and continuous MAVLink setpoints.",
+  "scope": {
+    "bridge": "mavlink",
+    "projectContext": "px4",
+    "boundary": "arming, offboard mode, and continuous setpoints",
+    "goal": "Test whether MAVLink arming, offboard-mode, fence-change, and velocity-setpoint actions can carry auditable policy receipts without making SINT a required PX4 runtime dependency.",
+    "nonGoal": "This fixture does not propose changes to PX4 flight-control internals."
+  },
+  "requirements": {
+    "armAndModeChangesRequireCommitReview": true,
+    "velocitySetpointsRequireReview": true,
+    "humanTakeoffZoneEscalates": true,
+    "fenceChangesRequireEvidence": true,
+    "negativeOutcomesCarryReceipt": true
+  },
+  "deployment": {
+    "siteId": "drone-lab-01",
+    "vehicleId": "px4-07",
+    "systemId": 11,
+    "missionRef": "sint://mission/px4/px4-07/delivery-4481",
+    "corridorRef": "sint://corridor/utm/delivery-zone-a",
+    "takeoffZoneId": "pad-3"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "vehicleId",
+      "systemId",
+      "flightMode",
+      "missionRef",
+      "corridorRef",
+      "takeoffZoneId",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "px4-offboard:drone-lab-01:px4-07:delivery-zone-a",
+      "actionRef": "action:px4:offboard:drone-lab-01:px4-07:delivery-zone-a",
+      "resource": "mavlink://11/cmd/mode",
+      "operation": "call",
+      "decision": "escalate",
+      "assignedTier": "T3_commit",
+      "vehicleId": "px4-07",
+      "systemId": 11,
+      "flightMode": "OFFBOARD",
+      "missionRef": "sint://mission/px4/px4-07/delivery-4481",
+      "corridorRef": "sint://corridor/utm/delivery-zone-a",
+      "takeoffZoneId": "pad-3",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-06-02T17:00:00.000Z"
+    }
+  },
+  "mappingCases": [
+    {
+      "id": "arm_command_routes_through_gateway",
+      "name": "Arm command maps to the commit boundary",
+      "intercept": {
+        "messageType": "COMMAND_LONG",
+        "systemId": 11,
+        "componentId": 1,
+        "payload": {
+          "target_system": 11,
+          "target_component": 1,
+          "command": 400,
+          "confirmation": 0,
+          "param1": 1,
+          "param2": 0,
+          "param3": 0,
+          "param4": 0,
+          "param5": 0,
+          "param6": 0,
+          "param7": 0
+        }
+      },
+      "expectedResource": "mavlink://11/cmd/arm",
+      "expectedAction": "call",
+      "expectedTier": "T3_commit",
+      "receiptRequired": true
+    },
+    {
+      "id": "offboard_mode_routes_through_gateway",
+      "name": "OFFBOARD mode change maps to the commit boundary",
+      "intercept": {
+        "messageType": "COMMAND_LONG",
+        "systemId": 11,
+        "componentId": 1,
+        "payload": {
+          "target_system": 11,
+          "target_component": 1,
+          "command": 176,
+          "confirmation": 0,
+          "param1": 1,
+          "param2": 6,
+          "param3": 0,
+          "param4": 0,
+          "param5": 0,
+          "param6": 0,
+          "param7": 0
+        }
+      },
+      "expectedResource": "mavlink://11/cmd/mode",
+      "expectedAction": "call",
+      "expectedTier": "T3_commit",
+      "receiptRequired": true
+    },
+    {
+      "id": "velocity_setpoint_routes_through_gateway",
+      "name": "Continuous velocity setpoint maps to the act boundary",
+      "intercept": {
+        "messageType": "SET_POSITION_TARGET_LOCAL_NED",
+        "systemId": 11,
+        "componentId": 1,
+        "payload": {
+          "type_mask": 0,
+          "coordinate_frame": 1,
+          "x": 0,
+          "y": 0,
+          "z": -30,
+          "vx": 6,
+          "vy": 8,
+          "vz": 0,
+          "afx": 0,
+          "afy": 0,
+          "afz": 0,
+          "yaw": 0,
+          "yaw_rate": 0
+        }
+      },
+      "expectedResource": "mavlink://11/cmd_vel",
+      "expectedAction": "publish",
+      "expectedTier": "T2_act",
+      "expectedPhysicalContext": {
+        "currentVelocityMps": 10
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "fence_disable_routes_through_gateway",
+      "name": "Fence disable maps to the commit boundary",
+      "intercept": {
+        "messageType": "COMMAND_LONG",
+        "systemId": 11,
+        "componentId": 1,
+        "payload": {
+          "target_system": 11,
+          "target_component": 1,
+          "command": 207,
+          "confirmation": 0,
+          "param1": 0,
+          "param2": 0,
+          "param3": 0,
+          "param4": 0,
+          "param5": 0,
+          "param6": 0,
+          "param7": 0
+        }
+      },
+      "expectedResource": "mavlink://11/cmd/fence",
+      "expectedAction": "call",
+      "expectedTier": "T3_commit",
+      "receiptRequired": true
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "arm_vehicle_requires_commit_review",
+      "name": "Arming remains a commit-tier reviewed action",
+      "expectedResource": "mavlink://11/cmd/arm",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "receiptRequired": true
+    },
+    {
+      "id": "offboard_mode_requires_commit_review",
+      "name": "OFFBOARD mode change remains a commit-tier reviewed action",
+      "expectedResource": "mavlink://11/cmd/mode",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "targetMode": "OFFBOARD",
+      "receiptRequired": true
+    },
+    {
+      "id": "velocity_setpoint_requires_review",
+      "name": "Continuous velocity setpoint stays receipt-backed and reviewed",
+      "expectedResource": "mavlink://11/cmd_vel",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 15,
+        "corridorRef": "sint://corridor/utm/delivery-zone-a"
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "human_in_takeoff_zone_escalates_velocity_setpoint",
+      "name": "Human near the pad raises setpoint consequence",
+      "expectedResource": "mavlink://11/cmd_vel",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 1.8
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "fence_disable_without_corridor_receipt_rejected",
+      "name": "Reject fence disable when corridor evidence is missing",
+      "expectedResource": "mavlink://11/cmd/fence",
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "corridorReceiptPresent": false,
+      "policyViolated": "PX4_CORRIDOR_RECEIPT_REQUIRED",
+      "receiptRequired": true
+    }
+  ],
+  "successCriteria": {
+    "armAndModeStayCommitTier": true,
+    "velocitySetpointsAreHighConsequence": true,
+    "humanPresenceEscalatesToCommit": true,
+    "missingCorridorReceiptDenied": true,
+    "allOutcomesCarryReceipts": true
+  }
+}

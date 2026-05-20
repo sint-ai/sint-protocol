@@ -1,0 +1,221 @@
+{
+  "fixtureId": "regulated-consent-extensions-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Experimental consent and regulated-domain evidence extensions for home, worker, patient, resident, and caregiver physical-AI workflows.",
+  "status": "experimental",
+  "scopeNote": "These fixtures are consent and audit primitives only. They are not HIPAA, FDA, medical-device, CPSC, or consumer-product compliance certification.",
+  "consentEventSchema": {
+    "requiredFields": [
+      "consentId",
+      "grantorRef",
+      "subjectRole",
+      "scope",
+      "tokenId",
+      "resource",
+      "action",
+      "modalities",
+      "evidenceDigest",
+      "rawEvidenceStored",
+      "expiresAt",
+      "revocable"
+    ],
+    "allowedModalities": [
+      "voice",
+      "gesture",
+      "touch",
+      "app",
+      "caregiver_delegation"
+    ],
+    "privacyRules": {
+      "rawAudioStored": false,
+      "rawVideoStored": false,
+      "biometricTemplateStored": false,
+      "digestAlgorithm": "sha-256",
+      "minimizeGrantorRef": true
+    }
+  },
+  "consentScopes": [
+    {
+      "scopeId": "patient-caregiver-vitals-read",
+      "subjectRole": "patient",
+      "grantorRef": "did:example:patient:7f3a",
+      "delegateRef": "did:example:caregiver:a91c",
+      "resourcePattern": "health://patient/7f3a/vitals/*",
+      "actions": [
+        "read"
+      ],
+      "maxAgeSeconds": 2592000,
+      "revocable": true
+    },
+    {
+      "scopeId": "worker-shared-zone-assist",
+      "subjectRole": "worker",
+      "grantorRef": "did:example:worker:packout-12",
+      "resourcePattern": "humanoid://fleet/warehouse/robot/*/workspace/zone-packout-3/*",
+      "actions": [
+        "prepare",
+        "call"
+      ],
+      "maxAgeSeconds": 300,
+      "revocable": true
+    },
+    {
+      "scopeId": "resident-room-entry",
+      "subjectRole": "resident",
+      "grantorRef": "did:example:resident:room-402",
+      "resourcePattern": "home://resident/room-402/robot/entry",
+      "actions": [
+        "call"
+      ],
+      "maxAgeSeconds": 600,
+      "revocable": true
+    }
+  ],
+  "sampleEvents": [
+    {
+      "name": "patient_voice_consent_for_vitals",
+      "consentId": "consent-patient-voice-001",
+      "grantorRef": "did:example:patient:7f3a",
+      "subjectRole": "patient",
+      "scopeId": "patient-caregiver-vitals-read",
+      "tokenId": "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+      "resource": "health://patient/7f3a/vitals/heart-rate",
+      "action": "read",
+      "modalities": [
+        "voice",
+        "caregiver_delegation"
+      ],
+      "evidenceDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "rawEvidenceStored": false,
+      "expiresAt": "2026-08-02T10:10:00.000000Z",
+      "revocable": true,
+      "expectedDecision": "allow",
+      "assignedTier": "T0_observe"
+    },
+    {
+      "name": "worker_gesture_consent_for_robot_assist",
+      "consentId": "consent-worker-gesture-001",
+      "grantorRef": "did:example:worker:packout-12",
+      "subjectRole": "worker",
+      "scopeId": "worker-shared-zone-assist",
+      "tokenId": "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6b8",
+      "resource": "humanoid://fleet/warehouse/robot/digit-07/workspace/zone-packout-3/assist",
+      "action": "call",
+      "modalities": [
+        "gesture"
+      ],
+      "evidenceDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "rawEvidenceStored": false,
+      "expiresAt": "2026-08-02T10:05:00.000000Z",
+      "revocable": true,
+      "expectedDecision": "escalate",
+      "assignedTier": "T2_act"
+    },
+    {
+      "name": "resident_touch_consent_for_room_entry_revoked",
+      "consentId": "consent-resident-touch-001",
+      "grantorRef": "did:example:resident:room-402",
+      "subjectRole": "resident",
+      "scopeId": "resident-room-entry",
+      "tokenId": "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6c9",
+      "resource": "home://resident/room-402/robot/entry",
+      "action": "call",
+      "modalities": [
+        "touch",
+        "app"
+      ],
+      "evidenceDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "rawEvidenceStored": false,
+      "expiresAt": "2026-08-02T10:06:00.000000Z",
+      "revocable": true,
+      "revokedAt": "2026-08-02T10:02:00.000000Z",
+      "expectedDecision": "deny",
+      "assignedTier": "T2_act",
+      "policyViolated": "CONSENT_REVOKED"
+    }
+  ],
+  "privacyPreservingEvidenceRules": [
+    {
+      "sensor": "camera",
+      "allowedEvidence": [
+        "presence_boolean",
+        "consent_gesture_digest",
+        "device_attestation_ref"
+      ],
+      "forbiddenEvidence": [
+        "raw_frame",
+        "face_embedding",
+        "identity_label"
+      ]
+    },
+    {
+      "sensor": "microphone",
+      "allowedEvidence": [
+        "intent_digest",
+        "local_transcript_hash",
+        "device_attestation_ref"
+      ],
+      "forbiddenEvidence": [
+        "raw_audio",
+        "voiceprint_embedding",
+        "speaker_identification"
+      ]
+    },
+    {
+      "sensor": "biometric",
+      "allowedEvidence": [
+        "consent_status",
+        "revocation_ref",
+        "policy_decision_ref"
+      ],
+      "forbiddenEvidence": [
+        "biometric_template",
+        "remote_identification_result",
+        "emotion_inference"
+      ]
+    }
+  ],
+  "incidentExportPrototypes": [
+    {
+      "domain": "home",
+      "name": "consumer-room-entry-incident",
+      "requiredFields": [
+        "incidentId",
+        "consentId",
+        "tokenId",
+        "resource",
+        "action",
+        "decision",
+        "policyViolated",
+        "evidenceDigest",
+        "eventHash",
+        "previousHash"
+      ],
+      "experimental": true
+    },
+    {
+      "domain": "medical",
+      "name": "caregiver-access-review",
+      "requiredFields": [
+        "incidentId",
+        "consentId",
+        "delegateRef",
+        "tokenId",
+        "resource",
+        "action",
+        "decision",
+        "evidenceDigest",
+        "revocationRef",
+        "eventHash"
+      ],
+      "experimental": true
+    }
+  ],
+  "successCriteria": {
+    "consentEvidenceTokenBound": true,
+    "consentEvidenceRevocable": true,
+    "rawSensitiveMediaNeverRequired": true,
+    "incidentExportsMarkedExperimental": true,
+    "regulatedDomainClaimsRequirePartnerValidation": true
+  }
+}

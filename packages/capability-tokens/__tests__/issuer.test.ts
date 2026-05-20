@@ -63,6 +63,35 @@ describe("Capability Token Issuer", () => {
     expect(validateResult.ok).toBe(true);
   });
 
+  it("should default to the classic Ed25519 crypto profile", () => {
+    const result = issueCapabilityToken(validRequest, issuerKeypair.privateKey);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value.cryptoProfile).toBeUndefined();
+    expect(result.value.signature).toHaveLength(128);
+  });
+
+  it("should fail closed for unsupported mandatory post-quantum profiles", () => {
+    const result = issueCapabilityToken(
+      {
+        ...validRequest,
+        cryptoProfile: "hybrid-ed25519-mldsa65",
+        postQuantumSignatures: [
+          {
+            algorithm: "ML-DSA-65",
+            publicKeyRef: "pq://issuer/ml-dsa-65/2026-05",
+            signature: "pq-signature-placeholder",
+          },
+        ],
+      },
+      issuerKeypair.privateKey,
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("UNSUPPORTED_CRYPTO_PROFILE");
+  });
+
   it("should reject expired token requests", () => {
     const expiredRequest: SintCapabilityTokenRequest = {
       ...validRequest,

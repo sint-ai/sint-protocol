@@ -1,0 +1,74 @@
+name: Release Candidate Checklist
+description: Gate a tagged release candidate for AAIF resubmission evidence
+title: "rc: vX.Y.Z-rcN checklist"
+labels:
+  - release
+  - aaif-gate/reference-implementation
+  - aaif-gate/conformance
+  - aaif-gate/openssf
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue for each tagged release candidate. Check only items that
+        are completed and link evidence for every completed gate.
+  - type: input
+    id: release-tag
+    attributes:
+      label: Release candidate tag
+      placeholder: "v0.3.0-rc1"
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      placeholder: "YYYY-MM-DD"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope summary
+      description: What changed in this RC and why it matters.
+    validations:
+      required: true
+  - type: checkboxes
+    id: gates
+    attributes:
+      label: Validation gates
+      options:
+        - label: `pnpm run build` passed
+          required: true
+        - label: `pnpm run test` passed (workspace)
+          required: true
+        - label: `pnpm run docs:build` passed
+          required: true
+        - label: Conformance suite passed against current fixtures
+          required: true
+        - label: Reference gateway production path validated (fail-closed checks)
+          required: true
+        - label: Signed request path validated end-to-end
+          required: true
+        - label: Postgres/Redis persistence path validated
+          required: true
+        - label: OpenSSF Best Practices gaps updated or confirmed unchanged
+          required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence links
+      placeholder: |
+        - CI run:
+        - Conformance report:
+        - Gateway verification output:
+        - OpenSSF tracker issue:
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and follow-ups
+      placeholder: "Known risks, deferred work, and owner/date for follow-up."
+    validations:
+      required: false

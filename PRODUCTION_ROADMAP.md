@@ -29,6 +29,12 @@ The release candidate should support:
 - recording auditable decisions in durable storage
 - exposing a documented gateway or interceptor workflow
 
+This production roadmap also feeds the AAIF resubmission path. The foundation
+feedback made the gating issue explicit: SINT must pair technical readiness with
+independent production adoption, independent maintainership, and already-running
+reference / conformance artifacts. The evidence roadmap is tracked in
+`docs/roadmaps/aaif-resubmission-2026.md`.
+
 The release candidate should not promise:
 
 - every bridge package as production-supported
@@ -64,6 +70,14 @@ Exit criteria:
 - startup schema bootstrap is idempotent
 - upgrade notes exist for persistence-affecting changes
 
+Status:
+
+- production gateway startup now enforces the documented durable-store and auth
+  contract when `SINT_ENV=production` or `NODE_ENV=production`
+- required environment variables, readiness checks, release checklist, and
+  rollback notes are documented in
+  `docs/guides/gateway-production-hardening.md`
+
 ### M4. Operability
 
 Exit criteria:
@@ -72,6 +86,11 @@ Exit criteria:
 - structured logs exist for core enforcement outcomes
 - operator troubleshooting path exists
 - one deployment topology is documented end-to-end
+
+Status:
+
+- `prod-lite` compose runs the gateway in production mode and probes
+  `/v1/ready`, which checks the configured store and cache backends
 
 ### M5. Release Discipline
 
@@ -82,6 +101,58 @@ Exit criteria:
 - at least one end-to-end script or walkthrough is maintained
 - versioning and rollback expectations are explicit
 
+### M6. Foundation Evidence Readiness
+
+Exit criteria:
+
+- independent production adopters are documented separately from pilots and
+  co-design partners
+- at least one independent maintainer has 90+ days of sustained merge activity
+- the reference gateway and conformance tooling are released before any
+  foundation resubmission
+- OpenSSF Best Practices work is started and gaps are public
+- resubmission evidence is assembled from completed artifacts, not roadmap
+  promises
+
+### M7. Post-Quantum Crypto Agility
+
+Exit criteria:
+
+- token and receipt formats are crypto-agile
+- unsupported mandatory PQ profiles fail closed
+- hybrid Ed25519 + ML-DSA validation is available behind a verifier interface
+- EvidenceLedger hash algorithms are explicit and migration-safe
+- docs avoid claiming quantum resistance until a PQ verifier and release gate
+  are complete
+
+Status:
+
+- token-level `cryptoProfile` and `postQuantumSignatures` metadata are defined
+- non-classic token profiles currently fail closed with
+  `UNSUPPORTED_CRYPTO_PROFILE`
+- detailed migration plan lives in
+  `docs/roadmaps/post-quantum-crypto-agility.md`
+
+### M8. Humanoid Robotics Integration Readiness
+
+Exit criteria:
+
+- common humanoid intents have canonical resource URIs, tier mappings, and
+  conformance fixtures
+- warehouse / RaaS pilot guidance reuses existing ROS 2, Open-RMF, OPC UA, and
+  Sparkplug bridges
+- EU AI Act and ISO 13482 evidence exports are generated from fixture and
+  ledger data rather than hand-written claims
+- multi-vendor fleet handoffs produce auditable receipts across humanoids, AMRs,
+  conveyors, and safety controllers
+- vendor-specific adapters are added only after partner API access or simulator
+  contracts exist
+
+Status:
+
+- integration roadmap lives in
+  `docs/roadmaps/humanoid-robotics-integrations-2026.md`
+
 ## Recommended Implementation Order
 
 1. Finish data-integrity and persistence fixes.
@@ -89,7 +160,9 @@ Exit criteria:
 3. Freeze the first supported production slice.
 4. Document runtime contract and deployment.
 5. Add release gates.
-6. Resume feature expansion one domain at a time.
+6. Build the humanoid profile fixture and warehouse pilot kit on top of the
+   existing bridge surface.
+7. Resume feature expansion one domain at a time.
 
 ## Feature Roadmap Reframing
 

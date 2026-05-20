@@ -31,6 +31,7 @@ async function main(): Promise<void> {
   ║  Health:  http://localhost:${info.port}/v1/health     ║
   ║  Approvals SSE: http://localhost:${info.port}/v1/approvals/events ║
   ║  Approvals WS:  ws://localhost:${info.port}/v1/approvals/ws ║
+  ║  Mode:    ${config.env.padEnd(35)}║
   ║  Store:   ${config.store.padEnd(35)}║
   ║  Cache:   ${config.cache.padEnd(35)}║
   ╚═══════════════════════════════════════════════╝

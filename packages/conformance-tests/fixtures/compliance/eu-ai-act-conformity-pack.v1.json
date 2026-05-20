@@ -1,0 +1,217 @@
+{
+  "fixtureId": "eu-ai-act-conformity-pack-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Evidence-backed EU AI Act conformity package for physical AI and humanoid robotics deployments.",
+  "regulation": {
+    "name": "Regulation (EU) 2024/1689",
+    "officialTextDate": "2024-06-13",
+    "scopeNote": "Operational evidence pack for high-risk assessment workflows. This fixture is not a legal determination of product classification.",
+    "references": [
+      {
+        "id": "eu-ai-act-article-13",
+        "title": "Article 13 - Transparency and provision of information to deployers",
+        "url": "https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-13"
+      },
+      {
+        "id": "eu-ai-act-article-14",
+        "title": "Article 14 - Human oversight",
+        "url": "https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-14"
+      },
+      {
+        "id": "eu-ai-act-annex-iv",
+        "title": "Annex IV - Technical documentation referred to in Article 11(1)",
+        "url": "https://www.springlex.eu/en/packages/ai-act/ai-act-regulation/annex-4/"
+      }
+    ]
+  },
+  "deployment": {
+    "systemName": "SINT-governed warehouse humanoid fleet",
+    "intendedPurpose": "Govern AI agent requests that observe, plan, move, manipulate, hand off, and stop humanoid robots in shared warehouse workspaces.",
+    "operatorRole": "warehouse-safety-operator",
+    "robotCategory": "service-robot-near-humans",
+    "riskAssumptions": [
+      "robots operate near workers and AMRs",
+      "T2 physical actions require human review before execution",
+      "T3 irreversible or safety-envelope actions require explicit high-consequence review",
+      "e-stop and rollback evidence must be preserved in an append-only ledger"
+    ]
+  },
+  "article13TransparencyExport": {
+    "requiredFields": [
+      "systemName",
+      "intendedPurpose",
+      "operatorRole",
+      "resourceCatalog",
+      "approvalTierModel",
+      "knownLimitations",
+      "humanOversightMeasures",
+      "logAccessProcedure",
+      "evidenceRefs"
+    ],
+    "resourceCatalog": [
+      {
+        "resourcePattern": "humanoid://*/status",
+        "action": "observe",
+        "tier": "T0_observe",
+        "deployersShouldKnow": "status reads are auto-approved and ledgered"
+      },
+      {
+        "resourcePattern": "humanoid://*/plan",
+        "action": "prepare",
+        "tier": "T1_prepare",
+        "deployersShouldKnow": "planning writes are bounded and audited"
+      },
+      {
+        "resourcePattern": "humanoid://*/base/cmd_vel",
+        "action": "publish",
+        "tier": "T2_act",
+        "deployersShouldKnow": "base motion requires review before actuation"
+      },
+      {
+        "resourcePattern": "humanoid://*/handoff",
+        "action": "call",
+        "tier": "T2_act",
+        "deployersShouldKnow": "handoffs require approval and an auditable receipt"
+      },
+      {
+        "resourcePattern": "humanoid://*/safety/envelope",
+        "action": "override",
+        "tier": "T3_commit",
+        "deployersShouldKnow": "safety-envelope changes require high-consequence review"
+      },
+      {
+        "resourcePattern": "humanoid://*/estop",
+        "action": "override",
+        "tier": "T3_commit",
+        "deployersShouldKnow": "emergency-stop events are always recorded with incident context"
+      }
+    ],
+    "knownLimitations": [
+      "SINT provides operational governance evidence; it does not certify the robot hardware.",
+      "Deployment-specific risk classification remains the provider and deployer responsibility.",
+      "Sensor, perception, and motion-controller safety claims require external validation."
+    ],
+    "logAccessProcedure": "Export per-shift JSON Lines from EvidenceLedger, verify the SHA-256 chain, and provide reviewer access to approval, denial, rollback, and incident rows."
+  },
+  "article14HumanOversightExport": {
+    "requiredFields": [
+      "oversightRole",
+      "interventionPoints",
+      "stopControl",
+      "t2T3ReviewEvidence",
+      "operatorTrainingEvidence",
+      "postIncidentReview"
+    ],
+    "oversightRole": "warehouse-safety-operator",
+    "interventionPoints": [
+      {
+        "tier": "T2_act",
+        "mechanism": "approval queue before physical actuation",
+        "evidenceSource": "approvalId"
+      },
+      {
+        "tier": "T3_commit",
+        "mechanism": "explicit high-consequence review with incident or rollback evidence",
+        "evidenceSource": "incidentId"
+      },
+      {
+        "tier": "T3_commit",
+        "mechanism": "circuit breaker and emergency-stop handling",
+        "evidenceSource": "rollbackTargetRef"
+      }
+    ],
+    "stopControl": {
+      "type": "unconditional-estop",
+      "ledgerEvent": "safety.estop.triggered",
+      "requiresTokenValidation": false,
+      "rollbackEvidenceRequired": true
+    },
+    "operatorTrainingEvidence": {
+      "required": true,
+      "artifactRef": "sint://compliance/operator-training/warehouse-safety-operator"
+    },
+    "postIncidentReview": {
+      "required": true,
+      "artifactRef": "sint://compliance/post-incident-review"
+    }
+  },
+  "annexIVChecklist": [
+    {
+      "id": "annex-iv-1-system-description",
+      "title": "General description of the AI system",
+      "sintArtifactRefs": [
+        "docs/guides/humanoid-warehouse-pilot.md",
+        "packages/conformance-tests/fixtures/physical-ai/humanoid-profile.v1.json"
+      ]
+    },
+    {
+      "id": "annex-iv-2-system-components",
+      "title": "System components and interaction with external systems",
+      "sintArtifactRefs": [
+        "packages/core/src/constants/tiers.ts",
+        "packages/conformance-tests/fixtures/physical-ai/humanoid-warehouse-pilot.v1.json"
+      ]
+    },
+    {
+      "id": "annex-iv-3-risk-management",
+      "title": "Risk management and foreseeable misuse controls",
+      "sintArtifactRefs": [
+        "packages/policy-gateway/src/index.ts",
+        "packages/conformance-tests/src/humanoid-warehouse-pilot-conformance.test.ts"
+      ]
+    },
+    {
+      "id": "annex-iv-4-human-oversight",
+      "title": "Human oversight measures",
+      "sintArtifactRefs": [
+        "packages/conformance-tests/fixtures/compliance/eu-ai-act-conformity-pack.v1.json",
+        "packages/conformance-tests/src/eu-ai-act-conformity-pack-conformance.test.ts"
+      ]
+    },
+    {
+      "id": "annex-iv-5-logging",
+      "title": "Logging, traceability, and record retention",
+      "sintArtifactRefs": [
+        "packages/evidence-ledger/src/index.ts",
+        "docs/guides/humanoid-warehouse-pilot.md"
+      ]
+    },
+    {
+      "id": "annex-iv-6-cybersecurity",
+      "title": "Cybersecurity and access control",
+      "sintArtifactRefs": [
+        "packages/capability-tokens/src/index.ts",
+        "docs/roadmaps/post-quantum-crypto-agility.md"
+      ]
+    }
+  ],
+  "iso13482Crosswalk": [
+    {
+      "topic": "protective stop",
+      "sintControl": "unconditional e-stop event with rollback evidence",
+      "evidenceSource": "safety.estop.triggered"
+    },
+    {
+      "topic": "speed and separation monitoring",
+      "sintControl": "token-bound max velocity and dynamic envelope checks",
+      "evidenceSource": "physicalContext.currentVelocityMps"
+    },
+    {
+      "topic": "force limiting",
+      "sintControl": "token-bound max force constraints",
+      "evidenceSource": "physicalContext.currentForceNewtons"
+    },
+    {
+      "topic": "human presence near service robot",
+      "sintControl": "humanDetected context escalates or denies physical action according to policy",
+      "evidenceSource": "physicalContext.humanDetected"
+    }
+  ],
+  "successCriteria": {
+    "article13GeneratedFromFixtureData": true,
+    "article14T2T3EvidenceRequired": true,
+    "annexIVArtifactsReferenced": true,
+    "iso13482CrosswalkIncluded": true,
+    "externalReviewerReady": true
+  }
+}

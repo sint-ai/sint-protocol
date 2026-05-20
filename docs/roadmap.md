@@ -1,59 +1,82 @@
-# SINT Roadmap (Active Track)
+# SINT Roadmap
 
-This file is the active roadmap index for docs navigation.
+This is the active public roadmap for the protocol repo.
 
-## Q2 2026 — Foundation and Adoption
+The short version: SINT is moving from a broad reference stack into a
+production-ready protocol surface with sharper release gates, clearer evidence,
+and more credible external collaboration.
 
-- [x] WebSocket approval streaming
-- [x] PostgreSQL + Redis persistence baseline
-- [x] Docker images and compose stacks
-- [x] Policy playground + API docs surfaces
-- [x] Developer docs site launch (`docs.sint.gg`)
-- [x] Gazebo ROS2 validation profile
-- [x] NVIDIA Isaac Sim integration baseline
-- [x] SIP process established (SIP-0001)
-- [x] TSC founding ADR (ADR-0001)
-- [x] Community governance docs
-- [ ] Discord community launch
-- [ ] First external contributor onboarding
-- [x] Discord launch kit + templates (`docs/community/discord-launch-kit.md`)
-- [x] Good-first-issues board generator (`pnpm run community:starter-board`)
-- [x] Open-source collaboration reply playbook (`docs/community/open-source-collaboration-replies.md`)
-- [x] Monthly security bulletin publication
-- [x] Hardware safety Phase A — signal/evidence alignment + conformance fixtures
-- [x] Secure MCP deployments guide published
-- [x] NIST AI RMF crosswalk document
+## What Landed Recently
 
-## Q3 2026 — Hardware Safety Phase B (Pilot)
+The current repo already includes:
 
-- [ ] Warehouse AMR pilot deployment (hardware safety bridge live)
-- [ ] Industrial cell pilot deployment (PLC/OPC-UA permit handshake live)
-- [ ] Phase B KPI measurement and reporting
-- [ ] External partner conformance certification baseline
+- production hardening guides and release gates
+- approval streaming and durable deployment paths
+- AAIF evidence and maintainer workflows
+- OpenSSF gap tracking and dependency review artifacts
+- collaborator-facing physical AI fixtures for Open-RMF, MoveIt, Nav2, PX4,
+  LeRobot, and solar field operations
+- public onboarding and contribution docs for external collaborators
 
-## Q3/Q4 Planning
+## Through June 2026
 
-See detailed plans in:
+The near-term goal is to finish tightening the core:
 
+- [x] production hardening docs and verification flows
+- [x] AAIF release gate and evidence dossier workflow
+- [x] OpenSSF baseline tracker and dependency review lane
+- [x] external contributor onboarding and scorecard workflows
+- [x] robotics collaboration fixture pack
+- [ ] merge the current production-readiness branch
+- [ ] keep docs, README, and public protocol copy aligned
+
+## Q3 2026
+
+Q3 is about proving that the protocol can survive outside a friendly demo
+environment.
+
+- [ ] reference gateway path documented as the default durable deployment slice
+- [ ] conformance and certification artifacts kept green on every release lane
+- [ ] at least one external collaborator thread turns into a shared fixture,
+  adapter sketch, or PR
+- [ ] independent maintainer evidence accumulates across a real multi-month
+  window
+- [ ] named adopter or pilot evidence improves beyond the immediate co-design
+  cluster
+- [ ] highest-priority OpenSSF and dependency-review gaps are materially reduced
+
+## Q4 2026
+
+Q4 is about packaging the protocol so the story is stronger than the pitch.
+
+- [ ] public protocol page reflects what already ships, not just ambition
+- [ ] roadmap page reflects a real through-December execution plan
+- [ ] reference gateway, templates, and example integrations are clean enough to
+  reuse
+- [ ] 2-3 external deployment or pilot signals exist if the outreach lanes land
+- [ ] AAIF resubmission packet can be assembled from shipped evidence only
+
+## Through December 2026
+
+For the fuller execution plan, use:
+
+- [End-of-Year 2026 Execution Plan](./roadmaps/end-of-year-2026-execution-plan.md)
+
+## Detailed Tracks
+
+- [Protocol overview](./protocol.md)
 - [Legacy phase plan](./roadmap-phases-legacy.md)
 - [Ecosystem outreach 2026](./roadmaps/ecosystem-outreach-2026.md)
-- [Hardware safety controller integration roadmap](./roadmaps/hardware-safety-controller-integration.md)
+- [AAIF resubmission 2026](./roadmaps/aaif-resubmission-2026.md)
+- [Humanoid robotics integrations 2026](./roadmaps/humanoid-robotics-integrations-2026.md)
+- [Post-quantum crypto agility](./roadmaps/post-quantum-crypto-agility.md)
 
-## Ecosystem Outreach (Q2–Q3 2026)
+## What We Are Measuring
 
-- [x] Secure MCP deployments guide (`docs/guides/secure-mcp-deployments.md`)
-- [x] NIST AI RMF crosswalk document (`docs/specs/nist-ai-rmf-crosswalk.md`)
-- [x] NIST submission bundle generator + playbook (`pnpm run nist:bundle`)
-- [ ] PR to `modelcontextprotocol/servers` — SINT as reference security middleware
-- [ ] NIST submission to ai-inquiries@nist.gov (crosswalk + conformance suite + SPAI abstract)
-- [ ] SPAI 2026 abstract submitted (deadline: May 7, 2026)
-- [ ] dev.to / Anthropic DevRel co-authored guide published
-- [ ] MCP Discord community engagement (OWASP ASI Top-10 thread)
-- [ ] ROSCon 2026 talk proposal submitted
-- [ ] Open Robotics discourse post (SROS2 companion layer positioning)
+The repo should look better by the end of the year in five ways:
 
-## Q3 Documentation Deliverables (Published)
-
-- [x] EU AI Act compliance mapping document
-- [x] ISO 13482 alignment guide
-- [x] Formal threat model publication
+1. stronger production defaults
+2. cleaner release and evidence discipline
+3. better external collaborator signal
+4. stronger maintainership credibility
+5. less drift between repo docs, docs site, and public site copy

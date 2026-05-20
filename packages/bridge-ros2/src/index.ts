@@ -2,6 +2,7 @@ export {
   topicToResourceUri,
   gazeboTopicToResourceUri,
   isaacTopicToResourceUri,
+  differentialDriveTopicToResourceUri,
   serviceToResourceUri,
   actionToResourceUri,
   extractPhysicalContext,
@@ -9,8 +10,10 @@ export {
 export {
   extractPhysicalContextFromTwist,
   extractPhysicalContextFromWrench,
+  extractPhysicalContextFromDifferentialWheelCommand,
   twistSchema,
   wrenchSchema,
+  differentialWheelCommandSchema,
   poseSchema,
   jointStateSchema,
   odometrySchema,
@@ -19,6 +22,7 @@ export {
 export type {
   Twist,
   Wrench,
+  DifferentialWheelCommand,
   Pose,
   JointState,
   Odometry,
