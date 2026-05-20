@@ -1,0 +1,189 @@
+{
+  "fixtureId": "solar-field-operations-policy-receipts-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral solar field operations fixture for testing policy receipts around inspection, cleaning, and installation support robots.",
+  "scope": {
+    "bridge": "ros2",
+    "projectContext": "solar-field-operations",
+    "boundary": "inspection, cleaning, and installation actuation",
+    "goal": "Test whether solar field inspection, cleaning, and installation actions can carry auditable policy receipts without making SINT a required runtime dependency for field robots.",
+    "nonGoal": "This fixture does not propose changes to any vendor-specific robot controller."
+  },
+  "requirements": {
+    "inspectionInferenceStaysObserveTier": true,
+    "routePlansArePrepareTier": true,
+    "motionAndToolActuationRequireReview": true,
+    "weatherPermitRequired": true,
+    "humanAisleEscalates": true,
+    "lotoRequiredForInstallation": true,
+    "negativeOutcomesCarryReceipt": true
+  },
+  "deployment": {
+    "siteId": "solar-farm-01",
+    "rowId": "tracker-row-17",
+    "trackerId": "solaris-17",
+    "cleanerRobotId": "mantis-03",
+    "installerRobotId": "colossus-02",
+    "weatherPermitRef": "sint://permit/weather/solar-farm-01/row-17",
+    "lotoPermitRef": "sint://permit/loto/solar-farm-01/string-b17",
+    "workspaceId": "aisle-17"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "siteId",
+      "rowId",
+      "robotId",
+      "missionType",
+      "weatherPermitRef",
+      "lotoPermitRef",
+      "workspaceId",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "solar-row-17:solar-farm-01:mantis-03:clean-4481",
+      "actionRef": "action:solar:clean:solar-farm-01:tracker-row-17:clean-4481",
+      "resource": "ros2:///cmd_vel",
+      "operation": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "siteId": "solar-farm-01",
+      "rowId": "tracker-row-17",
+      "robotId": "mantis-03",
+      "missionType": "autonomous-cleaning",
+      "weatherPermitRef": "sint://permit/weather/solar-farm-01/row-17",
+      "lotoPermitRef": "sint://permit/loto/solar-farm-01/string-b17",
+      "workspaceId": "aisle-17",
+      "decisionDigest": "digest:sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-06-06T17:00:00.000Z"
+    }
+  },
+  "mappingCases": [
+    {
+      "id": "thermal_inspection_inference_is_observe_tier",
+      "name": "Thermal inspection inference stays below physical actuation",
+      "resourceSource": "engine",
+      "resource": "engine://system1/panel_inspection",
+      "operation": "inference",
+      "expectedResource": "engine://system1/panel_inspection",
+      "expectedTier": "T0_observe",
+      "receiptRequired": true
+    },
+    {
+      "id": "stage_cleaning_route_plan_is_prepare_tier",
+      "name": "Stage cleaning route plan before robot motion",
+      "resourceSource": "engine",
+      "resource": "engine://system2/plan",
+      "operation": "create",
+      "expectedResource": "engine://system2/plan",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "cleaning_motion_routes_through_cmd_vel",
+      "name": "Crawler or quadruped motion routes through the ROS 2 motion boundary",
+      "resourceSource": "topic",
+      "topicName": "/cmd_vel",
+      "operation": "publish",
+      "expectedResource": "ros2:///cmd_vel",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "installation_tool_routes_through_joint_commands",
+      "name": "Installation tool actuation routes through the ROS 2 joint command boundary",
+      "resourceSource": "topic",
+      "topicName": "/joint_commands",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_commands",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "inspection_inference_is_observe_tier",
+      "name": "Inspection inference is logged but not treated as physical motion",
+      "resource": "engine://system1/panel_inspection",
+      "operation": "inference",
+      "expectedDecision": "allow",
+      "expectedTier": "T0_observe",
+      "receiptRequired": true
+    },
+    {
+      "id": "route_planning_is_prepare_tier",
+      "name": "Cleaning route planning stays below live actuation",
+      "resource": "engine://system2/plan",
+      "operation": "create",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "cleaning_motion_requires_review",
+      "name": "Solar row cleaning motion remains a reviewed action",
+      "resource": "ros2:///cmd_vel",
+      "operation": "publish",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 0.35
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "human_in_aisle_escalates_cleaning_motion",
+      "name": "Human presence in the service aisle raises cleaning consequence",
+      "resource": "ros2:///cmd_vel",
+      "operation": "publish",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 0.1
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "cleaning_motion_without_weather_permit_rejected",
+      "name": "Reject cleaning motion when weather or surface permit is missing",
+      "resource": "ros2:///cmd_vel",
+      "operation": "publish",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "weatherPermitPresent": false,
+      "policyViolated": "SOLAR_WEATHER_PERMIT_REQUIRED",
+      "receiptRequired": true
+    },
+    {
+      "id": "installation_tool_without_loto_rejected",
+      "name": "Reject installation actuation without lockout-tagout evidence",
+      "resource": "ros2:///joint_commands",
+      "operation": "publish",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "lotoPermitPresent": false,
+      "policyViolated": "SOLAR_LOTO_REQUIRED",
+      "receiptRequired": true
+    }
+  ],
+  "successCriteria": {
+    "inspectionIsObserveTier": true,
+    "planningIsPrepareTier": true,
+    "cleaningMotionIsHighConsequence": true,
+    "humanAisleEscalatesToCommit": true,
+    "weatherPermitRequiredForMotion": true,
+    "lotoRequiredForInstallation": true,
+    "allOutcomesCarryReceipts": true
+  }
+}

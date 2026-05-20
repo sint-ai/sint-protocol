@@ -1325,6 +1325,87 @@ export function loadLeRobotPolicyActuationReceiptsFixture(): LeRobotPolicyActuat
   );
 }
 
+export interface SolarFieldOperationsPolicyReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "ros2";
+    readonly projectContext: "solar-field-operations";
+    readonly boundary: "inspection, cleaning, and installation actuation";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly inspectionInferenceStaysObserveTier: boolean;
+    readonly routePlansArePrepareTier: boolean;
+    readonly motionAndToolActuationRequireReview: boolean;
+    readonly weatherPermitRequired: boolean;
+    readonly humanAisleEscalates: boolean;
+    readonly lotoRequiredForInstallation: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly rowId: string;
+    readonly trackerId: string;
+    readonly cleanerRobotId: string;
+    readonly installerRobotId: string;
+    readonly weatherPermitRef: string;
+    readonly lotoPermitRef: string;
+    readonly workspaceId: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly mappingCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resourceSource: "engine" | "topic";
+    readonly resource?: string;
+    readonly topicName?: string;
+    readonly operation: "inference" | "create" | "publish";
+    readonly expectedResource: string;
+    readonly expectedTier: ApprovalTier;
+    readonly receiptRequired: boolean;
+  }>;
+  readonly policyCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resource: string;
+    readonly operation: "inference" | "create" | "publish";
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+    };
+    readonly weatherPermitPresent?: boolean;
+    readonly lotoPermitPresent?: boolean;
+    readonly policyViolated?: "SOLAR_WEATHER_PERMIT_REQUIRED" | "SOLAR_LOTO_REQUIRED";
+    readonly receiptRequired: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly inspectionIsObserveTier: boolean;
+    readonly planningIsPrepareTier: boolean;
+    readonly cleaningMotionIsHighConsequence: boolean;
+    readonly humanAisleEscalatesToCommit: boolean;
+    readonly weatherPermitRequiredForMotion: boolean;
+    readonly lotoRequiredForInstallation: boolean;
+    readonly allOutcomesCarryReceipts: boolean;
+  };
+}
+
+export function loadSolarFieldOperationsPolicyReceiptsFixture(): SolarFieldOperationsPolicyReceiptsFixture {
+  return loadFixture<SolarFieldOperationsPolicyReceiptsFixture>(
+    "physical-ai/solar-field-operations-policy-receipts.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
