@@ -34,6 +34,16 @@ Branch deploy note:
 - GitHub Pages environment rules may reject deployments from non-`main` branches
 - if you need the public site updated, merge the docs change to `main`
 
+Runtime warning note:
+
+- if the `Deploy` step logs only a `punycode` deprecation warning and the job
+  still succeeds, treat it as a non-blocking upstream GitHub Pages action
+  warning rather than a docs build regression
+- current source of that warning is the `actions/deploy-pages` dependency chain
+  through `@actions/artifact -> @azure/core-http -> node-fetch@2 -> whatwg-url`
+- if the workflow starts failing or the warning surface changes, re-check the
+  latest `actions/deploy-pages` release before changing the site build
+
 ## Content Organization
 
 - Root docs landing page: `docs/index.md`

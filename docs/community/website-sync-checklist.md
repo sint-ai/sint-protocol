@@ -20,6 +20,9 @@ Important:
 - feature branches do not automatically deploy to `docs.sint.gg`
 - if a branch-triggered deploy is attempted, GitHub Pages environment rules may
   reject it
+- a successful `Deploy` step may still log a `punycode` deprecation warning
+  from upstream GitHub Pages action dependencies; treat that as non-blocking
+  unless the deploy itself fails
 
 ### `sint.gg`
 
