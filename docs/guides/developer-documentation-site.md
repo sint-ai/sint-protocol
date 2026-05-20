@@ -28,6 +28,12 @@ The site is published by GitHub Actions workflow:
 - Trigger: push to `main` when docs or docs tooling changes
 - Target: GitHub Pages with custom domain `docs.sint.gg`
 
+Branch deploy note:
+
+- feature branches can validate docs with `pnpm run docs:build`
+- GitHub Pages environment rules may reject deployments from non-`main` branches
+- if you need the public site updated, merge the docs change to `main`
+
 ## Content Organization
 
 - Root docs landing page: `docs/index.md`

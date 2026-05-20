@@ -163,6 +163,10 @@ pnpm run docs:preview
 
 Docs source lives in [`docs/`](docs), VitePress config is in [`docs/.vitepress/config.mts`](docs/.vitepress/config.mts), and deployment is handled by [`docs-site.yml`](.github/workflows/docs-site.yml).
 
+Deploy note:
+- branch builds validate docs locally and in CI
+- public `docs.sint.gg` deployment publishes from `main` under GitHub Pages environment rules
+
 Community/adoption assets:
 - [`docs/community/discord-launch-runbook.md`](docs/community/discord-launch-runbook.md)
 - [`docs/community/discord-launch-kit.md`](docs/community/discord-launch-kit.md)

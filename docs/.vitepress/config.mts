@@ -84,6 +84,7 @@ export default defineConfig({
           { text: "Sunnybotics Collaboration Brief", link: "/community/sunnybotics-collaboration-brief" },
           { text: "Sunnybotics Outreach Drafts", link: "/community/sunnybotics-outreach-drafts" },
           { text: "Lovable Site Refresh Prompt", link: "/community/lovable-sint-gg-refresh-prompt" },
+          { text: "Website Sync Checklist", link: "/community/website-sync-checklist" },
           { text: "Good First Issues Board", link: "/community/good-first-issues-board" },
           { text: "Collaboration Reply Playbook", link: "/community/open-source-collaboration-replies" },
         ],

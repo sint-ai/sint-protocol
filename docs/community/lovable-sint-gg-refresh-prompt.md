@@ -37,6 +37,7 @@ Source of truth for content:
 - docs/protocol.md
 - docs/roadmap.md
 - docs/roadmaps/end-of-year-2026-execution-plan.md
+- docs/community/website-sync-checklist.md
 - docs/guides/gateway-production-hardening.md
 - docs/guides/production-slice-verification.md
 - docs/community/aaif-evidence-dossier.md
