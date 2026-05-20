@@ -1164,6 +1164,87 @@ export function loadNav2NavigationPolicyReceiptsFixture(): Nav2NavigationPolicyR
   );
 }
 
+export interface Px4OffboardPolicyReceiptsFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "mavlink";
+    readonly projectContext: "px4";
+    readonly boundary: "arming, offboard mode, and continuous setpoints";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly armAndModeChangesRequireCommitReview: boolean;
+    readonly velocitySetpointsRequireReview: boolean;
+    readonly humanTakeoffZoneEscalates: boolean;
+    readonly fenceChangesRequireEvidence: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly vehicleId: string;
+    readonly systemId: number;
+    readonly missionRef: string;
+    readonly corridorRef: string;
+    readonly takeoffZoneId: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string | number>;
+  };
+  readonly mappingCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly intercept: {
+      readonly messageType: "COMMAND_LONG" | "SET_POSITION_TARGET_LOCAL_NED";
+      readonly systemId: number;
+      readonly componentId: number;
+      readonly payload: Record<string, number>;
+    };
+    readonly expectedResource: string;
+    readonly expectedAction: "call" | "publish";
+    readonly expectedTier: ApprovalTier;
+    readonly expectedPhysicalContext?: {
+      readonly currentVelocityMps?: number;
+    };
+    readonly receiptRequired: boolean;
+  }>;
+  readonly policyCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly expectedResource: string;
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly targetMode?: "OFFBOARD";
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+      readonly corridorRef?: string;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+    };
+    readonly corridorReceiptPresent?: boolean;
+    readonly policyViolated?: "PX4_CORRIDOR_RECEIPT_REQUIRED";
+    readonly receiptRequired: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly armAndModeStayCommitTier: boolean;
+    readonly velocitySetpointsAreHighConsequence: boolean;
+    readonly humanPresenceEscalatesToCommit: boolean;
+    readonly missingCorridorReceiptDenied: boolean;
+    readonly allOutcomesCarryReceipts: boolean;
+  };
+}
+
+export function loadPx4OffboardPolicyReceiptsFixture(): Px4OffboardPolicyReceiptsFixture {
+  return loadFixture<Px4OffboardPolicyReceiptsFixture>(
+    "physical-ai/px4-offboard-policy-receipts.v1.json",
+  );
+}
+
 export interface EuAiActConformityPackFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

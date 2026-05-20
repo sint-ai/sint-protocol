@@ -52,7 +52,7 @@ Do not send another project message the same day.
 | 2026-05-21 | Open-RMF | GitHub project discussion or issue | Policy receipts for fleet handoffs | Garry thread has no negative signal and the Open-RMF fixture remains green |
 | 2026-05-26 | MoveIt | GitHub Discussion | Policy receipts around manipulation execution | Open-RMF thread is posted, no maintainers object, and the MoveIt fixture remains green |
 | 2026-05-28 | Nav2 | GitHub Discussion | Policy receipts for navigation goals and docking | Fewer than two unanswered threads are active and the Nav2 fixture remains green |
-| 2026-06-02 | PX4 | GitHub Issue | Capability gated MAVLink and offboard actions | We can point to a concrete MAVLink fixture |
+| 2026-06-02 | PX4 | GitHub Issue | Capability gated MAVLink and offboard actions | Fewer than two unanswered threads are active and the PX4 fixture remains green |
 | 2026-06-04 | LeRobot | GitHub Issue | Runtime gate between learned policies and hardware | We can point to a minimal learned-policy actuation fixture |
 | 2026-06-09 | Gazebo | GitHub Issue | Simulation-first SINT safety fixtures | We can show a Gazebo validation path |
 | 2026-06-11 | ros2_control | GitHub Issue | Policy boundary before hardware command writes | We have a crisp controller-boundary question |
@@ -208,6 +208,57 @@ A small first integration could be:
 The critique I would value:
 
 Is a policy gate useful at the navigation action boundary, or should this live above Nav2 in an application-level task executive?
+
+Repo for context:
+
+https://github.com/sint-ai/sint-protocol
+````
+
+### PX4
+
+Title:
+
+```text
+Design discussion: policy receipts for arming and offboard control
+```
+
+Body:
+
+````markdown
+Hi PX4 maintainers,
+
+I am working on SINT Protocol, an open source runtime gate for agent and robot actions.
+
+The boundary I am trying to sanity check with PX4 is where companion-computer intent becomes arming, offboard mode, geofence changes, or continuous setpoints over MAVLink.
+
+The SINT loop is:
+
+```text
+robot or agent intent
+capability token
+policy gateway
+allow, deny, or escalate
+proof receipt
+```
+
+I put the question into a tiny fixture so it is easier to critique:
+
+https://github.com/sint-ai/sint-protocol/blob/main/packages/conformance-tests/fixtures/physical-ai/px4-offboard-policy-receipts.v1.json
+
+Guide:
+
+https://github.com/sint-ai/sint-protocol/blob/main/docs/guides/px4-offboard-policy-receipts.md
+
+A small PX4-shaped integration could be:
+
+1. Treat selected MAVLink actions at the router or companion boundary as policy-gated requests.
+2. Keep arming, OFFBOARD mode, and fence changes receipt-backed and explicit.
+3. Let continuous setpoints carry constraints like corridor access and speed limits.
+4. Start as a conformance fixture rather than a PX4 dependency.
+
+The technical question:
+
+Does this boundary belong at the MAVLink router or companion-computer layer, or is that the wrong abstraction for PX4 operators and integrators?
 
 Repo for context:
 
