@@ -122,7 +122,10 @@ test(bridge-mcp): add forbidden combo detection tests
 
 Email security reports to: **i@pshkv.com** with subject line `[SINT-SECURITY]`.
 
-We will acknowledge within 48 hours and provide a timeline for fix and disclosure.
+We will acknowledge within 48 hours and provide a timeline for fix and
+disclosure. See [SECURITY.md](./SECURITY.md) and
+[`docs/security/vulnerability-reporting-and-response.md`](docs/security/vulnerability-reporting-and-response.md)
+for the current disclosure path and response expectations.
 
 ## Code of Conduct
 
