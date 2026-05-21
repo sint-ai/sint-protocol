@@ -17,6 +17,86 @@ The current repo already includes:
 - collaborator-facing physical AI fixtures for Open-RMF, MoveIt, Nav2, PX4,
   LeRobot, and solar field operations
 - public onboarding and contribution docs for external collaborators
+- one real external security-readiness contribution cycle through bug bounty
+  planning and review
+
+## Current Priority Order
+
+As of May 2026, the repo should optimize for this order:
+
+1. close the trust and evidence gaps that block serious adoption
+2. turn external contributor signal into sustained maintainer signal
+3. ship Sprint 1 of the Factory Action Pack as a control standard, not a
+   marketing promise
+4. convert one collaborator lane into a shared external artifact or adapter
+5. refresh public site copy only after the shipped story is sharper
+
+### Priority 1. Trust And Evidence
+
+These items matter most because they improve submission quality, production
+credibility, and external trust at the same time.
+
+- issue [#192](https://github.com/sint-ai/sint-protocol/issues/192):
+  verify `SECURITY.md` disclosure path and response SLA
+- issue [#193](https://github.com/sint-ai/sint-protocol/issues/193):
+  publish external production-slice validation artifact
+- issue [#195](https://github.com/sint-ai/sint-protocol/issues/195):
+  run the first tagged RC checklist with evidence links
+- closed issue [#72](https://github.com/sint-ai/sint-protocol/issues/72) and
+  merged PR
+  [#196](https://github.com/sint-ai/sint-protocol/pull/196):
+  keep the bug bounty launch path concrete and non-binding until funded
+
+### Priority 2. External Maintainer Signal
+
+The strongest recent message in the repo is not another self-authored plan. It
+is outside participation.
+
+That means the next maintainer priority is:
+
+- keep Peter Xing's contribution cycle warm after PR
+  [#196](https://github.com/sint-ai/sint-protocol/pull/196)
+- look for one follow-up task that can become a second independent PR
+- keep the maintainer scorecard and onboarding path current
+- fix issue [#165](https://github.com/sint-ai/sint-protocol/issues/165) because
+  it is another clean external-facing paper cut
+
+### Priority 3. Factory Action Pack Sprint 1
+
+This is the right product-expansion lane, but it should ship as a control
+standard pack first.
+
+Use:
+
+- [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
+- issue [#202](https://github.com/sint-ai/sint-protocol/issues/202)
+
+The immediate Sprint 1 target is:
+
+- industrial action profile spec
+- `FactoryIntent` schema
+- `CellGraph` schema
+- robot action schema
+- simulation receipt schema
+- industrial policy pack
+- one refusal-first demo narrative
+
+### Priority 4. External Artifact Conversion
+
+The collaborator fixtures are valuable, but the next proof point is shared work
+with another project, not just more internal fixture coverage.
+
+Best conversion targets:
+
+- Open-RMF handoff receipts
+- Sunnybotics ROS 2 integration questions
+- one industrial or factory-control design thread
+
+### Priority 5. Public Story Sync
+
+`sint.gg/protocol` and `sint.gg/roadmap` should be refreshed after the above
+lanes move, because the best copy update is the one that reflects shipped
+control surfaces and real outside signal.
 
 ## Through June 2026
 
