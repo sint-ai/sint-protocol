@@ -17,6 +17,28 @@ By the end of 2026, SINT should be able to show:
 4. sustained independent maintainership evidence
 5. a cleaner protocol story across docs, repo, and public site
 
+## Next 30 Days
+
+The immediate order matters more than the total number of open ideas.
+
+For the next 30 days, prioritize:
+
+1. evidence and trust gaps that directly affect adoption credibility
+2. external contributor retention and maintainer-signal compounding
+3. Factory Action Pack Sprint 1 as the next protocol-standard upgrade
+4. one shared external artifact from an existing collaborator lane
+5. public site sync after the shipped story improves
+
+In practice, that means:
+
+- close OpenSSF evidence work that still points to missing proof rather than
+  missing words
+- convert the bug bounty planning contribution into a repeatable security lane
+- start the factory-control pack with schemas, policy, and simulation-proof
+  structure
+- avoid broad new workstreams that do not improve trust, production evidence,
+  or outside signal
+
 ## Q2 2026 — Tighten The Core
 
 ### Finish and Merge
