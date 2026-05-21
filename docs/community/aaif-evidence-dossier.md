@@ -29,4 +29,5 @@ pnpm run aaif:evidence:new release v0-3-0-rc1 2026-06-15
 
 | Date | Type | Organization | Owner | Link |
 | --- | --- | --- | --- | --- |
+| 2026-05-21 | conformance | TBD | TBD | [2026-05-21-conformance-production-slice-external-validation.md](./aaif-evidence/2026-05-21-conformance-production-slice-external-validation.md) |
 | _Add next entry_ | _type_ | _organization_ | _owner_ | _link_ |

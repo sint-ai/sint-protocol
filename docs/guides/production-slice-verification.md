@@ -23,6 +23,18 @@ Run the production-slice gate directly:
 pnpm --filter @pshkv/gateway-server test -- __tests__/production-slice.test.ts
 ```
 
+Generate the public signed artifact for external evaluators:
+
+```bash
+pnpm run security:production-slice-artifact
+```
+
+Artifact outputs:
+
+- `docs/reports/production-slice-validation-artifact.json`
+- `docs/reports/production-slice-validation-artifact.md`
+- `docs/reports/production-slice-validation-vitest.json`
+
 Run the full gateway package checks:
 
 ```bash

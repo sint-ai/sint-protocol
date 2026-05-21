@@ -20,6 +20,7 @@
     "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "security:dependency-review": "node ./scripts/generate-dependency-review-report.mjs",
+    "security:production-slice-artifact": "node ./scripts/generate-production-slice-validation-artifact.mjs",
     "community:starter-board": "node ./scripts/generate-community-starter-board.mjs",
     "community:maintainer-scorecard": "node ./scripts/update-maintainer-scorecard.mjs",
     "aaif:evidence:new": "node ./scripts/new-aaif-evidence-item.mjs",
