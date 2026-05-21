@@ -34,8 +34,8 @@ In practice, that means:
 - close OpenSSF evidence work that still points to missing proof rather than
   missing words
 - convert the bug bounty planning contribution into a repeatable security lane
-- start the factory-control pack with schemas, policy, and simulation-proof
-  structure
+- move from the factory-control standard pack into the simulation-first demo
+  lane and adapter stubs
 - avoid broad new workstreams that do not improve trust, production evidence,
   or outside signal
 

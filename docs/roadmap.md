@@ -124,7 +124,7 @@ environment.
 - [ ] named adopter or pilot evidence improves beyond the immediate co-design
   cluster
 - [ ] highest-priority OpenSSF and dependency-review gaps are materially reduced
-- [ ] Sprint 1 of the Factory Action Pack lands as a control-standard pack for
+- [x] Sprint 1 of the Factory Action Pack lands as a control-standard pack for
   prompt-generated industrial automation
 
 ## Q4 2026

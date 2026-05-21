@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sint.gg/specs/simulation-receipt.schema.json",
+  "title": "SimulationReceipt",
+  "description": "Simulation proof artifact required before selected factory actions may execute.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "simulation_receipt_id",
+    "cell_id",
+    "simulator",
+    "vendor_program_hash",
+    "collision_free",
+    "cycle_time_seconds",
+    "safety_zone_violations",
+    "max_force_newtons",
+    "approved_for_execution",
+    "signed_by"
+  ],
+  "properties": {
+    "simulation_receipt_id": {
+      "type": "string",
+      "pattern": "^simr_[A-Za-z0-9._-]+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "simulator": {
+      "type": "string",
+      "enum": [
+        "RobotStudio",
+        "KUKA.Sim",
+        "ROBOGUIDE",
+        "Emulate3D",
+        "TIA_Simulation",
+        "TwinCAT_Simulation",
+        "Isaac_Sim",
+        "RoboDK",
+        "Visual_Components",
+        "Custom"
+      ]
+    },
+    "vendor_program_hash": {
+      "type": "string",
+      "pattern": "^sha256:[A-Fa-f0-9]{64}$"
+    },
+    "collision_free": {
+      "type": "boolean"
+    },
+    "cycle_time_seconds": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "safety_zone_violations": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_force_newtons": {
+      "type": "number",
+      "minimum": 0
+    },
+    "approved_for_execution": {
+      "type": "boolean"
+    },
+    "signed_by": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "decision_digest": {
+          "type": "string"
+        },
+        "artifact_uri": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
