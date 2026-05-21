@@ -1,0 +1,57 @@
+{
+  "artifactVersion": "v1",
+  "artifactType": "production-slice-validation",
+  "generatedAt": "2026-05-21T20:24:34.882Z",
+  "gitSha": "8ea166983f2ba14859e09f0f59c09d16342e82fd",
+  "command": "pnpm --filter @pshkv/gateway-server exec vitest run __tests__/production-slice.test.ts --reporter=json",
+  "redactionBoundary": {
+    "include": [
+      "test status",
+      "test durations",
+      "suite/assertion names",
+      "git sha",
+      "generation timestamp"
+    ],
+    "exclude": [
+      "token values",
+      "agent keys",
+      "private infrastructure endpoints",
+      "raw request payloads from live environments",
+      "operator identity beyond repository-level attribution"
+    ]
+  },
+  "summary": {
+    "success": true,
+    "suiteCount": 1,
+    "passedSuiteCount": 1,
+    "failedSuiteCount": 0,
+    "testCount": 1,
+    "passedTestCount": 1,
+    "failedTestCount": 0
+  },
+  "suites": [
+    {
+      "file": "apps/gateway-server/__tests__/production-slice.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "failed": 0,
+      "durationMs": 56.99658203125,
+      "assertions": [
+        {
+          "fullName": "Gateway production slice issues, enforces, persists evidence, proves chain, and revokes via the supported HTTP surface",
+          "status": "passed",
+          "durationMs": 56.996583999999984
+        }
+      ]
+    }
+  ],
+  "signature": {
+    "algorithm": "ed25519",
+    "payloadHash": "fa0038b7dcf15abc05a647e25b73d18b2666950b48d5760634a4b37a831bb193",
+    "signature": "JnXYFcR3HuQBdgwrSuiqN72tH/+If7juTUhRLwYpNU4Bc8InQP5Fz9gDz3hXN6IexS1iT75lEOFPJDVtbjNiCQ==",
+    "verificationKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAv9SiMiBXxviiE4gVSk+2ndOwlPCniikSLvrrrXT3Ud0=\n-----END PUBLIC KEY-----\n",
+    "verificationKeyFingerprintSha256": "4f23796b0669c147c57043c0092f44b00f68ed12812a2cbf95eefb0c2cb1b3dd",
+    "keyScope": "report-local-ephemeral",
+    "verificationNote": "The artifact payload is signed with an ephemeral report key to prove immutability of this published report body."
+  }
+}
