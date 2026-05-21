@@ -38,4 +38,5 @@ See CONTRIBUTING.md and the "good first issue" label on GitHub Issues.
 
 - All TSC decisions recorded in `docs/tsc/`
 - All SIPs in `docs/sip/`
-- Security advisories via GitHub Security Advisories
+- Public security advisories via GitHub Security Advisories
+- Private vulnerability intake via the path documented in `SECURITY.md`
