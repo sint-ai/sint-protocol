@@ -27,7 +27,7 @@ The near-term goal is to finish tightening the core:
 - [x] OpenSSF baseline tracker and dependency review lane
 - [x] external contributor onboarding and scorecard workflows
 - [x] robotics collaboration fixture pack
-- [ ] merge the current production-readiness branch
+- [x] merge the current production-readiness branch
 - [ ] keep docs, README, and public protocol copy aligned
 
 ## Q3 2026
@@ -44,6 +44,8 @@ environment.
 - [ ] named adopter or pilot evidence improves beyond the immediate co-design
   cluster
 - [ ] highest-priority OpenSSF and dependency-review gaps are materially reduced
+- [ ] Sprint 1 of the Factory Action Pack lands as a control-standard pack for
+  prompt-generated industrial automation
 
 ## Q4 2026
 
@@ -55,12 +57,15 @@ Q4 is about packaging the protocol so the story is stronger than the pitch.
   reuse
 - [ ] 2-3 external deployment or pilot signals exist if the outreach lanes land
 - [ ] AAIF resubmission packet can be assembled from shipped evidence only
+- [ ] factory-control demo proves simulation-first execution and human approval
+  before robot or PLC actions
 
 ## Through December 2026
 
 For the fuller execution plan, use:
 
 - [End-of-Year 2026 Execution Plan](./roadmaps/end-of-year-2026-execution-plan.md)
+- [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
 
 ## Detailed Tracks
 
@@ -68,6 +73,7 @@ For the fuller execution plan, use:
 - [Legacy phase plan](./roadmap-phases-legacy.md)
 - [Ecosystem outreach 2026](./roadmaps/ecosystem-outreach-2026.md)
 - [AAIF resubmission 2026](./roadmaps/aaif-resubmission-2026.md)
+- [Factory Action Pack upgrade sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
 - [Humanoid robotics integrations 2026](./roadmaps/humanoid-robotics-integrations-2026.md)
 - [Post-quantum crypto agility](./roadmaps/post-quantum-crypto-agility.md)
 
