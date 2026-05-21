@@ -16,6 +16,9 @@ expanding toward the control layer that decides what can be simulated,
 approved, executed, audited, and settled before AI-generated factory actions
 touch real machines. See
 [`docs/roadmaps/factory-action-pack-upgrade-sprints.md`](docs/roadmaps/factory-action-pack-upgrade-sprints.md).
+Sprint 1 now ships a control-standard pack with an industrial action profile,
+factory intent and cell graph schemas, a robot action schema, a simulation
+receipt schema, an industrial policy pack, and a refusal-first demo narrative.
 
 > **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 

@@ -1,0 +1,59 @@
+policy_id: sint.factory.robot.motion.v1
+status: draft
+risk_tier: T3_commit
+description: >
+  Baseline industrial robot-motion policy for prompt-generated factory actions.
+  This profile exists to force simulation proof, workspace clarity, and
+  tier-appropriate human oversight before execution.
+applies_to:
+  resources:
+    - "factory://cell/*/robot/*/action/*"
+  actions:
+    - "plan"
+    - "simulate"
+    - "approve"
+    - "execute"
+required_context:
+  - human_detected_in_zone
+  - simulation_receipt_present
+  - approved_envelope.max_velocity_mps
+  - approved_envelope.max_force_newtons
+  - maintenance_mode
+  - safety_zone_clear
+rules:
+  - id: deny-human-in-zone
+    deny_if: human_detected_in_zone == true
+    reason: HUMAN_IN_ZONE
+  - id: deny-missing-simulation
+    deny_if: simulation_receipt_present == false
+    reason: SIMULATION_RECEIPT_MISSING
+  - id: deny-excess-velocity
+    deny_if: motion.max_velocity_mps > approved_envelope.max_velocity_mps
+    reason: VELOCITY_ENVELOPE_EXCEEDED
+  - id: deny-excess-force
+    deny_if: motion.max_force_newtons > approved_envelope.max_force_newtons
+    reason: FORCE_ENVELOPE_EXCEEDED
+  - id: require-human-approval
+    require_human_approval_if:
+      action_type_in:
+        - "robot.motion.pick_and_place"
+        - "robot.motion.weld"
+        - "robot.motion.cut"
+        - "robot.motion.lift"
+        - "robot.motion.dispense"
+  - id: require-lockout
+    require_lockout_if: maintenance_mode == true
+    reason: LOCKOUT_TAGOUT_REQUIRED
+  - id: require-zone-clear
+    deny_if: safety_zone_clear == false
+    reason: SAFETY_ZONE_NOT_CLEAR
+  - id: require-receipt-chain
+    require_receipt_chain: true
+evidence:
+  emit:
+    - policy.decision
+    - simulation.receipt.checked
+    - approval.requested
+    - execution.allowed
+    - execution.denied
+    - safety.rollback

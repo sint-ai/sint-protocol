@@ -115,6 +115,16 @@ The planned factory-control primitives are:
 - industrial policy packs
 - settlement metadata for reusable industrial skills and adapters
 
+The first shipped factory-control pack now includes:
+
+- [Industrial Action Profile](./specs/sint-industrial-action-profile.md)
+- [Factory Intent Schema](./specs/factory-intent.schema.json)
+- [Cell Graph Schema](./specs/cell-graph.schema.json)
+- [Robot Action Schema](./specs/robot-action.schema.json)
+- [Simulation Receipt Schema](./specs/simulation-receipt.schema.json)
+- [Industrial Policy Pack](./specs/industrial-policy.yaml)
+- [Factory Action Pack Demo](./guides/factory-action-pack-demo.md)
+
 The active roadmap for that lane lives here:
 
 - [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)

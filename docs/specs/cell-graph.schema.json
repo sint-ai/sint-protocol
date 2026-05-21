@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sint.gg/specs/cell-graph.schema.json",
+  "title": "CellGraph",
+  "description": "Canonical production-cell graph for industrial planning and execution control.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cell_id",
+    "assets",
+    "flows",
+    "approval_tier"
+  ],
+  "properties": {
+    "cell_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "asset_id",
+          "type",
+          "vendor",
+          "adapter"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9._-]+$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "robot_arm",
+              "plc",
+              "safety_plc",
+              "camera",
+              "conveyor",
+              "gripper",
+              "amr",
+              "sensor",
+              "digital_twin",
+              "workstation",
+              "custom"
+            ]
+          },
+          "vendor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "controller": {
+            "type": "string"
+          },
+          "adapter": {
+            "type": "string",
+            "pattern": "^sint-adapter-[A-Za-z0-9._-]+$"
+          },
+          "safety_zone": {
+            "type": "string"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "flows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to",
+          "material",
+          "rate_per_minute"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "material": {
+            "type": "string"
+          },
+          "rate_per_minute": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "approval_tier": {
+      "type": "string",
+      "enum": [
+        "T0_observe",
+        "T1_prepare",
+        "T2_act",
+        "T3_commit",
+        "T3_HUMAN_REQUIRED"
+      ]
+    },
+    "simulation_required": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

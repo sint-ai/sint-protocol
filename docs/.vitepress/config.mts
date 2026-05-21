@@ -49,6 +49,7 @@ export default defineConfig({
           { text: "EU AI Act Conformity Pack", link: "/guides/eu-ai-act-conformity-pack" },
           { text: "Multi-Vendor Fleet Governance", link: "/guides/multivendor-fleet-governance" },
           { text: "Industrial Cell Safety Pack", link: "/guides/industrial-cell-safety-pack" },
+          { text: "Factory Action Pack Demo", link: "/guides/factory-action-pack-demo" },
           { text: "Regulated Consent Extensions", link: "/guides/regulated-consent-extensions" },
           { text: "Open-RMF Handoff Policy Receipts", link: "/guides/open-rmf-handoff-policy-receipts" },
           { text: "MoveIt Manipulation Policy Receipts", link: "/guides/moveit-manipulation-policy-receipts" },

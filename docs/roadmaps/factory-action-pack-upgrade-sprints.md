@@ -151,7 +151,7 @@ Target:
 
 Status:
 
-- planned
+- completed
 - tracking issue:
   [#202](https://github.com/sint-ai/sint-protocol/issues/202)
 
@@ -161,20 +161,31 @@ Goal:
 
 Deliverables:
 
-- `docs/specs/sint-industrial-action-profile.md`
-- `docs/specs/factory-intent.schema.json`
-- `docs/specs/cell-graph.schema.json`
-- `docs/specs/robot-action.schema.json`
-- `docs/specs/simulation-receipt.schema.json`
-- `docs/specs/industrial-policy.yaml`
-- one repo demo narrative covering prompt to cell plan, simulation-required
-  refusal, human approval, and signed refusal or execution receipt
+- `docs/specs/sint-industrial-action-profile.md` (shipped)
+- `docs/specs/factory-intent.schema.json` (shipped)
+- `docs/specs/cell-graph.schema.json` (shipped)
+- `docs/specs/robot-action.schema.json` (shipped)
+- `docs/specs/simulation-receipt.schema.json` (shipped)
+- `docs/specs/industrial-policy.yaml` (shipped)
+- `docs/guides/factory-action-pack-demo.md` with prompt to cell plan,
+  simulation-required refusal, human approval, and signed receipt path
+  (shipped)
 
 Exit criteria:
 
 - prompt-generated factory intent compiles into structured planning objects
 - the default path fail-closes without simulation proof
 - the demo shows refusal first, then controlled approval
+
+Artifact links:
+
+- [Industrial Action Profile](../specs/sint-industrial-action-profile.md)
+- [Factory Intent Schema](../specs/factory-intent.schema.json)
+- [Cell Graph Schema](../specs/cell-graph.schema.json)
+- [Robot Action Schema](../specs/robot-action.schema.json)
+- [Simulation Receipt Schema](../specs/simulation-receipt.schema.json)
+- [Industrial Policy Pack](../specs/industrial-policy.yaml)
+- [Factory Action Pack Demo](../guides/factory-action-pack-demo.md)
 
 ### Sprint 2. Simulation-First Factory Demo
 

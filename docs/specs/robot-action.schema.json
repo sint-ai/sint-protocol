@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sint.gg/specs/robot-action.schema.json",
+  "title": "RobotActionProfile",
+  "description": "Vendor-neutral robot action request for industrial execution control.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "action_type",
+    "target_robot",
+    "motion",
+    "tool",
+    "requires"
+  ],
+  "properties": {
+    "action_type": {
+      "type": "string",
+      "pattern": "^robot\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+    },
+    "target_robot": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_pose",
+        "target_pose",
+        "max_velocity_mps",
+        "max_force_newtons",
+        "collision_check"
+      ],
+      "properties": {
+        "source_pose": {
+          "type": "string"
+        },
+        "target_pose": {
+          "type": "string"
+        },
+        "max_velocity_mps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_force_newtons": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "collision_check": {
+          "type": "boolean"
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "payload_kg"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "payload_kg": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "simulation_receipt",
+        "human_approval",
+        "safety_zone_clear"
+      ],
+      "properties": {
+        "simulation_receipt": {
+          "type": "boolean"
+        },
+        "human_approval": {
+          "type": "boolean"
+        },
+        "safety_zone_clear": {
+          "type": "boolean"
+        }
+      }
+    },
+    "adapter_hint": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sint.gg/specs/factory-intent.schema.json",
+  "title": "FactoryIntent",
+  "description": "Structured planning intent for prompt-generated industrial automation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intent_id",
+    "goal",
+    "industry",
+    "materials",
+    "stations",
+    "constraints"
+  ],
+  "properties": {
+    "intent_id": {
+      "type": "string",
+      "pattern": "^fi_[A-Za-z0-9._-]+$"
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 8
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "consumer_goods",
+        "automotive",
+        "electronics",
+        "food_beverage",
+        "life_sciences",
+        "logistics",
+        "energy",
+        "general_industrial",
+        "other"
+      ]
+    },
+    "materials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "stations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "infeed",
+          "pick_place",
+          "inspection",
+          "case_pack",
+          "palletize",
+          "weld",
+          "dispense",
+          "screwdrive",
+          "sort",
+          "test",
+          "outfeed",
+          "custom"
+        ]
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_capex_usd",
+        "floor_space_m2",
+        "takt_time_seconds",
+        "human_collaboration",
+        "safety_standard_targets"
+      ],
+      "properties": {
+        "max_capex_usd": {
+          "type": "number",
+          "minimum": 0
+        },
+        "floor_space_m2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "takt_time_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "human_collaboration": {
+          "type": "boolean"
+        },
+        "safety_standard_targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "ISO_10218",
+              "ISO_TS_15066",
+              "IEC_62443",
+              "EU_AI_ACT_ARTICLE_14",
+              "NIST_AI_RMF",
+              "OPC_UA_FX",
+              "CUSTOM"
+            ]
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "authoring_source": {
+          "type": "string"
+        },
+        "created_by_agent": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "default": "USD"
+        }
+      }
+    }
+  }
+}
