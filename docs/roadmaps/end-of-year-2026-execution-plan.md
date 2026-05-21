@@ -59,6 +59,30 @@ The strongest Q3 collaboration lanes are:
 - PX4 offboard boundary
 - solar field robot motion boundary
 
+### Factory Control Upgrade
+
+Q3 should also start the factory-control track explicitly.
+
+The thesis is that AI-generated factory plans are getting easier to produce,
+while safe execution remains fragmented across simulation tools, PLC stacks,
+robot vendors, approval workflows, and audit systems.
+
+The goal for SINT is not to become another industrial design copilot. The goal
+is to become the control layer between generated industrial intent and real
+execution.
+
+Planned sprint sequence:
+
+- Sprint 1: factory intent, cell graph, robot action, simulation receipt, and
+  industrial policy standard pack
+- Sprint 2: simulation-first factory demo with refusal, approval, and receipt
+  chain
+- Sprint 3: industrial adapter and simulator pack for multi-vendor execution
+
+Reference plan:
+
+- [Factory Action Pack Upgrade Sprints](./factory-action-pack-upgrade-sprints.md)
+
 ## Q4 2026 — Package It For Reuse
 
 ### Protocol Surface
@@ -66,6 +90,8 @@ The strongest Q3 collaboration lanes are:
 - cut a cleaner release candidate path for the reference gateway and SDKs
 - keep protocol, conformance, and deployment docs in sync
 - publish deployment and adapter examples that are small enough to copy
+- keep the factory-control story tied to shipped control surfaces, not vague
+  industrial ambition
 
 ### Ecosystem and Governance
 
@@ -81,6 +107,7 @@ By Q4, `sint.gg/protocol` and `sint.gg/roadmap` should describe:
 - what is being hardened right now
 - what will be finished by year-end
 - where collaborators can plug in
+- how SINT fits between AI-generated factory plans and real industrial execution
 
 ## What Not To Do
 
@@ -105,3 +132,4 @@ Use this simple year-end check:
 - OpenSSF gaps are materially reduced
 - at least one external project has engaged on a concrete fixture or adapter
 - public roadmap and protocol pages no longer read like placeholders
+- the factory-control upgrade track is legible as a real execution plan

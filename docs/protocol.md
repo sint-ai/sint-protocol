@@ -81,6 +81,44 @@ is tightening the surfaces that matter:
 - security and OpenSSF hygiene
 - collaborator-facing fixtures that let other projects critique the boundary
 
+## Factory Action Pack Direction
+
+The next industrial upgrade for SINT is not "support more vendors" in the
+abstract.
+
+It is to become the control layer between AI-generated factory plans and
+real-world execution.
+
+As tools like [iOrchestra](https://iorchestra.ai/),
+[Siemens Industrial Copilot](https://www.siemens.com/en-us/company/insights/generative-ai-industrial-copilot/),
+[ABB RobotStudio AI Assistant](https://www.abb.com/global/en/areas/robotics/products/software/robotstudio-suite/robotstudio-ai-assistant),
+and [Rockwell Emulate3D](https://www.rockwellautomation.com/en-us/products/software/factorytalk/designsuite/emulate3d-digital-twin.html)
+make prompt-generated industrial engineering more real, the missing layer shifts
+from creation to control.
+
+SINT should own the questions that matter once a generated plan gets close to a
+real floor:
+
+- who is allowed to run it
+- what machine or controller can execute it
+- what simulation proof is required
+- what safety envelope applies
+- what human approval is required
+- what receipt gets written after execution or refusal
+
+The planned factory-control primitives are:
+
+- `FactoryIntent`
+- `CellGraph`
+- `RobotActionProfile`
+- `SimulationReceipt`
+- industrial policy packs
+- settlement metadata for reusable industrial skills and adapters
+
+The active roadmap for that lane lives here:
+
+- [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
+
 ## Where To Start
 
 - [Getting Started](./getting-started.md)

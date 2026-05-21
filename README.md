@@ -10,6 +10,13 @@
 
 SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
 
+The next upgrade lane is factory control. As prompt-to-hardware and
+prompt-to-factory tooling gets better at generating industrial plans, SINT is
+expanding toward the control layer that decides what can be simulated,
+approved, executed, audited, and settled before AI-generated factory actions
+touch real machines. See
+[`docs/roadmaps/factory-action-pack-upgrade-sprints.md`](docs/roadmaps/factory-action-pack-upgrade-sprints.md).
+
 > **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 
 ```

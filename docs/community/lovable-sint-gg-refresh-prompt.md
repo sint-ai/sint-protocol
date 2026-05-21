@@ -37,6 +37,7 @@ Source of truth for content:
 - docs/protocol.md
 - docs/roadmap.md
 - docs/roadmaps/end-of-year-2026-execution-plan.md
+- docs/roadmaps/factory-action-pack-upgrade-sprints.md
 - docs/community/website-sync-checklist.md
 - docs/guides/gateway-production-hardening.md
 - docs/guides/production-slice-verification.md
@@ -100,6 +101,9 @@ Section: Production direction
   - cleaner release gates
   - external collaboration
   - maintainership credibility
+- Add one compact note that SINT is also expanding toward prompt-generated
+  factory control, where simulation proof and approval sit between generated
+  industrial plans and execution.
 
 Section: Footer CTA
 - Invite readers to explore docs, roadmap, and GitHub.
@@ -153,6 +157,8 @@ Section: Q4 2026
   - 2 to 3 meaningful deployment or pilot signals if outreach lands
   - evidence-backed AAIF resubmission packet
   - cleaner examples and templates
+  - a factory-control upgrade track that reads like a real sprint sequence, not
+    a hand-wavy future plan
 
 Section: End-of-year scorecard
 - Show 5 simple year-end checks:
