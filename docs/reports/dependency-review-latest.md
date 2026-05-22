@@ -1,11 +1,11 @@
 # Dependency Review Report
 
-- Generated at: 2026-05-19T22:32:32.521Z
+- Generated at: 2026-05-22T16:45:12.304Z
 - Lockfile: `pnpm-lock.yaml`
-- Lockfile SHA-256: `2e790a638a0f124ad37a66e90b32e05ca41d0ef338cd4f917c0eb67e66614725`
+- Lockfile SHA-256: `a3169a1e27bcd64db67692fd921703d53537b73bf8895210bbd4d9a5ddbd6375`
 - Audit command: `pnpm audit --prod --json`
 - Audit exit code: 1
-- Raw audit artifact: [dependency-audit-2026-05-19.json](./dependency-audit-2026-05-19.json)
+- Raw audit artifact: [dependency-audit-2026-05-22.json](./dependency-audit-2026-05-22.json)
 
 ## Vulnerability Summary
 
