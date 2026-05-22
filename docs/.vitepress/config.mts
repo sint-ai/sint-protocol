@@ -124,6 +124,7 @@ export default defineConfig({
         text: "Compliance & Reports",
         items: [
           { text: "Production Slice Validation Artifact", link: "/reports/production-slice-validation-artifact" },
+          { text: "AAIF Release Gate 2026-05-21", link: "/reports/aaif-release-gate-2026-05-21" },
           { text: "Tier Crosswalk Pack", link: "/compliance/tier-crosswalk-pack" },
           { text: "Industrial Benchmark Report", link: "/reports/industrial-benchmark-report" },
           { text: "ROS2 Control-Loop Benchmark", link: "/reports/ros2-control-loop-benchmark" },
