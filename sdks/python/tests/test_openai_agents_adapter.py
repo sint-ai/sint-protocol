@@ -12,6 +12,7 @@ from sint.openai_agents import (
     SintApprovalTimeoutError,
     SintDeniedError,
 )
+from sint.openai_agents_runtime import governed_tool_call
 from sint.types import LedgerEvent, PolicyDecision, SintRequest
 
 
@@ -208,3 +209,33 @@ async def test_evidence_for_request_filters_by_payload_request_id() -> None:
     adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
     matched = await adapter.evidence_for_request("target-1")
     assert [e.event_id for e in matched] == ["e0", "e1", "e2"]
+
+
+@pytest.mark.asyncio
+async def test_governed_tool_call_executes_only_after_authorization() -> None:
+    client = _FakeGatewayClient(_decision("allow"))
+    adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
+    executed: list[str] = []
+
+    async def _execute(decision: PolicyDecision) -> str:
+        executed.append(decision.action)
+        return "ok"
+
+    result = await governed_tool_call(adapter, _request(), _execute)
+    assert result == "ok"
+    assert executed == ["allow"]
+
+
+@pytest.mark.asyncio
+async def test_governed_tool_call_does_not_execute_on_denial() -> None:
+    client = _FakeGatewayClient(_decision("deny"))
+    adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
+    executed: list[str] = []
+
+    async def _execute(_decision: PolicyDecision) -> str:
+        executed.append("ran")
+        return "should-not-run"
+
+    with pytest.raises(SintDeniedError):
+        await governed_tool_call(adapter, _request(), _execute)
+    assert executed == []

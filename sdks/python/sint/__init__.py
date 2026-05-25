@@ -20,6 +20,16 @@ from .crewai import (
     CrewAIGuardrailProviderCompat,
     GuardrailDecision,
 )
+from .openai_agents import (
+    ApprovalResolution as OpenAIAgentsApprovalResolution,
+    OpenAIAgentsGovernanceAdapter,
+    SintApprovalDeniedError,
+    SintApprovalRequiredError,
+    SintApprovalTimeoutError,
+    SintDeniedError,
+    SintGovernanceError,
+)
+from .openai_agents_runtime import governed_tool_call
 
 __version__ = "0.1.0"
 
@@ -45,4 +55,13 @@ __all__ = [
     "CrewAIGuardrailProviderCompat",
     "GuardrailDecision",
     "CrewAIApprovalResolution",
+    # openai agents adapter
+    "OpenAIAgentsGovernanceAdapter",
+    "OpenAIAgentsApprovalResolution",
+    "SintGovernanceError",
+    "SintDeniedError",
+    "SintApprovalRequiredError",
+    "SintApprovalTimeoutError",
+    "SintApprovalDeniedError",
+    "governed_tool_call",
 ]
