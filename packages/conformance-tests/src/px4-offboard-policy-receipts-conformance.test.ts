@@ -43,7 +43,11 @@ describe("PX4 offboard policy receipts fixture v1", () => {
       humanTakeoffZoneEscalates: true,
       fenceChangesRequireEvidence: true,
       negativeOutcomesCarryReceipt: true,
+      px4EncryptedLogCorrelationRequired: true,
     });
+
+    expect(fixture.deployment.px4LogFormat).toBe("ulge");
+    expect(fixture.deployment.px4LogEvidenceRef).toMatch(/^sint:\/\/evidence\/px4\//);
   });
 
   it("defines receipt fields that bind vehicle, mission corridor, mode, and decision", () => {
@@ -131,6 +135,18 @@ describe("PX4 offboard policy receipts fixture v1", () => {
     expect(item?.receiptRequired).toBe(true);
   });
 
+  it("rejects OFFBOARD transitions when encrypted-log correlation evidence is missing", () => {
+    const item = fixture.policyCases.find(
+      (caseItem) => caseItem.id === "offboard_without_ulog_correlation_rejected",
+    );
+
+    expect(item?.expectedResource).toBe("mavlink://11/cmd/mode");
+    expect(item?.expectedDecision).toBe("deny");
+    expect(item?.expectedTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(item?.policyViolated).toBe("PX4_ULOG_CORRELATION_REQUIRED");
+    expect(item?.receiptRequired).toBe(true);
+  });
+
   it("keeps all outcomes receipt-backed", () => {
     expect(fixture.successCriteria).toEqual({
       armAndModeStayCommitTier: true,
@@ -138,6 +154,7 @@ describe("PX4 offboard policy receipts fixture v1", () => {
       humanPresenceEscalatesToCommit: true,
       missingCorridorReceiptDenied: true,
       allOutcomesCarryReceipts: true,
+      missingUlogCorrelationDenied: true,
     });
 
     for (const item of fixture.mappingCases) {

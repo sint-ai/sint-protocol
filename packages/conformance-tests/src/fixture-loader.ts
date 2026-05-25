@@ -1181,6 +1181,7 @@ export interface Px4OffboardPolicyReceiptsFixture {
     readonly humanTakeoffZoneEscalates: boolean;
     readonly fenceChangesRequireEvidence: boolean;
     readonly negativeOutcomesCarryReceipt: boolean;
+    readonly px4EncryptedLogCorrelationRequired: boolean;
   };
   readonly deployment: {
     readonly siteId: string;
@@ -1189,6 +1190,8 @@ export interface Px4OffboardPolicyReceiptsFixture {
     readonly missionRef: string;
     readonly corridorRef: string;
     readonly takeoffZoneId: string;
+    readonly px4LogFormat?: "ulge";
+    readonly px4LogEvidenceRef?: string;
   };
   readonly receiptSchema: {
     readonly requiredFields: readonly string[];
@@ -1227,7 +1230,7 @@ export interface Px4OffboardPolicyReceiptsFixture {
       readonly currentVelocityMps?: number;
     };
     readonly corridorReceiptPresent?: boolean;
-    readonly policyViolated?: "PX4_CORRIDOR_RECEIPT_REQUIRED";
+    readonly policyViolated?: "PX4_CORRIDOR_RECEIPT_REQUIRED" | "PX4_ULOG_CORRELATION_REQUIRED";
     readonly receiptRequired: boolean;
   }>;
   readonly successCriteria: {
@@ -1236,6 +1239,7 @@ export interface Px4OffboardPolicyReceiptsFixture {
     readonly humanPresenceEscalatesToCommit: boolean;
     readonly missingCorridorReceiptDenied: boolean;
     readonly allOutcomesCarryReceipts: boolean;
+    readonly missingUlogCorrelationDenied?: boolean;
   };
 }
 
