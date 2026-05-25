@@ -25,6 +25,7 @@ they strengthen incident replay and external auditability.
 Use this template:
 
 - `docs/reports/px4-ulog-correlation-artifact.template.json`
+- `docs/reports/px4-ulog-correlation-artifact.sample.json` (filled example)
 
 ## Security posture
 
