@@ -95,6 +95,7 @@ Best conversion targets:
 - Open-RMF handoff receipts
 - Sunnybotics ROS 2 integration questions
 - one industrial or factory-control design thread
+- PX4 encrypted-log evidence correlation lane (ULog `.ulge` + policy receipts)
 
 ### Priority 5. Public Story Sync
 
@@ -163,6 +164,7 @@ For the fuller execution plan, use:
 - [Graph-first coordination upgrade 2026](./roadmaps/graph-first-coordination-upgrade-2026.md)
 - [Humanoid robotics integrations 2026](./roadmaps/humanoid-robotics-integrations-2026.md)
 - [Post-quantum crypto agility](./roadmaps/post-quantum-crypto-agility.md)
+- [PX4 log encryption evidence integration](./guides/px4-log-encryption-evidence-integration.md)
 
 ## What We Are Measuring
 
