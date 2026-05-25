@@ -82,6 +82,10 @@ def _decision(action: str, *, with_approval_id: bool = False) -> PolicyDecision:
         }
         if with_approval_id:
             payload["approvalRequestId"] = "req-approve-001"
+    if action == "transform":
+        payload["transformations"] = {
+            "constraintOverrides": {"maxVelocityMps": 0.15},
+        }
     return PolicyDecision.model_validate(payload)
 
 
@@ -91,6 +95,14 @@ async def test_authorize_allow_returns_decision() -> None:
     adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
     result = await adapter.authorize_tool_call(_request())
     assert result.action == "allow"
+
+
+@pytest.mark.asyncio
+async def test_authorize_transform_returns_decision() -> None:
+    client = _FakeGatewayClient(_decision("transform"))
+    adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
+    result = await adapter.authorize_tool_call(_request())
+    assert result.action == "transform"
 
 
 @pytest.mark.asyncio
@@ -152,6 +164,16 @@ async def test_escalation_with_denied_resolution_raises_typed_error() -> None:
 async def test_evidence_for_request_filters_by_payload_request_id() -> None:
     events = [
         LedgerEvent.model_validate({
+            "eventId": "e0",
+            "sequenceNumber": "0",
+            "timestamp": "2026-04-06T11:59:59.000000Z",
+            "eventType": "economy.trust.evaluated",
+            "agentId": "a" * 64,
+            "payload": {"requestId": "target-1", "trustSignal": "medium_risk"},
+            "previousHash": "f" * 64,
+            "hash": "0" * 64,
+        }),
+        LedgerEvent.model_validate({
             "eventId": "e1",
             "sequenceNumber": "1",
             "timestamp": "2026-04-06T12:00:00.000000Z",
@@ -185,5 +207,4 @@ async def test_evidence_for_request_filters_by_payload_request_id() -> None:
     client = _FakeGatewayClient(_decision("allow"), ledger_events=events)
     adapter = OpenAIAgentsGovernanceAdapter(client)  # type: ignore[arg-type]
     matched = await adapter.evidence_for_request("target-1")
-    assert [e.event_id for e in matched] == ["e1", "e2"]
-
+    assert [e.event_id for e in matched] == ["e0", "e1", "e2"]
