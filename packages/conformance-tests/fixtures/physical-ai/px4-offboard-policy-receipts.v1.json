@@ -14,7 +14,8 @@
     "velocitySetpointsRequireReview": true,
     "humanTakeoffZoneEscalates": true,
     "fenceChangesRequireEvidence": true,
-    "negativeOutcomesCarryReceipt": true
+    "negativeOutcomesCarryReceipt": true,
+    "px4EncryptedLogCorrelationRequired": true
   },
   "deployment": {
     "siteId": "drone-lab-01",
@@ -22,7 +23,9 @@
     "systemId": 11,
     "missionRef": "sint://mission/px4/px4-07/delivery-4481",
     "corridorRef": "sint://corridor/utm/delivery-zone-a",
-    "takeoffZoneId": "pad-3"
+    "takeoffZoneId": "pad-3",
+    "px4LogFormat": "ulge",
+    "px4LogEvidenceRef": "sint://evidence/px4/px4-07/delivery-4481"
   },
   "receiptSchema": {
     "requiredFields": [
@@ -224,6 +227,15 @@
       "corridorReceiptPresent": false,
       "policyViolated": "PX4_CORRIDOR_RECEIPT_REQUIRED",
       "receiptRequired": true
+    },
+    {
+      "id": "offboard_without_ulog_correlation_rejected",
+      "name": "Reject OFFBOARD action when encrypted-log correlation evidence is missing",
+      "expectedResource": "mavlink://11/cmd/mode",
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "PX4_ULOG_CORRELATION_REQUIRED",
+      "receiptRequired": true
     }
   ],
   "successCriteria": {
@@ -231,6 +243,7 @@
     "velocitySetpointsAreHighConsequence": true,
     "humanPresenceEscalatesToCommit": true,
     "missingCorridorReceiptDenied": true,
-    "allOutcomesCarryReceipts": true
+    "allOutcomesCarryReceipts": true,
+    "missingUlogCorrelationDenied": true
   }
 }
