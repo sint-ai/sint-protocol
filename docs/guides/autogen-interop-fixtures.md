@@ -65,6 +65,60 @@ Silent drops are non-conformant.
 3. Edge disconnect fail-closed denial for trust-escalated actions
 4. Evidence event presence for deny/escalate paths
 
+## Reference adapter blueprint
+
+The conformance test provides the canonical callback chain:
+
+- trust gate callback (pre-policy)
+- `PolicyGateway.intercept()` callback (authorization)
+- trust-to-tier merge callback (post-policy)
+
+Minimal TypeScript shape:
+
+```ts
+import type { PolicyGateway, SintRequest, PolicyDecision } from "@pshkv/gate-policy-gateway";
+
+type TrustSignal = "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
+
+export async function authorizeAutogenToolCall(
+  gateway: PolicyGateway,
+  request: SintRequest,
+  trustSignal: TrustSignal,
+): Promise<PolicyDecision> {
+  // 1) Pre-policy trust gate
+  if (trustSignal === "blocked") {
+    return {
+      requestId: request.requestId,
+      timestamp: new Date().toISOString(),
+      action: "deny",
+      assignedTier: "T3_commit",
+      assignedRisk: "T3_irreversible",
+      denial: { reason: "Trust signal blocked execution", policyViolated: "TRUST_BLOCKED" },
+    };
+  }
+
+  // 2) Mandatory choke point
+  const decision = await gateway.intercept(request);
+
+  // 3) Runtime action mapping
+  // allow     -> execute tool
+  // deny      -> fail closed
+  // escalate  -> suspend and await approval
+  // transform -> apply overrides and execute
+  return decision;
+}
+```
+
+### Evidence extraction
+
+Adapters should return `requestId` with decision payloads and expose the evidence stream references for operators:
+
+- `policy.evaluated` for policy decisions
+- `economy.trust.evaluated` for trust escalation
+- `economy.trust.blocked` for trust gate denials
+
+If your runtime cannot surface event IDs directly, `requestId` is the minimum trace key and is required.
+
 ## Run locally
 
 ```bash
