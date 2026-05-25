@@ -22,6 +22,10 @@ they strengthen incident replay and external auditability.
    - log key identifier reference (not private key material)
    - timeline match results and anomaly notes
 
+Use this template:
+
+- `docs/reports/px4-ulog-correlation-artifact.template.json`
+
 ## Security posture
 
 - Keep log decryption private keys in separate key-management scope.
@@ -39,6 +43,14 @@ they strengthen incident replay and external auditability.
 3. Add an operator runbook section for review-time decryption workflow.
 4. Add one benchmark metric:
    - decision-to-flight-event correlation latency.
+
+## Minimal acceptance checks
+
+- every reviewed T2/T3 offboard action has one correlation artifact
+- artifact includes both encrypted and decrypted log digests
+- artifact includes a non-secret `keyRef`, never key material
+- at least one MAVLink action timestamp is correlated within the declared
+  `maxAllowedDeltaMs`
 
 ## Non-goals
 
