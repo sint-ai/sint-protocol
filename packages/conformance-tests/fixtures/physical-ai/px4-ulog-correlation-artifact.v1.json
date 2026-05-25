@@ -1,0 +1,63 @@
+{
+  "fixtureId": "px4-ulog-correlation-artifact-v1",
+  "schemaVersion": "2026-05-25",
+  "description": "Conformance fixture for PX4 encrypted ULog correlation artifacts linked to SINT policy/evidence timelines.",
+  "requiredFields": [
+    "artifactVersion",
+    "artifactType",
+    "siteId",
+    "vehicleId",
+    "missionRef",
+    "requestId",
+    "tokenId",
+    "policyDecision",
+    "px4LogEvidence",
+    "correlation",
+    "review"
+  ],
+  "sample": {
+    "artifactVersion": "2026-05-25",
+    "artifactType": "px4-ulog-correlation",
+    "siteId": "drone-lab-01",
+    "vehicleId": "px4-07",
+    "missionRef": "sint://mission/px4/px4-07/delivery-4481",
+    "requestId": "01905f7c-0000-7000-8000-000000000011",
+    "tokenId": "01905f7c-0000-7000-8000-000000000012",
+    "policyDecision": {
+      "action": "escalate",
+      "assignedTier": "T3_commit",
+      "decisionEventType": "policy.evaluated",
+      "decisionEventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "decisionTimestamp": "2026-05-25T17:20:00.000Z"
+    },
+    "px4LogEvidence": {
+      "logFormat": "ulge",
+      "encryptedLogDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "decryptedLogDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "keyRef": "kms://px4-log-keys/px4-07",
+      "decryptEnvironmentRef": "sint://runtime/review-env/forensics-01",
+      "ulogTimeWindow": {
+        "start": "2026-05-25T17:19:59.000Z",
+        "end": "2026-05-25T17:20:10.000Z"
+      }
+    },
+    "correlation": {
+      "matchedEvents": [
+        {
+          "type": "mavlink.mode_change",
+          "targetMode": "OFFBOARD",
+          "sintEventTimestamp": "2026-05-25T17:20:00.000Z",
+          "ulogTimestamp": "2026-05-25T17:20:00.121Z",
+          "deltaMs": 121
+        }
+      ],
+      "correlationStatus": "matched",
+      "maxAllowedDeltaMs": 1000
+    },
+    "review": {
+      "reviewedBy": "operator@example.com",
+      "reviewTimestamp": "2026-05-25T17:30:00.000Z",
+      "notes": "Mode change and first setpoint matched expected timeline."
+    }
+  }
+}

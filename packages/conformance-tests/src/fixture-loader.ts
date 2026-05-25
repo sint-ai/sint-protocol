@@ -1323,6 +1323,62 @@ export interface LeRobotPolicyActuationReceiptsFixture {
   };
 }
 
+export interface Px4UlogCorrelationArtifactFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly requiredFields: readonly string[];
+  readonly sample: {
+    readonly artifactVersion: string;
+    readonly artifactType: "px4-ulog-correlation";
+    readonly siteId: string;
+    readonly vehicleId: string;
+    readonly missionRef: string;
+    readonly requestId: string;
+    readonly tokenId: string;
+    readonly policyDecision: {
+      readonly action: "allow" | "deny" | "escalate" | "transform";
+      readonly assignedTier: ApprovalTier;
+      readonly decisionEventType: string;
+      readonly decisionEventHash: string;
+      readonly decisionTimestamp: string;
+    };
+    readonly px4LogEvidence: {
+      readonly logFormat: "ulge";
+      readonly encryptedLogDigest: string;
+      readonly decryptedLogDigest: string;
+      readonly keyRef: string;
+      readonly decryptEnvironmentRef: string;
+      readonly ulogTimeWindow: {
+        readonly start: string;
+        readonly end: string;
+      };
+    };
+    readonly correlation: {
+      readonly matchedEvents: readonly Array<{
+        readonly type: string;
+        readonly targetMode?: string;
+        readonly sintEventTimestamp: string;
+        readonly ulogTimestamp: string;
+        readonly deltaMs: number;
+      }>;
+      readonly correlationStatus: "matched" | "mismatch";
+      readonly maxAllowedDeltaMs: number;
+    };
+    readonly review: {
+      readonly reviewedBy: string;
+      readonly reviewTimestamp: string;
+      readonly notes: string;
+    };
+  };
+}
+
+export function loadPx4UlogCorrelationArtifactFixture(): Px4UlogCorrelationArtifactFixture {
+  return loadFixture<Px4UlogCorrelationArtifactFixture>(
+    "physical-ai/px4-ulog-correlation-artifact.v1.json",
+  );
+}
+
 export function loadLeRobotPolicyActuationReceiptsFixture(): LeRobotPolicyActuationReceiptsFixture {
   return loadFixture<LeRobotPolicyActuationReceiptsFixture>(
     "physical-ai/lerobot-policy-actuation-receipts.v1.json",
