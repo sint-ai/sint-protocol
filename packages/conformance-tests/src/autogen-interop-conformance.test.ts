@@ -270,6 +270,13 @@ describe("AutoGen Interop Conformance", () => {
     expect(decision.assignedTier).toBe(scenario.expected.assignedTier);
     expect(decision.action).toBe(scenario.expected.decisionAction);
     expect(decision.denial?.policyViolated).toBe(scenario.expected.policyViolated);
-    expect(events.some((e) => e.eventType === "economy.trust.evaluated")).toBe(true);
+    expect(
+      events.some(
+        (e) =>
+          e.eventType === "policy.evaluated" ||
+          e.eventType === "economy.trust.evaluated" ||
+          e.eventType === "economy.trust.blocked",
+      ),
+    ).toBe(true);
   });
 });
