@@ -63,6 +63,11 @@ jobs:
       - name: Fixture Certification Gate
         run: pnpm run cert:fixtures
 
+      - name: PX4 ULog Artifact Sample Drift Check
+        run: |
+          pnpm run px4:artifact:sample
+          git diff --exit-code -- docs/reports/px4-ulog-correlation-artifact.sample.json
+
       - name: Typecheck
         run: pnpm run typecheck
 
