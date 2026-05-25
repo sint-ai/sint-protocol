@@ -129,6 +129,11 @@ The active roadmap for that lane lives here:
 
 - [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
 
+The coordination-upgrade lane that builds graph-native multi-party governance
+on top of existing SINT receipts and policy events lives here:
+
+- [Graph-First Coordination Upgrade 2026](./roadmaps/graph-first-coordination-upgrade-2026.md)
+
 ## Where To Start
 
 - [Getting Started](./getting-started.md)
