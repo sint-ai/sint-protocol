@@ -18,6 +18,7 @@
     "benchmark:industrial": "pnpm --filter @sint/conformance-tests exec vitest run src/industrial-interoperability.test.ts src/industrial-benchmark-scenarios.test.ts --reporter=verbose",
     "benchmark:ros2-loop": "pnpm --filter @sint/conformance-tests exec vitest run src/ros2-control-loop-latency.test.ts --reporter=verbose",
     "benchmark:ros2-report": "node ./scripts/generate-ros2-control-loop-report.mjs",
+    "px4:artifact:sample": "node ./scripts/generate-px4-ulog-correlation-sample.mjs",
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "security:dependency-review": "node ./scripts/generate-dependency-review-report.mjs",
     "security:production-slice-artifact": "node ./scripts/generate-production-slice-validation-artifact.mjs",
