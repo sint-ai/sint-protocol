@@ -54,6 +54,40 @@ Integrate SINT policy decisions with dedicated hardware safety controllers (PLC 
 - Provide benchmark report including software + hardware safety handshake timing.
 - Publish design-partner case study with incident-response replay evidence.
 
+### Phase D — Q4 2026: PX4 Encrypted Log Evidence Lane
+
+Use PX4 encrypted ULog (`.ulge`) as a first-class evidence input for SINT
+incident review and policy-receipt correlation.
+
+- Treat encrypted PX4 logs as source-of-truth flight telemetry for high-risk
+  physical actions.
+- Correlate SINT `requestId` / policy events with decrypted ULog timeline
+  during incident replay.
+- Keep private decrypt keys outside runtime nodes; decrypt only in review
+  pipeline.
+
+Reference baseline from PX4 docs:
+
+- encryption algorithm path (`XChaCha20`) and wrapped symmetric key model
+- firmware enablement via crypto modules + board key config
+- `.ulge` single-file format in recent PX4
+- `Tools/log_encryption` download/decrypt workflow
+
+### PX4 integration tasks (execution-ready)
+
+1. Add a conformance fixture profile for "SINT decision timeline matches PX4
+   decrypted ULog event windows" on offboard actions.
+2. Add a guide that documents operator flow:
+   - collect `.ulge`
+   - decrypt in controlled environment
+   - map ULog timestamps to SINT evidence events
+3. Add a bridge-level evidence pointer field for PX4 encrypted log artifacts
+   (file hash + key identifier reference, never private key material).
+4. Add fail-closed policy profile option for safety-critical fleets:
+   - deny T2/T3 if required encrypted logging capability is unavailable.
+5. Publish one benchmark note for correlation latency budget
+   (decision-to-verified-flight-event alignment).
+
 ## KPI Targets
 
 - ROS2 software intercept p99: `< 10ms` (`benchmark:ros2-loop`)
