@@ -36,12 +36,16 @@ As of May 2026, the repo should optimize for this order:
 These items matter most because they improve submission quality, production
 credibility, and external trust at the same time.
 
-- issue [#192](https://github.com/sint-ai/sint-protocol/issues/192):
-  verify `SECURITY.md` disclosure path and response SLA
-- issue [#193](https://github.com/sint-ai/sint-protocol/issues/193):
-  publish external production-slice validation artifact
-- issue [#195](https://github.com/sint-ai/sint-protocol/issues/195):
-  run the first tagged RC checklist with evidence links
+- completed issue [#192](https://github.com/sint-ai/sint-protocol/issues/192):
+  `SECURITY.md` disclosure path and response SLA are verified and published
+- completed issue [#193](https://github.com/sint-ai/sint-protocol/issues/193):
+  signed production-slice validation artifact is published
+- completed issue [#195](https://github.com/sint-ai/sint-protocol/issues/195):
+  first tagged RC checklist evidence run is published
+- completed issue [#194](https://github.com/sint-ai/sint-protocol/issues/194):
+  dependency-review workflow and published audit artifact are in place
+- active remediation issue [#209](https://github.com/sint-ai/sint-protocol/issues/209):
+  remove remaining high findings in `fast-uri` dependency paths
 - closed issue [#72](https://github.com/sint-ai/sint-protocol/issues/72) and
   merged PR
   [#196](https://github.com/sint-ai/sint-protocol/pull/196):
@@ -108,6 +112,7 @@ The near-term goal is to finish tightening the core:
 - [x] external contributor onboarding and scorecard workflows
 - [x] robotics collaboration fixture pack
 - [x] merge the current production-readiness branch
+- [x] publish graph-first coordination upgrade roadmap lane
 - [ ] keep docs, README, and public protocol copy aligned
 
 ## Q3 2026
