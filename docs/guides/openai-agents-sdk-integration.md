@@ -27,6 +27,7 @@ from sint import (
     GatewayClient,
     GatewayConfig,
     OpenAIAgentsGovernanceAdapter,
+    governed_tool_call,
     SintRequest,
     ApprovalResolution,
 )
@@ -42,6 +43,18 @@ decision = await adapter.authorize_tool_call(
     request,
     on_escalation=resolver,      # optional async callback for human approval
     approval_timeout_s=30.0,     # fail-closed timeout path
+)
+```
+
+Or use the runtime helper to enforce "authorize before execute":
+
+```python
+result = await governed_tool_call(
+    adapter,
+    request,
+    execute=lambda decision: my_tool_runner(decision),  # called only after allow/transform or approved escalation
+    on_escalation=resolver,
+    approval_timeout_s=30.0,
 )
 ```
 
