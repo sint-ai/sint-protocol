@@ -10,6 +10,43 @@ Conformance runner:
 
 - `packages/conformance-tests/src/autogen-interop-conformance.test.ts`
 
+## MVP Contract (Issue #213)
+
+Minimal interop surface for AutoGen-style runtimes:
+
+1. Pre-tool-call authorization calls `PolicyGateway.intercept()`
+2. Typed policy outcomes map to runtime control flow
+3. Every governed decision yields an evidence reference
+
+### Request contract
+
+`SintRequest` (minimum required fields):
+
+- `requestId` (UUID v7)
+- `agentId`
+- `tokenId`
+- `resource`
+- `action`
+- `params`
+
+### Outcome contract
+
+Accepted policy outcomes:
+
+- `allow` -> execute tool call
+- `deny` -> fail closed, return typed denial
+- `escalate` -> suspend and wait for approval path
+- `transform` -> apply constraints/overrides, then execute
+
+### Evidence reference contract
+
+For each governed decision, adapters must expose an evidence reference that can be traced in the ledger event stream:
+
+- primary reference: `requestId`
+- expected event types: `policy.evaluated` and trust-layer events where applicable (`economy.trust.evaluated`, `economy.trust.blocked`)
+
+Silent drops are non-conformant.
+
 ## What is covered
 
 - policy callback + capability validation hook behavior
@@ -26,6 +63,7 @@ Conformance runner:
    - `high_risk`
    - `blocked`
 3. Edge disconnect fail-closed denial for trust-escalated actions
+4. Evidence event presence for deny/escalate paths
 
 ## Run locally
 
