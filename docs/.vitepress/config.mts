@@ -98,6 +98,7 @@ export default defineConfig({
           { text: "AAIF Resubmission 2026", link: "/roadmaps/aaif-resubmission-2026" },
           { text: "Ecosystem Outreach 2026", link: "/roadmaps/ecosystem-outreach-2026" },
           { text: "Factory Action Pack Upgrade Sprints", link: "/roadmaps/factory-action-pack-upgrade-sprints" },
+          { text: "Graph-First Coordination Upgrade", link: "/roadmaps/graph-first-coordination-upgrade-2026" },
           { text: "Humanoid Robotics Integrations", link: "/roadmaps/humanoid-robotics-integrations-2026" },
           { text: "Post-Quantum Crypto Agility", link: "/roadmaps/post-quantum-crypto-agility" },
           { text: "Physical AI Governance", link: "/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029" },

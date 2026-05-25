@@ -146,6 +146,7 @@ For the fuller execution plan, use:
 
 - [End-of-Year 2026 Execution Plan](./roadmaps/end-of-year-2026-execution-plan.md)
 - [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
+- [Graph-First Coordination Upgrade 2026](./roadmaps/graph-first-coordination-upgrade-2026.md)
 
 ## Detailed Tracks
 
@@ -154,6 +155,7 @@ For the fuller execution plan, use:
 - [Ecosystem outreach 2026](./roadmaps/ecosystem-outreach-2026.md)
 - [AAIF resubmission 2026](./roadmaps/aaif-resubmission-2026.md)
 - [Factory Action Pack upgrade sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
+- [Graph-first coordination upgrade 2026](./roadmaps/graph-first-coordination-upgrade-2026.md)
 - [Humanoid robotics integrations 2026](./roadmaps/humanoid-robotics-integrations-2026.md)
 - [Post-quantum crypto agility](./roadmaps/post-quantum-crypto-agility.md)
 
