@@ -32,12 +32,6 @@
         "sintEventTimestamp": "2026-05-25T17:20:00.000Z",
         "ulogTimestamp": "2026-05-25T17:20:00.121Z",
         "deltaMs": 121
-      },
-      {
-        "type": "mavlink.setpoint_velocity",
-        "sintEventTimestamp": "2026-05-25T17:20:00.230Z",
-        "ulogTimestamp": "2026-05-25T17:20:00.341Z",
-        "deltaMs": 111
       }
     ],
     "correlationStatus": "matched",
@@ -46,6 +40,6 @@
   "review": {
     "reviewedBy": "operator@example.com",
     "reviewTimestamp": "2026-05-25T17:30:00.000Z",
-    "notes": "OFFBOARD transition and first velocity setpoint matched policy timeline. No anomaly observed."
+    "notes": "Mode change and first setpoint matched expected timeline."
   }
 }
