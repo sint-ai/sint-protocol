@@ -27,6 +27,23 @@ Use this template:
 - `docs/reports/px4-ulog-correlation-artifact.template.json`
 - `docs/reports/px4-ulog-correlation-artifact.sample.json` (filled example)
 
+Generate a timestamped report packet:
+
+```bash
+pnpm run px4:artifact:report
+```
+
+Optional request correlation:
+
+```bash
+pnpm run px4:artifact:report -- --requestId=01905f7c-0000-7000-8000-000000000011
+```
+
+Generated outputs are written to:
+
+- `docs/reports/generated/px4-ulog-correlation-artifact.<stamp>.json`
+- `docs/reports/generated/px4-ulog-correlation-artifact.latest.json`
+
 ## Security posture
 
 - Keep log decryption private keys in separate key-management scope.
