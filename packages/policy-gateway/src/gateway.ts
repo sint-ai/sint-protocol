@@ -61,6 +61,20 @@ export interface EconomyPluginHooks {
   postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void>;
 }
 
+/**
+ * Managed-autonomy authority pre-gate.
+ *
+ * Runs after token resolution/validation but before tier assignment. Returning
+ * a decision short-circuits the normal policy pipeline; returning undefined
+ * means authority is retained and permission evaluation can proceed.
+ */
+export interface AutonomySupervisorPlugin {
+  preIntercept(
+    request: SintRequest,
+    token: SintCapabilityToken,
+  ): Promise<PolicyDecision | undefined>;
+}
+
 /** Policy Gateway configuration. */
 /**
  * CSML escalation hook — called after tier assignment to optionally bump the tier.
@@ -192,6 +206,13 @@ export interface PolicyGatewayConfig {
    * exceeds θ, the tier is bumped up by 1. Fail-open: errors do not block.
    */
   readonly csmlEscalation?: CsmlEscalationPlugin;
+  /**
+   * Optional managed-autonomy authority supervisor.
+   * When provided, it gates whether the agent still has authority to produce
+   * external output before the normal permission pipeline assigns tiers.
+   * Fail-closed: supervisor errors deny the request.
+   */
+  readonly autonomySupervisor?: AutonomySupervisorPlugin;
   /**
    * Optional circuit breaker plugin (ASI10 / EU AI Act Article 14(4)(e)).
    * Provides the operator "stop button" and automatic rogue-agent containment.
@@ -461,6 +482,35 @@ export class PolicyGateway {
         policyViolated: tokenValidation.error,
       });
       return decision;
+    }
+
+    // 4a. Managed-autonomy authority pre-gate.
+    // This is orthogonal to permission: first check whether the agent still has
+    // authority to emit external output, then let the normal tier/token pipeline
+    // decide whether the specific action is permitted.
+    if (this.config.autonomySupervisor) {
+      try {
+        const autonomyDecision = await this.config.autonomySupervisor.preIntercept(
+          request,
+          token,
+        );
+        if (autonomyDecision) {
+          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+            decision: autonomyDecision.action,
+            tier: autonomyDecision.assignedTier,
+            risk: autonomyDecision.assignedRisk,
+            source: "autonomy_supervisor",
+          });
+          return autonomyDecision;
+        }
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "AUTONOMY_SUPERVISOR_ERROR",
+          "Autonomy supervisor failed closed before permission evaluation",
+        );
+      }
     }
 
     // 4d. Execution envelope corridor checks (optional, additive guardrail).

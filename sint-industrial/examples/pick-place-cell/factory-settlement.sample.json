@@ -1,0 +1,65 @@
+{
+  "settlement_id": "fs_packaging_cell_001",
+  "workcell_id": "packaging_cell_001",
+  "trigger": {
+    "on_event": "factory.execution.receipt",
+    "require_receipt_chain": true
+  },
+  "contributors": [
+    {
+      "type": "agent",
+      "id": "sint-factory-compiler-stub",
+      "role": "factory_intent_compiler",
+      "share_bps": 2500,
+      "evidence_ref": "factory.intent.compiled"
+    },
+    {
+      "type": "adapter",
+      "id": "sint-adapter-abb-rapid-stub",
+      "role": "vendor_program_export",
+      "share_bps": 2000,
+      "evidence_ref": "factory.execution.receipt"
+    },
+    {
+      "type": "policy_pack",
+      "id": "sint.factory.robot.motion.v1",
+      "role": "industrial_motion_policy",
+      "share_bps": 1500,
+      "evidence_ref": "policy.decision"
+    },
+    {
+      "type": "sim_template",
+      "id": "isaac-sim-pick-place-template",
+      "role": "simulation_receipt_template",
+      "share_bps": 1500,
+      "evidence_ref": "factory.simulation.verified"
+    },
+    {
+      "type": "operator",
+      "id": "did:web:factory.example:reviewers:lead-safety",
+      "role": "human_safety_approval",
+      "share_bps": 1500,
+      "evidence_ref": "factory.approval.granted"
+    },
+    {
+      "type": "maintainer",
+      "id": "sint-industrial-pack-maintainers",
+      "role": "pack_maintenance",
+      "share_bps": 1000,
+      "evidence_ref": "factory.settlement.recorded"
+    }
+  ],
+  "payment": {
+    "method": "USDC",
+    "network": "SINT",
+    "currency": "USD",
+    "max_amount": 250,
+    "escrow_required": true
+  },
+  "evidence": {
+    "receipt_chain_required": true,
+    "execution_receipt_event": "factory.execution.receipt",
+    "settlement_event": "factory.settlement.recorded",
+    "ledger_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+  }
+}

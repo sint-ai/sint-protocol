@@ -65,6 +65,13 @@ export const preapprovedCorridorSchema = z.object({
   maxHeadingDeviationDeg: z.number().min(0).max(180).optional(),
 }).strict();
 
+export const factoryReceiptChainEntrySchema = z.object({
+  step: z.string().min(1).max(128),
+  eventType: z.string().min(1).max(128),
+  digest: z.string().regex(/^sha256:[a-f0-9]{64}$/i),
+  previousDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/i).nullable(),
+}).strict();
+
 export const executionContextSchema = z.object({
   deploymentProfile: z.string().min(1).max(128).optional(),
   siteId: z.string().min(1).max(128).optional(),
@@ -76,6 +83,7 @@ export const executionContextSchema = z.object({
   verifiableCompute: verifiableComputeContextSchema.optional(),
   hardwareSafety: hardwareSafetyContextSchema.optional(),
   preapprovedCorridor: preapprovedCorridorSchema.optional(),
+  factoryReceiptChain: z.array(factoryReceiptChainEntrySchema).max(32).optional(),
 }).strict();
 
 export const sintRequestSchema = z.object({

@@ -4,6 +4,7 @@ export type {
   TokenResolver,
   LedgerEmitter,
   EconomyPluginHooks,
+  AutonomySupervisorPlugin,
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
   EdgeControlPlanePlugin,

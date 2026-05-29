@@ -160,6 +160,8 @@ export function delegateCapabilityToken(
       attestationRequirements: parentToken.attestationRequirements,
       verifiableComputeRequirements: parentToken.verifiableComputeRequirements,
       executionEnvelope: parentToken.executionEnvelope,
+      behavioralConstraints: parentToken.behavioralConstraints,
+      autonomyPolicy: parentToken.autonomyPolicy,
       delegationChain: {
         parentTokenId: parentToken.tokenId,
         depth: newDepth,

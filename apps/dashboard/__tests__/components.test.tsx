@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { Header } from "../src/components/Header.js";
 import { PendingApprovals } from "../src/components/PendingApprovals.js";
 import { AuditLog } from "../src/components/AuditLog.js";
@@ -110,9 +110,7 @@ describe("PendingApprovals", () => {
     const approveButton = screen.getByText("Approve");
     fireEvent.click(approveButton);
 
-    // Wait for async
-    await new Promise((r) => setTimeout(r, 50));
-    expect(mockResolve).toHaveBeenCalled();
+    await waitFor(() => expect(mockResolve).toHaveBeenCalled());
 
     vi.restoreAllMocks();
   });

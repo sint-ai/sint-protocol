@@ -141,6 +141,18 @@ export interface SintPreapprovedCorridor {
   readonly maxHeadingDeviationDeg?: number;
 }
 
+/** Hash-linked factory evidence item carried with industrial action approvals. */
+export interface SintFactoryReceiptChainEntry {
+  /** Stable step label for the action lifecycle (plan, simulation, approval, execution). */
+  readonly step: string;
+  /** Ledger event type represented by this digest. */
+  readonly eventType: string;
+  /** SHA-256 digest reference for this evidence event. */
+  readonly digest: `sha256:${string}`;
+  /** Previous digest in the append-only chain, or null for the first event. */
+  readonly previousDigest: `sha256:${string}` | null;
+}
+
 /**
  * Execution context metadata for cross-bridge/audit interoperability.
  * Every field is optional — bridges populate whatever they know so the
@@ -168,6 +180,8 @@ export interface SintExecutionContext {
   readonly hardwareSafety?: SintHardwareSafetyContext;
   /** Pre-approved execution corridor, if this request is executing under one. */
   readonly preapprovedCorridor?: SintPreapprovedCorridor;
+  /** Compact append-only factory evidence chain for operator approval context. */
+  readonly factoryReceiptChain?: readonly SintFactoryReceiptChainEntry[];
 }
 
 /**

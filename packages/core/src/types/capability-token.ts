@@ -269,6 +269,27 @@ export interface SintDelegationChain {
   readonly attenuated: boolean;
 }
 
+/** Optional managed-autonomy authority policy carried by a capability token. */
+export interface SintAutonomyPolicy {
+  /** External output is only valid when the managed-autonomy state is stable. */
+  readonly requiredState: "stable";
+  /** Deployment/bridge guard profile used to derive autonomy guards externally. */
+  readonly guardProfileId: string;
+  /** Strong-timed metacognitive recovery budget before assistance/governance. */
+  readonly maxMetacognitiveRecoveryMs?: number;
+  /** Strong-timed assisted recovery budget before regulated control. */
+  readonly maxAssistedRecoveryMs?: number;
+  /** Optional assistance quorum required for assisted recovery. */
+  readonly assistanceQuorum?: {
+    readonly required: number;
+    readonly verifierTypes: readonly string[];
+  };
+  /** Must be external to the supervisor/gateway; never policy_gateway. */
+  readonly regulatedController: "human_operator" | "hardware_safety_controller";
+  /** Managed-autonomy authority checks fail closed when configured. */
+  readonly failClosed: true;
+}
+
 /**
  * The SINT Capability Token — the atomic unit of permission.
  *
@@ -322,6 +343,8 @@ export interface SintCapabilityToken {
    * per-minute rate limiting at the tool-call level.
    */
   readonly behavioralConstraints?: SintBehavioralConstraints;
+  /** Optional managed-autonomy authority policy. */
+  readonly autonomyPolicy?: SintAutonomyPolicy;
 
   // --- Cross-protocol identity (Agent Passport System interop) ---
   /**
@@ -395,6 +418,8 @@ export interface SintCapabilityTokenRequest {
   readonly executionEnvelope?: SintExecutionEnvelope;
   /** Optional runtime behavioral constraints for this token. */
   readonly behavioralConstraints?: SintBehavioralConstraints;
+  /** Optional managed-autonomy authority policy. */
+  readonly autonomyPolicy?: SintAutonomyPolicy;
   /** APS passport identifier for cross-protocol identity linkage. */
   readonly passportId?: string;
   /** Delegation depth in the APS chain (0 = root). */

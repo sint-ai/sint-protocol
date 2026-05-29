@@ -143,8 +143,24 @@ Q4 is about packaging the protocol so the story is stronger than the pitch.
   reuse
 - [ ] 2-3 external deployment or pilot signals exist if the outreach lanes land
 - [ ] AAIF resubmission packet can be assembled from shipped evidence only
-- [ ] factory-control demo proves simulation-first execution and human approval
+- [x] factory-control demo proves simulation-first execution and human approval
   before robot or PLC actions
+- [x] factory-control adapter profiles derive Universal Robots ROS2 and SRCI
+  command artifacts from the same gated action profile
+- [x] factory-control vendor stubs generate ABB RAPID, FANUC LS, KUKA KRL,
+  and URScript artifacts with deterministic SHA-256 program hashes
+- [x] factory-control simulation stubs bind generated program hashes to Isaac
+  Sim, RoboDK, RobotStudio, FANUC ROBOGUIDE, and KUKA.Sim-shaped receipt
+  evidence
+- [x] operator interface Conductor surfaces industrial approval evidence from
+  the live approval queue
+- [x] operator interface Conductor surfaces the factory receipt chain from
+  schema-validated execution context
+- [x] Sprint 3 industrial pack preview lands under `/sint-industrial` with
+  conformance coverage for active ROS2, SRCI, OPC UA, and MQTT profiles
+- [x] managed-autonomy authority pre-gate lands as
+  `@pshkv/autonomy-supervisor`, with verified S/M/A/Rt reachability,
+  token-level `autonomyPolicy`, and gateway pre-intercept wiring
 
 ## Through December 2026
 

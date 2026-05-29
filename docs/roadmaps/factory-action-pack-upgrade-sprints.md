@@ -195,7 +195,7 @@ Target:
 
 Status:
 
-- planned
+- in progress
 
 Goal:
 
@@ -204,20 +204,39 @@ Goal:
 
 Deliverables:
 
-- ROS 2 adapter upgraded to speak the factory action profile
-- Universal Robots ROS 2 demo path
-- ABB RAPID export stub
-- FANUC LS/TP export stub
-- SRCI command-profile mapping
-- Isaac Sim, RoboDK, or Visual Components simulation receipt stub
-- approval dashboard flow for industrial execution requests
+- executable factory action demo fixture (shipped)
+- conformance command for deny -> escalate -> allow control semantics (shipped)
+- ROS 2 adapter upgraded to speak the factory action profile (shipped)
+- Universal Robots ROS 2 demo path (shipped as adapter-profile artifact)
+- ABB RAPID export stub (shipped as deterministic export artifact)
+- FANUC LS export stub (shipped as deterministic export artifact)
+- KUKA KRL export stub (shipped as deterministic export artifact)
+- Universal Robots URScript export stub (shipped as deterministic export
+  artifact)
+- SRCI command-profile mapping (shipped as adapter-profile artifact)
+- Isaac Sim simulation receipt stub (shipped as adapter-profile artifact)
+- RoboDK simulation receipt stub (shipped as adapter-profile artifact)
+- RobotStudio simulation receipt stub (shipped as adapter-profile artifact)
+- FANUC ROBOGUIDE simulation receipt stub (shipped as adapter-profile artifact)
+- KUKA.Sim simulation receipt stub (shipped as adapter-profile artifact)
+- Operator Interface Conductor flow for industrial execution approvals
+  (shipped)
 - receipt-chain demo across plan, simulation, approval, and execution
+  (shipped through schema-validated execution context and Conductor UI)
 
 Exit criteria:
 
-- SINT refuses execution when simulation proof is missing
+- SINT refuses execution when simulation proof is missing (covered by
+  `pnpm run demo:factory-action`)
 - after simulation passes, SINT still requires tier-appropriate approval
-- the same action profile can fan out into at least two vendor execution stubs
+  (covered by `pnpm run demo:factory-action`)
+- the same action profile can fan out into at least four vendor execution stubs
+  (covered by ABB RAPID, FANUC LS, KUKA KRL, and URScript fixture stubs)
+- operators can review cell, robot, simulation, envelope, tool, and quorum
+  context before approval (covered by `@pshkv/interface` component tests)
+- operators can verify the hash-linked plan -> simulation -> approval ->
+  execution receipt chain before approval (covered by `@pshkv/interface` and
+  `@pshkv/gateway-server` tests)
 
 ### Sprint 3. Industrial Pack
 
@@ -227,7 +246,7 @@ Target:
 
 Status:
 
-- planned
+- started
 
 Goal:
 
@@ -235,33 +254,38 @@ Goal:
 
 Deliverables:
 
-- `/sint-industrial/schemas`
-- `/sint-industrial/policies`
-- `/sint-industrial/adapters/ros2`
-- `/sint-industrial/adapters/srci`
-- `/sint-industrial/adapters/opcua`
-- `/sint-industrial/adapters/mqtt`
+- `/sint-industrial/manifest.v1.json` (shipped as preview)
+- `/sint-industrial/schemas` (shipped as schema refs)
+- `/sint-industrial/policies` (shipped as policy contract refs)
+- `/sint-industrial/adapters/ros2` (shipped as active profile)
+- `/sint-industrial/adapters/srci` (shipped as active profile)
+- `/sint-industrial/adapters/opcua` (shipped as active profile)
+- `/sint-industrial/adapters/mqtt` (shipped as active profile)
 - `/sint-industrial/adapters/modbus`
 - `/sint-industrial/adapters/abb-rapid`
-- `/sint-industrial/adapters/kuka-krl`
+- `/sint-industrial/adapters/kuka-krl` (shipped as active export stub)
 - `/sint-industrial/adapters/fanuc-ls`
-- `/sint-industrial/adapters/ur-script`
+- `/sint-industrial/adapters/ur-script` (shipped as active export stub)
 - `/sint-industrial/adapters/beckhoff-twincat`
 - `/sint-industrial/adapters/rockwell-factorytalk`
 - `/sint-industrial/simulators/isaac-sim`
-- `/sint-industrial/simulators/robodk`
-- `/sint-industrial/simulators/robotstudio`
-- `/sint-industrial/simulators/roboguide`
-- `/sint-industrial/simulators/kuka-sim`
+- `/sint-industrial/simulators/robodk` (shipped as active receipt stub)
+- `/sint-industrial/simulators/robotstudio` (shipped as active receipt stub)
+- `/sint-industrial/simulators/roboguide` (shipped as active receipt stub)
+- `/sint-industrial/simulators/kuka-sim` (shipped as active receipt stub)
 - `/sint-industrial/simulators/emulate3d`
+- `/sint-industrial/settlement` with `FactorySettlement` attribution profile
+  (shipped as preview)
 - example cells for pick-place, inspection, palletizing, and hybrid workflows
 
 Exit criteria:
 
 - SINT can express one shared factory-control surface across at least three
-  industrial execution paths
+  industrial execution paths (covered by `pnpm run demo:industrial-pack`)
 - simulation receipts, approvals, and audit receipts stay first-class across
-  all examples
+  all active profiles (covered by `pnpm run demo:industrial-pack`)
+- settlement attribution requires execution receipts and never grants
+  execution authority (covered by `pnpm run demo:industrial-pack`)
 - the story is clear enough that a collaborator can plug in a real vendor API
   without changing SINT's governance model
 

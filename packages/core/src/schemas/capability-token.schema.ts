@@ -84,6 +84,19 @@ export const behavioralConstraintsSchema = z.object({
   maxPayloadBytes: z.number().int().positive().max(104_857_600).optional(), // 100 MiB ceiling
 }).strict();
 
+export const autonomyPolicySchema = z.object({
+  requiredState: z.literal("stable"),
+  guardProfileId: z.string().min(1).max(128),
+  maxMetacognitiveRecoveryMs: z.number().int().positive().optional(),
+  maxAssistedRecoveryMs: z.number().int().positive().optional(),
+  assistanceQuorum: z.object({
+    required: z.number().int().min(1),
+    verifierTypes: z.array(z.string().min(1).max(128)).min(1),
+  }).strict().optional(),
+  regulatedController: z.enum(["human_operator", "hardware_safety_controller"]),
+  failClosed: z.literal(true),
+}).strict();
+
 export const modelConstraintsSchema = z.object({
   allowedModelIds: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
   maxModelVersion: z.string().min(1).max(64).optional(),
@@ -141,6 +154,8 @@ export const capabilityTokenSchema = z.object({
   executionEnvelope: executionEnvelopeSchema.optional(),
   /** Runtime behavioral constraints (input patterns, rate limits, payload size). */
   behavioralConstraints: behavioralConstraintsSchema.optional(),
+  /** Managed-autonomy authority policy. */
+  autonomyPolicy: autonomyPolicySchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */
@@ -168,6 +183,8 @@ export const capabilityTokenRequestSchema = z.object({
   executionEnvelope: executionEnvelopeSchema.optional(),
   /** Runtime behavioral constraints for this token. */
   behavioralConstraints: behavioralConstraintsSchema.optional(),
+  /** Managed-autonomy authority policy. */
+  autonomyPolicy: autonomyPolicySchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */

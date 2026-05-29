@@ -1,0 +1,468 @@
+{
+  "packId": "sint-industrial-pack-v1",
+  "schemaVersion": "1.0.0",
+  "status": "preview",
+  "category": "Agentic Industrial Control Protocol",
+  "description": "Machine-readable Sprint 3 pack for factory-control schemas, policies, adapters, simulators, and example cells.",
+  "scopeNote": "Adapter contract and conformance surface only. This pack does not claim live certified industrial execution.",
+  "root": "sint-industrial",
+  "invariants": [
+    "all_authorization_flows_through_policy_gateway",
+    "adapters_translate_but_do_not_authorize",
+    "simulation_receipt_required_for_physical_execution",
+    "human_approval_required_for_T2_T3_execution",
+    "execution_receipts_are_hash_linked",
+    "settlement_requires_execution_receipt",
+    "claims_remain_simulation_or_adapter_contract_until_real_partner_validation"
+  ],
+  "paths": {
+    "schemas": "sint-industrial/schemas",
+    "policies": "sint-industrial/policies",
+    "adapters": "sint-industrial/adapters",
+    "simulators": "sint-industrial/simulators",
+    "settlement": "sint-industrial/settlement",
+    "examples": "sint-industrial/examples"
+  },
+  "schemas": [
+    {
+      "id": "factory-intent",
+      "packPath": "sint-industrial/schemas/factory-intent.schema.json",
+      "sourcePath": "docs/specs/factory-intent.schema.json",
+      "object": "FactoryIntent"
+    },
+    {
+      "id": "cell-graph",
+      "packPath": "sint-industrial/schemas/cell-graph.schema.json",
+      "sourcePath": "docs/specs/cell-graph.schema.json",
+      "object": "CellGraph"
+    },
+    {
+      "id": "robot-action",
+      "packPath": "sint-industrial/schemas/robot-action.schema.json",
+      "sourcePath": "docs/specs/robot-action.schema.json",
+      "object": "RobotActionProfile"
+    },
+    {
+      "id": "simulation-receipt",
+      "packPath": "sint-industrial/schemas/simulation-receipt.schema.json",
+      "sourcePath": "docs/specs/simulation-receipt.schema.json",
+      "object": "SimulationReceipt"
+    },
+    {
+      "id": "factory-settlement",
+      "packPath": "sint-industrial/schemas/factory-settlement.schema.json",
+      "sourcePath": "docs/specs/factory-settlement.schema.json",
+      "object": "FactorySettlement"
+    }
+  ],
+  "policies": [
+    {
+      "id": "industrial-policy",
+      "packPath": "sint-industrial/policies/industrial-policy.yaml",
+      "sourcePath": "docs/specs/industrial-policy.yaml",
+      "requires": [
+        "simulation_receipt",
+        "human_approval",
+        "safety_zone_clear",
+        "receipt_chain"
+      ]
+    }
+  ],
+  "settlementProfiles": [
+    {
+      "id": "factory-settlement",
+      "status": "active-profile",
+      "schemaPath": "sint-industrial/schemas/factory-settlement.schema.json",
+      "samplePath": "sint-industrial/examples/pick-place-cell/factory-settlement.sample.json",
+      "triggerEvent": "factory.execution.receipt",
+      "settlementEvent": "factory.settlement.recorded",
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "executionReceipt"
+      ],
+      "shareTotalBps": 10000,
+      "paymentMethods": [
+        "USDC",
+        "x402",
+        "invoice",
+        "internal_credit",
+        "none"
+      ],
+      "claimsExecutionAuthority": false
+    }
+  ],
+  "adapters": [
+    {
+      "id": "ros2",
+      "path": "sint-industrial/adapters/ros2",
+      "status": "active-profile",
+      "protocol": "ros2",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> sint_msgs/msg/FactoryRobotAction",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/factory-action-profile.ts",
+        "packages/bridge-ros2/src/ros2-resource-mapper.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "forceVelocityEnvelope"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "srci",
+      "path": "sint-industrial/adapters/srci",
+      "status": "active-profile",
+      "protocol": "srci",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> SRCI PickPlace command profile",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "plcInterlockState"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "opcua",
+      "path": "sint-industrial/adapters/opcua",
+      "status": "active-profile",
+      "protocol": "opcua",
+      "policyResource": "opcua://*/**",
+      "actionSurface": "CellGraph asset and PLC method calls through OPC UA resource URIs",
+      "implementationRefs": [
+        "packages/bridge-opcua/src/opcua-resource-mapper.ts",
+        "packages/conformance-tests/src/industrial-cell-safety-pack-conformance.test.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "hardwareSafety"
+      ],
+      "defaultTier": "T2_act",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "mqtt",
+      "path": "sint-industrial/adapters/mqtt",
+      "status": "active-profile",
+      "protocol": "mqtt",
+      "policyResource": "mqtt://*/factory/**",
+      "actionSurface": "Industrial telemetry, command staging, and gateway-mediated publish/subscribe",
+      "implementationRefs": [
+        "packages/bridge-iot/src/mqtt-session.ts",
+        "packages/bridge-iot/src/iot-resource-mapper.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "topicPolicy"
+      ],
+      "defaultTier": "T2_act",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "modbus",
+      "path": "sint-industrial/adapters/modbus",
+      "status": "planned",
+      "protocol": "modbus",
+      "policyResource": "modbus://*/**",
+      "actionSurface": "Register and coil command profile",
+      "implementationRefs": [],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "hardwareSafety"
+      ],
+      "defaultTier": "T2_act",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "abb-rapid",
+      "path": "sint-industrial/adapters/abb-rapid",
+      "status": "active-export-stub",
+      "protocol": "abb-rapid",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> deterministic RAPID export stub",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "vendorProgramHash"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "fanuc-ls",
+      "path": "sint-industrial/adapters/fanuc-ls",
+      "status": "active-export-stub",
+      "protocol": "fanuc-ls",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> deterministic FANUC LS export stub",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "vendorProgramHash"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "kuka-krl",
+      "path": "sint-industrial/adapters/kuka-krl",
+      "status": "active-export-stub",
+      "protocol": "kuka-krl",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> deterministic KRL export stub",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "vendorProgramHash"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "ur-script",
+      "path": "sint-industrial/adapters/ur-script",
+      "status": "active-export-stub",
+      "protocol": "ur-script",
+      "policyResource": "ros2:///joint_commands",
+      "actionSurface": "RobotActionProfile -> deterministic URScript export stub",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "vendorProgramHash"
+      ],
+      "defaultTier": "T3_commit",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "beckhoff-twincat",
+      "path": "sint-industrial/adapters/beckhoff-twincat",
+      "status": "planned",
+      "protocol": "beckhoff-twincat",
+      "policyResource": "opcua://*/**",
+      "actionSurface": "PLCopen motion and EtherCAT command profile",
+      "implementationRefs": [],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "hardwareSafety"
+      ],
+      "defaultTier": "T2_act",
+      "claimsLiveControl": false
+    },
+    {
+      "id": "rockwell-factorytalk",
+      "path": "sint-industrial/adapters/rockwell-factorytalk",
+      "status": "planned",
+      "protocol": "rockwell-factorytalk",
+      "policyResource": "opcua://*/**",
+      "actionSurface": "FactoryTalk event and Emulate3D validation profile",
+      "implementationRefs": [],
+      "requiredEvidence": [
+        "simulationReceipt",
+        "humanApproval",
+        "factoryReceiptChain",
+        "hardwareSafety"
+      ],
+      "defaultTier": "T2_act",
+      "claimsLiveControl": false
+    }
+  ],
+  "simulators": [
+    {
+      "id": "isaac-sim",
+      "path": "sint-industrial/simulators/isaac-sim",
+      "status": "active-receipt-stub",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts",
+        "docs/guides/isaac-sim-integration.md"
+      ],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "safetyZoneViolations",
+        "maxForceNewtons",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    },
+    {
+      "id": "robodk",
+      "path": "sint-industrial/simulators/robodk",
+      "status": "active-receipt-stub",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "cycleTimeSeconds",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    },
+    {
+      "id": "robotstudio",
+      "path": "sint-industrial/simulators/robotstudio",
+      "status": "active-receipt-stub",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "cycleTimeSeconds",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    },
+    {
+      "id": "roboguide",
+      "path": "sint-industrial/simulators/roboguide",
+      "status": "active-receipt-stub",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "cycleTimeSeconds",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    },
+    {
+      "id": "kuka-sim",
+      "path": "sint-industrial/simulators/kuka-sim",
+      "status": "active-receipt-stub",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [
+        "packages/bridge-ros2/src/industrial-adapter-profiles.ts"
+      ],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "cycleTimeSeconds",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    },
+    {
+      "id": "emulate3d",
+      "path": "sint-industrial/simulators/emulate3d",
+      "status": "planned",
+      "receiptObject": "SimulationReceipt",
+      "implementationRefs": [],
+      "requiredOutputs": [
+        "vendorProgramHash",
+        "collisionFree",
+        "cycleTimeSeconds",
+        "decisionDigest"
+      ],
+      "claimsLiveControl": false
+    }
+  ],
+  "examples": [
+    {
+      "id": "pick-place-cell",
+      "path": "sint-industrial/examples/pick-place-cell",
+      "status": "active-fixture-backed",
+      "sourceFixture": "packages/conformance-tests/fixtures/industrial/factory-action-demo.v1.json",
+      "requiredAdapters": [
+        "ros2",
+        "srci",
+        "abb-rapid",
+        "fanuc-ls",
+        "kuka-krl",
+        "ur-script"
+      ],
+      "requiredSimulator": "isaac-sim"
+    },
+    {
+      "id": "inspection-cell",
+      "path": "sint-industrial/examples/inspection-cell",
+      "status": "planned",
+      "sourceFixture": null,
+      "requiredAdapters": [
+        "ros2",
+        "opcua",
+        "mqtt"
+      ],
+      "requiredSimulator": "isaac-sim"
+    },
+    {
+      "id": "palletizing-cell",
+      "path": "sint-industrial/examples/palletizing-cell",
+      "status": "planned",
+      "sourceFixture": null,
+      "requiredAdapters": [
+        "srci",
+        "abb-rapid",
+        "fanuc-ls"
+      ],
+      "requiredSimulator": "robotstudio"
+    },
+    {
+      "id": "drone-robot-hybrid-cell",
+      "path": "sint-industrial/examples/drone-robot-hybrid-cell",
+      "status": "planned",
+      "sourceFixture": null,
+      "requiredAdapters": [
+        "ros2",
+        "opcua",
+        "mqtt"
+      ],
+      "requiredSimulator": "isaac-sim"
+    }
+  ],
+  "acceptanceCriteria": {
+    "minimumActiveExecutionPaths": 3,
+    "requiredActiveProtocols": [
+      "ros2",
+      "srci",
+      "opcua"
+    ],
+    "allActivePathsRequireSimulationReceipt": true,
+    "allActivePathsRequireHumanApproval": true,
+    "allActivePathsRequireReceiptChain": true,
+    "settlementRequiresExecutionReceipt": true,
+    "allPlannedPathsClaimNoLiveControl": true
+  }
+}
