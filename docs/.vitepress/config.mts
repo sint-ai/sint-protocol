@@ -109,6 +109,7 @@ export default defineConfig({
       {
         text: "Security Bulletins",
         items: [
+          { text: "MITRE ATLAS Candidate Mappings", link: "/security/mitre-atlas-agent-technique-mappings" },
           { text: "April 2026 Bulletin", link: "/security-bulletins/2026-04" },
           { text: "Bulletin Template", link: "/security-bulletins/TEMPLATE" },
         ],

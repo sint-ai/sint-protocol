@@ -49,6 +49,7 @@ features:
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
 - Formal threat model: [Security/Formal Threat Model](./security/formal-threat-model.md)
+- MITRE ATLAS candidate mappings: [Security/MITRE ATLAS](./security/mitre-atlas-agent-technique-mappings.md)
 - NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
 - Latest security bulletin: [May 2026](./security-bulletins/2026-05.md)
 
