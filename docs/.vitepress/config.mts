@@ -78,6 +78,7 @@ export default defineConfig({
           { text: "AAIF Proposal Template", link: "/community/aaif-resubmission-proposal-template" },
           { text: "Adopters And Evidence", link: "/community/adopters" },
           { text: "OpenSSF Gap Tracker", link: "/community/openssf-gap-tracker" },
+          { text: "OWASP Agentic Landscape Submission", link: "/community/owasp-agentic-landscape-submission" },
           { text: "Vulnerability Reporting And Response", link: "/security/vulnerability-reporting-and-response" },
           { text: "Discord Launch Runbook", link: "/community/discord-launch-runbook" },
           { text: "Discord Launch Kit", link: "/community/discord-launch-kit" },

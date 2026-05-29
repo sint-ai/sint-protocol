@@ -46,6 +46,7 @@ features:
 - Good-first-issues board: [Community/Starter Board](./community/good-first-issues-board.md)
 - Collaboration reply playbook: [Community/Replies](./community/open-source-collaboration-replies.md)
 - Physical AI runtime safety working group: [Community/Working Group](./community/physical-ai-runtime-safety-working-group.md)
+- OWASP Agentic Landscape submission packet: [Community/OWASP Packet](./community/owasp-agentic-landscape-submission.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
 - Formal threat model: [Security/Formal Threat Model](./security/formal-threat-model.md)

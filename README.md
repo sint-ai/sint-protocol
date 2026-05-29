@@ -214,6 +214,7 @@ Community/adoption assets:
 - [`docs/community/good-first-issues-board.md`](docs/community/good-first-issues-board.md)
 - [`docs/community/open-source-collaboration-replies.md`](docs/community/open-source-collaboration-replies.md)
 - [`docs/community/physical-ai-runtime-safety-working-group.md`](docs/community/physical-ai-runtime-safety-working-group.md)
+- [`docs/community/owasp-agentic-landscape-submission.md`](docs/community/owasp-agentic-landscape-submission.md)
 - [`docs/security-bulletins/2026-04.md`](docs/security-bulletins/2026-04.md)
 
 ### Run a Single Package
