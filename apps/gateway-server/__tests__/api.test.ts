@@ -332,6 +332,17 @@ describe("Gateway Server API", () => {
     });
   }
 
+  function issueJointCommandToken() {
+    return issueAndStoreToken({
+      resource: "ros2:///joint_commands",
+      actions: ["publish"],
+      constraints: {
+        maxVelocityMps: 0.5,
+        maxForceNewtons: 100,
+      },
+    });
+  }
+
   function makeT2Request(tokenId: string) {
     return {
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
@@ -341,6 +352,72 @@ describe("Gateway Server API", () => {
       resource: "ros2:///cmd_vel",
       action: "publish",
       params: {},
+    };
+  }
+
+  function makeFactoryActionRequest(tokenId: string) {
+    return {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6b1",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      agentId: agent.publicKey,
+      tokenId,
+      resource: "ros2:///joint_commands",
+      action: "publish",
+      params: {
+        action_type: "robot.motion.pick_and_place",
+        target_robot: "robot_abb_irb_1200_01",
+        source_pose: "inspection_conveyor_exit",
+        target_pose: "pallet_station_A",
+        max_velocity_mps: 0.25,
+        max_force_newtons: 80,
+        tool_type: "vacuum_gripper",
+        payload_kg: 2.4,
+        requires_simulation_receipt: true,
+        requires_human_approval: true,
+        requires_safety_zone_clear: true,
+        cell_id: "packaging_cell_001",
+        simulation_receipt_id: "simr_packaging_001",
+      },
+      physicalContext: {
+        currentVelocityMps: 0.25,
+        currentForceNewtons: 80,
+      },
+      executionContext: {
+        bridgeProtocol: "ros2",
+        siteId: "packaging_lab_001",
+        factoryReceiptChain: [
+          {
+            step: "factory_intent_compiled",
+            eventType: "factory.intent.compiled",
+            digest: "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+            previousDigest: null,
+          },
+          {
+            step: "cell_graph_planned",
+            eventType: "factory.cell_graph.planned",
+            digest: "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            previousDigest: "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          },
+          {
+            step: "simulation_receipt_verified",
+            eventType: "factory.simulation.verified",
+            digest: "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            previousDigest: "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          },
+          {
+            step: "human_approval_granted",
+            eventType: "factory.approval.granted",
+            digest: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            previousDigest: "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          },
+          {
+            step: "execution_receipt_emitted",
+            eventType: "factory.execution.receipt",
+            digest: "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+            previousDigest: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+          },
+        ],
+      },
     };
   }
 
@@ -373,6 +450,34 @@ describe("Gateway Server API", () => {
     expect(body.count).toBe(1);
     expect(body.requests[0].resource).toBe("ros2:///cmd_vel");
     expect(body.requests[0].action).toBe("publish");
+  });
+
+  it("GET /v1/approvals/pending includes factory-action evidence context", async () => {
+    const token = await issueJointCommandToken();
+    await app.request("/v1/intercept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(makeFactoryActionRequest(token.tokenId)),
+    });
+
+    const res = await app.request("/v1/approvals/pending");
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.count).toBe(1);
+    expect(body.requests[0].resource).toBe("ros2:///joint_commands");
+    expect(body.requests[0].params.action_type).toBe("robot.motion.pick_and_place");
+    expect(body.requests[0].params.simulation_receipt_id).toBe("simr_packaging_001");
+    expect(body.requests[0].physicalContext.currentVelocityMps).toBe(0.25);
+    expect(body.requests[0].physicalContext.currentForceNewtons).toBe(80);
+    expect(body.requests[0].executionContext.siteId).toBe("packaging_lab_001");
+    expect(body.requests[0].executionContext.factoryReceiptChain).toHaveLength(5);
+    expect(body.requests[0].executionContext.factoryReceiptChain[0].eventType).toBe(
+      "factory.intent.compiled",
+    );
+    expect(body.requests[0].executionContext.factoryReceiptChain[4].eventType).toBe(
+      "factory.execution.receipt",
+    );
   });
 
   it("GET /v1/approvals/:requestId returns request details", async () => {

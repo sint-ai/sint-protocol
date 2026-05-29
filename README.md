@@ -10,6 +10,14 @@
 
 SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
 
+The protocol now includes a managed-autonomy authority lane in
+[`@pshkv/autonomy-supervisor`](packages/autonomy-supervisor/README.md). It adds
+a second, orthogonal pre-gate for whether an agent still has authority to emit
+external output at all: `stable -> metacognitive_recovery ->
+assisted_recovery -> regulated_control`. External output is structurally
+allowed only from `stable`, and exit from `regulated_control` requires an
+external human-operator or hardware-safety-controller authorization signal.
+
 The next upgrade lane is factory control. As prompt-to-hardware and
 prompt-to-factory tooling gets better at generating industrial plans, SINT is
 expanding toward the control layer that decides what can be simulated,
@@ -19,6 +27,27 @@ touch real machines. See
 Sprint 1 now ships a control-standard pack with an industrial action profile,
 factory intent and cell graph schemas, a robot action schema, a simulation
 receipt schema, an industrial policy pack, and a refusal-first demo narrative.
+Sprint 2 has started with an executable conformance demo:
+`pnpm run demo:factory-action` proves the deny -> escalate -> allow path before
+any robot or PLC action reaches a vendor adapter stub. The ROS 2 bridge also
+maps the same factory action profile into a `/joint_commands` command envelope
+with force and velocity extraction, plus Universal Robots ROS2 demo and SRCI
+command-profile artifacts for adapter work that still routes through the same
+SINT policy resource. ABB RAPID, FANUC LS, KUKA KRL, and URScript export stubs
+now generate deterministic offline program text and SHA-256 hashes for
+simulation/review binding, and Isaac Sim, RoboDK, RobotStudio, KUKA.Sim, and
+FANUC ROBOGUIDE receipt stubs bind those hashes to collision, force-envelope,
+safety-zone, and decision-digest fields. The operator
+interface Conductor now surfaces industrial approval evidence from the live
+approval queue: cell, robot, motion, simulation receipt, envelope, tool, and
+quorum state, plus the compact plan -> simulation -> approval -> execution
+receipt chain before an operator can approve or deny the action.
+Sprint 3 is now represented as a preview
+[`sint-industrial`](sint-industrial/README.md) pack with a machine-readable
+manifest for ROS 2, SRCI, OPC UA, MQTT, simulator, and example-cell profiles:
+`pnpm run demo:industrial-pack` verifies that the pack keeps simulation,
+approval, receipt-chain evidence, and settlement attribution first-class across
+active execution paths.
 
 > **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 
@@ -411,7 +440,8 @@ Note: some consumer/health bridges are currently in “prototype API” state. C
 |---------|-------------|-------|
 | [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | — |
 | [`sint-mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | — |
-| [`@sint/dashboard`](apps/dashboard) | Real-time approval dashboard with operator auth | 29 |
+| [`@sint/interface`](apps/sint-interface) | Voice HUD and Conductor approvals for operator review | 25 |
+| [`@sint/dashboard`](apps/dashboard) | Archived real-time approval dashboard with operator auth | 29 |
 | [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | — |
 | [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
 | [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |

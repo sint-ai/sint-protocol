@@ -1,0 +1,289 @@
+{
+  "fixtureId": "factory-action-demo-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Executable Sprint 2 fixture for prompt-to-factory control: deny without simulation proof, escalate after simulation, allow only after human approval.",
+  "scopeNote": "Reference conformance fixture only. It does not claim live robot, PLC, or certified industrial execution.",
+  "prompt": "Create a robotic inspection and palletizing line for 60 boxes per minute using ABB, FANUC, KUKA, or Universal Robots arms, a Siemens PLC, and human-safe collaborative zones.",
+  "factoryIntent": {
+    "intent_id": "fi_packaging_001",
+    "goal": "Build a robotic inspection and palletizing line for 60 boxes per minute",
+    "industry": "consumer_goods",
+    "materials": ["corrugated_box"],
+    "stations": ["inspection", "palletize", "outfeed"],
+    "constraints": {
+      "max_capex_usd": 500000,
+      "floor_space_m2": 80,
+      "takt_time_seconds": 1,
+      "human_collaboration": true,
+      "safety_standard_targets": [
+        "ISO_10218",
+        "ISO_TS_15066",
+        "IEC_62443",
+        "EU_AI_ACT_ARTICLE_14"
+      ]
+    },
+    "metadata": {
+      "authoring_source": "factory-action-demo",
+      "created_by_agent": "sint-factory-compiler-stub",
+      "currency": "USD"
+    }
+  },
+  "cellGraph": {
+    "cell_id": "packaging_cell_001",
+    "assets": [
+      {
+        "asset_id": "robot_abb_irb_1200_01",
+        "type": "robot_arm",
+        "vendor": "ABB",
+        "controller": "OmniCore",
+        "adapter": "sint-adapter-abb-rapid",
+        "safety_zone": "zone_A",
+        "capabilities": ["pick_place", "palletize"]
+      },
+      {
+        "asset_id": "robot_fanuc_lr_mate_01",
+        "type": "robot_arm",
+        "vendor": "FANUC",
+        "controller": "R-30iB",
+        "adapter": "sint-adapter-fanuc-ls",
+        "safety_zone": "zone_A",
+        "capabilities": ["pick_place", "palletize"]
+      },
+      {
+        "asset_id": "robot_kuka_kr6_01",
+        "type": "robot_arm",
+        "vendor": "KUKA",
+        "controller": "KRC",
+        "adapter": "sint-adapter-kuka-krl",
+        "safety_zone": "zone_A",
+        "capabilities": ["pick_place", "palletize"]
+      },
+      {
+        "asset_id": "robot_ur10e_01",
+        "type": "robot_arm",
+        "vendor": "Universal Robots",
+        "controller": "PolyScope",
+        "adapter": "sint-adapter-ur-script",
+        "safety_zone": "zone_A",
+        "capabilities": ["pick_place", "palletize", "collaborative_motion"]
+      },
+      {
+        "asset_id": "plc_siemens_1500_01",
+        "type": "plc",
+        "vendor": "Siemens",
+        "controller": "S7-1500",
+        "adapter": "sint-adapter-siemens-tia-srci",
+        "capabilities": ["srci_command_profile", "cell_interlock"]
+      }
+    ],
+    "flows": [
+      {
+        "from": "inspection",
+        "to": "palletize",
+        "material": "corrugated_box",
+        "rate_per_minute": 60
+      }
+    ],
+    "approval_tier": "T3_commit",
+    "simulation_required": true
+  },
+  "robotAction": {
+    "action_type": "robot.motion.pick_and_place",
+    "target_robot": "robot_abb_irb_1200_01",
+    "motion": {
+      "source_pose": "inspection_conveyor_exit",
+      "target_pose": "pallet_station_A",
+      "max_velocity_mps": 0.25,
+      "max_force_newtons": 80,
+      "collision_check": true
+    },
+    "tool": {
+      "type": "vacuum_gripper",
+      "payload_kg": 2.4
+    },
+    "requires": {
+      "simulation_receipt": true,
+      "human_approval": true,
+      "safety_zone_clear": true
+    },
+    "adapter_hint": "sint-adapter-abb-rapid"
+  },
+  "simulationReceipt": {
+    "simulation_receipt_id": "simr_packaging_001",
+    "cell_id": "packaging_cell_001",
+    "simulator": "RobotStudio",
+    "vendor_program_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "collision_free": true,
+    "cycle_time_seconds": 2.4,
+    "safety_zone_violations": 0,
+    "max_force_newtons": 62,
+    "approved_for_execution": true,
+    "signed_by": "sint-simulation-gateway",
+    "metadata": {
+      "decision_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "artifact_uri": "sint://simulation/packaging_cell_001/robotstudio/simr_packaging_001"
+    }
+  },
+  "decisionPath": [
+    {
+      "id": "deny-without-simulation",
+      "description": "The robot motion is physically consequential and has no simulation proof attached.",
+      "inputs": {
+        "simulationReceiptPresent": false,
+        "humanApprovalPresent": false,
+        "safetyZoneClear": true
+      },
+      "expectedDecision": {
+        "action": "deny",
+        "assignedTier": "T3_commit",
+        "denial": {
+          "reason": "SIMULATION_RECEIPT_MISSING",
+          "policyViolated": "sint.factory.robot.motion.v1"
+        }
+      }
+    },
+    {
+      "id": "escalate-after-simulation",
+      "description": "Simulation passed, but the action still requires explicit human approval before execution.",
+      "inputs": {
+        "simulationReceiptPresent": true,
+        "humanApprovalPresent": false,
+        "safetyZoneClear": true
+      },
+      "expectedDecision": {
+        "action": "escalate",
+        "assignedTier": "T3_commit",
+        "escalation": {
+          "requiredTier": "T3_commit",
+          "timeoutMs": 300000
+        }
+      }
+    },
+    {
+      "id": "allow-after-human-approval",
+      "description": "Simulation proof and human approval are both present, so the action can proceed to a vendor adapter stub.",
+      "inputs": {
+        "simulationReceiptPresent": true,
+        "humanApprovalPresent": true,
+        "safetyZoneClear": true
+      },
+      "expectedDecision": {
+        "action": "allow",
+        "assignedTier": "T3_commit"
+      }
+    }
+  ],
+  "approval": {
+    "approvalId": "approval_packaging_001",
+    "requiredTier": "T3_commit",
+    "quorum": {
+      "required": 1,
+      "authorizedRoles": ["industrial-safety-reviewer"]
+    },
+    "approverRef": "did:web:factory.example:reviewers:lead-safety",
+    "evidenceEvent": "factory.approval.granted"
+  },
+  "adapterStubs": [
+    {
+      "adapterId": "sint-adapter-abb-rapid-stub",
+      "vendor": "ABB",
+      "targetLanguage": "RAPID",
+      "executionResource": "robotstudio://packaging_cell_001/robot_abb_irb_1200_01/main",
+      "generatedProgramHash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "mapsActionFields": [
+        "target_robot",
+        "motion.source_pose",
+        "motion.target_pose",
+        "motion.max_velocity_mps",
+        "motion.max_force_newtons",
+        "tool.payload_kg"
+      ]
+    },
+    {
+      "adapterId": "sint-adapter-fanuc-ls-stub",
+      "vendor": "FANUC",
+      "targetLanguage": "LS",
+      "executionResource": "roboguide://packaging_cell_001/robot_fanuc_lr_mate_01/main",
+      "generatedProgramHash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "mapsActionFields": [
+        "target_robot",
+        "motion.source_pose",
+        "motion.target_pose",
+        "motion.max_velocity_mps",
+        "motion.max_force_newtons",
+        "tool.payload_kg"
+      ]
+    },
+    {
+      "adapterId": "sint-adapter-kuka-krl-stub",
+      "vendor": "KUKA",
+      "targetLanguage": "KRL",
+      "executionResource": "kuka-sim://packaging_cell_001/robot_kuka_kr6_01/main",
+      "generatedProgramHash": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+      "mapsActionFields": [
+        "target_robot",
+        "motion.source_pose",
+        "motion.target_pose",
+        "motion.max_velocity_mps",
+        "motion.max_force_newtons",
+        "tool.payload_kg"
+      ]
+    },
+    {
+      "adapterId": "sint-adapter-ur-script-stub",
+      "vendor": "Universal Robots",
+      "targetLanguage": "URScript",
+      "executionResource": "polyscope://packaging_cell_001/robot_ur10e_01/main",
+      "generatedProgramHash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mapsActionFields": [
+        "target_robot",
+        "motion.source_pose",
+        "motion.target_pose",
+        "motion.max_velocity_mps",
+        "motion.max_force_newtons",
+        "tool.payload_kg"
+      ]
+    }
+  ],
+  "receiptChain": [
+    {
+      "step": "factory_intent_compiled",
+      "eventType": "factory.intent.compiled",
+      "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "previousDigest": null
+    },
+    {
+      "step": "cell_graph_planned",
+      "eventType": "factory.cell_graph.planned",
+      "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "previousDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    {
+      "step": "simulation_receipt_verified",
+      "eventType": "factory.simulation.verified",
+      "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "previousDigest": "sha256:5555555555555555555555555555555555555555555555555555555555555555"
+    },
+    {
+      "step": "human_approval_granted",
+      "eventType": "factory.approval.granted",
+      "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "previousDigest": "sha256:6666666666666666666666666666666666666666666666666666666666666666"
+    },
+    {
+      "step": "execution_receipt_emitted",
+      "eventType": "factory.execution.receipt",
+      "digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "previousDigest": "sha256:7777777777777777777777777777777777777777777777777777777777777777"
+    }
+  ],
+  "successCriteria": {
+    "denyWithoutSimulation": true,
+    "escalateAfterSimulation": true,
+    "allowOnlyAfterHumanApproval": true,
+    "atLeastTwoVendorStubs": true,
+    "atLeastFourVendorStubs": true,
+    "receiptChainIsAppendOnly": true,
+    "claimsRemainSimulationOnly": true
+  }
+}

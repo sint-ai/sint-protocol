@@ -10,6 +10,39 @@ the control boundary clearly:
 prompt -> structured factory plan -> simulation required -> human approval -> signed receipt
 ```
 
+The demo is now executable as a conformance slice:
+
+```bash
+pnpm run demo:factory-action
+```
+
+It runs
+[`packages/conformance-tests/src/factory-action-demo-conformance.test.ts`](../../packages/conformance-tests/src/factory-action-demo-conformance.test.ts)
+against
+[`packages/conformance-tests/fixtures/industrial/factory-action-demo.v1.json`](../../packages/conformance-tests/fixtures/industrial/factory-action-demo.v1.json).
+
+The ROS 2 bridge now includes a factory action profile mapper. It turns the
+same `RobotActionProfile` object into a `sint_msgs/msg/FactoryRobotAction`
+message on `/joint_commands`, where normal ROS 2 interception still extracts
+velocity and force limits before the request reaches the Policy Gateway.
+
+It also derives two adapter-profile artifacts from the same gated action:
+
+- a Universal Robots ROS 2 demo path for `ur_robot_driver` surfaces such as
+  `scaled_joint_trajectory_controller/follow_joint_trajectory` and
+  `script_command`
+- an SRCI command profile for PLC-mediated robot commands
+- ABB RAPID, FANUC LS, KUKA KRL, and URScript export stubs with deterministic
+  program hashes
+- Isaac Sim, RoboDK, RobotStudio, FANUC ROBOGUIDE, and KUKA.Sim simulation
+  receipt stubs that bind the generated program hash, policy resource, safety
+  result, and decision digest
+- a SINT Operator Interface Conductor panel that renders industrial approval
+  evidence and the linked receipt chain from `/v1/approvals/pending`
+
+These artifacts keep `/joint_commands` as the SINT policy resource. The
+adapter profile is a translation plan, not an authorization path.
+
 ## Demo Goal
 
 Show that SINT behaves like a control layer for AI-generated factory actions.
@@ -26,7 +59,8 @@ In this first pack, the most important proof is refusal:
 
 ```text
 Create a robotic inspection and palletizing line for 60 boxes per minute using
-ABB or FANUC robots, a Siemens PLC, and human-safe collaborative zones.
+ABB, FANUC, KUKA, or Universal Robots arms, a Siemens PLC, and human-safe
+collaborative zones.
 ```
 
 ## Step 1. Compile The Intent
@@ -195,6 +229,14 @@ The next correct state is escalation:
 
 Only after approval does the action proceed to an execution receipt.
 
+The live approval surface is the SINT Operator Interface Conductor panel. For
+factory-action requests, it shows the operator the action type, cell, robot,
+motion, simulation receipt, force/velocity envelope, tool payload, and approval
+quorum before the approve or deny decision is sent to the gateway. If the
+request includes `executionContext.factoryReceiptChain`, Conductor also renders
+the compact hash-linked path across intent compilation, cell planning,
+simulation verification, human approval, and execution receipt.
+
 ## Step 7. Emit A Signed Outcome
 
 The useful story is that SINT can explain all three outcomes:
@@ -213,6 +255,10 @@ That is a stronger industrial story than "we support robots."
 - [Robot Action Schema](../specs/robot-action.schema.json)
 - [Simulation Receipt Schema](../specs/simulation-receipt.schema.json)
 - [Industrial Policy Pack](../specs/industrial-policy.yaml)
+- [Executable demo fixture](../../packages/conformance-tests/fixtures/industrial/factory-action-demo.v1.json)
+- [Demo conformance test](../../packages/conformance-tests/src/factory-action-demo-conformance.test.ts)
+- [ROS 2 factory action mapper](../../packages/bridge-ros2/src/factory-action-profile.ts)
+- [Industrial adapter profiles](../../packages/bridge-ros2/src/industrial-adapter-profiles.ts)
 
 ## What This Demo Is
 
@@ -222,6 +268,6 @@ That is a stronger industrial story than "we support robots."
 
 ## What This Demo Is Not
 
-- a live Siemens, ABB, FANUC, or UR adapter
+- a live Siemens, ABB, KUKA, FANUC, or UR adapter
 - a claim of certified industrial deployment
 - a replacement for safety PLCs, vendor engineering tools, or assessors

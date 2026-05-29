@@ -14,6 +14,14 @@ export interface HealthResponse {
   revokedTokens: number;
 }
 
+/** Compact hash-linked receipt item surfaced for factory action approvals. */
+export interface FactoryReceiptChainEntry {
+  step: string;
+  eventType: string;
+  digest: string;
+  previousDigest: string | null;
+}
+
 /** A pending approval request. */
 export interface ApprovalRequest {
   requestId: string;
@@ -22,7 +30,17 @@ export interface ApprovalRequest {
   resource: string;
   action: string;
   agentId: string;
+  params?: Record<string, unknown>;
+  physicalContext?: Record<string, unknown>;
+  executionContext?: Record<string, unknown> & {
+    factoryReceiptChain?: FactoryReceiptChainEntry[];
+  };
   fallbackAction?: string;
+  approvalQuorum?: {
+    required: number;
+    authorized: string[];
+  };
+  approvalCount?: number;
   createdAt: string;
   expiresAt: string;
 }

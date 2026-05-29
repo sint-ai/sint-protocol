@@ -43,6 +43,7 @@ export function computeSigningPayload(
   return canonicalJSONStringify({
     actions: token.actions,
     attestationRequirements: token.attestationRequirements,
+    autonomyPolicy: token.autonomyPolicy,
     behavioralConstraints: token.behavioralConstraints,
     constraints: token.constraints,
     cryptoProfile: token.cryptoProfile,
@@ -133,6 +134,7 @@ export function issueCapabilityToken(
     verifiableComputeRequirements: request.verifiableComputeRequirements,
     executionEnvelope: request.executionEnvelope,
     behavioralConstraints: request.behavioralConstraints,
+    autonomyPolicy: request.autonomyPolicy,
     passportId: request.passportId,
     delegationDepth: request.delegationDepth,
     delegationChain: request.delegationChain,

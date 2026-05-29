@@ -18,6 +18,7 @@ import {
   extractPhysicalContextFromWrench,
   extractPhysicalContextFromDifferentialWheelCommand,
 } from "./ros2-message-types.js";
+import { extractPhysicalContextFromFactoryRobotAction } from "./factory-action-profile.js";
 
 export interface TopicToResourceOptions {
   /**
@@ -270,6 +271,11 @@ export function extractPhysicalContext(
         currentForceNewtons: ctx.forceNewtons,
       };
     }
+  }
+
+  const factoryActionContext = extractPhysicalContextFromFactoryRobotAction(message.data);
+  if (factoryActionContext !== undefined) {
+    return factoryActionContext;
   }
 
   return undefined;

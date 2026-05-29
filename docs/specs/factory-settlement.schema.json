@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.sint.gg/specs/factory-settlement.schema.json",
+  "title": "FactorySettlement",
+  "description": "Settlement attribution profile for AI-generated industrial workcells, adapters, policy packs, and simulation templates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settlement_id",
+    "workcell_id",
+    "trigger",
+    "contributors",
+    "payment",
+    "evidence"
+  ],
+  "properties": {
+    "settlement_id": {
+      "type": "string",
+      "pattern": "^fs_[A-Za-z0-9._-]+$"
+    },
+    "workcell_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["on_event", "require_receipt_chain"],
+      "properties": {
+        "on_event": {
+          "type": "string",
+          "enum": [
+            "factory.simulation.verified",
+            "factory.approval.granted",
+            "factory.execution.receipt"
+          ]
+        },
+        "require_receipt_chain": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    },
+    "contributors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "id", "share_bps"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "agent",
+              "adapter",
+              "policy_pack",
+              "sim_template",
+              "operator",
+              "maintainer"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "share_bps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "evidence_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "payment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "network", "currency", "escrow_required"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["USDC", "x402", "invoice", "internal_credit", "none"]
+        },
+        "network": {
+          "type": "string",
+          "minLength": 1
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "max_amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "escrow_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_chain_required",
+        "execution_receipt_event",
+        "settlement_event"
+      ],
+      "properties": {
+        "receipt_chain_required": {
+          "type": "boolean",
+          "const": true
+        },
+        "execution_receipt_event": {
+          "type": "string",
+          "const": "factory.execution.receipt"
+        },
+        "settlement_event": {
+          "type": "string",
+          "const": "factory.settlement.recorded"
+        },
+        "ledger_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-fA-F0-9]{64}$"
+        }
+      }
+    }
+  }
+}

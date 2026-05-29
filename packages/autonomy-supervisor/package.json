@@ -1,0 +1,35 @@
+{
+  "name": "@pshkv/autonomy-supervisor",
+  "version": "0.1.0",
+  "description": "SINT managed-autonomy authority pre-gate for runtime autonomy state supervision",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "verify": "tsx verify/reachability.ts"
+  },
+  "dependencies": {
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-policy-gateway": "workspace:*",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "private": true
+}

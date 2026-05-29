@@ -25,12 +25,13 @@ factory intent -> structured plan -> simulation proof -> approval gate -> execut
 
 ## Profile Objects
 
-The first profile pack introduces four primary objects:
+The first profile pack introduces five primary objects:
 
 1. `FactoryIntent`
 2. `CellGraph`
 3. `RobotActionProfile`
 4. `SimulationReceipt`
+5. `FactorySettlement`
 
 Supporting artifacts:
 
@@ -80,6 +81,26 @@ The same action shape can later be translated into:
 - SRCI
 - PLC or motion-controller profiles
 
+The ROS 2 bridge now ships executable adapter-profile helpers for this:
+
+- Universal Robots ROS 2 demo path: derives a `ur_robot_driver` handoff plan
+  while keeping the SINT policy resource on `/joint_commands`.
+- SRCI command profile: maps the same action into a PLC-facing SRCI command
+  profile without granting execution authority.
+- ABB RAPID, FANUC LS, KUKA KRL, and URScript export stubs: produce
+  deterministic offline program artifacts and SHA-256 hashes for simulation,
+  review, and receipt binding.
+- Isaac Sim, RoboDK, RobotStudio, FANUC ROBOGUIDE, and KUKA.Sim simulation
+  receipt stubs: bind the generated program hash to collision, force,
+  safety-zone, approval-readiness, and decision-digest fields shaped like the
+  canonical `SimulationReceipt`.
+- Operator Interface Conductor: renders factory-action approval evidence from
+  the live gateway approval queue, including the hash-linked receipt chain
+  when present, before an operator resolves the request.
+
+These helpers are intentionally adapter-level. They do not bypass
+`PolicyGateway.intercept()` and they do not claim live certified robot control.
+
 ### 4. Simulation Receipt
 
 `SimulationReceipt` is the proof object for simulation-first control.
@@ -96,6 +117,39 @@ It binds:
 
 The point is simple: no serious physical action should rely on vibes when a
 simulation proof object can exist.
+
+### 5. Factory Receipt Chain
+
+Industrial approvals can carry a compact receipt chain in
+`executionContext.factoryReceiptChain`.
+
+Each entry contains:
+
+- `step`
+- `eventType`
+- `digest`
+- `previousDigest`
+
+The chain is intentionally small and hash-referenced. It lets an operator see
+whether the current action is linked back to the expected factory intent, cell
+plan, simulation proof, approval, and execution receipt without embedding the
+full artifacts in the approval payload.
+
+### 6. Factory Settlement
+
+`FactorySettlement` records attribution and payment intent for reusable
+factory-control work:
+
+- planning agents
+- vendor adapters
+- policy packs
+- simulation templates
+- human safety reviewers
+- pack maintainers
+
+Settlement is downstream of safety, never upstream of it. It requires the same
+receipt chain and an execution receipt before any payment rail or accounting
+system can record settlement.
 
 ## URI And Resource Guidance
 
@@ -151,6 +205,7 @@ Target adapter families:
 - [Cell Graph Schema](./cell-graph.schema.json)
 - [Robot Action Schema](./robot-action.schema.json)
 - [Simulation Receipt Schema](./simulation-receipt.schema.json)
+- [Factory Settlement Schema](./factory-settlement.schema.json)
 - [Industrial Policy Pack](./industrial-policy.yaml)
 - [Factory Action Pack Demo](../guides/factory-action-pack-demo.md)
 

@@ -3,9 +3,80 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import type { ApprovalRequest } from "../src/api/types.js";
+import { ApprovalConductor } from "../src/components/ApprovalConductor.js";
 import { StatusBar } from "../src/components/StatusBar.js";
 import { VoiceBar } from "../src/components/VoiceBar.js";
+
+const mockIndustrialApprovalRequest: ApprovalRequest = {
+  requestId: "req-industrial-001",
+  reason: "Robot motion requires human approval",
+  requiredTier: "T2_ACT",
+  resource: "ros2:///joint_commands",
+  action: "publish",
+  agentId: "agent-industrial-abcdef123456",
+  params: {
+    action_type: "robot.motion.pick_and_place",
+    target_robot: "robot_abb_irb_1200_01",
+    source_pose: "inspection_conveyor_exit",
+    target_pose: "pallet_station_A",
+    max_velocity_mps: 0.25,
+    max_force_newtons: 80,
+    tool_type: "vacuum_gripper",
+    payload_kg: 2.4,
+    requires_simulation_receipt: true,
+    requires_human_approval: true,
+    requires_safety_zone_clear: true,
+    cell_id: "packaging_cell_001",
+    simulation_receipt_id: "simr_packaging_001",
+  },
+  physicalContext: {
+    currentVelocityMps: 0.25,
+    currentForceNewtons: 80,
+  },
+  executionContext: {
+    factoryReceiptChain: [
+      {
+        step: "factory_intent_compiled",
+        eventType: "factory.intent.compiled",
+        digest: "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        previousDigest: null,
+      },
+      {
+        step: "cell_graph_planned",
+        eventType: "factory.cell_graph.planned",
+        digest: "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        previousDigest: "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      },
+      {
+        step: "simulation_receipt_verified",
+        eventType: "factory.simulation.verified",
+        digest: "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        previousDigest: "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      },
+      {
+        step: "human_approval_granted",
+        eventType: "factory.approval.granted",
+        digest: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+        previousDigest: "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      },
+      {
+        step: "execution_receipt_emitted",
+        eventType: "factory.execution.receipt",
+        digest: "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+        previousDigest: "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      },
+    ],
+  },
+  approvalQuorum: {
+    required: 2,
+    authorized: ["op-alice", "op-bob"],
+  },
+  approvalCount: 1,
+  createdAt: "2026-01-01T00:00:00Z",
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+};
 
 // ---------------------------------------------------------------------------
 // StatusBar
@@ -146,5 +217,56 @@ describe("VoiceBar", () => {
     render(<VoiceBar {...defaultProps} isSupported={false} />);
     const btn = screen.getByRole("button") as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ApprovalConductor
+// ---------------------------------------------------------------------------
+
+describe("ApprovalConductor", () => {
+  it("renders industrial approval evidence for factory action requests", () => {
+    render(
+      <ApprovalConductor
+        requests={[mockIndustrialApprovalRequest]}
+        connected={true}
+        error={null}
+        onResolve={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Factory action approval evidence")).toBeDefined();
+    expect(screen.getByText("Conductor approvals")).toBeDefined();
+    expect(screen.getByText("Factory action")).toBeDefined();
+    expect(screen.getByText("robot.motion.pick_and_place")).toBeDefined();
+    expect(screen.getByText("packaging_cell_001")).toBeDefined();
+    expect(screen.getByText("robot_abb_irb_1200_01")).toBeDefined();
+    expect(screen.getByText("inspection_conveyor_exit -> pallet_station_A")).toBeDefined();
+    expect(screen.getByText("simr_packaging_001")).toBeDefined();
+    expect(screen.getByText("0.25 m/s / 80 N")).toBeDefined();
+    expect(screen.getByText("Human approval 1/2")).toBeDefined();
+    expect(screen.getByLabelText("Factory receipt chain")).toBeDefined();
+    expect(screen.getByText("Receipt chain")).toBeDefined();
+    expect(screen.getByText("5 linked")).toBeDefined();
+    expect(screen.getByText("factory.intent.compiled")).toBeDefined();
+    expect(screen.getByText("factory.execution.receipt")).toBeDefined();
+  });
+
+  it("resolves an approval from the conductor buttons", async () => {
+    const onResolve = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ApprovalConductor
+        requests={[mockIndustrialApprovalRequest]}
+        connected={true}
+        error={null}
+        onResolve={onResolve}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("Approve"));
+
+    await waitFor(() => {
+      expect(onResolve).toHaveBeenCalledWith("req-industrial-001", "approved");
+    });
   });
 });

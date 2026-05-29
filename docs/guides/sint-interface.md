@@ -48,8 +48,19 @@ Example commands:
 ### Approvals Panel (left)
 Pending T2 (async review) and T3 (synchronous sign-off) requests awaiting your decision.
 - Each card shows: resource, action, tier, agent, timeout countdown
-- ✓ Approve sends `POST /v1/approvals/{id}/resolve { action: "approve" }`
-- ✗ Deny sends `POST /v1/approvals/{id}/resolve { action: "deny" }`
+- Approve sends `POST /v1/approvals/{id}/resolve { status: "approved" }`
+- Deny sends `POST /v1/approvals/{id}/resolve { status: "denied" }`
+
+For Factory Action Pack requests on `ros2:///joint_commands`, the Conductor
+adds an industrial evidence block before the decision buttons:
+
+- factory action type and target cell
+- target robot and source/target pose
+- linked simulation receipt, if present
+- force and velocity envelope extracted from the request
+- tool payload and approval quorum state
+- compact receipt-chain timeline from
+  `executionContext.factoryReceiptChain`, when present
 
 ### Action Stream (center)
 Real-time feed from the PolicyGateway WebSocket (`/v1/approvals/ws`).

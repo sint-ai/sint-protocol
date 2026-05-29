@@ -90,6 +90,20 @@ export const SINT_EVENTS = {
   AVATAR_PROFILE_UPDATED: "avatar.profile.updated",
   AVATAR_CSML_ESCALATED: "avatar.csml.escalated",
 
+  // Managed autonomy — authority axis
+  AUTONOMY_STATE_ENTERED: "autonomy.state.entered",
+  AUTONOMY_STATE_EXITED: "autonomy.state.exited",
+  AUTONOMY_GUARD_TRIGGERED: "autonomy.guard.triggered",
+  AUTONOMY_OUTPUT_SUPPRESSED: "autonomy.output.suppressed",
+  AUTONOMY_RECOVERY_STARTED: "autonomy.recovery.started",
+  AUTONOMY_RECOVERY_SUCCEEDED: "autonomy.recovery.succeeded",
+  AUTONOMY_RECOVERY_FAILED: "autonomy.recovery.failed",
+  AUTONOMY_ASSISTANCE_REQUESTED: "autonomy.assistance.requested",
+  AUTONOMY_ASSISTANCE_RESOLVED: "autonomy.assistance.resolved",
+  AUTONOMY_AUTHORITY_REVOKED: "autonomy.authority.revoked",
+  AUTONOMY_AUTHORITY_RESTORED: "autonomy.authority.restored",
+  GOVERNANCE_CONTROL_SURRENDERED: "governance.control.surrendered",
+
   // Risk scoring — emitted after each intercept with riskScore + csml
   RISK_SCORE_COMPUTED: "risk.score.computed",
 

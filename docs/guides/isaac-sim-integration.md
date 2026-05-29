@@ -55,7 +55,27 @@ ros2:///cmd_vel
 Run:
 
 ```bash
-pnpm --filter @sint/conformance-tests test -- src/industrial-interoperability.test.ts
+pnpm --filter @pshkv/conformance-tests test -- src/industrial-interoperability.test.ts
 ```
 
 The test `Isaac Sim namespaced cmd_vel maps to equivalent ROS2 control-tier semantics` verifies equivalence with native ROS2 control behavior.
+
+## Factory Action Receipt Stub
+
+The ROS2 bridge also exposes
+`robotActionProfileToIsaacSimSimulationReceiptStub()`.
+
+That helper takes a `RobotActionProfile` plus a vendor program hash from an
+offline export stub, then produces an Isaac Sim-shaped `SimulationReceipt`
+artifact with:
+
+- `vendor_program_hash`
+- `collision_free`
+- `cycle_time_seconds`
+- `safety_zone_violations`
+- `max_force_newtons`
+- `approved_for_execution`
+- `metadata.decision_digest`
+
+This is a receipt-shape artifact for testing and integration work. It is not a
+claim that Isaac Sim has been run or that a real robot has been certified safe.

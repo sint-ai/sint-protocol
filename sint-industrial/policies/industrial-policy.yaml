@@ -1,0 +1,12 @@
+policy_ref: ../../docs/specs/industrial-policy.yaml
+policy_id: sint.factory.robot.motion.v1
+pack_id: sint-industrial-pack-v1
+status: preview
+contract:
+  authorization: PolicyGateway.intercept
+  adapters_authorize: false
+  requires:
+    - simulation_receipt
+    - human_approval
+    - safety_zone_clear
+    - receipt_chain

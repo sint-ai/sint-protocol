@@ -1652,6 +1652,146 @@ export function loadIndustrialCellSafetyPackFixture(): IndustrialCellSafetyPackF
   );
 }
 
+export interface FactoryActionDemoFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scopeNote: string;
+  readonly prompt: string;
+  readonly factoryIntent: {
+    readonly intent_id: string;
+    readonly goal: string;
+    readonly industry: string;
+    readonly materials: readonly string[];
+    readonly stations: readonly string[];
+    readonly constraints: {
+      readonly max_capex_usd: number;
+      readonly floor_space_m2: number;
+      readonly takt_time_seconds: number;
+      readonly human_collaboration: boolean;
+      readonly safety_standard_targets: readonly string[];
+    };
+    readonly metadata?: Record<string, unknown>;
+  };
+  readonly cellGraph: {
+    readonly cell_id: string;
+    readonly assets: readonly Array<{
+      readonly asset_id: string;
+      readonly type: string;
+      readonly vendor: string;
+      readonly controller?: string;
+      readonly adapter: string;
+      readonly safety_zone?: string;
+      readonly capabilities?: readonly string[];
+    }>;
+    readonly flows: readonly Array<{
+      readonly from: string;
+      readonly to: string;
+      readonly material: string;
+      readonly rate_per_minute: number;
+    }>;
+    readonly approval_tier: ApprovalTier | "T3_HUMAN_REQUIRED";
+    readonly simulation_required: boolean;
+  };
+  readonly robotAction: {
+    readonly action_type: string;
+    readonly target_robot: string;
+    readonly motion: {
+      readonly source_pose: string;
+      readonly target_pose: string;
+      readonly max_velocity_mps: number;
+      readonly max_force_newtons: number;
+      readonly collision_check: boolean;
+    };
+    readonly tool: {
+      readonly type: string;
+      readonly payload_kg: number;
+    };
+    readonly requires: {
+      readonly simulation_receipt: boolean;
+      readonly human_approval: boolean;
+      readonly safety_zone_clear: boolean;
+    };
+    readonly adapter_hint?: string;
+  };
+  readonly simulationReceipt: {
+    readonly simulation_receipt_id: string;
+    readonly cell_id: string;
+    readonly simulator: string;
+    readonly vendor_program_hash: string;
+    readonly collision_free: boolean;
+    readonly cycle_time_seconds: number;
+    readonly safety_zone_violations: number;
+    readonly max_force_newtons: number;
+    readonly approved_for_execution: boolean;
+    readonly signed_by: string;
+    readonly metadata?: Record<string, unknown>;
+  };
+  readonly decisionPath: readonly Array<{
+    readonly id:
+      | "deny-without-simulation"
+      | "escalate-after-simulation"
+      | "allow-after-human-approval";
+    readonly description: string;
+    readonly inputs: {
+      readonly simulationReceiptPresent: boolean;
+      readonly humanApprovalPresent: boolean;
+      readonly safetyZoneClear: boolean;
+    };
+    readonly expectedDecision: {
+      readonly action: DecisionAction;
+      readonly assignedTier: ApprovalTier;
+      readonly denial?: {
+        readonly reason: string;
+        readonly policyViolated: string;
+      };
+      readonly escalation?: {
+        readonly requiredTier: ApprovalTier;
+        readonly timeoutMs: number;
+      };
+    };
+  }>;
+  readonly approval: {
+    readonly approvalId: string;
+    readonly requiredTier: ApprovalTier;
+    readonly quorum: {
+      readonly required: number;
+      readonly authorizedRoles: readonly string[];
+    };
+    readonly approverRef: string;
+    readonly evidenceEvent: string;
+  };
+  readonly adapterStubs: readonly Array<{
+    readonly adapterId: string;
+    readonly vendor: string;
+    readonly targetLanguage: string;
+    readonly executionResource: string;
+    readonly generatedProgramHash: string;
+    readonly mapsActionFields: readonly string[];
+  }>;
+  readonly receiptChain: readonly Array<{
+    readonly step: string;
+    readonly eventType: string;
+    readonly digest: string;
+    readonly previousDigest: string | null;
+  }>;
+  readonly successCriteria: {
+    readonly denyWithoutSimulation: boolean;
+    readonly escalateAfterSimulation: boolean;
+    readonly allowOnlyAfterHumanApproval: boolean;
+    readonly atLeastTwoVendorStubs: boolean;
+    readonly atLeastFourVendorStubs?: boolean;
+    readonly receiptChainIsAppendOnly: boolean;
+    readonly claimsRemainSimulationOnly: boolean;
+  };
+}
+
+export function loadFactoryActionDemoFixture(): FactoryActionDemoFixture {
+  return loadFixture<FactoryActionDemoFixture>(
+    "industrial/factory-action-demo.v1.json",
+  );
+}
+
 export interface RegulatedConsentExtensionsFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
