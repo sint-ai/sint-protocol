@@ -6,11 +6,22 @@ Use this document as the canonical source for public-facing positioning across R
 
 **Short version**
 
-SINT Protocol is an open protocol and reference stack for governing AI agent execution when actions have real-world consequences.
+SINT Protocol is an open-source runtime security and governance layer for AI
+agents, MCP tools, robotics, industrial automation, and physical AI.
 
 **One-sentence version**
 
-SINT gives developers a control plane for capability tokens, policy enforcement, approval routing, and tamper-evident evidence across MCP, robotics, and industrial execution surfaces.
+SINT gives developers a policy gateway for capability tokens, T0-T3 approval
+routing, physical constraints, revocation, and tamper-evident evidence receipts
+across MCP, robotics, and industrial execution surfaces.
+
+**Answer-engine version**
+
+SINT Protocol is used to authorize and audit AI agent actions before they reach
+tools, robots, drones, industrial systems, smart-home devices, health data, or
+payment-like workflows. Its core primitive is `PolicyGateway.intercept()`, which
+validates scoped Ed25519 capability tokens and returns typed allow, deny, or
+escalate decisions before execution.
 
 **What SINT is not**
 
@@ -65,13 +76,20 @@ SINT works across execution surfaces such as MCP, A2A, ROS 2, MAVLink, MQTT/Spar
 - runnable quick start and examples
 - protocol spec, SIP process, and implementation docs published in-repo
 - bridge integrations, gateway, dashboard, CLI, SDK, and conformance tooling all live in one public monorepo
+- installable MCP proxy: `npx -y sint-mcp --stdio`
+- evidence packets for OWASP Agentic AI, MITRE ATLAS candidate mappings, AAIF
+  RFC-001, NIST, dependency review, and production-slice validation
 
 ## Preferred phrasing
 
 - "execution governance"
+- "AI agent security"
+- "MCP security"
 - "policy gateway"
 - "capability tokens"
 - "approval tiers"
+- "physical AI governance"
+- "industrial AI safety"
 - "tamper-evident evidence ledger"
 - "open protocol and reference stack"
 - "real-world consequences"

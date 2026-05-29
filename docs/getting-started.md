@@ -1,8 +1,14 @@
 # Getting Started with SINT Protocol
 
-This guide gets you from clone to a complete `token -> intercept -> approval -> ledger` flow in about 10 minutes.
+This guide gets you from clone to a complete `token -> intercept -> approval
+-> ledger` flow in about 10 minutes. By the end, you will have a local policy
+gateway that can authorize an AI agent action, escalate higher-risk requests,
+and record the decision in the evidence ledger.
 
-If you want the fastest builder-facing walkthrough for the new interceptor flagship instead of the full local stack, start with [SINT PDP Interceptor Quickstart](./guides/sint-pdp-interceptor-quickstart.md). It shows `request -> decision -> receipt` plus the fail-closed path in one terminal run.
+If you want the fastest builder-facing walkthrough for MCP and agent-runtime
+security, start with [SINT PDP Interceptor Quickstart](./guides/sint-pdp-interceptor-quickstart.md).
+It shows `request -> decision -> receipt` plus the fail-closed path in one
+terminal run.
 
 ## Prerequisites
 

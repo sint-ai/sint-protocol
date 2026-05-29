@@ -2,7 +2,7 @@
   "name": "sint-protocol",
   "version": "0.1.0",
   "private": true,
-  "description": "SINT Protocol — Security, permission, and economic enforcement layer for physical AI",
+  "description": "SINT Protocol - runtime security and governance for AI agents, MCP tools, robotics, industrial automation, and physical AI",
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",

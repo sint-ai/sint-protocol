@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: SINT Protocol
-  text: Governance and Safety Control Plane for Physical AI
-  tagline: Delegated authority, runtime enforcement, and evidence for actions with real-world consequence.
+  text: Runtime Security and Governance for AI Agents
+  tagline: Capability-token authorization, approval tiers, physical constraints, and evidence receipts for MCP, robotics, industrial automation, and physical AI.
   image:
     src: /sint-logo.svg
     alt: SINT Protocol
@@ -20,13 +20,21 @@ hero:
       link: /SINT_v0.2_SPEC
 
 features:
-  - title: Runtime Safety Enforcement
-    details: Every request is validated, tiered, approved when required, and fail-closed under revocation or disconnect.
-  - title: Industrial Interoperability
-    details: Bridge profiles for MCP, A2A, ROS 2, MQTT/Sparkplug, OPC UA, Open-RMF, and gRPC.
-  - title: Auditability by Default
-    details: Evidence ledger records decisions and outcomes with tamper-evident hash chaining and proof routes.
+  - title: Pre-Action Policy Gateway
+    details: Every governed request is validated, tiered, approved when required, and refused fail-closed under revocation, missing signatures, or disconnect.
+  - title: Physical and Industrial AI Coverage
+    details: Bridge profiles and fixtures cover MCP, A2A, ROS 2, MAVLink, PX4, MQTT/Sparkplug, OPC UA, Open-RMF, gRPC, and simulator-backed industrial flows.
+  - title: Evidence for Audits and Incident Response
+    details: Hash-chained ledger records, proof receipts, OWASP ASI mappings, MITRE ATLAS candidate mappings, and release-gate artifacts make decisions verifiable.
 ---
+
+## What Is SINT Protocol?
+
+SINT Protocol is an open-source runtime governance layer for AI agents and
+physical AI systems. It places a policy gateway before tool calls, robot
+commands, industrial writes, payment-like actions, and regulated-data access so
+developers can enforce scoped authority, approval routing, revocation, physical
+limits, and tamper-evident audit evidence before execution.
 
 ## Developer Quick Links
 
