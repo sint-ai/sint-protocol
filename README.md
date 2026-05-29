@@ -696,6 +696,7 @@ docker-compose up
 - EU AI Act mapping: [`docs/compliance/eu-ai-act-mapping.md`](docs/compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [`docs/compliance/iso-13482-alignment.md`](docs/compliance/iso-13482-alignment.md)
 - Formal threat model: [`docs/security/formal-threat-model.md`](docs/security/formal-threat-model.md)
+- MITRE ATLAS candidate mappings: [`docs/security/mitre-atlas-agent-technique-mappings.md`](docs/security/mitre-atlas-agent-technique-mappings.md)
 - Getting started: [`docs/getting-started.md`](docs/getting-started.md)
 - Deployment profiles: [`docs/profiles/`](docs/profiles/)
 - Examples: [`examples/`](examples/) (hello-world, warehouse-amr, industrial-cell)

@@ -1,0 +1,68 @@
+schema: sint-mitre-atlas-candidate-mapping-v0.1
+status: candidate
+source_issue: https://github.com/sint-ai/sint-protocol/issues/127
+atlas_issue: https://github.com/mitre-atlas/atlas-data/issues/11
+atlas_id_status: awaiting_canonical_aml_ids
+submission:
+  recipient: atlas@mitre.org
+  gmail_draft_id: r-4084736127375409030
+  subject: "SINT mappings for proposed ATLAS agent techniques - identity spoofing and payment hijacking"
+techniques:
+  - placeholder_id: T-XXXX
+    canonical_id: null
+    name: Agent Identity Spoofing
+    description: >
+      Impersonation of a legitimate agent, runtime, or delegated principal to
+      gain access to tools, workflows, funds, physical devices, or privileged
+      context.
+    sint_enforcement_tier: strong_proxy
+    mitigations:
+      - id: sint.capability_tokens.subject_binding
+        package: "@sint/gate-capability-tokens"
+        summary: Ed25519 capability tokens bind issuer, subject, resource, action, constraints, expiry, and delegation chain.
+      - id: sint.policy_gateway.subject_match
+        package: "@sint/gate-policy-gateway"
+        summary: PolicyGateway validates signatures and verifies token.subject equals request.agentId before execution.
+      - id: sint.memory_integrity.credential_funnel
+        package: "@sint/gate-policy-gateway"
+        summary: Detects credential-funnel and inconsistent identity claim patterns in agent sessions.
+      - id: sint.aps_interop.cross_verify
+        package: "@sint/gate-capability-tokens"
+        summary: APS/SINT cross-verification preserves delegated authority and revocation semantics.
+    evidence:
+      fixtures:
+        - packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json
+        - packages/conformance-tests/fixtures/interop/aps-sint-handshake.v1.json
+      tests:
+        - packages/conformance-tests/src/owasp-asi-conformance.test.ts
+        - packages/capability-tokens/__tests__/aps-crossverify.test.ts
+    claim_boundary: Candidate mitigation mapping only; no MITRE acceptance claimed.
+
+  - placeholder_id: T-YYYY
+    canonical_id: null
+    name: Agent Payment Hijacking
+    description: >
+      Unauthorized redirection, inflation, or forgery of agent payment flows
+      through manipulated payee identity, budget context, usage receipts, or
+      delegated payment authority.
+    sint_enforcement_tier: strong_proxy
+    mitigations:
+      - id: sint.economy_plugin.budget_enforcement
+        package: "@sint/bridge-economy"
+        summary: Enforces per-agent budgets, route/cost policy, and budget exhaustion behavior.
+      - id: sint.approval_tiers.payment_gate
+        package: "@sint/gate-policy-gateway"
+        summary: Promotes high-risk or irreversible payment actions to T2/T3 approval gates.
+      - id: sint.receipt_binding.payment_context
+        package: "@sint/gate-evidence-ledger"
+        summary: Binds payment and route decisions to agent identity, token scope, action intent, and evidence events.
+      - id: sint.payment_governance.fixtures
+        package: "@sint/conformance-tests"
+        summary: Covers unauthorized payee redirection, stale receipts, budget exhaustion, and approval bypass attempts.
+    evidence:
+      fixtures:
+        - packages/conformance-tests/fixtures/economy/payment-governance.v1.json
+      tests:
+        - packages/conformance-tests/src/payment-governance-fixtures-conformance.test.ts
+        - packages/conformance-tests/src/economy-regression.test.ts
+    claim_boundary: Candidate mitigation mapping only; no MITRE acceptance claimed.
