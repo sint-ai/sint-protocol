@@ -6,50 +6,69 @@
 
 [![Glama](https://glama.ai/mcp/servers/sint-ai/sint-protocol/badges/card.svg)](https://glama.ai/mcp/servers/sint-ai/sint-protocol)
 
-**Security, permission, and economic enforcement layer for physical AI.**
+**Open-source runtime security and governance for AI agents, MCP tools, robotics, industrial automation, and physical AI.**
 
-SINT is the missing governance layer between AI agents and the physical world. Every tool call, robot command, and actuator movement flows through a single Policy Gateway that enforces capability-based permissions, graduated approval tiers, and tamper-evident audit logging.
+SINT Protocol is an open protocol and TypeScript reference stack that sits
+between AI agent intent and real-world execution. Before a governed tool call,
+robot command, industrial write, payment-like action, or actuator movement can
+run, the request passes through `PolicyGateway.intercept()` for capability-token
+authorization, T0-T3 approval tiering, physical constraint enforcement,
+revocation checks, and tamper-evident evidence logging.
 
-The protocol now includes a managed-autonomy authority lane in
-[`@pshkv/autonomy-supervisor`](packages/autonomy-supervisor/README.md). It adds
-a second, orthogonal pre-gate for whether an agent still has authority to emit
-external output at all: `stable -> metacognitive_recovery ->
-assisted_recovery -> regulated_control`. External output is structurally
-allowed only from `stable`, and exit from `regulated_control` requires an
-external human-operator or hardware-safety-controller authorization signal.
+## What is SINT Protocol?
 
-The next upgrade lane is factory control. As prompt-to-hardware and
-prompt-to-factory tooling gets better at generating industrial plans, SINT is
-expanding toward the control layer that decides what can be simulated,
-approved, executed, audited, and settled before AI-generated factory actions
-touch real machines. See
-[`docs/roadmaps/factory-action-pack-upgrade-sprints.md`](docs/roadmaps/factory-action-pack-upgrade-sprints.md).
-Sprint 1 now ships a control-standard pack with an industrial action profile,
-factory intent and cell graph schemas, a robot action schema, a simulation
-receipt schema, an industrial policy pack, and a refusal-first demo narrative.
-Sprint 2 has started with an executable conformance demo:
-`pnpm run demo:factory-action` proves the deny -> escalate -> allow path before
-any robot or PLC action reaches a vendor adapter stub. The ROS 2 bridge also
-maps the same factory action profile into a `/joint_commands` command envelope
-with force and velocity extraction, plus Universal Robots ROS2 demo and SRCI
-command-profile artifacts for adapter work that still routes through the same
-SINT policy resource. ABB RAPID, FANUC LS, KUKA KRL, and URScript export stubs
-now generate deterministic offline program text and SHA-256 hashes for
-simulation/review binding, and Isaac Sim, RoboDK, RobotStudio, KUKA.Sim, and
-FANUC ROBOGUIDE receipt stubs bind those hashes to collision, force-envelope,
-safety-zone, and decision-digest fields. The operator
-interface Conductor now surfaces industrial approval evidence from the live
-approval queue: cell, robot, motion, simulation receipt, envelope, tool, and
-quorum state, plus the compact plan -> simulation -> approval -> execution
-receipt chain before an operator can approve or deny the action.
-Sprint 3 is now represented as a preview
-[`sint-industrial`](sint-industrial/README.md) pack with a machine-readable
-manifest for ROS 2, SRCI, OPC UA, MQTT, simulator, and example-cell profiles:
-`pnpm run demo:industrial-pack` verifies that the pack keeps simulation,
-approval, receipt-chain evidence, and settlement attribution first-class across
-active execution paths.
+SINT is an AI agent security control plane for actions with real-world
+consequence. It helps teams answer four questions before an autonomous system
+acts:
 
-> **Academic grounding:** SINT is designed with reference to IEC 62443 FR1–FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework references the ROSClaw empirical safety study ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
+- **Who is allowed to act?** Ed25519 capability tokens bind issuer, subject,
+  resource, action, expiry, constraints, and delegation chain.
+- **What constraints apply?** Velocity, force, geofence, budget, rate-limit, and
+  consent constraints travel with the token instead of living in ad hoc config.
+- **When is human review required?** T0-T3 approval tiers route low-risk actions
+  automatically and escalate physical or irreversible actions to operators.
+- **How do you prove what happened?** Every decision can be written to a
+  SHA-256 hash-chained `EvidenceLedger` with portable proof receipts.
+
+## Where SINT Fits
+
+SINT is not a replacement for MCP, A2A, ROS 2, MAVLink, MQTT, OPC UA, Open-RMF,
+or industrial robot tooling. It is the enforcement layer in front of those
+systems:
+
+- **MCP security:** authorize tool calls before an MCP server executes them.
+- **Agent runtime governance:** add pre-tool authorization, typed deny/escalate
+  outcomes, and evidence references to agent frameworks.
+- **Robotics and drones:** enforce ROS 2, MAVLink, PX4, and fleet actions with
+  physical constraints and e-stop semantics.
+- **Industrial automation:** govern OPC UA, MQTT/Sparkplug, SRCI, simulator, and
+  offline robot-program paths before PLC or robot actions touch equipment.
+- **Consumer and regulated data:** apply consent, caregiver delegation,
+  differential privacy, and audit exports for smart-home and health workflows.
+
+## Latest Implementation Highlights
+
+- **Installable MCP proxy:** `npx -y sint-mcp --stdio` runs the security-first
+  multi-MCP proxy.
+- **Five-minute interceptor demo:** `pnpm run demo:interceptor-quickstart`
+  shows `request -> decision -> receipt` and the fail-closed path.
+- **Production gateway posture:** production mode requires durable stores,
+  explicit authentication, readiness checks, and signature enforcement.
+- **Industrial action pack:** `pnpm run demo:factory-action` and
+  `pnpm run demo:industrial-pack` verify deny, escalate, approve, simulate, and
+  receipt-chain flows before vendor adapter execution.
+- **Autonomy supervisor:** `@pshkv/autonomy-supervisor` adds an authority lane
+  for managed autonomy: `stable -> metacognitive_recovery ->
+  assisted_recovery -> regulated_control`.
+- **External evidence packets:** OWASP Agentic AI landscape, MITRE ATLAS
+  candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review, and
+  production-slice validation artifacts are published under `docs/`.
+
+Academic and compliance grounding: SINT is designed with reference to IEC 62443
+FR1-FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework
+references the ROSClaw empirical safety study
+([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security
+analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
 
 ```
 Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Escalate
@@ -121,9 +140,16 @@ Production references:
 
 ## Why SINT?
 
-AI agents can now control robots, execute code, move money, and operate machinery. They can also access your health data, control your smart home, and orchestrate critical infrastructure. But there's no standard security layer between "the LLM decided to do X" and "X happened in the physical world or with your personal data."
+AI agents now execute code, call tools, move money, operate robots, control
+smart-home devices, and interact with industrial systems. The risk is no longer
+only prompt quality; it is whether the runtime has a verifiable control point
+between "the model decided" and "the world changed."
 
-### SINT vs. Other Frameworks
+SINT makes that control point explicit. It turns agent execution into a governed
+workflow with scoped authority, pre-action policy evaluation, operator review,
+physical limits, revocation, and audit evidence.
+
+### Capability Coverage
 
 | Capability | **SINT Protocol** | Microsoft AGT | MCP Baseline | SROS2 |
 |---|---|---|---|---|
@@ -140,7 +166,11 @@ AI agents can now control robots, execute code, move money, and operate machiner
 | Caregiver delegation + consent | ✅ FHIR Consent tokens | ❌ | ❌ | ❌ |
 | Differential privacy ledger | ✅ Per-query epsilon budget | ❌ | ❌ | ❌ |
 
-**SINT is the only framework purpose-built for physical AI and personal data governance** — where actions are irreversible and have real-world consequences. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit) targets digital/software agents; SINT targets robots, drones, smart homes, health fabric, and critical infrastructure.
+SINT is designed for physical AI and regulated data workflows where actions can
+be irreversible: robots, drones, smart homes, health fabric, industrial control,
+and critical infrastructure. [Microsoft AGT](https://github.com/microsoft/agent-governance-toolkit)
+focuses on digital/software governance patterns; SINT focuses on pre-action
+enforcement across tool, robotics, and industrial execution boundaries.
 
 
 **The empirical case for SINT:**
@@ -297,11 +327,11 @@ pnpm run stack:interface  # starts gateway + interface + postgres + redis
 ```
 
 Features:
-- 🎙️ **Voice input** — Web Speech API (zero external deps), real-time transcript
-- 🖥️ **Command HUD** — 3-panel grid: approvals | action stream | context
-- 💾 **Operator memory** — ledger-backed persistent context (`@sint/memory`)
-- 🔔 **Proactive notifications** — `sint__notify` (T2 tier, requires confirmation)
-- ✅ **T2/T3 approvals** — one-click approve/deny with timeout countdown
+- **Voice input**: Web Speech API, zero external dependencies, real-time transcript
+- **Command HUD**: three-panel approvals, action stream, and context view
+- **Operator memory**: ledger-backed persistent context (`@sint/memory`)
+- **Proactive notifications**: `sint__notify` runs as T2 and requires confirmation
+- **T2/T3 approvals**: one-click approve/deny with timeout countdown
 
 See [docs/guides/sint-interface.md](docs/guides/sint-interface.md) for full setup and usage.
 
