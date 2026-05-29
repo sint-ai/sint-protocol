@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sint.ai/physical-ai/runtime-safety-fixture.v0.1.schema.json",
+  "title": "Physical AI Runtime Safety Fixture v0.1",
+  "type": "object",
+  "required": ["fixtureId", "schemaVersion", "description", "profile", "defaultToken", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "fixtureId": { "type": "string", "const": "physical-ai-runtime-safety-v0.1" },
+    "schemaVersion": { "type": "string", "const": "0.1.0" },
+    "description": { "type": "string", "minLength": 1 },
+    "profile": {
+      "type": "object",
+      "required": ["transport", "actionBoundary", "decisionVocabulary", "transportOutcomes", "evidenceRequirements"],
+      "additionalProperties": false,
+      "properties": {
+        "transport": { "type": "string", "enum": ["ros2/sros2"] },
+        "actionBoundary": { "type": "string", "enum": ["pre-actuation"] },
+        "decisionVocabulary": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["allow", "deny", "escalate", "rollback"] },
+          "minItems": 4,
+          "uniqueItems": true
+        },
+        "transportOutcomes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "forwarded",
+              "held_for_review",
+              "publish_rejected",
+              "discovery_rejected",
+              "execution_rolled_back"
+            ]
+          },
+          "minItems": 5,
+          "uniqueItems": true
+        },
+        "evidenceRequirements": {
+          "type": "object",
+          "required": [
+            "decisionRefRequired",
+            "actionIntentRefRequired",
+            "hashChainRequired",
+            "receiptRequiredForNegativeOutcomes",
+            "authorityPointer",
+            "actionPointer"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "decisionRefRequired": { "type": "boolean", "const": true },
+            "actionIntentRefRequired": { "type": "boolean", "const": true },
+            "hashChainRequired": { "type": "boolean", "const": true },
+            "receiptRequiredForNegativeOutcomes": { "type": "boolean", "const": true },
+            "authorityPointer": {
+              "type": "object",
+              "required": ["field", "form", "nullable"],
+              "additionalProperties": false,
+              "properties": {
+                "field": { "type": "string", "const": "delegation_ref" },
+                "form": { "type": "string", "const": "opaque_content_addressed" },
+                "nullable": { "type": "boolean" }
+              }
+            },
+            "actionPointer": {
+              "type": "object",
+              "required": ["field", "form"],
+              "additionalProperties": false,
+              "properties": {
+                "field": { "type": "string", "const": "action_ref" },
+                "form": { "type": "string", "const": "deterministic_public_derivation" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "defaultToken": { "$ref": "#/$defs/token" },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "tokenOverride": { "$ref": "#/$defs/token" },
+          "request": { "$ref": "#/$defs/request" },
+          "transportCheck": { "$ref": "#/$defs/transportCheck" },
+          "expected": {
+            "type": "object",
+            "required": ["decisionAction", "transportOutcome"],
+            "additionalProperties": true,
+            "properties": {
+              "decisionAction": { "type": "string", "enum": ["allow", "deny", "escalate", "rollback"] },
+              "assignedTier": { "type": "string", "enum": ["T0_observe", "T1_prepare", "T2_act", "T3_commit"] },
+              "policyViolated": { "type": "string" },
+              "transportOutcome": {
+                "type": "string",
+                "enum": [
+                  "forwarded",
+                  "held_for_review",
+                  "publish_rejected",
+                  "discovery_rejected",
+                  "execution_rolled_back"
+                ]
+              },
+              "transportDecision": { "type": "string", "enum": ["allow", "deny", "not-covered"] },
+              "evidenceEventType": { "type": "string" },
+              "evidence": { "type": "object" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "token": {
+      "type": "object",
+      "required": ["resource", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "resource": { "type": "string" },
+        "actions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxVelocityMps": { "type": "number", "minimum": 0 },
+            "maxForceNewtons": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["resource", "action"],
+      "additionalProperties": true,
+      "properties": {
+        "resource": { "type": "string" },
+        "action": { "type": "string" },
+        "params": { "type": "object" },
+        "physicalContext": { "type": "object" },
+        "recentActions": { "type": "array", "items": { "type": "string" } },
+        "executionContext": { "type": "object" }
+      }
+    },
+    "transportCheck": {
+      "type": "object",
+      "required": ["enclave", "topicName", "operation"],
+      "additionalProperties": false,
+      "properties": {
+        "enclave": {
+          "type": "object",
+          "required": [
+            "enclavePath",
+            "domainId",
+            "allowPublish",
+            "allowSubscribe",
+            "denyPublish",
+            "denySubscribe",
+            "governanceEnforced"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "enclavePath": { "type": "string" },
+            "domainId": { "type": "integer" },
+            "allowPublish": { "type": "array", "items": { "type": "string" } },
+            "allowSubscribe": { "type": "array", "items": { "type": "string" } },
+            "denyPublish": { "type": "array", "items": { "type": "string" } },
+            "denySubscribe": { "type": "array", "items": { "type": "string" } },
+            "governanceEnforced": { "type": "boolean" }
+          }
+        },
+        "topicName": { "type": "string" },
+        "operation": { "type": "string", "enum": ["publish", "subscribe"] }
+      }
+    }
+  }
+}

@@ -85,6 +85,7 @@ export default defineConfig({
           { text: "Robotics Collaboration Outreach", link: "/community/robotics-collaboration-outreach-schedule" },
           { text: "Sunnybotics Collaboration Brief", link: "/community/sunnybotics-collaboration-brief" },
           { text: "Sunnybotics Outreach Drafts", link: "/community/sunnybotics-outreach-drafts" },
+          { text: "Physical AI Runtime Safety WG", link: "/community/physical-ai-runtime-safety-working-group" },
           { text: "Lovable Site Refresh Prompt", link: "/community/lovable-sint-gg-refresh-prompt" },
           { text: "Website Sync Checklist", link: "/community/website-sync-checklist" },
           { text: "Good First Issues Board", link: "/community/good-first-issues-board" },

@@ -212,6 +212,7 @@ Community/adoption assets:
 - [`docs/community/external-contributor-onboarding.md`](docs/community/external-contributor-onboarding.md)
 - [`docs/community/good-first-issues-board.md`](docs/community/good-first-issues-board.md)
 - [`docs/community/open-source-collaboration-replies.md`](docs/community/open-source-collaboration-replies.md)
+- [`docs/community/physical-ai-runtime-safety-working-group.md`](docs/community/physical-ai-runtime-safety-working-group.md)
 - [`docs/security-bulletins/2026-04.md`](docs/security-bulletins/2026-04.md)
 
 ### Run a Single Package
@@ -714,6 +715,8 @@ docker-compose up
 - ROS2 loop benchmark report: [`docs/reports/ros2-control-loop-benchmark.md`](docs/reports/ros2-control-loop-benchmark.md)
 - Hardware safety controller roadmap: [`docs/roadmaps/hardware-safety-controller-integration.md`](docs/roadmaps/hardware-safety-controller-integration.md)
 - Hardware safety handshake fixture: [`packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json`](packages/conformance-tests/fixtures/industrial/hardware-safety-handshake.v1.json)
+- Physical AI runtime safety fixtures: [`packages/conformance-tests/fixtures/physical-ai/runtime-safety-fixtures.v0.1.json`](packages/conformance-tests/fixtures/physical-ai/runtime-safety-fixtures.v0.1.json)
+- Physical AI runtime safety fixture schema: [`packages/conformance-tests/fixtures/physical-ai/runtime-safety-fixture.schema.json`](packages/conformance-tests/fixtures/physical-ai/runtime-safety-fixture.schema.json)
 - Certification bundle summary: [`docs/reports/certification-bundle-summary.md`](docs/reports/certification-bundle-summary.md)
 - NIST submission playbook: [`docs/guides/nist-submission-playbook.md`](docs/guides/nist-submission-playbook.md)
 - NIST submission bundle report: [`docs/reports/nist-submission-bundle.md`](docs/reports/nist-submission-bundle.md)
