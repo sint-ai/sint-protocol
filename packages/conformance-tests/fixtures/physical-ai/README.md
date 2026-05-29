@@ -28,3 +28,23 @@ SINT provides one reference runner, but other implementations can translate the
 same cases into their own gateway, transport, or simulator. The important
 interop question is whether independent systems agree on the expected decision,
 transport outcome, and evidence contract.
+
+## Files
+
+- `runtime-safety-fixture.schema.json` defines the v0.1 fixture shape.
+- `runtime-safety-fixtures.v0.1.json` is the canonical ROS2/SROS2 starter pack.
+
+## Run The Reference Checks
+
+```bash
+pnpm --filter @pshkv/conformance-tests test:physical-ai-runtime
+```
+
+## Review Targets
+
+The first working-group review should answer four questions:
+
+1. Can another runtime express the same pre-actuation authorization boundary?
+2. Can another transport express the same non-bypass outcome?
+3. Can another safety controller express rollback/e-stop evidence?
+4. Can another evidence format bind `action_ref` and `delegation_ref` without leaking private authority metadata?

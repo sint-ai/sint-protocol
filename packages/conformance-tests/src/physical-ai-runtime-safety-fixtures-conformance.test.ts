@@ -6,6 +6,9 @@
  */
 
 import { beforeEach, describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
@@ -21,6 +24,11 @@ import {
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import { checkSros2Permission } from "@pshkv/bridge-ros2";
 import { loadPhysicalAiRuntimeSafetyFixture } from "./fixture-loader.js";
+
+const FIXTURE_ROOT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "../fixtures/physical-ai",
+);
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3_600_000);
@@ -88,6 +96,9 @@ describe("Physical AI runtime safety fixtures v0.1", () => {
   });
 
   it("declares a stable physical-AI interoperability profile", () => {
+    expect(existsSync(resolve(FIXTURE_ROOT, "runtime-safety-fixture.schema.json"))).toBe(true);
+    expect(existsSync(resolve(FIXTURE_ROOT, "runtime-safety-fixtures.v0.1.json"))).toBe(true);
+
     expect(fixture.fixtureId).toBe("physical-ai-runtime-safety-v0.1");
     expect(fixture.profile.transport).toBe("ros2/sros2");
     expect(fixture.profile.actionBoundary).toBe("pre-actuation");
