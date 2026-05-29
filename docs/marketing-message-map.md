@@ -69,6 +69,12 @@ Every decision is captured in a tamper-evident, hash-chained ledger for audit an
 
 SINT works across execution surfaces such as MCP, A2A, ROS 2, MAVLink, MQTT/Sparkplug, OPC UA, Open-RMF, and gRPC.
 
+### 6. Agent commerce
+
+SINT can govern task-market and machine-payment workflows before work or money
+moves: task creation, bids, claims, benchmark proof submission, worker
+selection, settlement release, and x402-style payment permits.
+
 ## Proof points to emphasize
 
 - Apache-2.0 licensed
@@ -90,6 +96,8 @@ SINT works across execution surfaces such as MCP, A2A, ROS 2, MAVLink, MQTT/Spar
 - "approval tiers"
 - "physical AI governance"
 - "industrial AI safety"
+- "agent commerce governance"
+- "x402 policy enforcement"
 - "tamper-evident evidence ledger"
 - "open protocol and reference stack"
 - "real-world consequences"
