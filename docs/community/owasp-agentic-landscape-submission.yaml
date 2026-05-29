@@ -1,0 +1,47 @@
+schema: sint-owasp-agentic-landscape-submission-v0.1
+status: submission_ready
+tracking_issue: https://github.com/sint-ai/sint-protocol/issues/125
+source_pages:
+  landscape: https://genai.owasp.org/ai-security-solutions-landscape/
+  q2_2026_agentic: https://genai.owasp.org/resource/ai-security-solutions-landscape-for-agentic-ai-q2-2026/
+submission_path:
+  label: Submit - Agentic AI Solution
+  page: https://genai.owasp.org/ai-security-solutions-landscape/
+solution:
+  name: SINT Protocol
+  type: open_source
+  repository: https://github.com/sint-ai/sint-protocol
+  category_stages:
+    - Deploy
+    - Operate
+    - Monitor
+    - Govern
+    - Test & Evaluate
+  short_description: >
+    Open-source runtime security and governance layer for agentic and physical
+    AI. SINT places a PolicyGateway before tool calls, ROS2 actions, MCP tools,
+    A2A tasks, IoT/industrial bridges, and payment-like actions.
+  differentiator: >
+    Physical-AI and industrial safety enforcement: velocity/force/geofence
+    constraints in tokens, ROS2/SROS2 and industrial bridge fixtures, e-stop
+    rollback semantics, hardware safety handshakes, and receipt-backed policy
+    decisions for real-world actions.
+evidence:
+  owasp_asi_mapping: docs/conformance/owasp-asi-mapping.md
+  asi_fixture_pack: packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json
+  physical_ai_fixture_pack: packages/conformance-tests/fixtures/physical-ai/runtime-safety-fixtures.v0.1.json
+  conformance_command: pnpm --filter @pshkv/conformance-tests test:fixtures
+coverage:
+  ASI01: full
+  ASI02: full
+  ASI03: full
+  ASI04: full
+  ASI05: full
+  ASI06: full
+  ASI07: full
+  ASI08: full
+  ASI09: full
+  ASI10: full
+claim_boundary:
+  - Submission-ready packet only.
+  - Does not claim OWASP inclusion, endorsement, or review acceptance.
