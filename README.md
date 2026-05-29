@@ -208,6 +208,7 @@ Deploy note:
 
 Community/adoption assets:
 - [`docs/community/discord-launch-runbook.md`](docs/community/discord-launch-runbook.md)
+- [`docs/community/aaif-rfc001-submission-packet.md`](docs/community/aaif-rfc001-submission-packet.md)
 - [`docs/community/discord-launch-kit.md`](docs/community/discord-launch-kit.md)
 - [`docs/community/external-contributor-onboarding.md`](docs/community/external-contributor-onboarding.md)
 - [`docs/community/good-first-issues-board.md`](docs/community/good-first-issues-board.md)
