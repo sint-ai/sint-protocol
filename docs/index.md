@@ -41,6 +41,7 @@ features:
 - Standalone certification tool: [Guide](./guides/standalone-certification-tool.md)
 - NIST submission playbook: [Guide](./guides/nist-submission-playbook.md)
 - Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
+- AAIF RFC-001 submission packet: [Community/AAIF Packet](./community/aaif-rfc001-submission-packet.md)
 - Discord launch kit: [Community/Discord Launch Kit](./community/discord-launch-kit.md)
 - Good-first-issues board: [Community/Starter Board](./community/good-first-issues-board.md)
 - Collaboration reply playbook: [Community/Replies](./community/open-source-collaboration-replies.md)

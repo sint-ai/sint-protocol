@@ -74,6 +74,7 @@ export default defineConfig({
         items: [
           { text: "AAIF Gate Labels", link: "/community/aaif-gate-labels" },
           { text: "AAIF Evidence Dossier", link: "/community/aaif-evidence-dossier" },
+          { text: "AAIF RFC-001 Submission Packet", link: "/community/aaif-rfc001-submission-packet" },
           { text: "AAIF Proposal Template", link: "/community/aaif-resubmission-proposal-template" },
           { text: "Adopters And Evidence", link: "/community/adopters" },
           { text: "OpenSSF Gap Tracker", link: "/community/openssf-gap-tracker" },
