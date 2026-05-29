@@ -590,6 +590,108 @@ export interface PaymentGovernanceFixture {
   }>;
 }
 
+export interface AgentCommerceGovernanceFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profile: {
+    readonly resources: readonly string[];
+    readonly actions: readonly string[];
+    readonly taskModes: readonly string[];
+    readonly decisionReasons: readonly AgentCommerceDecisionReason[];
+    readonly evidenceRequiredFor: readonly string[];
+  };
+  readonly defaults: {
+    readonly referenceTime: string;
+    readonly minReputationScore: number;
+    readonly highValueApprovalThresholdUsdc: number;
+    readonly maxX402SessionCapUsdc: number;
+    readonly maxPermitExpiryMinutes: number;
+    readonly allowedRecipients: readonly string[];
+    readonly registeredAgents: readonly string[];
+    readonly reputationByAgent: Record<string, number>;
+    readonly usedSettlementReceiptIds: readonly string[];
+  };
+  readonly cases: readonly AgentCommerceGovernanceCase[];
+}
+
+export type AgentCommerceDecision = "allow" | "deny" | "escalate";
+
+export type AgentCommerceDecisionReason =
+  | "ALLOW"
+  | "AGENT_IDENTITY_REQUIRED"
+  | "SCOPE_NOT_AUTHORIZED"
+  | "REPUTATION_BELOW_THRESHOLD"
+  | "VALUE_REQUIRES_APPROVAL"
+  | "STATE_TRANSITION_INVALID"
+  | "BID_NOT_COMPETITIVE"
+  | "PROOF_REQUIRED"
+  | "X402_CAP_EXCEEDED"
+  | "X402_PERMIT_EXPIRED"
+  | "RECIPIENT_NOT_ALLOWLISTED"
+  | "SETTLEMENT_STATE_INVALID"
+  | "RECEIPT_REPLAY";
+
+export interface AgentCommerceGovernanceCase {
+  readonly name: string;
+  readonly principal: string;
+  readonly capability: {
+    readonly resources: readonly string[];
+    readonly actions: readonly string[];
+  };
+  readonly request: {
+    readonly resource: string;
+    readonly action: string;
+    readonly task?: {
+      readonly id: string;
+      readonly mode: "bounty" | "claim" | "pitch" | "benchmark" | "auction";
+      readonly status:
+        | "draft"
+        | "open"
+        | "claimed"
+        | "worker_selected"
+        | "pending_approval"
+        | "accepted"
+        | "settled";
+      readonly rewardUsdc: number;
+      readonly recipient?: string;
+      readonly stakeRequiredUsdc?: number;
+      readonly auctionType?: "english" | "reverse_english" | "dutch" | "reverse_dutch";
+      readonly maxPriceUsdc?: number;
+      readonly currentLowestBidUsdc?: number;
+      readonly selectedWorker?: string;
+      readonly metricDescription?: string;
+      readonly metricTarget?: string;
+    };
+    readonly bid?: {
+      readonly priceUsdc: number;
+    };
+    readonly proof?: {
+      readonly type: string;
+      readonly metricName?: string;
+      readonly metricValue?: number;
+      readonly digest?: string;
+    };
+    readonly x402?: {
+      readonly sessionId: string;
+      readonly recipient: string;
+      readonly permitCapUsdc: number;
+      readonly expiresAt: string;
+    };
+    readonly settlement?: {
+      readonly recipient: string;
+      readonly receiptId: string;
+    };
+  };
+  readonly expected: {
+    readonly decision: AgentCommerceDecision;
+    readonly reason: AgentCommerceDecisionReason;
+    readonly requiredTier?: string;
+    readonly nextStatus?: string;
+    readonly evidenceRequired: boolean;
+  };
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -689,6 +791,12 @@ export function loadActionRefExplainabilityFixture(): ActionRefExplainabilityFix
 export function loadPaymentGovernanceFixture(): PaymentGovernanceFixture {
   return loadFixture<PaymentGovernanceFixture>(
     "economy/payment-governance.v1.json",
+  );
+}
+
+export function loadAgentCommerceGovernanceFixture(): AgentCommerceGovernanceFixture {
+  return loadFixture<AgentCommerceGovernanceFixture>(
+    "economy/agent-commerce-governance.v1.json",
   );
 }
 

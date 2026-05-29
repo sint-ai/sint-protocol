@@ -1,0 +1,499 @@
+{
+  "fixtureId": "sint.economy.agent-commerce-governance.v1",
+  "schemaVersion": "2026-05-29",
+  "description": "Executable governance fixture for agent-to-agent task markets and x402-style machine payments: identity, scoped market actions, task-mode transitions, reputation gates, auction rules, benchmark proofs, x402 spend caps, and settlement receipts.",
+  "profile": {
+    "resources": [
+      "market://task/*",
+      "market://settlement/*",
+      "x402://session/*"
+    ],
+    "actions": [
+      "create",
+      "pitch",
+      "bid",
+      "claim",
+      "submit",
+      "submit_proof",
+      "select_worker",
+      "accept",
+      "release",
+      "authorize_permit"
+    ],
+    "taskModes": [
+      "bounty",
+      "claim",
+      "pitch",
+      "benchmark",
+      "auction"
+    ],
+    "decisionReasons": [
+      "ALLOW",
+      "AGENT_IDENTITY_REQUIRED",
+      "SCOPE_NOT_AUTHORIZED",
+      "REPUTATION_BELOW_THRESHOLD",
+      "VALUE_REQUIRES_APPROVAL",
+      "STATE_TRANSITION_INVALID",
+      "BID_NOT_COMPETITIVE",
+      "PROOF_REQUIRED",
+      "X402_CAP_EXCEEDED",
+      "X402_PERMIT_EXPIRED",
+      "RECIPIENT_NOT_ALLOWLISTED",
+      "SETTLEMENT_STATE_INVALID",
+      "RECEIPT_REPLAY"
+    ],
+    "evidenceRequiredFor": [
+      "deny",
+      "escalate",
+      "select_worker",
+      "accept",
+      "release"
+    ]
+  },
+  "defaults": {
+    "referenceTime": "2026-05-29T12:00:00.000Z",
+    "minReputationScore": 0.7,
+    "highValueApprovalThresholdUsdc": 50,
+    "maxX402SessionCapUsdc": 25,
+    "maxPermitExpiryMinutes": 60,
+    "allowedRecipients": [
+      "merchant://taskmarket-escrow",
+      "merchant://x402-router",
+      "agent://requester-alpha",
+      "agent://worker-verified"
+    ],
+    "registeredAgents": [
+      "agent://requester-alpha",
+      "agent://worker-verified",
+      "agent://worker-new"
+    ],
+    "reputationByAgent": {
+      "agent://requester-alpha": 0.93,
+      "agent://worker-verified": 0.88,
+      "agent://worker-new": 0.41
+    },
+    "usedSettlementReceiptIds": [
+      "settlement-receipt-duplicate"
+    ]
+  },
+  "cases": [
+    {
+      "name": "allow bounty task creation within value threshold",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["create"]
+      },
+      "request": {
+        "resource": "market://task/t-001",
+        "action": "create",
+        "task": {
+          "id": "t-001",
+          "mode": "bounty",
+          "status": "draft",
+          "rewardUsdc": 12,
+          "recipient": "merchant://taskmarket-escrow"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "open",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "escalate high value benchmark creation",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["create"]
+      },
+      "request": {
+        "resource": "market://task/t-002",
+        "action": "create",
+        "task": {
+          "id": "t-002",
+          "mode": "benchmark",
+          "status": "draft",
+          "rewardUsdc": 125,
+          "recipient": "merchant://taskmarket-escrow",
+          "metricDescription": "lowest p95 latency with passing tests",
+          "metricTarget": "p95_ms <= 250"
+        }
+      },
+      "expected": {
+        "decision": "escalate",
+        "reason": "VALUE_REQUIRES_APPROVAL",
+        "requiredTier": "T3_COMMIT",
+        "nextStatus": "open",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny unregistered worker claim",
+      "principal": "agent://worker-unregistered",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["claim"]
+      },
+      "request": {
+        "resource": "market://task/t-003",
+        "action": "claim",
+        "task": {
+          "id": "t-003",
+          "mode": "claim",
+          "status": "open",
+          "rewardUsdc": 8,
+          "stakeRequiredUsdc": 1
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "AGENT_IDENTITY_REQUIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny low reputation exclusive claim",
+      "principal": "agent://worker-new",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["claim"]
+      },
+      "request": {
+        "resource": "market://task/t-004",
+        "action": "claim",
+        "task": {
+          "id": "t-004",
+          "mode": "claim",
+          "status": "open",
+          "rewardUsdc": 10,
+          "stakeRequiredUsdc": 2
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "REPUTATION_BELOW_THRESHOLD",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow verified worker claim",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["claim"]
+      },
+      "request": {
+        "resource": "market://task/t-005",
+        "action": "claim",
+        "task": {
+          "id": "t-005",
+          "mode": "claim",
+          "status": "open",
+          "rewardUsdc": 10,
+          "stakeRequiredUsdc": 2
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "claimed",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "allow pitch submission without payment",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["pitch"]
+      },
+      "request": {
+        "resource": "market://task/t-006",
+        "action": "pitch",
+        "task": {
+          "id": "t-006",
+          "mode": "pitch",
+          "status": "open",
+          "rewardUsdc": 20
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "open",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "allow requester to select pitch worker with evidence",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["select_worker"]
+      },
+      "request": {
+        "resource": "market://task/t-007",
+        "action": "select_worker",
+        "task": {
+          "id": "t-007",
+          "mode": "pitch",
+          "status": "open",
+          "rewardUsdc": 20,
+          "selectedWorker": "agent://worker-verified"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "worker_selected",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny auction bid that does not undercut current lowest bid",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["bid"]
+      },
+      "request": {
+        "resource": "market://task/t-008",
+        "action": "bid",
+        "task": {
+          "id": "t-008",
+          "mode": "auction",
+          "auctionType": "english",
+          "status": "open",
+          "rewardUsdc": 20,
+          "maxPriceUsdc": 20,
+          "currentLowestBidUsdc": 7
+        },
+        "bid": {
+          "priceUsdc": 8
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "BID_NOT_COMPETITIVE",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny benchmark submission without proof digest",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["submit_proof"]
+      },
+      "request": {
+        "resource": "market://task/t-009",
+        "action": "submit_proof",
+        "task": {
+          "id": "t-009",
+          "mode": "benchmark",
+          "status": "open",
+          "rewardUsdc": 15
+        },
+        "proof": {
+          "type": "benchmark",
+          "metricName": "p95_latency_ms",
+          "metricValue": 212
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "PROOF_REQUIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow benchmark submission with digest and metric",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["submit_proof"]
+      },
+      "request": {
+        "resource": "market://task/t-010",
+        "action": "submit_proof",
+        "task": {
+          "id": "t-010",
+          "mode": "benchmark",
+          "status": "open",
+          "rewardUsdc": 15
+        },
+        "proof": {
+          "type": "benchmark",
+          "metricName": "p95_latency_ms",
+          "metricValue": 184,
+          "digest": "sha256:2eb0c9f6a12a5e42b15b50f63783c2f401de42ccbb6ca2b1e5ceef07d0e2b2f7"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "pending_approval",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "allow requester accept low-value work with evidence",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://task/*"],
+        "actions": ["accept"]
+      },
+      "request": {
+        "resource": "market://task/t-011",
+        "action": "accept",
+        "task": {
+          "id": "t-011",
+          "mode": "bounty",
+          "status": "pending_approval",
+          "rewardUsdc": 12,
+          "selectedWorker": "agent://worker-verified"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "accepted",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny x402 permit above session cap",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["x402://session/*"],
+        "actions": ["authorize_permit"]
+      },
+      "request": {
+        "resource": "x402://session/s-012",
+        "action": "authorize_permit",
+        "x402": {
+          "sessionId": "s-012",
+          "recipient": "merchant://x402-router",
+          "permitCapUsdc": 30,
+          "expiresAt": "2026-05-29T12:30:00.000Z"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "X402_CAP_EXCEEDED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny expired x402 permit",
+      "principal": "agent://worker-verified",
+      "capability": {
+        "resources": ["x402://session/*"],
+        "actions": ["authorize_permit"]
+      },
+      "request": {
+        "resource": "x402://session/s-013",
+        "action": "authorize_permit",
+        "x402": {
+          "sessionId": "s-013",
+          "recipient": "merchant://x402-router",
+          "permitCapUsdc": 5,
+          "expiresAt": "2026-05-29T11:59:59.000Z"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "X402_PERMIT_EXPIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny settlement before accepted task state",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://settlement/*"],
+        "actions": ["release"]
+      },
+      "request": {
+        "resource": "market://settlement/t-014",
+        "action": "release",
+        "task": {
+          "id": "t-014",
+          "mode": "bounty",
+          "status": "pending_approval",
+          "rewardUsdc": 12,
+          "selectedWorker": "agent://worker-verified"
+        },
+        "settlement": {
+          "recipient": "agent://worker-verified",
+          "receiptId": "settlement-receipt-009"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "SETTLEMENT_STATE_INVALID",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny replayed settlement receipt",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://settlement/*"],
+        "actions": ["release"]
+      },
+      "request": {
+        "resource": "market://settlement/t-015",
+        "action": "release",
+        "task": {
+          "id": "t-015",
+          "mode": "bounty",
+          "status": "accepted",
+          "rewardUsdc": 12,
+          "selectedWorker": "agent://worker-verified"
+        },
+        "settlement": {
+          "recipient": "agent://worker-verified",
+          "receiptId": "settlement-receipt-duplicate"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "RECEIPT_REPLAY",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow accepted task settlement release",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["market://settlement/*"],
+        "actions": ["release"]
+      },
+      "request": {
+        "resource": "market://settlement/t-016",
+        "action": "release",
+        "task": {
+          "id": "t-016",
+          "mode": "bounty",
+          "status": "accepted",
+          "rewardUsdc": 12,
+          "selectedWorker": "agent://worker-verified"
+        },
+        "settlement": {
+          "recipient": "agent://worker-verified",
+          "receiptId": "settlement-receipt-011"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "settled",
+        "evidenceRequired": true
+      }
+    }
+  ]
+}

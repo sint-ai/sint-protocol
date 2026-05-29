@@ -95,6 +95,16 @@ export default defineConfig({
         ],
       },
       {
+        text: "Specs",
+        items: [
+          { text: "Agent Commerce Governance Profile", link: "/specs/agent-commerce-governance-profile-v1" },
+          { text: "Payment Governance Profile", link: "/specs/payment-governance-profile-v1" },
+          { text: "Action Ref Explainability Profile", link: "/specs/action-ref-identity-explainability-profile" },
+          { text: "APS-SINT Handshake", link: "/specs/aps-sint-handshake-v1" },
+          { text: "SINT Industrial Action Profile", link: "/specs/sint-industrial-action-profile" },
+        ],
+      },
+      {
         text: "Roadmaps",
         items: [
           { text: "End-of-Year 2026 Execution Plan", link: "/roadmaps/end-of-year-2026-execution-plan" },
