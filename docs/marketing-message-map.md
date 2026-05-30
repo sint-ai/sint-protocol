@@ -82,6 +82,16 @@ confined spaces, or move through shared work zones. The message is not
 "certification replacement"; it is "policy receipts and runtime evidence for
 supervisors, safety teams, surveyors, and post-incident review."
 
+Latest proof points:
+
+- executable shipyard humanoid conformance scenarios for welding, hot work,
+  confined spaces, material handling, bystander escalation, simulation receipt
+  drift, and e-stop rollback
+- ROS 2 weld-start mapping plus OPC UA safety-signal mappings for permit,
+  fire-watch, fume extraction, gas monitor, interlock, and e-stop context
+- `sintctl shipyard evidence export` produces hash-chained JSONL evidence for
+  supervisor review, remote survey support, and incident reconstruction
+
 ## Proof points to emphasize
 
 - Apache-2.0 licensed

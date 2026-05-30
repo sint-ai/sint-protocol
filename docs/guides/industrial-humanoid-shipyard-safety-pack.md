@@ -4,6 +4,9 @@ This guide defines a SINT safety and evidence pack for industrial humanoids
 working in shipyards, with emphasis on welding, hot work, confined-space entry,
 inspection, material handling, and remote survey evidence.
 
+Status: executable conformance pack plus Sprint 2 bridge and evidence-export
+scaffolding shipped.
+
 The target deployment shape matches companies building humanoid robots for
 heavy industry: a robot may inspect a hull block, enter a shared work zone,
 start a welding arc, grind material, lift parts, or generate evidence for a
@@ -22,6 +25,24 @@ Runtime mapping helpers:
 - ROS 2 weld-start profile: `packages/bridge-ros2/src/shipyard-humanoid-profile.ts`
 - OPC UA safety signals: `packages/bridge-opcua/src/shipyard-safety-signals.ts`
 - Evidence export CLI: `sintctl shipyard evidence export`
+- Sample evidence export: `docs/reports/shipyard-humanoid-evidence-export.jsonl`
+
+## What Shipped
+
+The latest build turns the original static conformance profile into a working
+operator path:
+
+- conformance scenarios declare expected allow, deny, escalate, and rollback
+  decisions for shipyard humanoid hazards
+- ROS 2 helpers map weld-start intent into a SINT-gated factory action envelope
+  and Isaac Sim receipt stub
+- OPC UA helpers map hot-work permit, fire-watch, fume extraction, gas monitor,
+  interlock, and e-stop safety signals into canonical resources
+- `sintctl shipyard evidence export` converts the fixture into hash-chained
+  JSONL records for supervisor review, remote survey support, and incident
+  reconstruction
+- docs and outreach material keep certification language support-only: SINT
+  provides policy receipts and evidence, not welding or shipyard certification
 
 ## Scope
 

@@ -50,6 +50,19 @@ systems:
 
 - **Installable MCP proxy:** `npx -y sint-mcp --stdio` runs the security-first
   multi-MCP proxy.
+- **Industrial humanoid shipyard safety:** executable conformance fixtures now
+  cover Persona-style shipyard humanoid welding, hot-work permits, fire watch,
+  fume extraction, confined-space gas safety, bystander escalation,
+  simulation-to-execution drift, material load envelopes, and unconditional
+  e-stop rollback.
+- **Shipyard bridge and evidence scaffolding:** ROS 2 weld-start profile
+  helpers, OPC UA safety-signal mappings, Isaac Sim receipt stubs, and
+  `sintctl shipyard evidence export` generate hash-chained JSONL evidence for
+  supervisor review, remote survey support, and incident reconstruction.
+- **Agent commerce governance:** the Economic Layer now includes a conformance
+  profile for agent-to-agent task markets: task creation, bids, worker
+  selection, benchmark-proof submission, settlement release, and x402-style
+  payment permits.
 - **Five-minute interceptor demo:** `pnpm run demo:interceptor-quickstart`
   shows `request -> decision -> receipt` and the fail-closed path.
 - **Production gateway posture:** production mode requires durable stores,
@@ -741,6 +754,8 @@ docker-compose up
 - AutoGen interop fixtures guide: [`docs/guides/autogen-interop-fixtures.md`](docs/guides/autogen-interop-fixtures.md)
 - AgentSkill delegated authority fixtures guide: [`docs/guides/agentskill-authz-interop-fixtures.md`](docs/guides/agentskill-authz-interop-fixtures.md)
 - Industrial humanoid shipyard safety pack: [`docs/guides/industrial-humanoid-shipyard-safety-pack.md`](docs/guides/industrial-humanoid-shipyard-safety-pack.md)
+- Industrial humanoid shipyard sprint: [`docs/roadmaps/industrial-humanoid-shipyard-safety-sprint.md`](docs/roadmaps/industrial-humanoid-shipyard-safety-sprint.md)
+- Shipyard humanoid evidence export sample: [`docs/reports/shipyard-humanoid-evidence-export.jsonl`](docs/reports/shipyard-humanoid-evidence-export.jsonl)
 - action_ref identity/explainability profile: [`docs/specs/action-ref-identity-explainability-profile.md`](docs/specs/action-ref-identity-explainability-profile.md)
 - Payment governance profile (Economic Layer v1): [`docs/specs/payment-governance-profile-v1.md`](docs/specs/payment-governance-profile-v1.md)
 - Agent commerce governance profile: [`docs/specs/agent-commerce-governance-profile-v1.md`](docs/specs/agent-commerce-governance-profile-v1.md)
