@@ -1760,6 +1760,132 @@ export function loadIndustrialCellSafetyPackFixture(): IndustrialCellSafetyPackF
   );
 }
 
+export interface IndustrialHumanoidShipyardSafetyPackFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scopeNote: string;
+  readonly deployment: {
+    readonly siteId: string;
+    readonly vesselBlockId: string;
+    readonly profile: "industrial-humanoid-shipyard";
+    readonly actors: readonly string[];
+    readonly robots: readonly Array<{
+      readonly id: string;
+      readonly kind: "humanoid";
+      readonly primaryTools: readonly string[];
+    }>;
+    readonly resources: readonly string[];
+  };
+  readonly policyTemplates: readonly Array<{
+    readonly templateId: string;
+    readonly resourcePattern: string;
+    readonly defaultTier: ApprovalTier;
+    readonly requiredPermits: readonly string[];
+    readonly requiredHardwareSafety: {
+      readonly permitState: "granted";
+      readonly interlockState: "closed";
+      readonly estopState: "clear";
+      readonly maxObservedAgeMs: number;
+    };
+  }>;
+  readonly shipyardScenarios: readonly Array<{
+    readonly id: string;
+    readonly description: string;
+    readonly resource: string;
+    readonly action: "observe" | "execute" | "enter" | "override";
+    readonly operation:
+      | "visual_inspection"
+      | "arc_weld_start"
+      | "confined_space_entry"
+      | "material_lift"
+      | "estop";
+    readonly permits?: Record<string, boolean>;
+    readonly constraints?: {
+      readonly maxLoadKg?: number;
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly distanceToHumanM?: number;
+      readonly currentLoadKg?: number;
+    };
+    readonly simulation?: {
+      readonly expectedProgramDigest: string;
+      readonly submittedProgramDigest: string;
+      readonly receiptDigest: string;
+    };
+    readonly hardwareSafety: {
+      readonly permitState: "granted" | "denied" | "unknown" | "stale";
+      readonly interlockState: "closed" | "open" | "fault" | "unknown";
+      readonly estopState: "clear" | "triggered" | "unknown";
+      readonly controllerId: string;
+      readonly observedAgeMs: number;
+    };
+    readonly expectedDecision: "allow" | "deny" | "escalate" | "rollback";
+    readonly expectedTier: ApprovalTier;
+    readonly policyViolated?: string;
+    readonly evidenceEvent: string;
+    readonly rollbackTargetRef?: string;
+    readonly receiptRequired: boolean;
+  }>;
+  readonly absEvidenceExport: {
+    readonly purpose: string;
+    readonly format: "json-lines";
+    readonly requiredFields: readonly string[];
+    readonly dataQualityRules: readonly Array<{
+      readonly ruleId: string;
+      readonly description: string;
+      readonly maxSkewMs?: number;
+      readonly required?: boolean;
+    }>;
+  };
+  readonly fmeaExport: readonly Array<{
+    readonly failureMode: string;
+    readonly sourceScenarioId: string;
+    readonly hazard: string;
+    readonly sintDetection: string;
+    readonly sintControl: string;
+    readonly severity: number;
+    readonly occurrence: number;
+    readonly detection: number;
+    readonly requiredEvidence: readonly string[];
+  }>;
+  readonly safetyCaseMapping: readonly Array<{
+    readonly topic: string;
+    readonly sintSupport: string;
+    readonly claimBoundary: string;
+  }>;
+  readonly sprintPlan: {
+    readonly duration: string;
+    readonly goal: string;
+    readonly workstreams: readonly Array<{
+      readonly id: string;
+      readonly name: string;
+      readonly deliverables: readonly string[];
+    }>;
+  };
+  readonly successCriteria: {
+    readonly hotWorkPermitCovered: boolean;
+    readonly fireWatchCovered: boolean;
+    readonly fumeExtractionCovered: boolean;
+    readonly unsafeAtmosphereCovered: boolean;
+    readonly bystanderInWeldZoneCovered: boolean;
+    readonly simulationReceiptMismatchCovered: boolean;
+    readonly supervisorApprovalForWeldingCovered: boolean;
+    readonly loadEnvelopeCovered: boolean;
+    readonly estopRollbackCovered: boolean;
+    readonly absEvidenceExportHasDataQualityRules: boolean;
+    readonly fmeaRowsReferenceExecutableScenarios: boolean;
+    readonly claimsRemainSupportOnly: boolean;
+  };
+}
+
+export function loadIndustrialHumanoidShipyardSafetyPackFixture(): IndustrialHumanoidShipyardSafetyPackFixture {
+  return loadFixture<IndustrialHumanoidShipyardSafetyPackFixture>(
+    "industrial/industrial-humanoid-shipyard-safety-pack.v1.json",
+  );
+}
+
 export interface FactoryActionDemoFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

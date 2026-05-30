@@ -740,6 +740,7 @@ docker-compose up
 - gRPC bridge guide: [`docs/guides/grpc-bridge-skeleton.md`](docs/guides/grpc-bridge-skeleton.md)
 - AutoGen interop fixtures guide: [`docs/guides/autogen-interop-fixtures.md`](docs/guides/autogen-interop-fixtures.md)
 - AgentSkill delegated authority fixtures guide: [`docs/guides/agentskill-authz-interop-fixtures.md`](docs/guides/agentskill-authz-interop-fixtures.md)
+- Industrial humanoid shipyard safety pack: [`docs/guides/industrial-humanoid-shipyard-safety-pack.md`](docs/guides/industrial-humanoid-shipyard-safety-pack.md)
 - action_ref identity/explainability profile: [`docs/specs/action-ref-identity-explainability-profile.md`](docs/specs/action-ref-identity-explainability-profile.md)
 - Payment governance profile (Economic Layer v1): [`docs/specs/payment-governance-profile-v1.md`](docs/specs/payment-governance-profile-v1.md)
 - Agent commerce governance profile: [`docs/specs/agent-commerce-governance-profile-v1.md`](docs/specs/agent-commerce-governance-profile-v1.md)
