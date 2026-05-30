@@ -3,6 +3,10 @@
 import { randomUUID } from "node:crypto";
 import { buildQuery, requestJson, type CliConfig } from "./client.js";
 import { runStandaloneCertification } from "./certification.js";
+import {
+  runShipyardEvidenceExport,
+  type ShipyardEvidenceFormat,
+} from "./shipyard.js";
 
 type ParsedArgs = {
   positionals: string[];
@@ -91,6 +95,7 @@ Commands:
   certify run               Run standalone conformance certification suite
   registry publish          Publish a capability token to the public registry
   registry list             List published tokens (--issuer, --resource filters)
+  shipyard evidence export  Export shipyard humanoid safety evidence JSONL
 
 Examples:
   sintctl token issue --issuer <pub> --subject <pub> --resource ros2:///cmd_vel --actions publish --private-key <priv>
@@ -102,6 +107,7 @@ Examples:
   sintctl registry publish --token ./token.json --note "prod filesystem token"
   sintctl registry list --issuer <pub>
   sintctl registry list --resource mcp://filesystem
+  sintctl shipyard evidence export --output docs/reports/shipyard-evidence.jsonl
 `);
 }
 
@@ -121,7 +127,7 @@ async function run(): Promise<void> {
   const apiKey = getStringFlag(flags, "api-key");
   const config: CliConfig = { gatewayUrl, apiKey };
 
-  const [group, command] = positionals;
+  const [group, command, subcommand] = positionals;
 
   if (group === "token" && command === "issue") {
     const issuer = getStringFlag(flags, "issuer", true)!;
@@ -250,6 +256,29 @@ async function run(): Promise<void> {
     if (resource) params.set("resource", resource);
     const qs = params.toString();
     printJson(await requestJson(config, "GET", `/v1/registry/tokens${qs ? `?${qs}` : ""}`));
+    return;
+  }
+
+  if (group === "shipyard" && command === "evidence" && subcommand === "export") {
+    const format = (getStringFlag(flags, "format") ?? "jsonl") as ShipyardEvidenceFormat;
+    if (format !== "jsonl" && format !== "json") {
+      throw new Error("--format must be jsonl or json");
+    }
+
+    printJson(
+      runShipyardEvidenceExport({
+        rootDir: process.cwd(),
+        inputPath: getStringFlag(flags, "input"),
+        outputPath: getStringFlag(flags, "output"),
+        format,
+        generatedAt: getStringFlag(flags, "generated-at"),
+        workOrderPrefix: getStringFlag(flags, "work-order-prefix"),
+        weldProcedureSpecId: getStringFlag(flags, "wps-id"),
+        hotWorkPermitId: getStringFlag(flags, "hot-work-permit-id"),
+        fireWatchOperatorId: getStringFlag(flags, "fire-watch-operator-id"),
+        gasMonitorCalibrationRef: getStringFlag(flags, "gas-monitor-calibration-ref"),
+      }),
+    );
     return;
   }
 

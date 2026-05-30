@@ -17,6 +17,12 @@ Conformance test:
 
 - `packages/conformance-tests/src/industrial-humanoid-shipyard-safety-pack-conformance.test.ts`
 
+Runtime mapping helpers:
+
+- ROS 2 weld-start profile: `packages/bridge-ros2/src/shipyard-humanoid-profile.ts`
+- OPC UA safety signals: `packages/bridge-opcua/src/shipyard-safety-signals.ts`
+- Evidence export CLI: `sintctl shipyard evidence export`
+
 ## Scope
 
 The pack covers one shipyard block:
@@ -84,6 +90,18 @@ data-quality review, and incident reconstruction. Required fields include:
 Data quality rules require clock sync, calibrated sensors, and program digest
 binding between simulation and execution.
 
+Export JSONL evidence from the fixture:
+
+```bash
+pnpm --filter @pshkv/sintctl build
+node apps/sintctl/dist/cli.js shipyard evidence export \
+  --generated-at 2026-05-30T12:00:00.000Z \
+  --output docs/reports/shipyard-humanoid-evidence-export.jsonl
+```
+
+The export is hash chained with `eventHash` and `previousHash` so a surveyor or
+incident reviewer can detect missing or reordered records.
+
 ## Persona AI Fit
 
 Persona AI publicly describes industrial humanoids for shipyards, energy,
@@ -109,6 +127,14 @@ Run all fixture contracts:
 
 ```bash
 pnpm --filter @pshkv/conformance-tests test:fixtures
+```
+
+Run the bridge and CLI helpers:
+
+```bash
+pnpm --filter @pshkv/bridge-ros2 test
+pnpm --filter @pshkv/bridge-opcua test
+pnpm --filter @pshkv/sintctl test
 ```
 
 ## Exit Criteria

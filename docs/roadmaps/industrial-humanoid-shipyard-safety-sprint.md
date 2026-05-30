@@ -1,6 +1,6 @@
 # Industrial Humanoid Shipyard Safety Sprint
 
-Status: Sprint 1 executable profile shipped in conformance fixtures
+Status: Sprint 2 bridge and evidence-export scaffolding shipped
 
 This sprint turns the Persona-style industrial humanoid opportunity into a
 SINT product lane: safety policy, certification evidence, and runtime receipts
@@ -84,14 +84,24 @@ Status: complete in:
 
 ## Sprint 2 Candidate
 
-The next build slice should create a bridge skeleton that maps real controller
-events into this profile:
+Sprint 2 adds bridge-level scaffolding that maps controller and evidence
+surfaces into the executable profile:
 
 - ROS 2 / MoveIt action mapping for humanoid manipulation
-- OPC UA safety PLC permit and gas-monitor resource mapping
+- OPC UA safety PLC permit, fire-watch, fume extraction, gas-monitor, interlock,
+  and e-stop resource mapping
 - Isaac Sim / weld-simulator receipt adapter
+- `sintctl shipyard evidence export` command for hash-chained JSONL records
+
+Shipped code:
+
+- `packages/bridge-ros2/src/shipyard-humanoid-profile.ts`
+- `packages/bridge-opcua/src/shipyard-safety-signals.ts`
+- `apps/sintctl/src/shipyard.ts`
+
+Remaining candidate:
+
 - dashboard card for hot-work approvals and evidence replay
-- `sintctl shipyard evidence export` command
 
 ## Validation
 
@@ -100,6 +110,9 @@ Run:
 ```bash
 pnpm --filter @pshkv/conformance-tests exec vitest run src/industrial-humanoid-shipyard-safety-pack-conformance.test.ts
 pnpm --filter @pshkv/conformance-tests test:fixtures
+pnpm --filter @pshkv/bridge-ros2 test
+pnpm --filter @pshkv/bridge-opcua test
+pnpm --filter @pshkv/sintctl test
 pnpm run docs:build
 ```
 
