@@ -2,6 +2,12 @@
 
 Status: Sprint 2 bridge and evidence-export scaffolding shipped
 
+Latest shipped commits:
+
+- PR #234: executable industrial humanoid shipyard safety conformance pack
+- PR #235: ROS 2 weld-start mapping, OPC UA safety-signal helpers, and
+  `sintctl shipyard evidence export`
+
 This sprint turns the Persona-style industrial humanoid opportunity into a
 SINT product lane: safety policy, certification evidence, and runtime receipts
 for shipyard robots doing welding, inspection, confined-space, and material
@@ -102,6 +108,9 @@ Shipped code:
 Remaining candidate:
 
 - dashboard card for hot-work approvals and evidence replay
+- site-specific adapter examples for a real safety PLC, simulator artifact, and
+  ROS 2 controller surface
+- public demo script showing `request -> decision -> receipt -> JSONL export`
 
 ## Validation
 

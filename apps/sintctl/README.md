@@ -74,6 +74,11 @@ Override output path with `--output <path>`.
 safety fixture into hash-chained JSONL evidence records for remote survey,
 incident reconstruction, and supervisor review.
 
+This command is designed for the latest shipyard safety pack. It reads the
+fixture scenarios, preserves their expected policy decisions, adds work-order
+and safety-context fields, and links every output row with `previousHash` and
+`eventHash`.
+
 ```bash
 pnpm --filter @sint/sintctl build
 node apps/sintctl/dist/cli.js shipyard evidence export \
@@ -83,3 +88,11 @@ node apps/sintctl/dist/cli.js shipyard evidence export \
 
 Use `--format json` for a single JSON array, or `--input <path>` to point at a
 site-specific fixture with the same scenario shape.
+
+Useful options:
+
+- `--work-order-prefix <id>` sets the generated work-order prefix.
+- `--wps-id <id>` sets the weld procedure specification reference.
+- `--hot-work-permit-id <id>` sets the default hot-work permit reference.
+- `--fire-watch-operator-id <id>` sets the default fire-watch operator.
+- `--gas-monitor-calibration-ref <id>` sets the gas-monitor calibration record.

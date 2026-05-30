@@ -23,9 +23,9 @@ features:
   - title: Pre-Action Policy Gateway
     details: Every governed request is validated, tiered, approved when required, and refused fail-closed under revocation, missing signatures, or disconnect.
   - title: Physical and Industrial AI Coverage
-    details: Bridge profiles and fixtures cover MCP, A2A, ROS 2, MAVLink, PX4, MQTT/Sparkplug, OPC UA, Open-RMF, gRPC, and simulator-backed industrial flows.
+    details: Bridge profiles and fixtures cover MCP, A2A, ROS 2, MAVLink, PX4, MQTT/Sparkplug, OPC UA, Open-RMF, gRPC, shipyard humanoids, and simulator-backed industrial flows.
   - title: Evidence for Audits and Incident Response
-    details: Hash-chained ledger records, proof receipts, OWASP ASI mappings, MITRE ATLAS candidate mappings, and release-gate artifacts make decisions verifiable.
+    details: Hash-chained ledger records, proof receipts, shipyard JSONL evidence exports, OWASP ASI mappings, MITRE ATLAS candidate mappings, and release-gate artifacts make decisions verifiable.
 ---
 
 ## What Is SINT Protocol?
@@ -38,6 +38,9 @@ limits, and tamper-evident audit evidence before execution.
 
 ## Developer Quick Links
 
+- Latest shipped: [Industrial Humanoid Shipyard Safety Pack](./guides/industrial-humanoid-shipyard-safety-pack.md),
+  [Shipyard Safety Sprint](./roadmaps/industrial-humanoid-shipyard-safety-sprint.md),
+  [Agent Commerce Governance Profile](./specs/agent-commerce-governance-profile-v1.md)
 - Protocol overview: [Protocol](./protocol.md)
 - Active roadmap: [Roadmap](./roadmap.md)
 - Gateway API docs: `/v1/docs`
@@ -55,6 +58,8 @@ limits, and tamper-evident audit evidence before execution.
 - Collaboration reply playbook: [Community/Replies](./community/open-source-collaboration-replies.md)
 - Physical AI runtime safety working group: [Community/Working Group](./community/physical-ai-runtime-safety-working-group.md)
 - Industrial humanoid shipyard safety pack: [Guide](./guides/industrial-humanoid-shipyard-safety-pack.md)
+- Industrial humanoid shipyard safety sprint: [Roadmap](./roadmaps/industrial-humanoid-shipyard-safety-sprint.md)
+- Shipyard humanoid evidence export sample: `docs/reports/shipyard-humanoid-evidence-export.jsonl`
 - OWASP Agentic Landscape submission packet: [Community/OWASP Packet](./community/owasp-agentic-landscape-submission.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
