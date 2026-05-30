@@ -1,0 +1,589 @@
+{
+  "fixtureId": "industrial-humanoid-shipyard-safety-pack-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Shipyard humanoid safety pack for welding, hot-work, confined-space, material-handling, inspection, and certification-evidence workflows.",
+  "scopeNote": "SINT provides runtime governance, policy receipts, and safety-case evidence support for industrial humanoid deployments. This fixture is not a shipyard certification, ABS product approval, welding procedure qualification, OSHA compliance determination, or replacement for a certified robot safety controller.",
+  "deployment": {
+    "siteId": "shipyard-demo-01",
+    "vesselBlockId": "hull-block-17",
+    "profile": "industrial-humanoid-shipyard",
+    "actors": [
+      "industrial-humanoid-welder",
+      "welding-supervisor",
+      "fire-watch",
+      "safety-plc",
+      "abs-remote-surveyor",
+      "shipyard-operator"
+    ],
+    "robots": [
+      {
+        "id": "welder-humanoid-01",
+        "kind": "humanoid",
+        "primaryTools": [
+          "welding-torch",
+          "grinder",
+          "inspection-camera",
+          "material-gripper"
+        ]
+      }
+    ],
+    "resources": [
+      "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "humanoid://shipyard/robot/welder-humanoid-01/tool/grinder/start",
+      "humanoid://shipyard/robot/welder-humanoid-01/workspace/hull-block-17/confined-space/enter",
+      "humanoid://shipyard/robot/welder-humanoid-01/material/lift",
+      "humanoid://shipyard/robot/welder-humanoid-01/inspection/visual",
+      "humanoid://shipyard/robot/welder-humanoid-01/estop",
+      "opcua://safety-plc.shipyard.local/ns%3D2%3Bs%3DHotWork%2FPermit",
+      "opcua://safety-plc.shipyard.local/ns%3D2%3Bs%3DFireWatch%2FReady",
+      "opcua://safety-plc.shipyard.local/ns%3D2%3Bs%3DFumeExtraction%2FStatus",
+      "opcua://safety-plc.shipyard.local/ns%3D2%3Bs%3DGasMonitor%2FO2"
+    ]
+  },
+  "policyTemplates": [
+    {
+      "templateId": "shipyard-hot-work-welding",
+      "resourcePattern": "humanoid://shipyard/robot/*/tool/welding-torch/*",
+      "defaultTier": "T3_commit",
+      "requiredPermits": [
+        "hotWorkPermit",
+        "fireWatchReady",
+        "fumeExtractionOnline",
+        "gasAtmosphereSafe",
+        "simulationReceipt"
+      ],
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 2500
+      }
+    },
+    {
+      "templateId": "shipyard-confined-space-entry",
+      "resourcePattern": "humanoid://shipyard/robot/*/workspace/*/confined-space/enter",
+      "defaultTier": "T3_commit",
+      "requiredPermits": [
+        "confinedSpacePermit",
+        "gasAtmosphereSafe",
+        "attendantReady",
+        "commsLinkReady"
+      ],
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 2500
+      }
+    },
+    {
+      "templateId": "shipyard-material-handling",
+      "resourcePattern": "humanoid://shipyard/robot/*/material/lift",
+      "defaultTier": "T2_act",
+      "requiredPermits": [
+        "liftPlanApproved",
+        "zoneClear",
+        "loadWithinEnvelope"
+      ],
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 2500
+      }
+    },
+    {
+      "templateId": "shipyard-visual-inspection",
+      "resourcePattern": "humanoid://shipyard/robot/*/inspection/*",
+      "defaultTier": "T0_observe",
+      "requiredPermits": [
+        "zoneAccessLogged"
+      ],
+      "requiredHardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "maxObservedAgeMs": 5000
+      }
+    }
+  ],
+  "shipyardScenarios": [
+    {
+      "id": "visual-inspection-allowed",
+      "description": "Humanoid performs visual seam inspection in an authorized zone without physical actuation.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/inspection/visual",
+      "action": "observe",
+      "operation": "visual_inspection",
+      "permits": {
+        "zoneAccessLogged": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 120
+      },
+      "expectedDecision": "allow",
+      "expectedTier": "T0_observe",
+      "evidenceEvent": "shipyard.inspection.visual.allowed",
+      "receiptRequired": true
+    },
+    {
+      "id": "weld-start-without-hot-work-permit",
+      "description": "Humanoid attempts to start arc welding without an active hot-work permit.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": false,
+        "fireWatchReady": true,
+        "fumeExtractionOnline": true,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 80
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "HOT_WORK_PERMIT_REQUIRED",
+      "evidenceEvent": "shipyard.hotwork.permit.missing",
+      "receiptRequired": true
+    },
+    {
+      "id": "weld-start-fire-watch-not-ready",
+      "description": "Humanoid attempts hot work while the assigned fire-watch station is not ready.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": true,
+        "fireWatchReady": false,
+        "fumeExtractionOnline": true,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 75
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "FIRE_WATCH_REQUIRED",
+      "evidenceEvent": "shipyard.firewatch.not_ready",
+      "receiptRequired": true
+    },
+    {
+      "id": "fume-extraction-offline",
+      "description": "Welding path is otherwise valid but fume extraction is offline.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": true,
+        "fireWatchReady": true,
+        "fumeExtractionOnline": false,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 90
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "FUME_EXTRACTION_REQUIRED",
+      "evidenceEvent": "shipyard.fume_extraction.offline",
+      "receiptRequired": true
+    },
+    {
+      "id": "unsafe-atmosphere-confined-space",
+      "description": "Robot requests confined-space entry while gas-monitor context is unsafe.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/workspace/hull-block-17/confined-space/enter",
+      "action": "enter",
+      "operation": "confined_space_entry",
+      "permits": {
+        "confinedSpacePermit": true,
+        "gasAtmosphereSafe": false,
+        "attendantReady": true,
+        "commsLinkReady": true
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 60
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "ATMOSPHERE_UNSAFE",
+      "evidenceEvent": "shipyard.gas_monitor.unsafe",
+      "receiptRequired": true
+    },
+    {
+      "id": "bystander-in-weld-zone",
+      "description": "Bystander enters the weld envelope during a high-consequence welding request.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": true,
+        "fireWatchReady": true,
+        "fumeExtractionOnline": true,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": true
+      },
+      "physicalContext": {
+        "humanDetected": true,
+        "distanceToHumanM": 1.2
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 70
+      },
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "policyViolated": "BYSTANDER_IN_WELD_ZONE",
+      "evidenceEvent": "shipyard.human.detected_in_weld_zone",
+      "receiptRequired": true
+    },
+    {
+      "id": "simulation-receipt-mismatch",
+      "description": "Offline welding program hash does not match the simulation receipt bound to approval.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": true,
+        "fireWatchReady": true,
+        "fumeExtractionOnline": true,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": false
+      },
+      "simulation": {
+        "expectedProgramDigest": "sha256:1d5d2f257b67bb66f7a2f6c72d1c67f8aeafedec8bb8e9c1d12f962ef889d5b8",
+        "submittedProgramDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "receiptDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 95
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T3_commit",
+      "policyViolated": "SIMULATION_RECEIPT_MISMATCH",
+      "evidenceEvent": "shipyard.simulation.receipt_mismatch",
+      "receiptRequired": true
+    },
+    {
+      "id": "valid-weld-start-requires-supervisor-approval",
+      "description": "All hot-work preconditions are satisfied; weld start still escalates to supervisor approval because arc welding is irreversible physical work.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/tool/welding-torch/arc_start",
+      "action": "execute",
+      "operation": "arc_weld_start",
+      "permits": {
+        "hotWorkPermit": true,
+        "fireWatchReady": true,
+        "fumeExtractionOnline": true,
+        "gasAtmosphereSafe": true,
+        "simulationReceipt": true
+      },
+      "simulation": {
+        "expectedProgramDigest": "sha256:1d5d2f257b67bb66f7a2f6c72d1c67f8aeafedec8bb8e9c1d12f962ef889d5b8",
+        "submittedProgramDigest": "sha256:1d5d2f257b67bb66f7a2f6c72d1c67f8aeafedec8bb8e9c1d12f962ef889d5b8",
+        "receiptDigest": "sha256:9b8da3edcf3719892fd0ccf56b09256cf2ec0e16ad73e9dd3d232cc0bb10e6bd"
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 70
+      },
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "policyViolated": "SUPERVISOR_APPROVAL_REQUIRED",
+      "evidenceEvent": "shipyard.weld.supervisor_approval_required",
+      "receiptRequired": true
+    },
+    {
+      "id": "material-lift-over-envelope",
+      "description": "Humanoid material lift exceeds the token load envelope for the workcell.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/material/lift",
+      "action": "execute",
+      "operation": "material_lift",
+      "constraints": {
+        "maxLoadKg": 18
+      },
+      "physicalContext": {
+        "currentLoadKg": 22
+      },
+      "permits": {
+        "liftPlanApproved": true,
+        "zoneClear": true,
+        "loadWithinEnvelope": false
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 85
+      },
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "policyViolated": "LOAD_LIMIT_EXCEEDED",
+      "evidenceEvent": "shipyard.material.load_limit_exceeded",
+      "receiptRequired": true
+    },
+    {
+      "id": "estop-during-weld",
+      "description": "Emergency stop is triggered during a welding sequence.",
+      "resource": "humanoid://shipyard/robot/welder-humanoid-01/estop",
+      "action": "override",
+      "operation": "estop",
+      "hardwareSafety": {
+        "permitState": "denied",
+        "interlockState": "closed",
+        "estopState": "triggered",
+        "controllerId": "safety-plc-shipyard-01",
+        "observedAgeMs": 25
+      },
+      "expectedDecision": "rollback",
+      "expectedTier": "T3_commit",
+      "policyViolated": "ESTOP_UNCONDITIONAL",
+      "evidenceEvent": "shipyard.estop.triggered",
+      "rollbackTargetRef": "sint://action/welder-humanoid-01/hull-block-17/last-safe-state",
+      "receiptRequired": true
+    }
+  ],
+  "absEvidenceExport": {
+    "purpose": "Support remote survey, audit replay, data quality review, and incident reconstruction for shipyard humanoid work.",
+    "format": "json-lines",
+    "requiredFields": [
+      "siteId",
+      "vesselBlockId",
+      "robotId",
+      "workOrderId",
+      "weldProcedureSpecId",
+      "hotWorkPermitId",
+      "fireWatchOperatorId",
+      "gasMonitorCalibrationRef",
+      "fumeExtractionStatus",
+      "simulationReceiptDigest",
+      "policyDecision",
+      "assignedTier",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "dataQualityRules": [
+      {
+        "ruleId": "shipyard-evidence-clock-sync",
+        "description": "Robot, safety PLC, gateway, and survey export timestamps must share a bounded clock source.",
+        "maxSkewMs": 250
+      },
+      {
+        "ruleId": "shipyard-evidence-calibrated-sensors",
+        "description": "Gas monitor and proximity sensor evidence must include calibration references.",
+        "required": true
+      },
+      {
+        "ruleId": "shipyard-evidence-program-binding",
+        "description": "Welding program digest must match the digest approved in the simulation receipt.",
+        "required": true
+      }
+    ]
+  },
+  "fmeaExport": [
+    {
+      "failureMode": "hot work without permit",
+      "sourceScenarioId": "weld-start-without-hot-work-permit",
+      "hazard": "unapproved ignition source in shipyard work area",
+      "sintDetection": "hotWorkPermit false",
+      "sintControl": "deny before arc start and emit shipyard.hotwork.permit.missing",
+      "severity": 10,
+      "occurrence": 3,
+      "detection": 2,
+      "requiredEvidence": [
+        "hotWorkPermitId",
+        "policyViolated",
+        "eventHash",
+        "previousHash"
+      ]
+    },
+    {
+      "failureMode": "fire watch missing",
+      "sourceScenarioId": "weld-start-fire-watch-not-ready",
+      "hazard": "delayed detection of ignition or slag fire",
+      "sintDetection": "fireWatchReady false",
+      "sintControl": "deny before arc start and require assigned fire watch",
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 2,
+      "requiredEvidence": [
+        "fireWatchOperatorId",
+        "policyViolated",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "unsafe atmosphere in confined space",
+      "sourceScenarioId": "unsafe-atmosphere-confined-space",
+      "hazard": "oxygen deficiency or hazardous atmosphere exposure",
+      "sintDetection": "gasAtmosphereSafe false",
+      "sintControl": "deny confined-space entry before robot motion",
+      "severity": 10,
+      "occurrence": 2,
+      "detection": 2,
+      "requiredEvidence": [
+        "gasMonitorCalibrationRef",
+        "policyViolated",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "bystander inside weld envelope",
+      "sourceScenarioId": "bystander-in-weld-zone",
+      "hazard": "burn, flash, collision, or fume exposure",
+      "sintDetection": "physicalContext.humanDetected and distanceToHumanM below envelope threshold",
+      "sintControl": "escalate to T3 supervisor review or deny depending on site policy",
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 3,
+      "requiredEvidence": [
+        "physicalContext.humanDetected",
+        "distanceToHumanM",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "simulation-to-execution drift",
+      "sourceScenarioId": "simulation-receipt-mismatch",
+      "hazard": "robot executes a program not reviewed in simulation",
+      "sintDetection": "submittedProgramDigest differs from expectedProgramDigest",
+      "sintControl": "deny before tool actuation and require fresh simulation receipt",
+      "severity": 9,
+      "occurrence": 2,
+      "detection": 2,
+      "requiredEvidence": [
+        "expectedProgramDigest",
+        "submittedProgramDigest",
+        "simulationReceiptDigest",
+        "eventHash"
+      ]
+    },
+    {
+      "failureMode": "e-stop during weld ignored",
+      "sourceScenarioId": "estop-during-weld",
+      "hazard": "continued welding after operator emergency stop",
+      "sintDetection": "estopState triggered",
+      "sintControl": "unconditional rollback to last safe state",
+      "severity": 10,
+      "occurrence": 2,
+      "detection": 1,
+      "requiredEvidence": [
+        "incidentId",
+        "rollbackTargetRef",
+        "eventHash",
+        "previousHash"
+      ]
+    }
+  ],
+  "safetyCaseMapping": [
+    {
+      "topic": "hot-work authorization",
+      "sintSupport": "Capability token scope, permit state, fire-watch state, fume extraction, gas monitor status, and simulation receipt are checked before arc start.",
+      "claimBoundary": "evidence support only; does not qualify welding procedure or certify hot-work safety"
+    },
+    {
+      "topic": "remote survey and certification evidence",
+      "sintSupport": "ABS-style export fields bind policy decisions, permits, simulation receipts, sensor calibration references, and hash-chain continuity.",
+      "claimBoundary": "requires classification society or qualified assessor review"
+    },
+    {
+      "topic": "human coworker safety",
+      "sintSupport": "Human detection in the weld envelope escalates to T3 and records the physical context that caused the decision.",
+      "claimBoundary": "does not replace physical guarding, trained spotters, or certified safety-rated sensors"
+    },
+    {
+      "topic": "simulation-to-real execution control",
+      "sintSupport": "Offline program digest and simulator receipt digest are bound into the authorization decision.",
+      "claimBoundary": "simulator validity remains a deployment-owner responsibility"
+    }
+  ],
+  "sprintPlan": {
+    "duration": "2 weeks",
+    "goal": "Make SINT legible as the runtime safety and certification-evidence layer for industrial humanoid shipyard deployments.",
+    "workstreams": [
+      {
+        "id": "S1",
+        "name": "Policy profile and fixture pack",
+        "deliverables": [
+          "shipyard policy templates",
+          "welding and confined-space scenarios",
+          "ABS-style evidence export schema"
+        ]
+      },
+      {
+        "id": "S2",
+        "name": "Simulation and program binding",
+        "deliverables": [
+          "simulation receipt digest checks",
+          "offline program hash binding",
+          "drift-denial scenario"
+        ]
+      },
+      {
+        "id": "S3",
+        "name": "Safety-case evidence",
+        "deliverables": [
+          "FMEA rows tied to executable scenarios",
+          "data quality rules",
+          "support-only claim boundaries"
+        ]
+      },
+      {
+        "id": "S4",
+        "name": "Outreach package",
+        "deliverables": [
+          "Persona fit brief",
+          "operator guide",
+          "demo command and validation checklist"
+        ]
+      }
+    ]
+  },
+  "successCriteria": {
+    "hotWorkPermitCovered": true,
+    "fireWatchCovered": true,
+    "fumeExtractionCovered": true,
+    "unsafeAtmosphereCovered": true,
+    "bystanderInWeldZoneCovered": true,
+    "simulationReceiptMismatchCovered": true,
+    "supervisorApprovalForWeldingCovered": true,
+    "loadEnvelopeCovered": true,
+    "estopRollbackCovered": true,
+    "absEvidenceExportHasDataQualityRules": true,
+    "fmeaRowsReferenceExecutableScenarios": true,
+    "claimsRemainSupportOnly": true
+  }
+}

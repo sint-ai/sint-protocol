@@ -75,6 +75,13 @@ SINT can govern task-market and machine-payment workflows before work or money
 moves: task creation, bids, claims, benchmark proof submission, worker
 selection, settlement release, and x402-style payment permits.
 
+### 7. Industrial humanoid safety evidence
+
+SINT can govern industrial humanoids before they weld, grind, lift, enter
+confined spaces, or move through shared work zones. The message is not
+"certification replacement"; it is "policy receipts and runtime evidence for
+supervisors, safety teams, surveyors, and post-incident review."
+
 ## Proof points to emphasize
 
 - Apache-2.0 licensed
@@ -98,6 +105,9 @@ selection, settlement release, and x402-style payment permits.
 - "industrial AI safety"
 - "agent commerce governance"
 - "x402 policy enforcement"
+- "industrial humanoid safety"
+- "shipyard robotics governance"
+- "hot-work policy receipts"
 - "tamper-evident evidence ledger"
 - "open protocol and reference stack"
 - "real-world consequences"
