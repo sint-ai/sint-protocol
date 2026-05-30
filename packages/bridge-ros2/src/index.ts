@@ -64,6 +64,17 @@ export type {
   UniversalRobotsRos2DemoPath,
 } from "./industrial-adapter-profiles.js";
 export {
+  shipyardHumanoidPreconditionSchema,
+  shipyardHumanoidWeldStartProfile,
+  shipyardHumanoidWeldStartProfileSchema,
+  shipyardHumanoidWeldStartToRobotActionProfile,
+} from "./shipyard-humanoid-profile.js";
+export type {
+  ShipyardHumanoidPrecondition,
+  ShipyardHumanoidWeldStartOptions,
+  ShipyardHumanoidWeldStartProfile,
+} from "./shipyard-humanoid-profile.js";
+export {
   extractPhysicalContextFromTwist,
   extractPhysicalContextFromWrench,
   extractPhysicalContextFromDifferentialWheelCommand,
