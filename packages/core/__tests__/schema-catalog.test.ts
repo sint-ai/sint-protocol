@@ -31,4 +31,10 @@ describe("schema catalog request contract", () => {
     expect(properties.corridorId).toBeDefined();
     expect(properties.maxDeviationMeters).toBeDefined();
   });
+
+  it("publishes mission authority wire contracts", () => {
+    expect(SINT_SCHEMA_CATALOG["mission-manifest"]).toBeDefined();
+    expect(SINT_SCHEMA_CATALOG["authority-decision"]).toBeDefined();
+    expect(SINT_SCHEMA_CATALOG["mission-evidence-bundle"]).toBeDefined();
+  });
 });
