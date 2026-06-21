@@ -692,6 +692,123 @@ export interface AgentCommerceGovernanceCase {
   };
 }
 
+export interface PhysicalWorkMarketFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly profile: {
+    readonly resources: readonly string[];
+    readonly actions: readonly string[];
+    readonly taskStatuses: readonly PhysicalWorkTaskStatus[];
+    readonly decisionReasons: readonly PhysicalWorkDecisionReason[];
+    readonly evidenceRequiredFor: readonly string[];
+  };
+  readonly defaults: {
+    readonly referenceTime: string;
+    readonly highValueApprovalThresholdUsdc: number;
+    readonly minStakeBySubnetUsdc: Record<string, number>;
+    readonly supportedSubnets: readonly string[];
+    readonly registeredIdentities: readonly string[];
+    readonly requiredSensorsBySubnet: Record<string, readonly string[]>;
+    readonly minSimulationSafetyScore: number;
+    readonly minVerifierSafetyScore: number;
+    readonly validatorQuorum: number;
+    readonly usedSettlementReceiptIds: readonly string[];
+  };
+  readonly cases: readonly PhysicalWorkMarketCase[];
+}
+
+export type PhysicalWorkDecision = "allow" | "deny" | "escalate";
+
+export type PhysicalWorkDecisionReason =
+  | "ALLOW"
+  | "SCOPE_NOT_AUTHORIZED"
+  | "IDENTITY_REQUIRED"
+  | "SUBNET_NOT_SUPPORTED"
+  | "STAKE_BELOW_MINIMUM"
+  | "VALUE_REQUIRES_APPROVAL"
+  | "STATE_TRANSITION_INVALID"
+  | "SIM_PROOF_REQUIRED"
+  | "POPW_BUNDLE_REQUIRED"
+  | "POPW_BUNDLE_INCOMPLETE"
+  | "VALIDATOR_QUORUM_NOT_MET"
+  | "VERIFIER_SAFETY_BELOW_THRESHOLD"
+  | "DEADLINE_EXPIRED"
+  | "SETTLEMENT_STATE_INVALID"
+  | "RECEIPT_REPLAY";
+
+export type PhysicalWorkTaskStatus =
+  | "draft"
+  | "open"
+  | "bid_submitted"
+  | "bid_selected"
+  | "sim_passed"
+  | "executing"
+  | "proof_submitted"
+  | "verified"
+  | "settled"
+  | "failed";
+
+export interface PhysicalWorkMarketCase {
+  readonly name: string;
+  readonly principal: string;
+  readonly capability: {
+    readonly resources: readonly string[];
+    readonly actions: readonly string[];
+  };
+  readonly request: {
+    readonly resource: string;
+    readonly action: string;
+    readonly task?: {
+      readonly id: string;
+      readonly subnet: string;
+      readonly status: PhysicalWorkTaskStatus;
+      readonly rewardUsdc: number;
+      readonly deadline: string;
+      readonly requiredTier: "T1_PREPARE" | "T2_ACT" | "T3_COMMIT";
+      readonly selectedRobot?: string;
+    };
+    readonly bid?: {
+      readonly robotId: string;
+      readonly stakeUsdc: number;
+      readonly etaSeconds: number;
+    };
+    readonly simulationProof?: {
+      readonly digest?: string;
+      readonly deterministicReplay?: boolean;
+      readonly safetyScore?: number;
+    };
+    readonly popwBundle?: {
+      readonly taskId: string;
+      readonly actionRef: string;
+      readonly robotId: string;
+      readonly deadline: string;
+      readonly sensors: readonly string[];
+      readonly mediaHash?: string;
+      readonly bundleHash?: string;
+    };
+    readonly validatorAttestations?: readonly Array<{
+      readonly validatorId: string;
+      readonly verdict: "success" | "failure" | "inconclusive";
+      readonly safety: number;
+      readonly finalPct: number;
+      readonly evidenceHash: string;
+    }>;
+    readonly settlement?: {
+      readonly receiptId: string;
+      readonly recipient: string;
+      readonly amountUsdc: number;
+    };
+  };
+  readonly expected: {
+    readonly decision: PhysicalWorkDecision;
+    readonly reason: PhysicalWorkDecisionReason;
+    readonly requiredTier?: string;
+    readonly nextStatus?: PhysicalWorkTaskStatus;
+    readonly evidenceRequired: boolean;
+  };
+}
+
 function loadFixture<T>(relativePath: string): T {
   const path = resolve(FIXTURE_ROOT, relativePath);
   const raw = readFileSync(path, "utf8");
@@ -797,6 +914,12 @@ export function loadPaymentGovernanceFixture(): PaymentGovernanceFixture {
 export function loadAgentCommerceGovernanceFixture(): AgentCommerceGovernanceFixture {
   return loadFixture<AgentCommerceGovernanceFixture>(
     "economy/agent-commerce-governance.v1.json",
+  );
+}
+
+export function loadPhysicalWorkMarketFixture(): PhysicalWorkMarketFixture {
+  return loadFixture<PhysicalWorkMarketFixture>(
+    "physical-ai/physical-work-market.v1.json",
   );
 }
 
