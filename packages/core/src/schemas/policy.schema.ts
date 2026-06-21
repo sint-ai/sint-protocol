@@ -20,6 +20,10 @@ export const physicalContextSchema = z.object({
     y: z.number(),
     z: z.number(),
   }).optional(),
+  currentHeadingDeg: z.number().min(-360).max(360).optional(),
+  localizationConfidence: z.number().min(0).max(1).optional(),
+  localizationObservedAt: iso8601Schema.optional(),
+  frameId: z.string().min(1).max(128).optional(),
 }).strict();
 
 export const executorIdentitySchema = z.object({
@@ -60,6 +64,14 @@ export const hardwareSafetyContextSchema = z.object({
 
 export const preapprovedCorridorSchema = z.object({
   corridorId: z.string().min(1).max(128),
+  missionType: z.enum([
+    "logistics",
+    "casualty_evac",
+    "civilian_rescue",
+    "inspection",
+    "security",
+    "combat",
+  ]).optional(),
   expiresAt: iso8601Schema,
   maxDeviationMeters: z.number().min(0).optional(),
   maxHeadingDeviationDeg: z.number().min(0).max(180).optional(),

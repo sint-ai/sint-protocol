@@ -15,6 +15,7 @@ import { describe, it, expect } from "vitest";
 import { MAVLinkInterceptor } from "../src/mavlink-interceptor.js";
 import { MAV_CMD } from "../src/mavlink-types.js";
 import type { MavlinkIntercept, MavCommandLong, MavSetPositionTargetLocalNed } from "../src/mavlink-types.js";
+import { mapMavlinkToSint } from "../src/mavlink-resource-mapper.js";
 import {
   generateKeypair,
   issueCapabilityToken,
@@ -80,6 +81,33 @@ function makeVelocityCmd(vx: number, vy: number, vz = 0): MavlinkIntercept {
       yaw: 0, yaw_rate: 0,
     } satisfies MavSetPositionTargetLocalNed,
     timestamp: new Date().toISOString(),
+    systemId: 1,
+    componentId: 1,
+  };
+}
+
+function makePositionTarget(
+  overrides: Partial<MavSetPositionTargetLocalNed> = {},
+): MavlinkIntercept {
+  return {
+    messageType: "SET_POSITION_TARGET_LOCAL_NED",
+    payload: {
+      type_mask: 0,
+      coordinate_frame: 1,
+      x: 12,
+      y: 3,
+      z: -4,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      afx: 0,
+      afy: 0,
+      afz: 0,
+      yaw: Math.PI / 2,
+      yaw_rate: 0,
+      ...overrides,
+    } satisfies MavSetPositionTargetLocalNed,
+    timestamp: "2026-06-04T12:00:00.000000Z",
     systemId: 1,
     componentId: 1,
   };
@@ -271,5 +299,24 @@ describe("MAVLinkInterceptor velocity constraint", () => {
       makeCommandLong(MAV_CMD.MAV_CMD_IMAGE_START_CAPTURE)
     );
     expect(result.action).toBe("deny");
+  });
+});
+
+describe("MAVLink spatial context mapping", () => {
+  it("maps SET_POSITION_TARGET_LOCAL_NED position/yaw fields into spatial context", () => {
+    const mapped = mapMavlinkToSint(makePositionTarget(), false);
+
+    expect(mapped.physicalContext?.currentPosition).toEqual({ x: 12, y: 3, z: 4 });
+    expect(mapped.physicalContext?.currentHeadingDeg).toBeCloseTo(90);
+    expect(mapped.physicalContext?.localizationObservedAt).toBe("2026-06-04T12:00:00.000000Z");
+    expect(mapped.physicalContext?.frameId).toBe("mavlink-local-ned");
+  });
+
+  it("does not claim position proof for velocity-only SET_POSITION_TARGET_LOCAL_NED messages", () => {
+    const mapped = mapMavlinkToSint(makeVelocityCmd(2, 0, 0), false);
+
+    expect(mapped.physicalContext?.currentVelocityMps).toBe(2);
+    expect(mapped.physicalContext?.currentPosition).toBeUndefined();
+    expect(mapped.physicalContext?.localizationObservedAt).toBeUndefined();
   });
 });

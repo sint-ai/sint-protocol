@@ -7,9 +7,16 @@ export type {
   AutonomySupervisorPlugin,
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
+  SpatialCorridorVerifierPlugin,
   EdgeControlPlanePlugin,
   VerifiableComputePlugin,
 } from "./gateway.js";
+export { StaticSpatialCorridorVerifier } from "./spatial-corridor.js";
+export type {
+  CorridorPoint,
+  StaticCorridorGeometry,
+  StaticCorridorResolver,
+} from "./spatial-corridor.js";
 export { DefaultSupplyChainVerifier } from "./supply-chain.js";
 export type {
   SupplyChainVerifierPlugin,

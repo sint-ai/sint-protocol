@@ -127,11 +127,23 @@ export const verifiableComputeRequirementsSchema = z.object({
 
 export const executionEnvelopeSchema = z.object({
   corridorId: z.string().min(1).max(128).optional(),
+  missionType: z.enum([
+    "logistics",
+    "casualty_evac",
+    "civilian_rescue",
+    "inspection",
+    "security",
+    "combat",
+  ]).optional(),
   expiresAt: iso8601Schema.optional(),
   maxDeviationMeters: z.number().min(0).optional(),
   maxHeadingDeviationDeg: z.number().min(0).max(180).optional(),
   maxVelocityMps: z.number().positive().optional(),
   maxForceNewtons: z.number().positive().optional(),
+  requiresSpatialProof: z.boolean().optional(),
+  maxLocalizationAgeMs: z.number().int().positive().optional(),
+  minLocalizationConfidence: z.number().min(0).max(1).optional(),
+  frameId: z.string().min(1).max(128).optional(),
 }).strict();
 
 export const delegationChainSchema = z.object({

@@ -113,6 +113,27 @@ export interface DynamicEnvelopePlugin {
   }>;
 }
 
+/**
+ * Corridor verifier hook for spatial mission envelopes.
+ *
+ * Deployments can bind corridor IDs to signed geometry, route reservations, or
+ * map-server lookups outside the gateway. The gateway consumes only measured
+ * facts and compares them against the token execution envelope.
+ */
+export interface SpatialCorridorVerifierPlugin {
+  verifyCorridor(
+    request: SintRequest,
+    token: SintCapabilityToken,
+  ): Promise<{
+    readonly verified: boolean;
+    readonly insideCorridor?: boolean;
+    readonly lateralDeviationMeters?: number;
+    readonly headingDeviationDeg?: number;
+    readonly verifierRef?: string;
+    readonly reason?: string;
+  }>;
+}
+
 export interface CsmlEscalationPlugin {
   /**
    * Evaluate whether this agent's CSML score warrants tier escalation.
@@ -230,6 +251,12 @@ export interface PolicyGatewayConfig {
    * static constraints. Fail-open: plugin errors fall back to token limits.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
+  /**
+   * Optional spatial corridor verifier for mission envelopes.
+   * When a token requires spatial proof and declares deviation/heading limits,
+   * absence or failure of this verifier denies the request fail-closed.
+   */
+  readonly spatialCorridorVerifier?: SpatialCorridorVerifierPlugin;
   /**
    * Optional goal hijack detector (ASI01).
    * Scans request params for prompt injection, role override, escalation
@@ -544,6 +571,16 @@ export class PolicyGateway {
           "Preapproved corridor exceeds token execution envelope expiry",
         );
       }
+    }
+
+    const spatialMissionDecision = await this.evaluateSpatialMissionEnvelope(
+      request,
+      token,
+      requestId,
+      timestamp,
+    );
+    if (spatialMissionDecision) {
+      return spatialMissionDecision;
     }
 
     // 4b. Rate-limit check (per-token sliding window)
@@ -1114,6 +1151,182 @@ export class PolicyGateway {
         },
       },
     };
+  }
+
+  private async evaluateSpatialMissionEnvelope(
+    request: SintRequest,
+    token: SintCapabilityToken,
+    requestId: string,
+    timestamp: string,
+  ): Promise<PolicyDecision | undefined> {
+    const envelope = token.executionEnvelope;
+    if (!envelope) {
+      return undefined;
+    }
+
+    const corridor = request.executionContext?.preapprovedCorridor;
+    if (envelope.missionType && corridor?.missionType !== envelope.missionType) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "CONSTRAINT_VIOLATION",
+        `Mission type ${corridor?.missionType ?? "missing"} does not match token envelope mission ${envelope.missionType}`,
+      );
+    }
+
+    if (!envelope.requiresSpatialProof) {
+      return undefined;
+    }
+
+    const physical = request.physicalContext;
+    if (!physical?.currentPosition) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "SPATIAL_PROOF_REQUIRED",
+        "Spatial proof requires currentPosition evidence",
+      );
+    }
+
+    if (envelope.frameId && physical.frameId !== envelope.frameId) {
+      return this.deny(
+        requestId,
+        timestamp,
+        "SPATIAL_FRAME_MISMATCH",
+        `Spatial proof frame ${physical.frameId ?? "missing"} does not match token envelope frame ${envelope.frameId}`,
+      );
+    }
+
+    if (envelope.minLocalizationConfidence !== undefined) {
+      const confidence = physical.localizationConfidence;
+      if (confidence === undefined || confidence < envelope.minLocalizationConfidence) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CONFIDENCE_LOW",
+          `Localization confidence ${confidence ?? "missing"} is below required ${envelope.minLocalizationConfidence}`,
+        );
+      }
+    }
+
+    if (envelope.maxLocalizationAgeMs !== undefined) {
+      if (!physical.localizationObservedAt) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_PROOF_STALE",
+          "Spatial proof is missing localizationObservedAt for freshness checks",
+        );
+      }
+      const observedAtMs = new Date(physical.localizationObservedAt).getTime();
+      if (!Number.isFinite(observedAtMs) || Date.now() - observedAtMs > envelope.maxLocalizationAgeMs) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_PROOF_STALE",
+          `Spatial proof exceeded maxLocalizationAgeMs ${envelope.maxLocalizationAgeMs}`,
+        );
+      }
+    }
+
+    const needsCorridorVerification =
+      envelope.maxDeviationMeters !== undefined
+      || envelope.maxHeadingDeviationDeg !== undefined
+      || this.config.spatialCorridorVerifier !== undefined;
+
+    if (needsCorridorVerification) {
+      if (!this.config.spatialCorridorVerifier) {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CORRIDOR_VERIFIER_REQUIRED",
+          "Spatial corridor verifier is required for this token envelope",
+        );
+      }
+
+      let corridorResult: Awaited<ReturnType<SpatialCorridorVerifierPlugin["verifyCorridor"]>>;
+      try {
+        corridorResult = await this.config.spatialCorridorVerifier.verifyCorridor(
+          request,
+          token,
+        );
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CORRIDOR_VERIFICATION_FAILED",
+          "Spatial corridor verifier failed closed",
+        );
+      }
+
+      if (!corridorResult.verified || corridorResult.insideCorridor === false) {
+        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+          corridorId: envelope.corridorId,
+          missionType: envelope.missionType,
+          verifierRef: corridorResult.verifierRef,
+          reason: corridorResult.reason,
+          insideCorridor: corridorResult.insideCorridor,
+          lateralDeviationMeters: corridorResult.lateralDeviationMeters,
+          headingDeviationDeg: corridorResult.headingDeviationDeg,
+        });
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CORRIDOR_VIOLATION",
+          corridorResult.reason ?? "Spatial corridor verification failed",
+        );
+      }
+
+      if (
+        envelope.maxDeviationMeters !== undefined
+        && corridorResult.lateralDeviationMeters !== undefined
+        && corridorResult.lateralDeviationMeters > envelope.maxDeviationMeters
+      ) {
+        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+          corridorId: envelope.corridorId,
+          missionType: envelope.missionType,
+          verifierRef: corridorResult.verifierRef,
+          lateralDeviationMeters: corridorResult.lateralDeviationMeters,
+          maxDeviationMeters: envelope.maxDeviationMeters,
+        });
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CORRIDOR_DEVIATION",
+          `Lateral deviation ${corridorResult.lateralDeviationMeters}m exceeds limit ${envelope.maxDeviationMeters}m`,
+        );
+      }
+
+      if (
+        envelope.maxHeadingDeviationDeg !== undefined
+        && corridorResult.headingDeviationDeg !== undefined
+        && corridorResult.headingDeviationDeg > envelope.maxHeadingDeviationDeg
+      ) {
+        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+          corridorId: envelope.corridorId,
+          missionType: envelope.missionType,
+          verifierRef: corridorResult.verifierRef,
+          headingDeviationDeg: corridorResult.headingDeviationDeg,
+          maxHeadingDeviationDeg: envelope.maxHeadingDeviationDeg,
+        });
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_CORRIDOR_HEADING",
+          `Heading deviation ${corridorResult.headingDeviationDeg}deg exceeds limit ${envelope.maxHeadingDeviationDeg}deg`,
+        );
+      }
+
+      this.emitEvent("policy.spatial.corridor_verified", request.agentId, request.tokenId, {
+        corridorId: envelope.corridorId,
+        missionType: envelope.missionType,
+        verifierRef: corridorResult.verifierRef,
+        lateralDeviationMeters: corridorResult.lateralDeviationMeters,
+        headingDeviationDeg: corridorResult.headingDeviationDeg,
+      });
+    }
+
+    return undefined;
   }
 
   private evaluateHardwareSafetyHandshake(

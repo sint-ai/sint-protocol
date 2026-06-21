@@ -276,6 +276,414 @@ describe("PolicyGateway", () => {
     expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
   });
 
+  it("denies request when corridor mission type does not match token envelope", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "rescue-corridor-a",
+        missionType: "civilian_rescue",
+        expiresAt: futureISO(1),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "rescue-corridor-a",
+            missionType: "combat",
+            expiresAt: futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+  });
+
+  it("denies spatial-envelope request when localization proof is missing", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "logistics-corridor-a",
+        missionType: "logistics",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxLocalizationAgeMs: 1_000,
+        minLocalizationConfidence: 0.9,
+        frameId: "map",
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "logistics-corridor-a",
+            missionType: "logistics",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_PROOF_REQUIRED");
+  });
+
+  it("denies spatial-envelope request when localization confidence is too low", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "evac-corridor-a",
+        missionType: "casualty_evac",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        minLocalizationConfidence: 0.95,
+        frameId: "map",
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 1, y: 2, z: 0 },
+          localizationConfidence: 0.72,
+          localizationObservedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          frameId: "map",
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "evac-corridor-a",
+            missionType: "casualty_evac",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_CONFIDENCE_LOW");
+  });
+
+  it("denies spatial-envelope request when localization evidence is stale", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "rescue-corridor-b",
+        missionType: "civilian_rescue",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxLocalizationAgeMs: 1_000,
+        minLocalizationConfidence: 0.9,
+        frameId: "map",
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 1, y: 2, z: 0 },
+          localizationConfidence: 0.99,
+          localizationObservedAt: futureISO(-1),
+          frameId: "map",
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "rescue-corridor-b",
+            missionType: "civilian_rescue",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_PROOF_STALE");
+  });
+
+  it("escalates spatial-envelope T2 action when localization proof is fresh and confident", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "logistics-corridor-b",
+        missionType: "logistics",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxLocalizationAgeMs: 5_000,
+        minLocalizationConfidence: 0.9,
+        frameId: "map",
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 1, y: 2, z: 0 },
+          localizationConfidence: 0.99,
+          localizationObservedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          frameId: "map",
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "logistics-corridor-b",
+            missionType: "logistics",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("denies spatial-envelope request with deviation limits when no corridor verifier is configured", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "warehouse-aisle-7",
+        missionType: "logistics",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxDeviationMeters: 0.25,
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 1, y: 0.1, z: 0 },
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "warehouse-aisle-7",
+            missionType: "logistics",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_CORRIDOR_VERIFIER_REQUIRED");
+  });
+
+  it("denies spatial-envelope request when corridor verifier reports outside corridor", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "rescue-lane-3",
+        missionType: "civilian_rescue",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxDeviationMeters: 0.5,
+      },
+    });
+    gateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      spatialCorridorVerifier: {
+        verifyCorridor: vi.fn().mockResolvedValue({
+          verified: true,
+          insideCorridor: false,
+          lateralDeviationMeters: 1.7,
+          verifierRef: "signed-corridor-map:v1",
+          reason: "position outside signed rescue lane",
+        }),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 10, y: 4, z: 0 },
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "rescue-lane-3",
+            missionType: "civilian_rescue",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_CORRIDOR_VIOLATION");
+    expect(
+      emitSpy.mock.calls.some((call) => call[0]?.eventType === "policy.spatial.corridor_violation"),
+    ).toBe(true);
+  });
+
+  it("denies spatial-envelope request when corridor verifier throws", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "evac-route-12",
+        missionType: "casualty_evac",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxDeviationMeters: 0.5,
+      },
+    });
+    gateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      spatialCorridorVerifier: {
+        verifyCorridor: vi.fn().mockRejectedValue(new Error("map server unavailable")),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 2, y: 0.2, z: 0 },
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "evac-route-12",
+            missionType: "casualty_evac",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_CORRIDOR_VERIFICATION_FAILED");
+  });
+
+  it("escalates spatial-envelope T2 action when corridor geometry is verified within token limits", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "warehouse-aisle-9",
+        missionType: "logistics",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxDeviationMeters: 0.5,
+        maxHeadingDeviationDeg: 15,
+      },
+    });
+    gateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      spatialCorridorVerifier: {
+        verifyCorridor: vi.fn().mockResolvedValue({
+          verified: true,
+          insideCorridor: true,
+          lateralDeviationMeters: 0.2,
+          headingDeviationDeg: 8,
+          verifierRef: "signed-corridor-map:v1",
+        }),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 3, y: 0.2, z: 0 },
+          currentHeadingDeg: 8,
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "warehouse-aisle-9",
+            missionType: "logistics",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+    expect(
+      emitSpy.mock.calls.some((call) => call[0]?.eventType === "policy.spatial.corridor_verified"),
+    ).toBe(true);
+  });
+
+  it("denies spatial-envelope request when verified heading exceeds token limit", async () => {
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      executionEnvelope: {
+        corridorId: "warehouse-aisle-10",
+        missionType: "logistics",
+        expiresAt: futureISO(1),
+        requiresSpatialProof: true,
+        maxDeviationMeters: 0.5,
+        maxHeadingDeviationDeg: 10,
+      },
+    });
+    gateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      spatialCorridorVerifier: {
+        verifyCorridor: vi.fn().mockResolvedValue({
+          verified: true,
+          insideCorridor: true,
+          lateralDeviationMeters: 0.1,
+          headingDeviationDeg: 22,
+          verifierRef: "signed-corridor-map:v1",
+        }),
+      },
+    });
+
+    const decision = await gateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        physicalContext: {
+          currentPosition: { x: 3, y: 0.1, z: 0 },
+          currentHeadingDeg: 22,
+        },
+        executionContext: {
+          preapprovedCorridor: {
+            corridorId: "warehouse-aisle-10",
+            missionType: "logistics",
+            expiresAt: token.executionEnvelope?.expiresAt ?? futureISO(1),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SPATIAL_CORRIDOR_HEADING");
+  });
+
   it("denies immediately when hardware emergency-stop is triggered", async () => {
     const token = issueAndStore({
       resource: "ros2:///plan",

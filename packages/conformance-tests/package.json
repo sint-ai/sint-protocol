@@ -29,6 +29,7 @@
     "@pshkv/bridge-iot": "workspace:*",
     "@pshkv/autonomy-supervisor": "workspace:*",
     "@pshkv/persistence": "workspace:*",
+    "@pshkv/sint-edge-agent": "workspace:*",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
