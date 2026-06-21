@@ -11,7 +11,12 @@ import { InMemoryLedgerStore } from "../src/in-memory-ledger-store.js";
 import { InMemoryTokenStore } from "../src/in-memory-token-store.js";
 import { InMemoryCache } from "../src/in-memory-cache.js";
 import { InMemoryRevocationBus } from "../src/in-memory-revocation-bus.js";
-import type { SintLedgerEvent, SintCapabilityToken } from "@pshkv/core";
+import { InMemoryMissionManifestStore } from "../src/in-memory-mission-manifest-store.js";
+import type {
+  MissionManifest,
+  SintLedgerEvent,
+  SintCapabilityToken,
+} from "@pshkv/core";
 
 function makeLedgerEvent(
   seq: number,
@@ -45,6 +50,35 @@ function makeToken(id: string): SintCapabilityToken {
     revocable: true,
     signature: "c".repeat(128),
   } as SintCapabilityToken;
+}
+
+function makeManifest(): MissionManifest {
+  return {
+    manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+    protocolVersion: "0.3.0",
+    manifestVersion: 1,
+    issuer: "a".repeat(64),
+    platformId: "px4-air-01",
+    platformIdentity: "b".repeat(64),
+    missionClass: "isr",
+    validFrom: "2026-06-07T00:00:00.000000Z",
+    validUntil: "2026-06-08T00:00:00.000000Z",
+    resources: ["mavlink://vehicle/1/camera"],
+    actions: ["capture"],
+    effectConstraints: [],
+    approvalPolicy: {
+      minimumQuorum: 0,
+      authorizedOperatorIds: [],
+      authorizationMaxAgeMs: 60_000,
+    },
+    abortConditions: [
+      { conditionId: "estop", signal: "estop", response: "terminate" },
+    ],
+    maxDelegationDepth: 0,
+    delegationDepth: 0,
+    policyHash: "c".repeat(64),
+    signature: "d".repeat(128),
+  };
 }
 
 // ── LedgerStore ──
@@ -149,6 +183,61 @@ describe("InMemoryLedgerStore", () => {
   });
 });
 
+describe("InMemoryMissionManifestStore action claims", () => {
+  it("rejects duplicate action references and atomically enforces effect limits", async () => {
+    const store = new InMemoryMissionManifestStore();
+    const manifest = makeManifest();
+    await store.store(manifest);
+
+    const first = await store.claimAction({
+      actionRef: "action-1",
+      manifestId: manifest.manifestId,
+      effectId: "camera-capture",
+      claimedAt: "2026-06-07T10:00:00.000000Z",
+    }, 1);
+    expect(first.status).toBe("claimed");
+
+    const duplicate = await store.claimAction({
+      actionRef: "action-1",
+      manifestId: manifest.manifestId,
+      effectId: "camera-capture",
+      claimedAt: "2026-06-07T10:00:01.000000Z",
+    }, 1);
+    expect(duplicate.status).toBe("duplicate");
+
+    const exhausted = await store.claimAction({
+      actionRef: "action-2",
+      manifestId: manifest.manifestId,
+      effectId: "camera-capture",
+      claimedAt: "2026-06-07T10:00:02.000000Z",
+    }, 1);
+    expect(exhausted.status).toBe("effect_limit_exceeded");
+  });
+
+  it("finalizes a claimed action exactly once", async () => {
+    const store = new InMemoryMissionManifestStore();
+    const manifest = makeManifest();
+    await store.store(manifest);
+    const report = {
+      actionRef: "action-1",
+      manifestId: manifest.manifestId,
+      platformIdentity: manifest.platformIdentity,
+      outcome: "completed" as const,
+      completedAt: "2026-06-07T10:01:00.000000Z",
+      signature: "e".repeat(128),
+    };
+
+    expect((await store.finalizeAction(report)).status).toBe("missing_claim");
+    await store.claimAction({
+      actionRef: "action-1",
+      manifestId: manifest.manifestId,
+      claimedAt: "2026-06-07T10:00:00.000000Z",
+    });
+    expect((await store.finalizeAction(report)).status).toBe("finalized");
+    expect((await store.finalizeAction(report)).status).toBe("duplicate");
+  });
+});
+
 // ── TokenStore ──
 
 describe("InMemoryTokenStore", () => {
@@ -193,6 +282,89 @@ describe("InMemoryTokenStore", () => {
   it("remove returns false for unknown token", async () => {
     const removed = await store.remove("unknown");
     expect(removed).toBe(false);
+  });
+});
+
+// ── MissionManifestStore ──
+
+describe("InMemoryMissionManifestStore", () => {
+  let store: InMemoryMissionManifestStore;
+
+  beforeEach(() => {
+    store = new InMemoryMissionManifestStore();
+  });
+
+  it("stores immutable manifests and filters active missions", async () => {
+    const manifest = makeManifest();
+    expect((await store.store(manifest)).status).toBe("stored");
+    expect((await store.store({ ...manifest, missionClass: "logistics" })).status)
+      .toBe("duplicate");
+    expect(await store.get(manifest.manifestId)).toEqual(manifest);
+    expect(await store.getAuthorityHead(manifest.platformIdentity)).toEqual(manifest);
+    expect(await store.list({
+      platformId: manifest.platformId,
+      missionClass: manifest.missionClass,
+      activeAt: "2026-06-07T12:00:00.000000Z",
+    })).toEqual([manifest]);
+    expect(await store.list({
+      activeAt: "2026-06-08T00:00:00.000000Z",
+    })).toEqual([]);
+  });
+
+  it("rejects authority rollback and forks while advancing direct children", async () => {
+    const root = makeManifest();
+    await store.store(root);
+    const rollback = {
+      ...root,
+      manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6b8",
+      parentManifestId: root.manifestId,
+      delegationDepth: 1,
+    } as MissionManifest;
+    expect((await store.store(rollback)).status).toBe("rollback");
+
+    const fork = {
+      ...rollback,
+      manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6c9",
+      manifestVersion: 2,
+      parentManifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6d0",
+    } as MissionManifest;
+    expect((await store.store(fork)).status).toBe("fork");
+
+    const child = {
+      ...rollback,
+      manifestVersion: 2,
+    } as MissionManifest;
+    expect((await store.store(child)).status).toBe("stored");
+    expect((await store.getAuthorityHead(root.platformIdentity))?.manifestId)
+      .toBe(child.manifestId);
+    expect((await store.store({
+      ...root,
+      manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6d1",
+    })).status).toBe("rollback");
+  });
+
+  it("appends one revocation without mutating the manifest", async () => {
+    const manifest = makeManifest();
+    await store.store(manifest);
+    const revocation = {
+      manifestId: manifest.manifestId,
+      reason: "Mission cancelled",
+      revokedBy: "operator-1",
+      revokedAt: "2026-06-07T12:30:00.000000Z",
+    };
+    expect(await store.revoke(revocation)).toBe(true);
+    expect(await store.revoke({ ...revocation, reason: "Duplicate" })).toBe(false);
+    expect(await store.getRevocation(manifest.manifestId)).toEqual(revocation);
+    expect(await store.get(manifest.manifestId)).toEqual(manifest);
+  });
+
+  it("cannot revoke an unknown manifest", async () => {
+    expect(await store.revoke({
+      manifestId: makeManifest().manifestId,
+      reason: "Unknown",
+      revokedBy: "operator-1",
+      revokedAt: "2026-06-07T12:30:00.000000Z",
+    })).toBe(false);
   });
 });
 

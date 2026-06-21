@@ -10,10 +10,82 @@
 import type {
   ISO8601,
   LedgerQuery,
+  MissionManifest,
+  MissionManifestRevocation,
+  MissionActionOutcomeReport,
   SintCapabilityToken,
   SintLedgerEvent,
   UUIDv7,
 } from "@pshkv/core";
+
+export interface MissionManifestQuery {
+  readonly platformId?: string;
+  readonly missionClass?: MissionManifest["missionClass"];
+  readonly activeAt?: ISO8601;
+}
+
+export interface MissionActionClaim {
+  readonly actionRef: string;
+  readonly manifestId: UUIDv7;
+  readonly effectId?: string;
+  readonly claimedAt: ISO8601;
+}
+
+export type MissionActionClaimResult =
+  | { readonly status: "claimed"; readonly claim: MissionActionClaim }
+  | { readonly status: "duplicate"; readonly claim: MissionActionClaim }
+  | { readonly status: "effect_limit_exceeded" };
+
+export type MissionActionOutcomeResult =
+  | { readonly status: "finalized"; readonly report: MissionActionOutcomeReport }
+  | { readonly status: "duplicate"; readonly report: MissionActionOutcomeReport }
+  | { readonly status: "missing_claim" };
+
+export type MissionManifestStoreResult =
+  | { readonly status: "stored"; readonly manifest: MissionManifest }
+  | { readonly status: "duplicate"; readonly manifest: MissionManifest }
+  | { readonly status: "rollback"; readonly head: MissionManifest }
+  | { readonly status: "fork"; readonly head: MissionManifest };
+
+/**
+ * Immutable mission manifests and append-only revocations.
+ */
+export interface MissionManifestStore {
+  /**
+   * Atomically store a manifest and advance the platform authority head.
+   * Existing authority can only advance through a higher-version direct child.
+   */
+  store(manifest: MissionManifest): Promise<MissionManifestStoreResult>;
+
+  /** Retrieve a manifest by ID. */
+  get(manifestId: UUIDv7): Promise<MissionManifest | undefined>;
+
+  /** Retrieve the monotonic authority head for a platform identity. */
+  getAuthorityHead(platformIdentity: string): Promise<MissionManifest | undefined>;
+
+  /** List manifests matching optional operational filters. */
+  list(query?: MissionManifestQuery): Promise<readonly MissionManifest[]>;
+
+  /** Append a revocation. Returns false when missing or already revoked. */
+  revoke(revocation: MissionManifestRevocation): Promise<boolean>;
+
+  /** Retrieve the revocation record for a manifest. */
+  getRevocation(manifestId: UUIDv7): Promise<MissionManifestRevocation | undefined>;
+
+  /**
+   * Atomically reserve an executable action and, when applicable, one effect use.
+   * Claims are append-only so action replay and concurrent max-use races fail closed.
+   */
+  claimAction(
+    claim: MissionActionClaim,
+    effectMaxUses?: number,
+  ): Promise<MissionActionClaimResult>;
+
+  /** Append the single terminal outcome for an existing execution claim. */
+  finalizeAction(
+    report: MissionActionOutcomeReport,
+  ): Promise<MissionActionOutcomeResult>;
+}
 
 /**
  * Persistent storage for ledger events.

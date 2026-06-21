@@ -5,4 +5,6 @@ export type {
   InterceptResult,
   TokenResult,
   LedgerResult,
+  MissionManifestRecord,
+  MissionAuthorityResult,
 } from "./sint-client.js";

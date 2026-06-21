@@ -13,14 +13,22 @@ import { CsmlEscalator } from "@pshkv/avatar";
 import { RevocationStore } from "@pshkv/gate-capability-tokens";
 import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
-import type { TokenStore, LedgerStore, CacheStore, RevocationBus } from "@pshkv/persistence";
+import type {
+  TokenStore,
+  LedgerStore,
+  CacheStore,
+  RevocationBus,
+  MissionManifestStore,
+} from "@pshkv/persistence";
 import {
   InMemoryTokenStore,
   InMemoryLedgerStore,
   InMemoryCache,
   InMemoryRevocationBus,
+  InMemoryMissionManifestStore,
   PgTokenStore,
   PgLedgerStore,
+  PgMissionManifestStore,
   getPool,
   ensurePgSchema,
   RedisCache,
@@ -45,6 +53,7 @@ import { memoryRoutes, type MemoryRouteContext } from "./routes/memory.js";
 import { delegationRoutes, type DelegationRouteContext } from "./routes/delegations.js";
 import { csmlRoutes, type CsmlRouteContext } from "./routes/csml.js";
 import { registryRoutes, type RegistryRouteContext } from "./routes/registry.js";
+import { missionAuthorityRoutes } from "./routes/mission-authority.js";
 import { InMemoryRegistryStore } from "@pshkv/token-registry";
 import type { SintConfig } from "./config.js";
 
@@ -59,6 +68,7 @@ export interface ServerContext {
   readonly cache: CacheStore;
   readonly revocationBus: RevocationBus;
   readonly registryStore: InMemoryRegistryStore;
+  readonly missionManifestStore: MissionManifestStore;
   readonly backend: {
     readonly store: "memory" | "postgres";
     readonly cache: "memory" | "redis";
@@ -91,6 +101,7 @@ export function createContext(): ServerContext {
   const cache = new InMemoryCache();
   const revocationBus = new InMemoryRevocationBus();
   const registryStore = new InMemoryRegistryStore();
+  const missionManifestStore = new InMemoryMissionManifestStore();
 
   const gateway = new PolicyGateway({
     resolveToken: async (id) => tokenStore.get(id),
@@ -125,6 +136,7 @@ export function createContext(): ServerContext {
     cache,
     revocationBus,
     registryStore,
+    missionManifestStore,
     backend: { store: "memory", cache: "memory" },
     readinessProbe: async () => ({
       ok: true,
@@ -149,6 +161,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
   let ledgerStore: LedgerStore;
   let cache: CacheStore;
   let revocationBus: RevocationBus;
+  let missionManifestStore: MissionManifestStore;
   let storeProbe: () => Promise<{ ok: boolean; detail: string }> = async () => ({
     ok: true,
     detail: "in-memory store",
@@ -164,6 +177,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     await ensurePgSchema(pool);
     tokenStore = new PgTokenStore(pool);
     ledgerStore = new PgLedgerStore(pool);
+    missionManifestStore = new PgMissionManifestStore(pool);
     storeProbe = async () => {
       try {
         await pool.query("SELECT 1");
@@ -177,6 +191,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
   } else {
     tokenStore = new InMemoryTokenStore();
     ledgerStore = new InMemoryLedgerStore();
+    missionManifestStore = new InMemoryMissionManifestStore();
   }
 
   // ── Cache + revocation bus backend ──
@@ -247,7 +262,6 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
   });
 
   const registryStore = new InMemoryRegistryStore();
-
   return {
     tokenStore,
     revocationStore,
@@ -258,6 +272,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     cache,
     revocationBus,
     registryStore,
+    missionManifestStore,
     backend: { store: config.store, cache: config.cache },
     readinessProbe: async () => {
       const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);
@@ -325,6 +340,7 @@ export function createApp(ctx?: ServerContext, opts?: ServerOptions): Hono {
   app.route("", discoveryRoutes());
   app.route("", metricsRoutes());
   app.route("", riskStreamRoutes(context, globalRiskBus));
+  app.route("", missionAuthorityRoutes(context));
 
   // Economy routes (optional — only when economy context is configured)
   if (options.economyContext) {
