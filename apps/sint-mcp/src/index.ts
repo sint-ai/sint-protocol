@@ -21,8 +21,46 @@ import { randomUUID } from "node:crypto";
 import { loadConfig } from "./config.js";
 import { SintMCPServer } from "./server.js";
 
+const SINT_MCP_VERSION = "0.1.1";
+
 let activeServer: SintMCPServer | null = null;
 let trajectoryFlushed = false;
+
+function printHelp(): void {
+  console.log(`SINT MCP ${SINT_MCP_VERSION}
+
+Security-first multi-MCP proxy server with SINT policy enforcement.
+
+Usage:
+  sint-mcp [options]
+
+Options:
+  --help, -h              Show this help text and exit
+  --version, -v           Show version and exit
+  --stdio                 Use stdio transport (default)
+  --sse                   Use streamable HTTP transport
+  --port <port>           HTTP port for --sse (default: 3200)
+  --config <path>         Path to sint-mcp JSON config
+
+Environment:
+  SINT_MCP_CONFIG         Path to a sint-mcp JSON config file
+  SINT_MCP_POLICY         Enforcement posture: permissive, cautious, or strict
+  SINT_MCP_TRANSPORT      Transport mode: stdio or sse
+  SINT_MCP_PORT           Port used when transport is sse
+`);
+}
+
+function handleMetaFlags(argv: readonly string[]): boolean {
+  if (argv.includes("--help") || argv.includes("-h")) {
+    printHelp();
+    return true;
+  }
+  if (argv.includes("--version") || argv.includes("-v")) {
+    console.log(SINT_MCP_VERSION);
+    return true;
+  }
+  return false;
+}
 
 async function flushTrajectory(outcome: "success" | "failure" | "partial" | "timeout"): Promise<void> {
   if (!activeServer || trajectoryFlushed) return;
@@ -36,6 +74,10 @@ async function flushTrajectory(outcome: "success" | "failure" | "partial" | "tim
 }
 
 async function main(): Promise<void> {
+  if (handleMetaFlags(process.argv.slice(2))) {
+    return;
+  }
+
   const config = loadConfig();
 
   // Banner
