@@ -95,6 +95,23 @@ in this public protocol repository.
 pnpm --filter @pshkv/core test -- mission-authority.test.ts
 pnpm --filter @pshkv/gate-evidence-ledger test -- mission-evidence-bundle.test.ts
 pnpm --filter @pshkv/conformance-tests test -- mission-authority-conformance.test.ts
+pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-reference-slice-conformance.test.ts
 cd sdks/rust && cargo test -p sint-edge-authority
 pnpm run security:sbom
+```
+
+## Reference Slice
+
+The public synthetic reference path is:
+
+- `examples/mission-authority-reference-slice.mjs`
+- `examples/mission-authority-reference-slice/README.md`
+
+It runs a signed manifest, operator quorum, append-only action claim,
+short-lived dispatch envelope, edge-runner journal, and terminal outcome without
+touching real hardware:
+
+```bash
+pnpm run build
+pnpm run demo:mission-authority-reference
 ```

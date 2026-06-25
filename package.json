@@ -11,6 +11,7 @@
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
     "demo": "pnpm --filter @pshkv/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
+    "demo:mission-authority-reference": "node ./examples/mission-authority-reference-slice.mjs",
     "demo:factory-action": "pnpm --filter @pshkv/bridge-ros2 build && pnpm --filter @pshkv/conformance-tests exec vitest run src/factory-action-demo-conformance.test.ts --reporter=verbose",
     "demo:industrial-pack": "pnpm --filter @pshkv/conformance-tests exec vitest run src/sint-industrial-pack-conformance.test.ts --reporter=verbose",
     "demo:interceptor-quickstart": "node ./examples/sint-pdp-interceptor-quickstart.mjs",
