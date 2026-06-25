@@ -1,0 +1,123 @@
+{
+  "fixtureId": "mission-authority-reference-gateway-readiness-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Public synthetic readiness checklist for the SINT Mission Authority reference gateway and Signed Effect edge execution path.",
+  "referencePath": {
+    "guide": "docs/guides/mission-authority-reference-gateway.md",
+    "missionAuthorityDoc": "docs/mission-authority.md",
+    "exampleScript": "examples/mission-authority-reference-slice.mjs",
+    "exampleReadme": "examples/mission-authority-reference-slice/README.md",
+    "demoCommand": "pnpm run demo:mission-authority-reference",
+    "conformanceCommand": "pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-reference-gateway-conformance.test.ts"
+  },
+  "requiredGates": [
+    {
+      "id": "signed-authority",
+      "status": "implemented",
+      "evidence": [
+        "computeMissionManifestPolicyPayload",
+        "computeMissionManifestSigningPayload",
+        "missionManifestSchema"
+      ]
+    },
+    {
+      "id": "operator-quorum",
+      "status": "implemented",
+      "evidence": [
+        "computeOperatorAuthorizationSigningPayload",
+        "evaluateMissionAuthority",
+        "observedApprovalCount"
+      ]
+    },
+    {
+      "id": "gateway-separation",
+      "status": "implemented",
+      "evidence": [
+        "PolicyGateway.intercept",
+        "issueCapabilityToken",
+        "createSignedDispatchEnvelope"
+      ]
+    },
+    {
+      "id": "append-only-execution",
+      "status": "implemented",
+      "evidence": [
+        "claimAction",
+        "finalizeAction",
+        "MissionActionOutcomeReport"
+      ]
+    },
+    {
+      "id": "edge-revalidation",
+      "status": "implemented",
+      "evidence": [
+        "createSignedEffectPack",
+        "SintEdgeRunner",
+        "physicalBindings"
+      ]
+    },
+    {
+      "id": "evidence-replay",
+      "status": "implemented",
+      "evidence": [
+        "EdgeJournal.verify",
+        "journalHead",
+        "detailsDigest"
+      ]
+    },
+    {
+      "id": "revocation-drill",
+      "status": "implemented",
+      "evidence": [
+        "AUTHORITY_REVOKED",
+        "WRONG_PLATFORM",
+        "COMMUNICATIONS_POLICY_VIOLATION",
+        "AUTONOMY_COMPROMISED"
+      ]
+    },
+    {
+      "id": "public-data-boundary",
+      "status": "implemented",
+      "evidence": [
+        "synthetic identities",
+        "in-memory stores",
+        "injected executor"
+      ]
+    }
+  ],
+  "negativeCases": [
+    "wrong-platform",
+    "expired-manifest",
+    "revoked-authority",
+    "communications-loss",
+    "autonomy-compromised",
+    "missing-operator-quorum",
+    "action-ref-replay",
+    "dispatch-replay",
+    "edge-physical-limit"
+  ],
+  "productionReplacements": [
+    {
+      "reference": "InMemoryMissionManifestStore",
+      "production": "PostgreSQL mission manifest migrations"
+    },
+    {
+      "reference": "generated test keypairs",
+      "production": "deployment identity root or HSM-backed issuer"
+    },
+    {
+      "reference": "injected synthetic executor",
+      "production": "deployment-owned hardware adapter"
+    },
+    {
+      "reference": "local edge journal",
+      "production": "platform local journal plus exported evidence bundle"
+    }
+  ],
+  "nonGoals": [
+    "no live hardware control",
+    "no customer mission data",
+    "no controlled technical data",
+    "no bypass around PolicyGateway.intercept"
+  ]
+}

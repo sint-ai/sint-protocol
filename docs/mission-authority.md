@@ -106,6 +106,7 @@ The public synthetic reference path is:
 
 - `examples/mission-authority-reference-slice.mjs`
 - `examples/mission-authority-reference-slice/README.md`
+- `docs/guides/mission-authority-reference-gateway.md`
 
 It runs a signed manifest, operator quorum, append-only action claim,
 short-lived dispatch envelope, edge-runner journal, and terminal outcome without
@@ -114,4 +115,5 @@ touching real hardware:
 ```bash
 pnpm run build
 pnpm run demo:mission-authority-reference
+pnpm run mission-authority:readiness
 ```

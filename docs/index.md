@@ -51,6 +51,7 @@ limits, and tamper-evident audit evidence before execution.
 - Integration examples: [Tutorials](./tutorials/hello-world-agent.md)
 - Standalone certification tool: [Guide](./guides/standalone-certification-tool.md)
 - NIST submission playbook: [Guide](./guides/nist-submission-playbook.md)
+- Mission Authority reference gateway: [Guide](./guides/mission-authority-reference-gateway.md)
 - Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
 - AAIF RFC-001 submission packet: [Community/AAIF Packet](./community/aaif-rfc001-submission-packet.md)
 - Discord launch kit: [Community/Discord Launch Kit](./community/discord-launch-kit.md)
