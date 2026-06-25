@@ -1,0 +1,81 @@
+{
+  "fixtureId": "mission-authority-release-lane-evidence-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Release-lane evidence contract for keeping Mission Authority conformance, docs, and certification artifacts green on every public branch.",
+  "lane": {
+    "name": "mission-authority-reference",
+    "branchPattern": "feat/*",
+    "pullRequest": "draft-until-review",
+    "targetBase": "main"
+  },
+  "requiredCommands": [
+    {
+      "id": "readiness",
+      "command": "pnpm run mission-authority:readiness",
+      "evidence": "reference gateway demo plus readiness conformance"
+    },
+    {
+      "id": "conformance",
+      "command": "pnpm --filter @pshkv/conformance-tests test",
+      "evidence": "full conformance package"
+    },
+    {
+      "id": "docs",
+      "command": "pnpm run docs:build",
+      "evidence": "docs site renders with Mission Authority guide linked"
+    },
+    {
+      "id": "workspace-build",
+      "command": "pnpm run build",
+      "evidence": "all workspace packages compile"
+    },
+    {
+      "id": "workspace-test",
+      "command": "pnpm run test",
+      "evidence": "all workspace package tests pass"
+    }
+  ],
+  "requiredArtifacts": [
+    "docs/mission-authority.md",
+    "docs/guides/mission-authority-reference-gateway.md",
+    "docs/roadmap.md",
+    "examples/mission-authority-reference-slice.mjs",
+    "packages/conformance-tests/src/mission-authority-conformance.test.ts",
+    "packages/conformance-tests/src/mission-authority-reference-slice-conformance.test.ts",
+    "packages/conformance-tests/src/mission-authority-reference-gateway-conformance.test.ts",
+    "packages/conformance-tests/fixtures/mission-authority/reference-gateway-readiness.v1.json"
+  ],
+  "invariants": [
+    {
+      "id": "gateway-no-bypass",
+      "statement": "Physical execution remains gated by PolicyGateway.intercept plus Mission Authority evaluation."
+    },
+    {
+      "id": "append-only-evidence",
+      "statement": "Manifest, claim, outcome, and edge-journal records are append-only."
+    },
+    {
+      "id": "attenuation-only",
+      "statement": "Delegated mission manifests only narrow parent authority."
+    },
+    {
+      "id": "edge-can-only-deny",
+      "statement": "The edge runner may deny centrally authorized dispatches, but it cannot upgrade denied or escalated actions."
+    },
+    {
+      "id": "public-synthetic-data",
+      "statement": "Release-lane evidence uses synthetic public data only."
+    }
+  ],
+  "githubChecks": [
+    "build-and-test (22)",
+    "generate-benchmark-report",
+    "guardrails"
+  ],
+  "greenDefinition": {
+    "localCommandsPass": true,
+    "githubChecksPass": true,
+    "draftPrAllowed": true,
+    "untrackedLocalConfigIgnored": ".codex/"
+  }
+}

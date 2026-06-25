@@ -116,4 +116,5 @@ touching real hardware:
 pnpm run build
 pnpm run demo:mission-authority-reference
 pnpm run mission-authority:readiness
+pnpm run mission-authority:release-lane
 ```

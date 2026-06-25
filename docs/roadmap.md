@@ -122,7 +122,7 @@ Q3 is about proving that the protocol can survive outside a friendly demo
 environment.
 
 - [x] reference gateway path documented as the default durable deployment slice
-- [ ] conformance and certification artifacts kept green on every release lane
+- [x] conformance and certification artifacts kept green on every release lane
 - [ ] at least one external collaborator thread turns into a shared fixture,
   adapter sketch, or PR
 - [ ] independent maintainer evidence accumulates across a real multi-month

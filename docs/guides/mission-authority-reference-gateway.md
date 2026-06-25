@@ -55,6 +55,15 @@ The conformance guard is:
 pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-reference-gateway-conformance.test.ts
 ```
 
+The release-lane evidence gate is:
+
+```bash
+pnpm run mission-authority:release-lane
+```
+
+It binds this guide, the reference slice, the readiness fixture, and the
+expected GitHub checks into one conformance-checked release contract.
+
 ## Durable Production Shape
 
 The reference slice uses in-memory stores so it is safe to run anywhere. The

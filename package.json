@@ -13,6 +13,7 @@
     "demo": "pnpm --filter @pshkv/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
     "demo:mission-authority-reference": "node ./examples/mission-authority-reference-slice.mjs",
     "mission-authority:readiness": "pnpm run demo:mission-authority-reference && pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-reference-slice-conformance.test.ts src/mission-authority-reference-gateway-conformance.test.ts",
+    "mission-authority:release-lane": "pnpm run mission-authority:readiness && pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-release-lane-evidence-conformance.test.ts",
     "demo:factory-action": "pnpm --filter @pshkv/bridge-ros2 build && pnpm --filter @pshkv/conformance-tests exec vitest run src/factory-action-demo-conformance.test.ts --reporter=verbose",
     "demo:industrial-pack": "pnpm --filter @pshkv/conformance-tests exec vitest run src/sint-industrial-pack-conformance.test.ts --reporter=verbose",
     "demo:interceptor-quickstart": "node ./examples/sint-pdp-interceptor-quickstart.mjs",
