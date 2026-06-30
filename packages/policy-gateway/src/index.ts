@@ -43,6 +43,14 @@ export type { SafetyPermitPlugin, SafetyPermitResult, PermitState, InterlockStat
 export { NoopSafetyPermitPlugin } from "./safety-permit.js";
 export { DefaultArgInjectionDetector } from "./arg-injection-detector.js";
 export type { ArgInjectionDetector, ArgInjectionResult } from "./arg-injection-detector.js";
+export { DefaultRegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
+export type {
+  RegulatedDataClass,
+  RegulatedDataFallbackRoute,
+  RegulatedDataPolicyConfig,
+  RegulatedDataPolicyPlugin,
+  RegulatedDataRequestMetadata,
+} from "./regulated-data-policy.js";
 export { ApprovalQueue } from "./approval-flow.js";
 export type {
   ApprovalRequest,

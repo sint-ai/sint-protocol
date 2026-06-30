@@ -33,6 +33,7 @@ import type { MemoryIntegrityPlugin } from "./memory-integrity.js";
 import type { SupplyChainVerifierPlugin } from "./supply-chain.js";
 import type { SafetyPermitPlugin } from "./safety-permit.js";
 import type { ArgInjectionDetector } from "./arg-injection-detector.js";
+import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 
 const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
 const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
@@ -302,6 +303,13 @@ export interface PolicyGatewayConfig {
    * Fail-open: plugin errors do not block requests.
    */
   readonly argInjectionDetector?: ArgInjectionDetector;
+  /**
+   * Optional regulated-data runtime policy hook.
+   * Runs after token validation and before tier assignment. Intended for
+   * processor, residency, model, and context-minimization checks on requests
+   * carrying regulated data metadata. Fail-closed on plugin errors.
+   */
+  readonly regulatedDataPolicy?: RegulatedDataPolicyPlugin;
 }
 
 /**
@@ -509,6 +517,37 @@ export class PolicyGateway {
         policyViolated: tokenValidation.error,
       });
       return decision;
+    }
+
+    // 4a-pre. Regulated-data runtime policy.
+    // Evaluates processor/model/region/context metadata after token validation
+    // but before tier assignment so unsafe data paths never execute.
+    if (this.config.regulatedDataPolicy) {
+      try {
+        const regulatedDecision = await this.config.regulatedDataPolicy.evaluate(
+          request,
+          token,
+          { requestId, timestamp },
+        );
+        if (regulatedDecision) {
+          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+            decision: regulatedDecision.action,
+            tier: regulatedDecision.assignedTier,
+            risk: regulatedDecision.assignedRisk,
+            source: "regulated_data_policy",
+            policyViolated: regulatedDecision.denial?.policyViolated,
+            transformations: regulatedDecision.transformations,
+          });
+          return regulatedDecision;
+        }
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "REGULATED_DATA_POLICY_ERROR",
+          "Regulated-data policy failed closed before permission evaluation",
+        );
+      }
     }
 
     // 4a. Managed-autonomy authority pre-gate.

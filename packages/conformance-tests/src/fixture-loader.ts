@@ -2220,3 +2220,91 @@ export function loadRegulatedConsentExtensionsFixture(): RegulatedConsentExtensi
     "compliance/regulated-consent-extensions.v1.json",
   );
 }
+
+export interface RegulatedAgentRuntimeFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly status: "experimental";
+  readonly scopeNote: string;
+  readonly runtimeSurfaces: readonly string[];
+  readonly defaults: {
+    readonly enforcementChokePoint: "PolicyGateway.intercept";
+    readonly evidenceLedgerAppendOnly: true;
+    readonly contextInheritanceAttenuationOnly: true;
+    readonly rawSensitivePayloadsStoredInLedger: false;
+    readonly approvedProcessors: readonly string[];
+    readonly approvedRegions: readonly string[];
+    readonly approvedModels: readonly string[];
+  };
+  readonly dataClasses: readonly Array<{
+    readonly classId: string;
+    readonly description: string;
+    readonly examples: readonly string[];
+    readonly defaultTier: ApprovalTier;
+    readonly requiresConsent: boolean;
+    readonly allowedEvidence: readonly string[];
+    readonly forbiddenEvidence: readonly string[];
+  }>;
+  readonly policyRequirements: readonly Array<{
+    readonly requirementId: string;
+    readonly description: string;
+    readonly receiptFields: readonly string[];
+  }>;
+  readonly scenarios: readonly Array<{
+    readonly name: string;
+    readonly principal: string;
+    readonly token: {
+      readonly tokenId: string;
+      readonly resourcePattern: string;
+      readonly actions: readonly string[];
+      readonly dataClasses: readonly string[];
+      readonly purposeOfUse: readonly string[];
+      readonly allowedProcessors: readonly string[];
+      readonly allowedRegions: readonly string[];
+      readonly allowedModels: readonly string[];
+      readonly expiresAt: string;
+      readonly delegatedFrom?: string;
+      readonly inheritedContextFields?: readonly string[];
+    };
+    readonly request: {
+      readonly resource: string;
+      readonly action: string;
+      readonly dataClasses: readonly string[];
+      readonly purposeOfUse: string;
+      readonly processor: string;
+      readonly region: string;
+      readonly model: string;
+      readonly requestedContextFields: readonly string[];
+      readonly fallback?: {
+        readonly processor: string;
+        readonly region: string;
+        readonly model: string;
+        readonly transformations: readonly string[];
+      };
+    };
+    readonly expected: {
+      readonly decisionAction: DecisionAction;
+      readonly assignedTier: ApprovalTier;
+      readonly policyViolated?: string;
+      readonly transformations?: readonly string[];
+      readonly evidenceRequired: boolean;
+      readonly receiptFields: readonly string[];
+    };
+  }>;
+  readonly successCriteria: {
+    readonly everyDecisionFlowsThroughPolicyGateway: boolean;
+    readonly inheritedContextOnlyNarrows: boolean;
+    readonly unapprovedProcessorsDenied: boolean;
+    readonly crossRegionTransfersDeniedOrRerouted: boolean;
+    readonly sensitivePayloadsMinimizedInEvidence: boolean;
+    readonly transformReceiptsExplainRedactionAndFallback: boolean;
+    readonly claimsRemainRuntimeControlsNotCertification: boolean;
+  };
+}
+
+export function loadRegulatedAgentRuntimeFixture(): RegulatedAgentRuntimeFixture {
+  return loadFixture<RegulatedAgentRuntimeFixture>(
+    "compliance/regulated-agent-runtime.v1.json",
+  );
+}

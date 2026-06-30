@@ -15,8 +15,8 @@
     "build": "echo 'no build needed - bridge prototype (runs with tsx)'",
     "typecheck": "echo 'typecheck skipped - bridge prototype'",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "test": "echo 'tests skipped - bridge prototype'",
-    "test:watch": "echo 'tests skipped - bridge prototype'"
+    "test": "vitest run",
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@pshkv/core": "workspace:*",
