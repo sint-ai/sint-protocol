@@ -39,6 +39,34 @@ describe("Capability Token Delegator", () => {
     return result.value;
   }
 
+  function issueRegulatedRootToken(
+    regulatedDataPolicyOverrides: Partial<NonNullable<SintCapabilityTokenRequest["regulatedDataPolicy"]>> = {},
+  ) {
+    const request: SintCapabilityTokenRequest = {
+      issuer: root.publicKey,
+      subject: agent1.publicKey,
+      resource: "health://intake/*",
+      actions: ["read", "summarize"],
+      constraints: {},
+      regulatedDataPolicy: {
+        allowedDataClasses: ["PHI", "PII"],
+        allowedPurposes: ["TREAT", "PAYMENT"],
+        approvedProcessors: ["ehr-core", "in-region-model-router"],
+        approvedRegions: ["us-east-1", "us-west-2"],
+        approvedModels: ["clinical-summary-local", "billing-code-helper"],
+        allowedContextFields: ["symptoms", "medications", "insurance_plan"],
+        allowFallback: true,
+        ...regulatedDataPolicyOverrides,
+      },
+      delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+      expiresAt: futureISO(24),
+      revocable: true,
+    };
+    const result = issueCapabilityToken(request, root.privateKey);
+    if (!result.ok) throw new Error("Failed to issue regulated root token");
+    return result.value;
+  }
+
   it("should delegate with attenuated constraints", () => {
     const rootToken = issueRootToken();
 
@@ -164,5 +192,77 @@ describe("Capability Token Delegator", () => {
       physicalContext: { commandedVelocityMps: 0.8 },
     });
     expect(valid.ok).toBe(false);
+  });
+
+  it("should delegate with attenuated regulated data policy", () => {
+    const rootToken = issueRegulatedRootToken();
+
+    const delegated = delegateCapabilityToken(
+      rootToken,
+      {
+        newSubject: agent2.publicKey,
+        restrictActions: ["summarize"],
+        tightenRegulatedDataPolicy: {
+          allowedDataClasses: ["PHI"],
+          allowedPurposes: ["TREAT"],
+          approvedProcessors: ["in-region-model-router"],
+          approvedRegions: ["us-east-1"],
+          approvedModels: ["clinical-summary-local"],
+          allowedContextFields: ["symptoms"],
+          allowFallback: false,
+        },
+      },
+      agent1.privateKey,
+    );
+
+    expect(delegated.ok).toBe(true);
+    if (!delegated.ok) return;
+    expect(delegated.value.regulatedDataPolicy).toEqual({
+      allowedDataClasses: ["PHI"],
+      allowedPurposes: ["TREAT"],
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedContextFields: ["symptoms"],
+      allowFallback: false,
+    });
+  });
+
+  it("should reject regulated data policy expansion during delegation", () => {
+    const rootToken = issueRegulatedRootToken();
+
+    const delegated = delegateCapabilityToken(
+      rootToken,
+      {
+        newSubject: agent2.publicKey,
+        tightenRegulatedDataPolicy: {
+          approvedProcessors: ["unapproved-processor"],
+        },
+      },
+      agent1.privateKey,
+    );
+
+    expect(delegated.ok).toBe(false);
+    if (delegated.ok) return;
+    expect(delegated.error).toBe("INSUFFICIENT_PERMISSIONS");
+  });
+
+  it("should reject enabling fallback when parent disabled it", () => {
+    const rootToken = issueRegulatedRootToken({ allowFallback: false });
+
+    const delegated = delegateCapabilityToken(
+      rootToken,
+      {
+        newSubject: agent2.publicKey,
+        tightenRegulatedDataPolicy: {
+          allowFallback: true,
+        },
+      },
+      agent1.privateKey,
+    );
+
+    expect(delegated.ok).toBe(false);
+    if (delegated.ok) return;
+    expect(delegated.error).toBe("INSUFFICIENT_PERMISSIONS");
   });
 });
