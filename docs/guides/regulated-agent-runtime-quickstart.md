@@ -57,6 +57,33 @@ const gateway = new PolicyGateway({
 The plugin runs after token validation and before normal tier assignment. If it
 returns a deny or transform decision, the request stops there.
 
+When a token carries `regulatedDataPolicy`, the plugin intersects those
+token-bound allowlists with deployment defaults. The token can narrow processor,
+model, region, purpose, data class, context-field, and fallback authority. It
+cannot expand deployment policy.
+
+```typescript
+const tokenRequest = {
+  issuer,
+  subject: agentId,
+  resource: "fhir://fhir.example.org/Observation/*",
+  actions: ["read"],
+  constraints: {},
+  regulatedDataPolicy: {
+    allowedDataClasses: ["PHI"],
+    allowedPurposes: ["TREAT"],
+    approvedProcessors: ["in-region-model-router"],
+    approvedRegions: ["us-east-1"],
+    approvedModels: ["clinical-summary-local"],
+    allowedContextFields: ["resourceType", "interaction", "resourceId"],
+    allowFallback: true,
+  },
+  delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+  expiresAt,
+  revocable: true,
+};
+```
+
 ## Build Regulated Metadata
 
 ```typescript

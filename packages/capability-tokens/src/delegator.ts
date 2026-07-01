@@ -157,6 +157,7 @@ export function delegateCapabilityToken(
       actions: delegatedActions,
       constraints,
       modelConstraints: parentToken.modelConstraints,
+      regulatedDataPolicy: parentToken.regulatedDataPolicy,
       attestationRequirements: parentToken.attestationRequirements,
       verifiableComputeRequirements: parentToken.verifiableComputeRequirements,
       executionEnvelope: parentToken.executionEnvelope,

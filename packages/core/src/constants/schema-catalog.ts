@@ -40,6 +40,7 @@ const CAPABILITY_TOKEN_SCHEMA: JsonSchemaDoc = {
     actions: { type: "array", items: { type: "string" } },
     constraints: { type: "object" },
     modelConstraints: { type: "object" },
+    regulatedDataPolicy: { type: "object" },
     attestationRequirements: { type: "object" },
     verifiableComputeRequirements: { type: "object" },
     executionEnvelope: { type: "object" },

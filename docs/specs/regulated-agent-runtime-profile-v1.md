@@ -74,6 +74,19 @@ These checks are token-bound. Configuration may provide deployment defaults, but
 the effective authority must come from the signed capability token and any valid
 attenuated delegation chain.
 
+The optional `regulatedDataPolicy` capability-token extension binds:
+
+- allowed data classes
+- allowed purposes of use
+- approved processors
+- approved models
+- approved regions
+- allowed downstream context fields
+- fallback-routing permission
+
+Deployment policy can be stricter than the token. It must not expand token
+authority.
+
 ## Context Attenuation
 
 Downstream agents inherit less authority than their parent, never more. If a
