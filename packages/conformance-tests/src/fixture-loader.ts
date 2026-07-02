@@ -2292,9 +2292,49 @@ export interface RegulatedAgentRuntimeFixture {
       readonly receiptFields: readonly string[];
     };
   }>;
+  readonly tokenBoundAuthority: {
+    readonly extensionName: "regulatedDataPolicy";
+    readonly signedFields: readonly string[];
+    readonly signaturePayloadIncludesExtension: boolean;
+    readonly deploymentPolicyCannotExpandToken: boolean;
+    readonly delegationAttenuationOnly: boolean;
+    readonly parentPolicy: {
+      readonly allowedDataClasses: readonly string[];
+      readonly allowedPurposes: readonly string[];
+      readonly approvedProcessors: readonly string[];
+      readonly approvedRegions: readonly string[];
+      readonly approvedModels: readonly string[];
+      readonly allowedContextFields: readonly string[];
+      readonly allowFallback: boolean;
+    };
+    readonly validDelegation: {
+      readonly allowedDataClasses: readonly string[];
+      readonly allowedPurposes: readonly string[];
+      readonly approvedProcessors: readonly string[];
+      readonly approvedRegions: readonly string[];
+      readonly approvedModels: readonly string[];
+      readonly allowedContextFields: readonly string[];
+      readonly allowFallback: boolean;
+    };
+    readonly invalidDelegations: readonly Array<{
+      readonly name: string;
+      readonly requestedPolicy: {
+        readonly allowedDataClasses?: readonly string[];
+        readonly allowedPurposes?: readonly string[];
+        readonly approvedProcessors?: readonly string[];
+        readonly approvedRegions?: readonly string[];
+        readonly approvedModels?: readonly string[];
+        readonly allowedContextFields?: readonly string[];
+        readonly allowFallback?: boolean;
+      };
+      readonly expectedError: "INSUFFICIENT_PERMISSIONS";
+    }>;
+  };
   readonly successCriteria: {
     readonly everyDecisionFlowsThroughPolicyGateway: boolean;
     readonly inheritedContextOnlyNarrows: boolean;
+    readonly tokenBoundPolicySigned: boolean;
+    readonly tokenBoundPolicyDelegatesByAttenuationOnly: boolean;
     readonly unapprovedProcessorsDenied: boolean;
     readonly crossRegionTransfersDeniedOrRerouted: boolean;
     readonly sensitivePayloadsMinimizedInEvidence: boolean;
