@@ -88,6 +88,7 @@ const tokenRequest = {
 
 ```typescript
 import {
+  buildFHIRRegulatedDataPolicy,
   buildFHIRRegulatedRuntimeMetadata,
   mapFHIRToSint,
   withRegulatedRuntimeParams,
@@ -99,6 +100,15 @@ const mapping = mapFHIRToSint({
   resourceId: "blood-pressure-123",
   interaction: "read",
   patientId: "patient-456",
+});
+
+const regulatedDataPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+  allowedPurposes: ["TREAT"],
+  approvedProcessors: ["in-region-model-router"],
+  approvedRegions: ["us-east-1"],
+  approvedModels: ["clinical-summary-local"],
+  allowedContextFields: ["resourceType", "interaction", "resourceId"],
+  allowFallback: true,
 });
 
 const regulatedData = buildFHIRRegulatedRuntimeMetadata(mapping, {
@@ -114,6 +124,9 @@ const params = withRegulatedRuntimeParams(
   regulatedData,
 );
 ```
+
+Use `regulatedDataPolicy` as `SintCapabilityTokenRequest.regulatedDataPolicy`
+when issuing the token for this workflow.
 
 The resulting request params include:
 
