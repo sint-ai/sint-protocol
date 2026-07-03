@@ -128,6 +128,27 @@ const params = withRegulatedRuntimeParams(
 Use `regulatedDataPolicy` as `SintCapabilityTokenRequest.regulatedDataPolicy`
 when issuing the token for this workflow.
 
+Delegation can only narrow this policy. For example, a parent token can remove
+`patientId` from the child token's context authority:
+
+```typescript
+import { delegateCapabilityToken } from "@pshkv/gate-capability-tokens";
+
+const delegated = delegateCapabilityToken(
+  parentToken,
+  {
+    newSubject: childAgentId,
+    tightenRegulatedDataPolicy: {
+      allowedContextFields: ["resourceType", "interaction", "resourceId"],
+    },
+  },
+  parentAgentPrivateKey,
+);
+```
+
+If the child request asks for fields outside that narrowed list, the gateway
+returns a `transform` decision with `minimize_context` audit metadata.
+
 The resulting request params include:
 
 ```json
