@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.0] — 2026-07-07
+
+### Fixed
+
+- **Published packages now install correctly.** The 0.1.0 packages on npm shipped with literal `workspace:*` dependency ranges (published via `npm publish`, which does not rewrite the pnpm workspace protocol). The publish workflow now uses `pnpm publish`, so `@pshkv/gate-policy-gateway` and friends resolve their `@pshkv/*` dependencies to real versions.
+- Publish workflow SDK step pointed at a nonexistent `packages/sdk` directory (real path: `sdks/typescript`), so `@pshkv/sdk` was silently never published.
+- Root `bench` and `sintctl` scripts filtered on the nonexistent `@sint/*` scope.
+- README, CLAUDE.md, tutorials, and the secure-MCP-deployments guide referenced `@sint/*` package names; all copy-paste commands now use the published `@pshkv/*` names.
+
+### Added
+
+- `sint-scan` published to npm (`npx sint-scan`) — standalone zero-dependency MCP tool-risk scanner; consolidated from two duplicate in-repo variants.
+- Weekly OpenSSF Scorecard workflow with results published to the code-scanning dashboard.
+- `pnpm run community:eligibility-metrics` — tracks downloads, external contributors, criticality score, and upstream PRs in `docs/community/eligibility-metrics.md`.
+- `docs/roadmaps/oss-maintainer-eligibility-plan.md` — audit and plan for OSS maintainer-program eligibility.
+
+### Changed
+
+- Version bump to 0.2.0 for the 11 core published packages (`@pshkv/core`, gate, bridge, and registry packages). `sint-mcp` is unchanged (already correct on npm; ships a self-contained bundle).
+
 ## [0.1.0] — 2026-04-11
 
 Initial public release — runtime authorization framework for physical AI agents.

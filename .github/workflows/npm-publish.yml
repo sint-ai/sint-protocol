@@ -54,11 +54,12 @@ jobs:
           for pkg in "${PACKAGES[@]}"; do
             name=$(node -p "require('./$pkg/package.json').name")
             echo "Publishing $name..."
-            if (cd "$pkg" && npm publish --access public --provenance); then
+            # pnpm publish rewrites workspace:* deps to real versions; npm publish does not
+            if (cd "$pkg" && pnpm publish --access public --no-git-checks); then
               echo "✓ $name"
             else
               exit_code=$?
-              # 409 = already published at this version, treat as success
+              # already published at this version = success
               if npm view "$name@$(node -p "require('./$pkg/package.json').version")" > /dev/null 2>&1; then
                 echo "✓ $name (already published)"
               else
@@ -75,19 +76,22 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Publish SDK
         run: |
-          (cd packages/sdk && npm publish --access public --provenance) || echo "SDK publish skipped"
+          (cd sdks/typescript && pnpm publish --access public --no-git-checks) || echo "SDK publish skipped"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
 
-      - name: Publish MCP server
+      - name: Publish sint-scan (standalone)
         run: |
-          pkg="apps/sint-mcp"
+          pkg="apps/sint-scan-standalone"
           name=$(node -p "require('./$pkg/package.json').name")
           version=$(node -p "require('./$pkg/package.json').version")
           echo "Publishing $name@$version..."
+          # not a workspace member (zero deps) — plain npm publish
           if (cd "$pkg" && npm publish --access public --provenance); then
             echo "✓ $name"
           elif npm view "$name@$version" > /dev/null 2>&1; then
@@ -98,6 +102,24 @@ jobs:
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish MCP server
+        run: |
+          pkg="apps/sint-mcp"
+          name=$(node -p "require('./$pkg/package.json').name")
+          version=$(node -p "require('./$pkg/package.json').version")
+          echo "Publishing $name@$version..."
+          if (cd "$pkg" && pnpm publish --access public --no-git-checks); then
+            echo "✓ $name"
+          elif npm view "$name@$version" > /dev/null 2>&1; then
+            echo "✓ $name (already published)"
+          else
+            echo "::error::Failed to publish $name@$version"
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
 
       - name: Verify installation
         run: |
@@ -154,4 +176,5 @@ jobs:
           echo "- \`@pshkv/bridge-a2a\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`@pshkv/bridge-economy\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`@pshkv/token-registry\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`sint-scan\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`sint-mcp\`" >> $GITHUB_STEP_SUMMARY

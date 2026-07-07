@@ -1,6 +1,6 @@
 {
   "name": "@pshkv/bridge-iot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "SINT Bridge \u2014 MQTT/CoAP edge IoT bridge for constrained devices",
   "type": "module",
   "main": "./dist/index.js",
