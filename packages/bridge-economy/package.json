@@ -1,6 +1,6 @@
 {
   "name": "@pshkv/bridge-economy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "SINT Protocol Economy Bridge — Port/adapter integration with external economy services (balance, budget, trust, pricing)",
   "type": "module",
   "main": "./dist/index.js",

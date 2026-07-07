@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.2.0] — 2026-07-07
+## [0.3.0] — 2026-07-07
 
 ### Fixed
 
@@ -23,7 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
-- Version bump to 0.2.0 for the 11 core published packages (`@pshkv/core`, gate, bridge, and registry packages). `sint-mcp` is unchanged (already correct on npm; ships a self-contained bundle).
+- Version bump to 0.3.0 for the 11 core published packages (`@pshkv/core`, gate, bridge, and registry packages). `sint-mcp` publishes its pending 0.1.1 (self-contained bundle; runtime shape unchanged from 0.1.0).
 
 ## [0.1.0] — 2026-04-11
 

@@ -1,6 +1,6 @@
 {
   "name": "@pshkv/bridge-ros2",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "SINT Bridge \u2014 ROS 2 adapter: intercepts robot topic publishes and service calls through the security gate",
   "type": "module",
   "main": "./dist/index.js",
