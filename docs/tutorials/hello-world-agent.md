@@ -20,7 +20,7 @@ pnpm run build
 The Gateway Server is the single choke point that every agent request flows through. Start it with in-memory storage (no database needed):
 
 ```bash
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 ```
 
 You should see:
@@ -244,7 +244,7 @@ Save the complete script as `hello-agent.ts` in the repo root, then run it:
 npx tsx hello-agent.ts
 ```
 
-> **Note:** The script imports `@sint/client`, a workspace package. Make sure you've run `pnpm install && pnpm run build` first so the package is built and resolvable.
+> **Note:** The script imports `@pshkv/client`, a workspace package. Make sure you've run `pnpm install && pnpm run build` first so the package is built and resolvable.
 
 Expected output:
 
@@ -369,5 +369,5 @@ This is the SINT core loop. Every agent action — whether it's reading a file, 
 - **Try a dangerous action**: Change the resource to `shell://execute` and the action to `run`. Watch the gateway assign a higher risk tier or escalate for approval.
 - **Delegate a token**: Use `client.delegateToken()` to create a sub-token with reduced permissions — delegation can only attenuate, never escalate.
 - **Revoke a token**: Call `client.revokeToken()` and see the revocation recorded in the ledger.
-- **Start the dashboard**: Run `pnpm --filter @sint/dashboard dev` to see the real-time approval UI at `http://localhost:3201`.
+- **Start the dashboard**: Run `pnpm --filter @pshkv/dashboard dev` to see the real-time approval UI at `http://localhost:3201`.
 - **Read the whitepaper**: See [WHITEPAPER.md](../../WHITEPAPER.md) for the full protocol specification.

@@ -19,13 +19,13 @@ pnpm run bench        # Run PolicyGateway performance benchmarks (p50/p99 latenc
 
 Run a single package:
 ```bash
-pnpm --filter @sint/gate-policy-gateway test
-pnpm --filter @sint/bridge-mcp test
+pnpm --filter @pshkv/gate-policy-gateway test
+pnpm --filter @pshkv/bridge-mcp test
 ```
 
 Start the gateway server:
 ```bash
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 ```
 
 ## Monorepo Layout
@@ -48,7 +48,7 @@ packages/conformance-tests/ → Security regression suite (must pass on every PR
 No bridge adapter, route handler, or service should make authorization decisions independently. All requests go through the gateway.
 
 ### 2. Result<T, E> — never throw
-All fallible operations return `{ ok: true, value: T } | { ok: false, error: E }`. Use the `ok()` and `err()` helpers from `@sint/core`. Never use try/catch for control flow.
+All fallible operations return `{ ok: true, value: T } | { ok: false, error: E }`. Use the `ok()` and `err()` helpers from `@pshkv/core`. Never use try/catch for control flow.
 
 ### 3. Attenuation only
 Delegated capability tokens can only _reduce_ permissions (narrower resource, fewer actions, tighter constraints). Never escalate.
@@ -57,7 +57,7 @@ Delegated capability tokens can only _reduce_ permissions (narrower resource, fe
 The evidence ledger is INSERT-only. Events are SHA-256 hash-chained. No updates, no deletes.
 
 ### 5. Interface-first persistence
-Storage adapters implement interfaces from `@sint/persistence`. In-memory implementations are used for testing. PostgreSQL/Redis adapters are planned.
+Storage adapters implement interfaces from `@pshkv/persistence`. In-memory implementations are used for testing. PostgreSQL/Redis adapters are planned.
 
 ## Approval Tiers (T0–T3)
 
@@ -99,19 +99,19 @@ interface PolicyDecision {
 ## Dependency Graph
 
 ```
-@sint/core
+@pshkv/core
   ↓
-@sint/gate-capability-tokens   @sint/persistence
+@pshkv/gate-capability-tokens   @pshkv/persistence
   ↓                               ↓
-@sint/gate-evidence-ledger
+@pshkv/gate-evidence-ledger
   ↓
-@sint/gate-policy-gateway
+@pshkv/gate-policy-gateway
   ↓
-@sint/bridge-mcp   @sint/bridge-ros2
+@pshkv/bridge-mcp   @pshkv/bridge-ros2
   ↓                    ↓
-@sint/gateway-server
+@pshkv/gateway-server
   ↓
-@sint/conformance-tests
+@pshkv/conformance-tests
 ```
 
 ## Coding Conventions
@@ -183,12 +183,12 @@ const result = interceptor.interceptPublish({
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
 - **Phase 3** (complete): EconomyPlugin, CircuitBreakerPlugin, CSML escalation, DynamicEnvelopePlugin, OWASP ASI coverage map
-- **Phase 4** (complete): `@sint/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
+- **Phase 4** (complete): `@pshkv/bridge-iot` (MQTT/CoAP), ASI01 GoalHijackPlugin, ASI06 MemoryIntegrityPlugin, PostgreSQL adapters
 - **Phase 5** (complete): OWASP ASI01-ASI10 conformance fixtures, APS-SINT-MCP handshake spec, ASI03/ASI05 security fixes, sint-mcp production proxy, token registry, Python SDK, Rust SDK
 - **Phase 6** (complete): ASI06 cross-session/credential-funnel/velocity-loop checks, bridge test coverage (+42 tests), latency fast-path fix (steadyP99 5ms)
-- **Phase 7** (complete): `@sint/memory`, `@sint/interface-bridge`, voice-only HUD, sint__ operator tools
+- **Phase 7** (complete): `@pshkv/memory`, `@pshkv/interface-bridge`, voice-only HUD, sint__ operator tools
 - **Phase 8** (complete): `ProactiveEscalationEngine`, delegation tree, Console API routes (`/v1/memory`, `/v1/delegations`, `/v1/csml`)
-- **Phase 9** (complete): `@sint/token-registry` (public capability token registry, 18 tests), `SafetyPermitPlugin` (async external hardware safety resolver, fail-open), `IotInterceptor` (56 tests in bridge-iot), `/v1/registry` gateway routes, latency benchmark stabilised for parallel CI
+- **Phase 9** (complete): `@pshkv/token-registry` (public capability token registry, 18 tests), `SafetyPermitPlugin` (async external hardware safety resolver, fail-open), `IotInterceptor` (56 tests in bridge-iot), `/v1/registry` gateway routes, latency benchmark stabilised for parallel CI
 - **Phase 10** (next): npm publish, Constraint Language CL-1.0, Rust SDK, sintctl registry CLI commands, Show HN
 
 ## Multi-Agent Coordination
@@ -198,11 +198,11 @@ Multiple agents and developers may work on this repo concurrently. Follow these 
 ### Package Ownership (by focus area)
 | Area | Packages | Notes |
 |------|----------|-------|
-| Security core | `@sint/core`, `@sint/gate-capability-tokens`, `@sint/gate-policy-gateway` | High churn — check latest commit before modifying |
-| Bridges | `@sint/bridge-*` | Each bridge is independent — parallel work safe |
-| Engine | `@sint/engine-*` | AI execution layer — coordinate on `engine.ts` types |
-| Server/client | `@sint/gateway-server`, `@sint/client` | API surface — check for route conflicts |
-| Conformance | `@sint/conformance-tests` | Add tests here for any new security invariant |
+| Security core | `@pshkv/core`, `@pshkv/gate-capability-tokens`, `@pshkv/gate-policy-gateway` | High churn — check latest commit before modifying |
+| Bridges | `@pshkv/bridge-*` | Each bridge is independent — parallel work safe |
+| Engine | `@pshkv/engine-*` | AI execution layer — coordinate on `engine.ts` types |
+| Server/client | `@pshkv/gateway-server`, `@pshkv/client` | API surface — check for route conflicts |
+| Conformance | `@pshkv/conformance-tests` | Add tests here for any new security invariant |
 
 ### Before Starting Work
 1. **Pull latest** — `git pull --rebase`
@@ -211,7 +211,7 @@ Multiple agents and developers may work on this repo concurrently. Follow these 
 
 ### Common Name Collision Risks
 - `SintDeploymentProfile` exists in both `policy.ts` (site profiles) and was renamed in `engine.ts` to `SintHardwareDeploymentProfile`. Do not re-add generic names in engine packages.
-- UUID format: requestId MUST be UUID v7 (version digit `7` at position 14) — `crypto.randomUUID()` produces v4 and will fail schema validation. Use the `generateUUIDv7()` helper from `@sint/gate-capability-tokens`.
+- UUID format: requestId MUST be UUID v7 (version digit `7` at position 14) — `crypto.randomUUID()` produces v4 and will fail schema validation. Use the `generateUUIDv7()` helper from `@pshkv/gate-capability-tokens`.
 - `CircuitBreakerPlugin.trip()` sets `manualTrip=true` — this permanently prevents auto-HALF_OPEN. Tests that want to test the auto-recovery path must open the circuit via `recordDenial`, not `trip()`.
 
 ### What's In Progress

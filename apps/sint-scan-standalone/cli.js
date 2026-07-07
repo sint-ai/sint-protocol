@@ -1,28 +1,33 @@
 #!/usr/bin/env node
-// sint-scan v0.1.0 — SINT Labs | Apache-2.0
+// sint-scan v0.1.0 — SINT Labs
 // Scan any MCP server for risky tools in seconds
-// https://sint.gg | github.com/sint-ai/sint-protocol
+// https://sint.gg | Apache-2.0
 
 'use strict';
 
 const { scanTools, formatReport } = require('./scanner.js');
 
+const RESET = '\x1b[0m', BOLD = '\x1b[1m';
+const RED = '\x1b[31m', YELLOW = '\x1b[33m', GREEN = '\x1b[32m', CYAN = '\x1b[36m', DIM = '\x1b[2m';
+
+function printUsage() {
+  console.log(`\n${BOLD}sint-scan${RESET} — MCP Server Security Scanner by SINT Protocol\n`);
+  console.log(`  ${BOLD}Usage:${RESET}`);
+  console.log(`    npx sint-scan --tools '[{"name":"bash","description":"runs commands"}]'`);
+  console.log(`    echo '[{"name":"readFile"}]' | npx sint-scan --server myserver\n`);
+  console.log(`  ${BOLD}Options:${RESET}`);
+  console.log(`    --server <id>    Server identifier (default: "unknown")`);
+  console.log(`    --tools <json>   JSON array of MCP tool definitions`);
+  console.log(`    --json           Output raw JSON report`);
+  console.log(`    --help           Show this help\n`);
+  console.log(`  ${DIM}Full governance: https://sint.gg${RESET}\n`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
-    console.log('\n\x1b[1msint-scan\x1b[0m \x1b[2mv0.1.0\x1b[0m — MCP Server Security Scanner by SINT Protocol\n');
-    console.log('  \x1b[1mUsage:\x1b[0m');
-    console.log('    npx sint-scan --tools \'[{"name":"bash","description":"runs commands"}]\'');
-    console.log('    echo \'[{"name":"readFile"}]\' | npx sint-scan --server myserver\n');
-    console.log('  \x1b[1mOptions:\x1b[0m');
-    console.log('    --server <id>    Server identifier (default: "unknown")');
-    console.log('    --tools <json>   JSON array of MCP tool definitions');
-    console.log('    --json           Output raw JSON report');
-    console.log('    --help           Show this help\n');
-    console.log('  \x1b[2mFull governance: https://sint.gg\x1b[0m');
-    console.log('  \x1b[2mStar: https://github.com/sint-ai/sint-protocol\x1b[0m\n');
-    process.exit(0);
+    printUsage(); process.exit(0);
   }
 
   const jsonMode = args.includes('--json');
@@ -40,8 +45,8 @@ async function main() {
   }
 
   if (!toolsJson) {
-    console.error('\x1b[31mError:\x1b[0m No tools provided. Use --tools or pipe JSON.\n');
-    process.exit(1);
+    console.error(`${RED}Error:${RESET} No tools provided. Use --tools or pipe JSON.\n`);
+    printUsage(); process.exit(1);
   }
 
   let tools;
@@ -49,15 +54,13 @@ async function main() {
     tools = JSON.parse(toolsJson);
     if (!Array.isArray(tools)) tools = [tools];
   } catch (e) {
-    console.error('\x1b[31mError:\x1b[0m Invalid JSON: ' + e.message);
-    process.exit(1);
+    console.error(`${RED}Error:${RESET} Invalid JSON: ${e.message}`); process.exit(1);
   }
 
   const report = scanTools(tools, serverId);
 
   if (jsonMode) {
-    console.log(JSON.stringify(report, null, 2));
-    return;
+    console.log(JSON.stringify(report, null, 2)); return;
   }
 
   formatReport(report);

@@ -95,7 +95,7 @@ Every tool call enters `MCPInterceptor.interceptToolCall()`, exits with one of t
 ### Install
 
 ```bash
-npm install @sint/bridge-mcp @sint/gate-policy-gateway @sint/gate-capability-tokens
+npm install @pshkv/bridge-mcp @pshkv/gate-policy-gateway @pshkv/gate-capability-tokens
 ```
 
 ### Configure and run
@@ -515,11 +515,11 @@ Detailed mapping — component-level evidence:
 |-----|-------|----------------|----------------|
 | ASI01 | Goal Hijacking | `GoalHijackPlugin` | 5 heuristic layers: literal prompt injection, role override (`you are now`), semantic escalation (tool scope widening), exfiltration probes (credential reads followed by network calls), cross-agent injection (unverified A2A sender) |
 | ASI02 | Tool Misuse | `TamRegistry` + capability token resource scope | `validateAgainstTam()` checks tier, resource pattern, and required actions before any tool call is forwarded |
-| ASI03 | Identity Abuse | `@sint/gate-capability-tokens` | Ed25519 signatures; `did:key` identity; delegation chain verified at each hop; `InMemoryRevocationStore.isRevoked()` called on every intercept |
+| ASI03 | Identity Abuse | `@pshkv/gate-capability-tokens` | Ed25519 signatures; `did:key` identity; delegation chain verified at each hop; `InMemoryRevocationStore.isRevoked()` called on every intercept |
 | ASI04 | Supply Chain | `DefaultSupplyChainVerifier` | Checks `modelFingerprintHash` against token-bound value; validates `modelId` against allowlist; verifies bridge protocol consistency |
 | ASI05 | Code Execution | Forbidden combos + capsule sandbox | `filesystem.write→shell.exec` combo blocked; capsule sandbox isolates agent execution process |
 | ASI06 | Memory Poisoning | `DefaultMemoryIntegrityChecker` | Detects replay (suspicious repetition in `recentActions`), privilege claims (`ADMIN`, `OVERRIDE` keywords), UUIDv7 timestamp rollback, history overflow |
-| ASI07 | Inter-Agent Trust | `@sint/bridge-a2a` | Every A2A message sender's `did:key` must have a valid, unexpired, non-revoked capability token before the message is processed |
+| ASI07 | Inter-Agent Trust | `@pshkv/bridge-a2a` | Every A2A message sender's `did:key` must have a valid, unexpired, non-revoked capability token before the message is processed |
 | ASI08 | Cascading Failures | `CircuitBreakerPlugin` + rate limits | Circuit opens on N consecutive denials; all subsequent requests auto-deny; per-token sliding-window rate limits cap call volume |
 | ASI09 | Trust Exploitation | `checkForbiddenCombos()` + T2/T3 approval | Multi-step patterns checked against known-bad sequences; T3 requires human sign-off with configurable M-of-N quorum |
 | ASI10 | Rogue Agent | `CircuitBreaker.trip()` + CSML drift | Manual trip halts all T2/T3 actions instantly; CSML anomalous-persona detection auto-trips circuit on safety events |
@@ -539,7 +539,7 @@ Benchmarked on MacBook Pro M2 (policy evaluation only, not including downstream 
 
 The p99 target of < 5 ms holds for all tiers. Full benchmark results in `docs/reports/`. Raspberry Pi 5 results also available for edge deployments.
 
-> **How to run:** `pnpm --filter @sint/gate-policy-gateway bench`
+> **How to run:** `pnpm --filter @pshkv/gate-policy-gateway bench`
 
 ---
 
