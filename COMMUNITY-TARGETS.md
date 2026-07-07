@@ -114,3 +114,5 @@ Point readers to the repo, docs, quick start, and discussions. Ask what would ma
 | Agent frameworks | Keep your stack, add execution governance | Discuss integration patterns |
 | Security and standards | Protocol-level controls and evidence | Critique trust boundaries |
 | Broad OSS channels | Open protocol with concrete developer workflow | Visit repo, docs, and discussions |
+
+For the measurable eligibility targets behind this outreach (external contributors, downloads, dependents, OpenSSF criticality), see [docs/roadmaps/oss-maintainer-eligibility-plan.md](docs/roadmaps/oss-maintainer-eligibility-plan.md).
