@@ -102,6 +102,23 @@
         "policyCode": "KINETIC_CAPACITY_EXCEEDED",
         "capacityKnown": true
       }
+    },
+    {
+      "id": "V7-novel-workspace-unknown-capacity",
+      "note": "low velocity that would otherwise be safe, but the trajectory is novel so capacity is estimated; capacityKnown=false clamps supervision to assisted regardless of the safe-looking margin",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "physicalContext": { "currentVelocityMps": 0.3, "humanDetected": false, "nearestObstacleMeters": 2.0, "trajectoryNovel": true }
+      },
+      "expect": {
+        "referenceMargin": 0.667,
+        "marginBand": "safe",
+        "supervision": "assisted",
+        "decision": "escalate",
+        "capacityKnown": false,
+        "tightenedAtMost": { "maxVelocityMps": 1.0 }
+      }
     }
   ]
 }
