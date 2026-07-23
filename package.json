@@ -60,9 +60,16 @@
   },
   "pnpm": {
     "overrides": {
-      "fast-uri": ">=3.1.2",
+      "@hono/node-server": ">=2.0.5",
+      "body-parser": ">=2.3.0",
+      "express-rate-limit": ">=8.6.0",
+      "fast-uri": ">=3.1.4",
+      "hono": ">=4.12.27",
+      "ip-address": ">=10.2.0",
       "path-to-regexp": ">=8.4.0",
-      "picomatch": ">=4.0.4"
+      "picomatch": ">=4.0.4",
+      "qs": ">=6.15.3",
+      "ws": ">=8.21.0"
     }
   }
 }

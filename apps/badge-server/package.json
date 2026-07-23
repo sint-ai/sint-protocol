@@ -12,8 +12,8 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@hono/node-server": "^1.14.0",
-    "hono": "^4.7.0"
+    "@hono/node-server": "^2.0.5",
+    "hono": "^4.12.27"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
