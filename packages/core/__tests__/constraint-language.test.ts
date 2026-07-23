@@ -110,6 +110,145 @@ describe("validateConstraintEnvelope", () => {
     expect(result.mode).toBe("legacy");
   });
 
+  // -------------------------------------------------------------------------
+  // migrationAttestation — entity_continuity structural precondition
+  // Refs: aeoess/agent-governance-vocabulary#8
+  // -------------------------------------------------------------------------
+
+  it("migrationAttestation with continuityVerified:true and all fields is valid", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "0xdead",
+        continuityVerified: true,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("migrationAttestation with continuityVerified:false fails validation", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "0xdead",
+        continuityVerified: false,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "migrationAttestation.continuityVerified must be true for envelope to activate",
+    );
+  });
+
+  it("migrationAttestation with empty schema fails validation", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "0xdead",
+        continuityVerified: true,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "migrationAttestation.schema must be a non-empty string",
+    );
+  });
+
+  it("migrationAttestation with empty attestationUri fails validation", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "",
+        agentWallet: "0xdead",
+        continuityVerified: true,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "migrationAttestation.attestationUri must be a non-empty string",
+    );
+  });
+
+  it("migrationAttestation with empty agentWallet fails validation", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "",
+        continuityVerified: true,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "migrationAttestation.agentWallet must be a non-empty string",
+    );
+  });
+
+  it("migrationAttestation with empty issuedAt fails validation", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "0xdead",
+        continuityVerified: true,
+        issuedAt: "",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      "migrationAttestation.issuedAt must be a non-empty ISO8601 string",
+    );
+  });
+
+  it("migrationAttestation validates on legacy envelope too (forward-compatible)", () => {
+    const envelope: ConstraintEnvelope = {
+      migrationAttestation: {
+        schema: "https://soulboundrobots.ai/schemas/sbr-002-v1.json",
+        attestationUri: "https://eas.example/0xabc",
+        agentWallet: "0xdead",
+        continuityVerified: false,
+        issuedAt: "2026-04-20T00:00:00Z",
+      },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(false);
+    expect(result.mode).toBe("legacy");
+    expect(result.errors).toContain(
+      "migrationAttestation.continuityVerified must be true for envelope to activate",
+    );
+  });
+
+  it("envelope without migrationAttestation is unaffected (field is optional)", () => {
+    const envelope: ConstraintEnvelope = {
+      version: "cl-1.0",
+      physical: { maxVelocityMps: 0.5 },
+    };
+    const result = validateConstraintEnvelope(envelope);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
   it("CL-1.0 with mode:corridor-preapproved is valid", () => {
     const envelope: ConstraintEnvelope = {
       version: "cl-1.0",
