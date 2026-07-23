@@ -276,6 +276,54 @@ describe("Capability Token Validator", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("should sign and validate token-bound regulated data policy", () => {
+    const token = createValidToken({
+      regulatedDataPolicy: {
+        allowedDataClasses: ["PHI", "PII"],
+        allowedPurposes: ["TREAT"],
+        approvedProcessors: ["in-region-model-router"],
+        approvedRegions: ["us-east-1"],
+        approvedModels: ["clinical-summary-local"],
+        allowedContextFields: ["symptoms", "medications"],
+        allowFallback: true,
+      },
+    });
+
+    expect(computeSigningPayload(token)).toContain("regulatedDataPolicy");
+    const result = validateCapabilityToken(token, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(result.ok).toBe(true);
+  });
+
+  it("should reject tampered token-bound regulated data policy", () => {
+    const token = createValidToken({
+      regulatedDataPolicy: {
+        approvedProcessors: ["in-region-model-router"],
+        approvedRegions: ["us-east-1"],
+        approvedModels: ["clinical-summary-local"],
+        allowedPurposes: ["TREAT"],
+      },
+    });
+    const tampered: SintCapabilityToken = {
+      ...token,
+      regulatedDataPolicy: {
+        ...token.regulatedDataPolicy,
+        approvedProcessors: ["external-processor"],
+      },
+    };
+
+    const result = validateCapabilityToken(tampered, {
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBe("INVALID_SIGNATURE");
+  });
+
   it("should reject stale verifiable compute metadata", () => {
     const token = createValidToken({
       verifiableComputeRequirements: {

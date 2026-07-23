@@ -103,6 +103,16 @@ export const modelConstraintsSchema = z.object({
   modelFingerprintHash: sha256Schema.optional(),
 }).strict();
 
+export const regulatedDataPolicySchema = z.object({
+  allowedDataClasses: z.array(z.string().min(1).max(64)).min(1).max(32).optional(),
+  allowedPurposes: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
+  approvedProcessors: z.array(z.string().min(1).max(128)).min(1).max(64).optional(),
+  approvedRegions: z.array(z.string().min(1).max(128)).min(1).max(64).optional(),
+  approvedModels: z.array(z.string().min(1).max(128)).min(1).max(64).optional(),
+  allowedContextFields: z.array(z.string().min(1).max(128)).min(1).max(128).optional(),
+  allowFallback: z.boolean().optional(),
+}).strict();
+
 export const attestationRequirementsSchema = z.object({
   minAttestationGrade: z.number().int().min(0).max(3).optional(),
   allowedTeeBackends: z.array(
@@ -161,6 +171,7 @@ export const capabilityTokenSchema = z.object({
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
   modelConstraints: modelConstraintsSchema.optional(),
+  regulatedDataPolicy: regulatedDataPolicySchema.optional(),
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
@@ -190,6 +201,7 @@ export const capabilityTokenRequestSchema = z.object({
   actions: z.array(z.string().min(1).max(64)).min(1).max(16),
   constraints: physicalConstraintsSchema,
   modelConstraints: modelConstraintsSchema.optional(),
+  regulatedDataPolicy: regulatedDataPolicySchema.optional(),
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),

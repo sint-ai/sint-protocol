@@ -19,6 +19,7 @@ import {
   type Result,
   type SintCapabilityToken,
   type SintPhysicalConstraints,
+  type SintRegulatedDataPolicy,
   err,
 } from "@pshkv/core";
 import { issueCapabilityToken } from "./issuer.js";
@@ -36,6 +37,9 @@ export interface DelegationParams {
 
   /** Optional: Tighten physical constraints (can only reduce, never increase). */
   readonly tightenConstraints?: Partial<SintPhysicalConstraints>;
+
+  /** Optional: Tighten regulated-data policy (subset only, never expand). */
+  readonly tightenRegulatedDataPolicy?: Partial<SintRegulatedDataPolicy>;
 
   /** Optional: Override expiry (must be <= parent's expiry). */
   readonly expiresAt?: ISO8601;
@@ -70,6 +74,89 @@ function minOptional(a?: number, b?: number): number | undefined {
   if (a === undefined) return b;
   if (b === undefined) return a;
   return Math.min(a, b);
+}
+
+function attenuateRegulatedDataPolicy(
+  parent: SintRegulatedDataPolicy | undefined,
+  tighten: Partial<SintRegulatedDataPolicy> | undefined,
+): Result<SintRegulatedDataPolicy | undefined, CapabilityTokenError> {
+  if (!tighten) {
+    return { ok: true, value: parent ? { ...parent } : undefined };
+  }
+  if (!parent) {
+    return err("INSUFFICIENT_PERMISSIONS");
+  }
+
+  const allowedDataClasses = attenuateStringList(
+    parent.allowedDataClasses,
+    tighten.allowedDataClasses,
+  );
+  const allowedPurposes = attenuateStringList(
+    parent.allowedPurposes,
+    tighten.allowedPurposes,
+  );
+  const approvedProcessors = attenuateStringList(
+    parent.approvedProcessors,
+    tighten.approvedProcessors,
+  );
+  const approvedRegions = attenuateStringList(
+    parent.approvedRegions,
+    tighten.approvedRegions,
+  );
+  const approvedModels = attenuateStringList(
+    parent.approvedModels,
+    tighten.approvedModels,
+  );
+  const allowedContextFields = attenuateStringList(
+    parent.allowedContextFields,
+    tighten.allowedContextFields,
+  );
+
+  if (
+    !allowedDataClasses.ok ||
+    !allowedPurposes.ok ||
+    !approvedProcessors.ok ||
+    !approvedRegions.ok ||
+    !approvedModels.ok ||
+    !allowedContextFields.ok
+  ) {
+    return err("INSUFFICIENT_PERMISSIONS");
+  }
+
+  if (parent.allowFallback === false && tighten.allowFallback === true) {
+    return err("INSUFFICIENT_PERMISSIONS");
+  }
+
+  return {
+    ok: true,
+    value: {
+      ...parent,
+      allowedDataClasses: allowedDataClasses.value,
+      allowedPurposes: allowedPurposes.value,
+      approvedProcessors: approvedProcessors.value,
+      approvedRegions: approvedRegions.value,
+      approvedModels: approvedModels.value,
+      allowedContextFields: allowedContextFields.value,
+      allowFallback: tighten.allowFallback ?? parent.allowFallback,
+    },
+  };
+}
+
+function attenuateStringList(
+  parent: readonly string[] | undefined,
+  requested: readonly string[] | undefined,
+): Result<readonly string[] | undefined, CapabilityTokenError> {
+  if (!requested) {
+    return { ok: true, value: parent };
+  }
+  if (!parent) {
+    return err("INSUFFICIENT_PERMISSIONS");
+  }
+  const parentSet = new Set(parent);
+  if (!requested.every((value) => parentSet.has(value))) {
+    return err("INSUFFICIENT_PERMISSIONS");
+  }
+  return { ok: true, value: [...requested] };
 }
 
 /**
@@ -147,6 +234,13 @@ export function delegateCapabilityToken(
     parentToken.constraints,
     params.tightenConstraints,
   );
+  const regulatedDataPolicy = attenuateRegulatedDataPolicy(
+    parentToken.regulatedDataPolicy,
+    params.tightenRegulatedDataPolicy,
+  );
+  if (!regulatedDataPolicy.ok) {
+    return regulatedDataPolicy;
+  }
 
   // Issue the delegated token
   return issueCapabilityToken(
@@ -157,6 +251,7 @@ export function delegateCapabilityToken(
       actions: delegatedActions,
       constraints,
       modelConstraints: parentToken.modelConstraints,
+      regulatedDataPolicy: regulatedDataPolicy.value,
       attestationRequirements: parentToken.attestationRequirements,
       verifiableComputeRequirements: parentToken.verifiableComputeRequirements,
       executionEnvelope: parentToken.executionEnvelope,

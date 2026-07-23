@@ -257,10 +257,12 @@ purpose, fallback, and context-minimization rules inside `PolicyGateway.intercep
 
 ```typescript
 import {
+  buildFHIRRegulatedDataPolicy,
   buildFHIRRegulatedRuntimeMetadata,
   mapFHIRToSint,
   withRegulatedRuntimeParams,
 } from "@pshkv/bridge-health";
+import { delegateCapabilityToken } from "@pshkv/gate-capability-tokens";
 
 const mapping = mapFHIRToSint({
   serverUrl: "https://fhir.example.org",
@@ -268,6 +270,15 @@ const mapping = mapFHIRToSint({
   resourceId: "blood-pressure-123",
   interaction: "read",
   patientId: "patient-456",
+});
+
+const regulatedDataPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+  allowedPurposes: ["TREAT"],
+  approvedProcessors: ["in-region-model-router"],
+  approvedRegions: ["us-east-1"],
+  approvedModels: ["clinical-summary-local"],
+  allowedContextFields: ["resourceType", "interaction", "resourceId"],
+  allowFallback: true,
 });
 
 const regulatedData = buildFHIRRegulatedRuntimeMetadata(mapping, {
@@ -285,6 +296,18 @@ const params = withRegulatedRuntimeParams(
 
 // The bridge forwards `resource`, `action`, and `params` to PolicyGateway.intercept().
 // It does not authorize the request itself.
+// Use `regulatedDataPolicy` as SintCapabilityTokenRequest.regulatedDataPolicy.
+
+const delegatedToken = delegateCapabilityToken(
+  parentToken,
+  {
+    newSubject: childAgentPublicKey,
+    tightenRegulatedDataPolicy: {
+      allowedContextFields: ["resourceType", "interaction"],
+    },
+  },
+  parentAgentPrivateKey,
+);
 ```
 
 ### HealthKit On-Device Access

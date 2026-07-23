@@ -513,9 +513,106 @@
       }
     }
   ],
+  "tokenBoundAuthority": {
+    "extensionName": "regulatedDataPolicy",
+    "signedFields": [
+      "allowedDataClasses",
+      "allowedPurposes",
+      "approvedProcessors",
+      "approvedRegions",
+      "approvedModels",
+      "allowedContextFields",
+      "allowFallback"
+    ],
+    "signaturePayloadIncludesExtension": true,
+    "deploymentPolicyCannotExpandToken": true,
+    "delegationAttenuationOnly": true,
+    "parentPolicy": {
+      "allowedDataClasses": [
+        "PHI",
+        "PII"
+      ],
+      "allowedPurposes": [
+        "TREAT",
+        "PAYMENT"
+      ],
+      "approvedProcessors": [
+        "ehr-core",
+        "in-region-model-router",
+        "billing-service"
+      ],
+      "approvedRegions": [
+        "us-east-1",
+        "us-west-2"
+      ],
+      "approvedModels": [
+        "clinical-summary-local",
+        "intake-triage-approved",
+        "billing-code-helper"
+      ],
+      "allowedContextFields": [
+        "symptoms",
+        "medications",
+        "insurance_plan"
+      ],
+      "allowFallback": true
+    },
+    "validDelegation": {
+      "allowedDataClasses": [
+        "PHI"
+      ],
+      "allowedPurposes": [
+        "TREAT"
+      ],
+      "approvedProcessors": [
+        "in-region-model-router"
+      ],
+      "approvedRegions": [
+        "us-east-1"
+      ],
+      "approvedModels": [
+        "clinical-summary-local"
+      ],
+      "allowedContextFields": [
+        "symptoms"
+      ],
+      "allowFallback": false
+    },
+    "invalidDelegations": [
+      {
+        "name": "processor_expansion",
+        "requestedPolicy": {
+          "approvedProcessors": [
+            "external-processor"
+          ]
+        },
+        "expectedError": "INSUFFICIENT_PERMISSIONS"
+      },
+      {
+        "name": "region_expansion",
+        "requestedPolicy": {
+          "approvedRegions": [
+            "eu-central-1"
+          ]
+        },
+        "expectedError": "INSUFFICIENT_PERMISSIONS"
+      },
+      {
+        "name": "context_expansion",
+        "requestedPolicy": {
+          "allowedContextFields": [
+            "raw_treatment_note"
+          ]
+        },
+        "expectedError": "INSUFFICIENT_PERMISSIONS"
+      }
+    ]
+  },
   "successCriteria": {
     "everyDecisionFlowsThroughPolicyGateway": true,
     "inheritedContextOnlyNarrows": true,
+    "tokenBoundPolicySigned": true,
+    "tokenBoundPolicyDelegatesByAttenuationOnly": true,
     "unapprovedProcessorsDenied": true,
     "crossRegionTransfersDeniedOrRerouted": true,
     "sensitivePayloadsMinimizedInEvidence": true,

@@ -13,6 +13,7 @@ import {
 } from "./fixture-loader.js";
 
 type RuntimeScenario = RegulatedAgentRuntimeFixture["scenarios"][number];
+type TokenBoundAuthority = RegulatedAgentRuntimeFixture["tokenBoundAuthority"];
 
 interface RuntimeDecisionResult {
   readonly decisionAction: RuntimeScenario["expected"]["decisionAction"];
@@ -122,6 +123,47 @@ class RegulatedAgentRuntimeHarness {
       evidenceRequired: true,
     };
   }
+}
+
+function isSubset(
+  child: readonly string[] | undefined,
+  parent: readonly string[],
+): boolean {
+  if (!child) {
+    return true;
+  }
+  const parentSet = new Set(parent);
+  return child.every((value) => parentSet.has(value));
+}
+
+function policyIsSubset(
+  child: TokenBoundAuthority["validDelegation"],
+  parent: TokenBoundAuthority["parentPolicy"],
+): boolean {
+  return (
+    isSubset(child.allowedDataClasses, parent.allowedDataClasses) &&
+    isSubset(child.allowedPurposes, parent.allowedPurposes) &&
+    isSubset(child.approvedProcessors, parent.approvedProcessors) &&
+    isSubset(child.approvedRegions, parent.approvedRegions) &&
+    isSubset(child.approvedModels, parent.approvedModels) &&
+    isSubset(child.allowedContextFields, parent.allowedContextFields) &&
+    !(parent.allowFallback === false && child.allowFallback === true)
+  );
+}
+
+function requestedPolicyExpandsParent(
+  requested: TokenBoundAuthority["invalidDelegations"][number]["requestedPolicy"],
+  parent: TokenBoundAuthority["parentPolicy"],
+): boolean {
+  return (
+    !isSubset(requested.allowedDataClasses, parent.allowedDataClasses) ||
+    !isSubset(requested.allowedPurposes, parent.allowedPurposes) ||
+    !isSubset(requested.approvedProcessors, parent.approvedProcessors) ||
+    !isSubset(requested.approvedRegions, parent.approvedRegions) ||
+    !isSubset(requested.approvedModels, parent.approvedModels) ||
+    !isSubset(requested.allowedContextFields, parent.allowedContextFields) ||
+    (parent.allowFallback === false && requested.allowFallback === true)
+  );
 }
 
 describe("Regulated agent runtime profile fixture v1", () => {
@@ -238,6 +280,45 @@ describe("Regulated agent runtime profile fixture v1", () => {
     );
     expect(fixture.defaults.contextInheritanceAttenuationOnly).toBe(true);
     expect(fixture.successCriteria.inheritedContextOnlyNarrows).toBe(true);
+  });
+
+  it("binds regulated data authority to signed token policy", () => {
+    expect(fixture.tokenBoundAuthority.extensionName).toBe("regulatedDataPolicy");
+    expect(fixture.tokenBoundAuthority.signaturePayloadIncludesExtension).toBe(true);
+    expect(fixture.successCriteria.tokenBoundPolicySigned).toBe(true);
+    expect(fixture.tokenBoundAuthority.signedFields).toEqual(
+      expect.arrayContaining([
+        "allowedDataClasses",
+        "allowedPurposes",
+        "approvedProcessors",
+        "approvedRegions",
+        "approvedModels",
+        "allowedContextFields",
+        "allowFallback",
+      ]),
+    );
+  });
+
+  it("requires regulated data delegation to attenuate token-bound authority", () => {
+    const authority = fixture.tokenBoundAuthority;
+
+    expect(authority.deploymentPolicyCannotExpandToken).toBe(true);
+    expect(authority.delegationAttenuationOnly).toBe(true);
+    expect(fixture.successCriteria.tokenBoundPolicyDelegatesByAttenuationOnly).toBe(true);
+    expect(policyIsSubset(authority.validDelegation, authority.parentPolicy)).toBe(true);
+
+    for (const invalidDelegation of authority.invalidDelegations) {
+      expect(invalidDelegation.expectedError, invalidDelegation.name).toBe(
+        "INSUFFICIENT_PERMISSIONS",
+      );
+      expect(
+        requestedPolicyExpandsParent(
+          invalidDelegation.requestedPolicy,
+          authority.parentPolicy,
+        ),
+        invalidDelegation.name,
+      ).toBe(true);
+    }
   });
 
   it("denies or reroutes unsafe processor, region, and model paths", () => {

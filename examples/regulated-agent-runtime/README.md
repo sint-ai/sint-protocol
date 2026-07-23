@@ -10,10 +10,15 @@ This example shows the intended integration shape for regulated-data workflows:
 
 ```typescript
 import {
+  buildFHIRRegulatedDataPolicy,
   buildFHIRRegulatedRuntimeMetadata,
   mapFHIRToSint,
   withRegulatedRuntimeParams,
 } from "@pshkv/bridge-health";
+import {
+  delegateCapabilityToken,
+  issueCapabilityToken,
+} from "@pshkv/gate-capability-tokens";
 import {
   DefaultRegulatedDataPolicyPlugin,
   PolicyGateway,
@@ -27,11 +32,64 @@ const mapping = mapFHIRToSint({
   patientId: "patient-456",
 });
 
+const regulatedDataPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+  allowedPurposes: ["TREAT"],
+  approvedProcessors: ["in-region-model-router"],
+  approvedRegions: ["us-east-1"],
+  approvedModels: ["clinical-summary-local"],
+  allowedContextFields: [
+    "resourceType",
+    "interaction",
+    "resourceId",
+    "patientId",
+  ],
+  allowFallback: false,
+});
+
+const parentToken = issueCapabilityToken(
+  {
+    issuer: issuerPublicKey,
+    subject: parentAgentPublicKey,
+    resource: mapping.resource,
+    actions: [mapping.action],
+    constraints: {},
+    regulatedDataPolicy,
+    delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+    expiresAt,
+    revocable: true,
+  },
+  issuerPrivateKey,
+);
+
+const delegatedToken = parentToken.ok
+  ? delegateCapabilityToken(
+      parentToken.value,
+      {
+        newSubject: childAgentPublicKey,
+        tightenRegulatedDataPolicy: {
+          allowedContextFields: ["resourceType", "interaction", "resourceId"],
+        },
+      },
+      parentAgentPrivateKey,
+    )
+  : parentToken;
+
+if (parentToken.ok) tokenStore.set(parentToken.value.tokenId, parentToken.value);
+if (delegatedToken.ok) {
+  tokenStore.set(delegatedToken.value.tokenId, delegatedToken.value);
+}
+
 const regulatedData = buildFHIRRegulatedRuntimeMetadata(mapping, {
   purposeOfUse: "TREAT",
   processor: "in-region-model-router",
   region: "us-east-1",
   model: "clinical-summary-local",
+  requestedContextFields: [
+    "resourceType",
+    "interaction",
+    "resourceId",
+    "patientId",
+  ],
 });
 
 const gateway = new PolicyGateway({
@@ -47,8 +105,8 @@ const gateway = new PolicyGateway({
 const decision = await gateway.intercept({
   requestId,
   timestamp,
-  agentId,
-  tokenId,
+  agentId: childAgentPublicKey,
+  tokenId: delegatedToken.ok ? delegatedToken.value.tokenId : tokenId,
   resource: mapping.resource,
   action: mapping.action,
   params: withRegulatedRuntimeParams({ fhir: mapping.context }, regulatedData),

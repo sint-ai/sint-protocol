@@ -202,6 +202,115 @@ describe("DefaultRegulatedDataPolicyPlugin", () => {
       }),
     );
   });
+
+  it("uses token-bound policy to deny data classes outside token authority", () => {
+    const token = makeToken({
+      regulatedDataPolicy: {
+        allowedDataClasses: ["ADMIN"],
+        approvedProcessors: ["in-region-model-router"],
+        approvedRegions: ["us-east-1"],
+        approvedModels: ["clinical-summary-local"],
+        allowedPurposes: ["TREAT"],
+      },
+    });
+    const policy = makePolicy();
+
+    const decision = policy.evaluate(makeRequest(token), token, {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50100",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+    });
+
+    expect(decision?.action).toBe("deny");
+    expect(decision?.denial?.policyViolated).toBe("DATA_CLASS_NOT_AUTHORIZED");
+  });
+
+  it("intersects token-bound processor, region, model, and purpose allowlists", () => {
+    const token = makeToken({
+      regulatedDataPolicy: {
+        allowedDataClasses: ["PHI", "PII"],
+        approvedProcessors: ["ehr-core"],
+        approvedRegions: ["us-west-2"],
+        approvedModels: ["intake-triage-approved"],
+        allowedPurposes: ["PAYMENT"],
+      },
+    });
+    const policy = makePolicy();
+
+    const decision = policy.evaluate(makeRequest(token), token, {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50101",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+    });
+
+    expect(decision?.action).toBe("deny");
+    expect(decision?.denial?.policyViolated).toBe("PURPOSE_NOT_AUTHORIZED");
+  });
+
+  it("lets token-bound context fields minimize delegated context without deployment map", () => {
+    const token = makeToken({
+      regulatedDataPolicy: {
+        allowedDataClasses: ["PHI", "PII"],
+        approvedProcessors: ["in-region-model-router"],
+        approvedRegions: ["us-east-1"],
+        approvedModels: ["clinical-summary-local"],
+        allowedPurposes: ["TREAT"],
+        allowedContextFields: ["symptoms"],
+      },
+    });
+    const policy = makePolicy();
+
+    const decision = policy.evaluate(makeRequest(token), token, {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50102",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+    });
+
+    expect(decision?.action).toBe("transform");
+    expect(decision?.transformations?.additionalAuditFields).toEqual(
+      expect.objectContaining({
+        transformations: ["minimize_context"],
+        effectiveContextFields: ["symptoms"],
+        minimizedFields: ["medications"],
+      }),
+    );
+  });
+
+  it("denies unsafe original path when token disables fallback", () => {
+    const token = makeToken({
+      regulatedDataPolicy: {
+        allowedDataClasses: ["PHI", "PII"],
+        approvedProcessors: ["in-region-model-router"],
+        approvedRegions: ["us-west-2"],
+        approvedModels: ["intake-triage-approved"],
+        allowedPurposes: ["TREAT"],
+        allowFallback: false,
+      },
+    });
+    const policy = makePolicy();
+    const request = makeRequest(token, {
+      params: {
+        regulatedData: {
+          dataClasses: ["PHI", "PII"],
+          purposeOfUse: "TREAT",
+          processor: "external-processor",
+          region: "eu-central-1",
+          model: "general-model",
+          fallback: {
+            processor: "in-region-model-router",
+            region: "us-west-2",
+            model: "intake-triage-approved",
+            transformations: ["redact_direct_identifiers"],
+          },
+        },
+      },
+    });
+
+    const decision = policy.evaluate(request, token, {
+      requestId: request.requestId,
+      timestamp: request.timestamp,
+    });
+
+    expect(decision?.action).toBe("deny");
+    expect(decision?.denial?.policyViolated).toBe("PROCESSOR_NOT_APPROVED");
+  });
 });
 
 describe("RegulatedDataPolicyPlugin — Gateway integration", () => {

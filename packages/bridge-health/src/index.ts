@@ -76,9 +76,11 @@ export {
 
 // Regulated runtime metadata for PolicyGateway regulated-data policy
 export {
+  buildFHIRRegulatedDataPolicy,
   buildFHIRRegulatedRuntimeMetadata,
   classifyFHIRDataClasses,
   withRegulatedRuntimeParams,
+  type FHIRRegulatedDataPolicyOptions,
   type RegulatedRuntimeRouteContext,
   type RegulatedRuntimeParams,
 } from "./regulated-runtime-metadata.js";

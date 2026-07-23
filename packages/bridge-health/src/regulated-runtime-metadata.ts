@@ -6,6 +6,7 @@
  */
 
 import type { RegulatedDataRequestMetadata } from "@pshkv/gate-policy-gateway";
+import type { SintRegulatedDataPolicy } from "@pshkv/core";
 import type { FHIRResourceMapping, FHIRResourceType } from "./fhir-mapper.js";
 
 export interface RegulatedRuntimeRouteContext {
@@ -19,6 +20,15 @@ export interface RegulatedRuntimeRouteContext {
 
 export interface RegulatedRuntimeParams {
   readonly regulatedData: RegulatedDataRequestMetadata;
+}
+
+export interface FHIRRegulatedDataPolicyOptions {
+  readonly allowedPurposes: readonly string[];
+  readonly approvedProcessors: readonly string[];
+  readonly approvedRegions: readonly string[];
+  readonly approvedModels: readonly string[];
+  readonly allowedContextFields?: readonly string[];
+  readonly allowFallback?: boolean;
 }
 
 const CLINICAL_PHI_RESOURCES = new Set<FHIRResourceType>([
@@ -51,6 +61,27 @@ export function buildFHIRRegulatedRuntimeMetadata(
     model: route.model,
     requestedContextFields: route.requestedContextFields ?? defaultContextFields(mapping),
     ...(route.fallback && { fallback: route.fallback }),
+  };
+}
+
+/**
+ * Build a token-bound regulated data policy from a FHIR mapping.
+ *
+ * Use this as `SintCapabilityTokenRequest.regulatedDataPolicy` so token
+ * authority and request metadata are derived from the same bridge mapping.
+ */
+export function buildFHIRRegulatedDataPolicy(
+  mapping: FHIRResourceMapping,
+  options: FHIRRegulatedDataPolicyOptions,
+): SintRegulatedDataPolicy {
+  return {
+    allowedDataClasses: classifyFHIRDataClasses(mapping.context.resourceType),
+    allowedPurposes: options.allowedPurposes,
+    approvedProcessors: options.approvedProcessors,
+    approvedRegions: options.approvedRegions,
+    approvedModels: options.approvedModels,
+    allowedContextFields: options.allowedContextFields ?? defaultContextFields(mapping),
+    allowFallback: options.allowFallback,
   };
 }
 

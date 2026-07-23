@@ -77,10 +77,11 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
 
     const assignedTier = assignRegulatedDataTier(metadata, request);
     const assignedRisk = riskForTier(assignedTier);
+    const policy = this.resolveEffectivePolicy(token);
 
     if (
-      this.allowedPurposes &&
-      !this.allowedPurposes.has(metadata.purposeOfUse)
+      policy.allowedPurposes &&
+      !policy.allowedPurposes.has(metadata.purposeOfUse)
     ) {
       return deny(
         context,
@@ -91,7 +92,17 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
       );
     }
 
-    if (this.fallbackAllowed(metadata)) {
+    if (!metadata.dataClasses.every((dataClass) => policy.allowedDataClasses?.has(dataClass) ?? true)) {
+      return deny(
+        context,
+        assignedTier,
+        assignedRisk,
+        "DATA_CLASS_NOT_AUTHORIZED",
+        "One or more regulated data classes are not authorized by this token",
+      );
+    }
+
+    if (this.fallbackAllowed(metadata, policy)) {
       return transform(context, assignedTier, assignedRisk, {
         transformations: metadata.fallback!.transformations,
         fallbackProcessor: metadata.fallback!.processor,
@@ -101,7 +112,7 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
       });
     }
 
-    if (!this.approvedProcessors.has(metadata.processor)) {
+    if (!policy.approvedProcessors.has(metadata.processor)) {
       return deny(
         context,
         assignedTier,
@@ -111,7 +122,7 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
       );
     }
 
-    if (!this.approvedRegions.has(metadata.region)) {
+    if (!policy.approvedRegions.has(metadata.region)) {
       return deny(
         context,
         assignedTier,
@@ -121,7 +132,7 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
       );
     }
 
-    if (!this.approvedModels.has(metadata.model)) {
+    if (!policy.approvedModels.has(metadata.model)) {
       return deny(
         context,
         assignedTier,
@@ -132,14 +143,19 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
     }
 
     const requestedContextFields = metadata.requestedContextFields ?? [];
-    const allowedContextFields = this.config.allowedContextFieldsByTokenId?.[token.tokenId];
-    if (allowedContextFields && exceedsContextScope(requestedContextFields, allowedContextFields)) {
-      const allowed = new Set(allowedContextFields);
-      const minimizedFields = requestedContextFields.filter((field) => !allowed.has(field));
+    if (
+      policy.allowedContextFields &&
+      exceedsContextScope(requestedContextFields, policy.allowedContextFields)
+    ) {
+      const minimizedFields = requestedContextFields.filter(
+        (field) => !policy.allowedContextFields!.has(field),
+      );
       return transform(context, assignedTier, assignedRisk, {
         transformations: ["minimize_context"],
         requestedContextFields,
-        effectiveContextFields: requestedContextFields.filter((field) => allowed.has(field)),
+        effectiveContextFields: requestedContextFields.filter((field) =>
+          policy.allowedContextFields!.has(field),
+        ),
         minimizedFields,
         reason: "delegated_context_minimized",
       });
@@ -148,17 +164,63 @@ export class DefaultRegulatedDataPolicyPlugin implements RegulatedDataPolicyPlug
     return undefined;
   }
 
-  private fallbackAllowed(metadata: RegulatedDataRequestMetadata): boolean {
+  private fallbackAllowed(
+    metadata: RegulatedDataRequestMetadata,
+    policy: EffectiveRegulatedDataPolicy,
+  ): boolean {
     const fallback = metadata.fallback;
     if (!fallback) {
       return false;
     }
+    if (policy.allowFallback === false) {
+      return false;
+    }
     return (
-      this.approvedProcessors.has(fallback.processor) &&
-      this.approvedRegions.has(fallback.region) &&
-      this.approvedModels.has(fallback.model)
+      policy.approvedProcessors.has(fallback.processor) &&
+      policy.approvedRegions.has(fallback.region) &&
+      policy.approvedModels.has(fallback.model)
     );
   }
+
+  private resolveEffectivePolicy(token: SintCapabilityToken): EffectiveRegulatedDataPolicy {
+    const tokenPolicy = token.regulatedDataPolicy;
+    return {
+      approvedProcessors: intersectIfPresent(
+        this.approvedProcessors,
+        tokenPolicy?.approvedProcessors,
+      ),
+      approvedRegions: intersectIfPresent(
+        this.approvedRegions,
+        tokenPolicy?.approvedRegions,
+      ),
+      approvedModels: intersectIfPresent(
+        this.approvedModels,
+        tokenPolicy?.approvedModels,
+      ),
+      allowedPurposes: intersectOptionalIfPresent(
+        this.allowedPurposes,
+        tokenPolicy?.allowedPurposes,
+      ),
+      allowedDataClasses: tokenPolicy?.allowedDataClasses
+        ? new Set(tokenPolicy.allowedDataClasses)
+        : undefined,
+      allowedContextFields: resolveContextFields(
+        this.config.allowedContextFieldsByTokenId?.[token.tokenId],
+        tokenPolicy?.allowedContextFields,
+      ),
+      allowFallback: tokenPolicy?.allowFallback,
+    };
+  }
+}
+
+interface EffectiveRegulatedDataPolicy {
+  readonly approvedProcessors: ReadonlySet<string>;
+  readonly approvedRegions: ReadonlySet<string>;
+  readonly approvedModels: ReadonlySet<string>;
+  readonly allowedPurposes?: ReadonlySet<string>;
+  readonly allowedDataClasses?: ReadonlySet<string>;
+  readonly allowedContextFields?: ReadonlySet<string>;
+  readonly allowFallback?: boolean;
 }
 
 function parseRegulatedDataMetadata(value: unknown): RegulatedDataRequestMetadata | undefined {
@@ -268,10 +330,46 @@ function transform(
 
 function exceedsContextScope(
   requestedContextFields: readonly string[],
-  allowedContextFields: readonly string[],
+  allowedContextFields: ReadonlySet<string>,
 ): boolean {
-  const allowed = new Set(allowedContextFields);
-  return requestedContextFields.some((field) => !allowed.has(field));
+  return requestedContextFields.some((field) => !allowedContextFields.has(field));
+}
+
+function intersectIfPresent(
+  deploymentAllowed: ReadonlySet<string>,
+  tokenAllowed: readonly string[] | undefined,
+): ReadonlySet<string> {
+  if (!tokenAllowed) {
+    return deploymentAllowed;
+  }
+  const tokenSet = new Set(tokenAllowed);
+  return new Set([...deploymentAllowed].filter((value) => tokenSet.has(value)));
+}
+
+function intersectOptionalIfPresent(
+  deploymentAllowed: ReadonlySet<string> | undefined,
+  tokenAllowed: readonly string[] | undefined,
+): ReadonlySet<string> | undefined {
+  if (!deploymentAllowed && !tokenAllowed) {
+    return undefined;
+  }
+  if (!deploymentAllowed) {
+    return new Set(tokenAllowed ?? []);
+  }
+  return intersectIfPresent(deploymentAllowed, tokenAllowed);
+}
+
+function resolveContextFields(
+  deploymentFields: readonly string[] | undefined,
+  tokenFields: readonly string[] | undefined,
+): ReadonlySet<string> | undefined {
+  if (!deploymentFields && !tokenFields) {
+    return undefined;
+  }
+  if (!deploymentFields) {
+    return new Set(tokenFields ?? []);
+  }
+  return intersectIfPresent(new Set(deploymentFields), tokenFields);
 }
 
 function readString(value: unknown): string | undefined {

@@ -164,6 +164,24 @@ export interface SintModelConstraints {
   readonly modelFingerprintHash?: string;
 }
 
+/** Token-bound policy for regulated data runtime paths. */
+export interface SintRegulatedDataPolicy {
+  /** Data classes this token may carry or process. */
+  readonly allowedDataClasses?: readonly string[];
+  /** Purposes of use this token authorizes. */
+  readonly allowedPurposes?: readonly string[];
+  /** Approved processor identifiers for this token. */
+  readonly approvedProcessors?: readonly string[];
+  /** Approved region/residency identifiers for this token. */
+  readonly approvedRegions?: readonly string[];
+  /** Approved model identifiers for this token. */
+  readonly approvedModels?: readonly string[];
+  /** Context fields that downstream agents may receive. */
+  readonly allowedContextFields?: readonly string[];
+  /** Whether approved fallback routing is permitted for this token. */
+  readonly allowFallback?: boolean;
+}
+
 /** Attestation backends supported by SINT enforcement and evidence flows. */
 export type SintAttestationBackend =
   | "intel-sgx"
@@ -347,6 +365,8 @@ export interface SintCapabilityToken {
   readonly constraints: SintPhysicalConstraints;
   /** Optional model identity restrictions for runtime use of this token. */
   readonly modelConstraints?: SintModelConstraints;
+  /** Optional token-bound regulated data policy. */
+  readonly regulatedDataPolicy?: SintRegulatedDataPolicy;
   /** Optional attestation requirements for this token. */
   readonly attestationRequirements?: SintAttestationRequirements;
   /** Optional verifiable-compute proof requirements for this token. */
@@ -426,6 +446,8 @@ export interface SintCapabilityTokenRequest {
   readonly constraints: SintPhysicalConstraints;
   /** Optional model identity restrictions. */
   readonly modelConstraints?: SintModelConstraints;
+  /** Optional token-bound regulated data policy. */
+  readonly regulatedDataPolicy?: SintRegulatedDataPolicy;
   /** Optional TEE attestation requirements. */
   readonly attestationRequirements?: SintAttestationRequirements;
   /** Optional ZK/TEE verifiable-compute proof requirements. */

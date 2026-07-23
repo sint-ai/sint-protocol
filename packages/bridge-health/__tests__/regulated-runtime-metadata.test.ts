@@ -6,6 +6,12 @@ import { describe, expect, it } from "vitest";
 import { ApprovalTier } from "@pshkv/core";
 import { DefaultRegulatedDataPolicyPlugin } from "@pshkv/gate-policy-gateway";
 import {
+  delegateCapabilityToken,
+  generateKeypair,
+  issueCapabilityToken,
+} from "@pshkv/gate-capability-tokens";
+import {
+  buildFHIRRegulatedDataPolicy,
   buildFHIRRegulatedRuntimeMetadata,
   classifyFHIRDataClasses,
   withRegulatedRuntimeParams,
@@ -75,6 +81,39 @@ describe("regulated runtime metadata", () => {
     expect(params.regulatedData).toBe(metadata);
   });
 
+  it("builds token-bound regulated data policy from the same FHIR mapping", () => {
+    const mapping = mapFHIRToSint({
+      serverUrl: "https://fhir.example.test",
+      resourceType: "Observation",
+      resourceId: "obs-123",
+      interaction: "read",
+      patientId: "patient-456",
+    });
+
+    const tokenPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+      allowedPurposes: ["TREAT"],
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowFallback: false,
+    });
+
+    expect(tokenPolicy).toEqual({
+      allowedDataClasses: ["PHI"],
+      allowedPurposes: ["TREAT"],
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedContextFields: [
+        "resourceType",
+        "interaction",
+        "resourceId",
+        "patientId",
+      ],
+      allowFallback: false,
+    });
+  });
+
   it("emits metadata compatible with the gateway regulated-data policy", () => {
     const mapping = mapFHIRToSint({
       serverUrl: "https://fhir.example.test",
@@ -138,6 +177,179 @@ describe("regulated runtime metadata", () => {
         fallbackProcessor: "in-region-model-router",
         fallbackRegion: "us-east-1",
         fallbackModel: "clinical-summary-local",
+      }),
+    );
+  });
+
+  it("uses generated token policy to bind issued token authority", () => {
+    const issuer = generateKeypair();
+    const subject = generateKeypair();
+    const mapping = mapFHIRToSint({
+      serverUrl: "https://fhir.example.test",
+      resourceType: "Observation",
+      resourceId: "obs-123",
+      interaction: "read",
+      patientId: "patient-456",
+    });
+    const tokenPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+      allowedPurposes: ["TREAT"],
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedContextFields: ["resourceType", "interaction"],
+      allowFallback: false,
+    });
+    const issued = issueCapabilityToken(
+      {
+        issuer: issuer.publicKey,
+        subject: subject.publicKey,
+        resource: mapping.resource,
+        actions: [mapping.action],
+        constraints: {},
+        regulatedDataPolicy: tokenPolicy,
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: new Date(Date.now() + 60_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+        revocable: true,
+      },
+      issuer.privateKey,
+    );
+    expect(issued.ok).toBe(true);
+    if (!issued.ok) return;
+
+    const metadata = buildFHIRRegulatedRuntimeMetadata(mapping, {
+      purposeOfUse: "TREAT",
+      processor: "in-region-model-router",
+      region: "us-east-1",
+      model: "clinical-summary-local",
+      requestedContextFields: ["resourceType", "interaction", "patientId"],
+    });
+    const policy = new DefaultRegulatedDataPolicyPlugin({
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedPurposes: ["TREAT"],
+    });
+    const decision = policy.evaluate(
+      {
+        requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50003" as any,
+        timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+        agentId: subject.publicKey,
+        tokenId: issued.value.tokenId,
+        resource: mapping.resource,
+        action: mapping.action,
+        params: withRegulatedRuntimeParams({}, metadata),
+      },
+      issued.value,
+      {
+        requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50003",
+        timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      },
+    );
+
+    expect(decision?.action).toBe("transform");
+    expect(decision?.transformations?.additionalAuditFields).toEqual(
+      expect.objectContaining({
+        transformations: ["minimize_context"],
+        effectiveContextFields: ["resourceType", "interaction"],
+        minimizedFields: ["patientId"],
+      }),
+    );
+  });
+
+  it("delegates generated token policy by narrowing bridge-derived context fields", () => {
+    const issuer = generateKeypair();
+    const parentSubject = generateKeypair();
+    const childSubject = generateKeypair();
+    const mapping = mapFHIRToSint({
+      serverUrl: "https://fhir.example.test",
+      resourceType: "Observation",
+      resourceId: "obs-123",
+      interaction: "read",
+      patientId: "patient-456",
+    });
+    const parentPolicy = buildFHIRRegulatedDataPolicy(mapping, {
+      allowedPurposes: ["TREAT"],
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedContextFields: [
+        "resourceType",
+        "interaction",
+        "resourceId",
+        "patientId",
+      ],
+      allowFallback: false,
+    });
+    const issued = issueCapabilityToken(
+      {
+        issuer: issuer.publicKey,
+        subject: parentSubject.publicKey,
+        resource: mapping.resource,
+        actions: [mapping.action],
+        constraints: {},
+        regulatedDataPolicy: parentPolicy,
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: new Date(Date.now() + 60_000).toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+        revocable: true,
+      },
+      issuer.privateKey,
+    );
+    expect(issued.ok).toBe(true);
+    if (!issued.ok) return;
+
+    const delegated = delegateCapabilityToken(
+      issued.value,
+      {
+        newSubject: childSubject.publicKey,
+        tightenRegulatedDataPolicy: {
+          allowedContextFields: ["resourceType", "interaction"],
+        },
+      },
+      parentSubject.privateKey,
+    );
+    expect(delegated.ok).toBe(true);
+    if (!delegated.ok) return;
+    expect(delegated.value.regulatedDataPolicy?.allowedContextFields).toEqual([
+      "resourceType",
+      "interaction",
+    ]);
+
+    const metadata = buildFHIRRegulatedRuntimeMetadata(mapping, {
+      purposeOfUse: "TREAT",
+      processor: "in-region-model-router",
+      region: "us-east-1",
+      model: "clinical-summary-local",
+      requestedContextFields: ["resourceType", "interaction", "patientId"],
+    });
+    const policy = new DefaultRegulatedDataPolicyPlugin({
+      approvedProcessors: ["in-region-model-router"],
+      approvedRegions: ["us-east-1"],
+      approvedModels: ["clinical-summary-local"],
+      allowedPurposes: ["TREAT"],
+    });
+    const decision = policy.evaluate(
+      {
+        requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50004" as any,
+        timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+        agentId: childSubject.publicKey,
+        tokenId: delegated.value.tokenId,
+        resource: mapping.resource,
+        action: mapping.action,
+        params: withRegulatedRuntimeParams({}, metadata),
+      },
+      delegated.value,
+      {
+        requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e50004",
+        timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      },
+    );
+
+    expect(decision?.action).toBe("transform");
+    expect(decision?.transformations?.additionalAuditFields).toEqual(
+      expect.objectContaining({
+        transformations: ["minimize_context"],
+        effectiveContextFields: ["resourceType", "interaction"],
+        minimizedFields: ["patientId"],
       }),
     );
   });
