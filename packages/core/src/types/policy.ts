@@ -215,6 +215,17 @@ export interface SintRequest {
     readonly humanDetected?: boolean;
     readonly currentForceNewtons?: number;
     readonly currentVelocityMps?: number;
+    readonly currentTorqueNm?: number;
+    readonly currentJerkMps3?: number;
+    readonly currentAngularVelocityRps?: number;
+    readonly nearestObstacleMeters?: number;
+    readonly trajectoryNovel?: boolean;
+    readonly jointStates?: ReadonlyArray<{
+      readonly joint: string;
+      readonly positionRad?: number;
+      readonly velocityRps?: number;
+      readonly effortNm?: number;
+    }>;
     readonly currentPosition?: { x: number; y: number; z: number };
     readonly currentHeadingDeg?: number;
     readonly localizationConfidence?: number;

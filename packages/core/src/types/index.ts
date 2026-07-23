@@ -7,3 +7,4 @@ export * from "./engine.js";
 export * from "./compliance.js";
 export * from "./protocol.js";
 export * from "./mission-authority.js";
+export * from "./kinetic-envelope.js";
