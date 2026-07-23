@@ -68,7 +68,7 @@ limits, and tamper-evident audit evidence before execution.
 - Agent commerce governance profile: [Spec](./specs/agent-commerce-governance-profile-v1.md)
 - Persona AI shipyard safety brief: [Community Brief](./community/persona-ai-shipyard-safety-brief.md)
 - NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
-- Latest security bulletin: [May 2026](./security-bulletins/2026-05.md)
+- Latest security bulletin: [July 2026](./security-bulletins/2026-07.md)
 
 ## Documentation Scope
 
