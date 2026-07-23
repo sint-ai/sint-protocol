@@ -1,0 +1,107 @@
+{
+  "profile": "ros2-reference-v0.1",
+  "note": "Decision/supervision/policyCode/tightenedAtMost are normative. referenceMargin is informative, from the open profile in ../README.md.",
+  "vectors": [
+    {
+      "id": "V1-cmd_vel-safe",
+      "note": "slow move, clear space",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "physicalContext": { "currentVelocityMps": 0.1, "humanDetected": false, "nearestObstacleMeters": 3.0, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": 0.933,
+        "marginBand": "safe",
+        "supervision": "stable",
+        "decision": "allow",
+        "capacityKnown": true
+      }
+    },
+    {
+      "id": "V2-cmd_vel-near-margin",
+      "note": "fast in clear space, self-check band",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "physicalContext": { "currentVelocityMps": 0.9, "humanDetected": false, "nearestObstacleMeters": 2.0, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": 0.4,
+        "marginBand": "approaching",
+        "supervision": "metacognitive",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": { "maxVelocityMps": 0.6 }
+      }
+    },
+    {
+      "id": "V3-human-near",
+      "note": "a human in the space halves capacity",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "physicalContext": { "currentVelocityMps": 0.6, "humanDetected": true, "nearestObstacleMeters": 2.0, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": 0.2,
+        "marginBand": "approaching",
+        "supervision": "assisted",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": { "maxVelocityMps": 0.3 }
+      }
+    },
+    {
+      "id": "V4-force-over-limit",
+      "note": "commanded force exceeds the ceiling, physics veto",
+      "request": {
+        "resource": "ros2:///wrench",
+        "action": "publish",
+        "physicalContext": { "currentForceNewtons": 180, "humanDetected": false, "nearestObstacleMeters": 3.0, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": -0.2,
+        "marginBand": "over",
+        "supervision": "silent_veto",
+        "decision": "deny",
+        "policyCode": "KINETIC_CAPACITY_EXCEEDED",
+        "capacityKnown": true
+      }
+    },
+    {
+      "id": "V5-obstacle-proximity",
+      "note": "close obstacle drops capacity",
+      "request": {
+        "resource": "ros2:///cmd_vel",
+        "action": "publish",
+        "physicalContext": { "currentVelocityMps": 0.5, "humanDetected": false, "nearestObstacleMeters": 0.4, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": 0.167,
+        "marginBand": "approaching",
+        "supervision": "assisted",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": { "maxVelocityMps": 0.25 }
+      }
+    },
+    {
+      "id": "V6-torque-over-limit",
+      "note": "commanded joint torque exceeds the ceiling, physics veto",
+      "request": {
+        "resource": "ros2:///joint_commands",
+        "action": "publish",
+        "physicalContext": { "currentTorqueNm": 52, "humanDetected": false, "nearestObstacleMeters": 3.0, "trajectoryNovel": false }
+      },
+      "expect": {
+        "referenceMargin": -0.3,
+        "marginBand": "over",
+        "supervision": "silent_veto",
+        "decision": "deny",
+        "policyCode": "KINETIC_CAPACITY_EXCEEDED",
+        "capacityKnown": true
+      }
+    }
+  ]
+}
