@@ -15,6 +15,17 @@ export const physicalContextSchema = z.object({
   humanDetected: z.boolean().optional(),
   currentForceNewtons: z.number().min(0).optional(),
   currentVelocityMps: z.number().min(0).optional(),
+  currentTorqueNm: z.number().min(0).optional(),
+  currentJerkMps3: z.number().min(0).optional(),
+  currentAngularVelocityRps: z.number().min(0).optional(),
+  nearestObstacleMeters: z.number().min(0).optional(),
+  trajectoryNovel: z.boolean().optional(),
+  jointStates: z.array(z.object({
+    joint: z.string().min(1).max(128),
+    positionRad: z.number().optional(),
+    velocityRps: z.number().optional(),
+    effortNm: z.number().optional(),
+  }).strict()).optional(),
   currentPosition: z.object({
     x: z.number(),
     y: z.number(),
