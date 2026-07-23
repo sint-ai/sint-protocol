@@ -1,5 +1,5 @@
 [workspace]
-members = ["sint-client"]
+members = ["sint-client", "sint-edge-authority"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -11,3 +11,5 @@ uuid = { version = "1", features = ["v7"] }
 ed25519-dalek = { version = "2", features = ["rand_core"] }
 hex = "0.4"
 thiserror = "1"
+sha2 = "0.10"
+time = { version = "0.3", features = ["parsing"] }

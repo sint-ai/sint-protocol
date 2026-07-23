@@ -1,0 +1,32 @@
+{
+  "name": "@pshkv/sint-edge-agent",
+  "version": "0.1.0",
+  "description": "SINT edge execution verifier for signed effect packs and short-lived dispatch envelopes",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@noble/hashes": "^1.7.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "private": true
+}

@@ -13,10 +13,20 @@ import {
 } from "@pshkv/gateway-server";
 import type { Hono } from "hono";
 import {
+  hashSha256,
+  sign,
   generateKeypair,
   issueCapabilityToken,
 } from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import type {
+  MissionManifest,
+  SintCapabilityTokenRequest,
+} from "@pshkv/core";
+import {
+  computeMissionManifestPolicyPayload,
+  computeMissionManifestSigningPayload,
+  computeMissionActionOutcomeSigningPayload,
+} from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);
@@ -151,6 +161,105 @@ describe("SintClient", () => {
     const result = await client.queryLedger();
     expect(result.events.length).toBeGreaterThan(0);
     expect(result.chainIntegrity).toBe(true);
+  });
+
+  it("manages and evaluates mission authority", async () => {
+    const token = await issueAndStoreToken();
+    const policy: Omit<MissionManifest, "policyHash" | "signature"> = {
+      manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6b8",
+      protocolVersion: "0.3.0",
+      manifestVersion: 1,
+      issuer: root.publicKey,
+      platformId: "ros2-ground-01",
+      platformIdentity: agent.publicKey,
+      missionClass: "logistics",
+      validFrom: "2026-01-01T00:00:00.000000Z",
+      validUntil: "2030-01-01T00:00:00.000000Z",
+      resources: ["ros2:///camera/front"],
+      actions: ["subscribe"],
+      effectConstraints: [],
+      approvalPolicy: {
+        minimumQuorum: 0,
+        authorizedOperatorIds: [],
+        authorizationMaxAgeMs: 60_000,
+      },
+      abortConditions: [
+        { conditionId: "estop", signal: "estop", response: "terminate" },
+        {
+          conditionId: "revoked",
+          signal: "authority_revoked",
+          response: "return_to_safe_state",
+        },
+      ],
+      maxDelegationDepth: 1,
+      delegationDepth: 0,
+    };
+    const unsignedManifest: Omit<MissionManifest, "signature"> = {
+      ...policy,
+      policyHash: hashSha256(computeMissionManifestPolicyPayload(policy)),
+    };
+    const manifest: MissionManifest = {
+      ...unsignedManifest,
+      signature: sign(
+        root.privateKey,
+        computeMissionManifestSigningPayload(unsignedManifest),
+      ),
+    };
+    await client.registerMissionManifest(manifest);
+    expect((await client.listMissionManifests()).total).toBe(1);
+
+    const requestId = "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7";
+    const request = {
+      requestId,
+      timestamp: new Date().toISOString(),
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      resource: "ros2:///camera/front",
+      action: "subscribe",
+      params: {},
+    };
+    const evaluated = await client.evaluateMissionAction({
+      manifestId: manifest.manifestId,
+      proposal: {
+        actionRef: requestId,
+        platformId: manifest.platformId,
+        platformIdentity: agent.publicKey,
+        resource: request.resource,
+        action: request.action,
+        proposedAt: request.timestamp,
+        communicationsAvailable: true,
+        autonomyCompromised: false,
+        authorityRevoked: false,
+        operatorAuthorizations: [],
+      },
+      request,
+    });
+    expect(evaluated.executable).toBe(true);
+
+    const unsignedOutcome = {
+      actionRef: requestId,
+      manifestId: manifest.manifestId,
+      platformIdentity: agent.publicKey,
+      outcome: "completed" as const,
+      completedAt: new Date(Date.now() + 1000).toISOString(),
+    };
+    const finalized = await client.finalizeMissionAction({
+      ...unsignedOutcome,
+      signature: sign(
+        agent.privateKey,
+        computeMissionActionOutcomeSigningPayload(unsignedOutcome),
+      ),
+    });
+    expect(finalized.status).toBe("finalized");
+    expect(finalized.gateReceiptEventId).toBe(evaluated.gateReceiptEventId);
+    expect((await client.getMissionEvidence(requestId)).chainIntegrity).toBe(true);
+
+    const revocation = await client.revokeMissionManifest(
+      manifest.manifestId,
+      "Mission cancelled",
+      "operator-1",
+    );
+    expect(revocation.status).toBe("revoked");
   });
 
   it("generateKeypair() generates Ed25519 keypair", async () => {

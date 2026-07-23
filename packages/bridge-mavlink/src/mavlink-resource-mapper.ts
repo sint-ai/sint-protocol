@@ -113,13 +113,29 @@ function commandToPath(cmd: number): string {
  */
 export function extractMavPhysicalContext(intercept: MavlinkIntercept): {
   currentVelocityMps?: number;
+  currentPosition?: { x: number; y: number; z: number };
+  currentHeadingDeg?: number;
+  localizationObservedAt?: string;
+  frameId?: string;
   altitudeLimitM?: number;
 } {
   if (intercept.messageType === "SET_POSITION_TARGET_LOCAL_NED") {
     const msg = intercept.payload as MavSetPositionTargetLocalNed;
     // Compute 3D velocity magnitude from NED components
     const speed = Math.sqrt(msg.vx ** 2 + msg.vy ** 2 + msg.vz ** 2);
-    return { currentVelocityMps: speed > 0 ? speed : undefined };
+    const positionIgnored = (msg.type_mask & 0b0000000000000111) === 0b0000000000000111;
+    const yawIgnored = (msg.type_mask & 0b0000010000000000) !== 0;
+    return {
+      currentVelocityMps: speed > 0 ? speed : undefined,
+      ...(!positionIgnored ? {
+        currentPosition: { x: msg.x, y: msg.y, z: -msg.z },
+        localizationObservedAt: intercept.timestamp,
+        frameId: "mavlink-local-ned",
+      } : {}),
+      ...(!yawIgnored ? {
+        currentHeadingDeg: radiansToDegrees(msg.yaw),
+      } : {}),
+    };
   }
 
   if (intercept.messageType === "COMMAND_LONG" || intercept.messageType === "COMMAND_INT") {
@@ -173,6 +189,10 @@ export function mapMavlinkToSint(
       physicalContext: {
         humanDetected: humanPresent,
         currentVelocityMps: physical.currentVelocityMps,
+        currentPosition: physical.currentPosition,
+        currentHeadingDeg: physical.currentHeadingDeg,
+        localizationObservedAt: physical.localizationObservedAt,
+        frameId: physical.frameId,
       },
     };
   }
@@ -200,6 +220,14 @@ export function mapMavlinkToSint(
     physicalContext: {
       humanDetected: humanPresent,
       currentVelocityMps: physical.currentVelocityMps,
+      currentPosition: physical.currentPosition,
+      currentHeadingDeg: physical.currentHeadingDeg,
+      localizationObservedAt: physical.localizationObservedAt,
+      frameId: physical.frameId,
     },
   };
+}
+
+function radiansToDegrees(rad: number): number {
+  return (rad * 180) / Math.PI;
 }

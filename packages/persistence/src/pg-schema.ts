@@ -101,4 +101,96 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_sint_rate_limit_expires_at
       ON sint_rate_limit_counters (expires_at);
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_mission_manifests (
+      manifest_id TEXT PRIMARY KEY,
+      platform_id TEXT NOT NULL,
+      mission_class TEXT NOT NULL,
+      valid_from TEXT NOT NULL,
+      valid_until TEXT NOT NULL,
+      manifest JSONB NOT NULL,
+      registered_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_sint_mission_manifests_platform
+      ON sint_mission_manifests (platform_id);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_sint_mission_manifests_class
+      ON sint_mission_manifests (mission_class);
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_sint_mission_manifests_validity
+      ON sint_mission_manifests (valid_from, valid_until);
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_mission_manifest_revocations (
+      manifest_id TEXT PRIMARY KEY
+        REFERENCES sint_mission_manifests (manifest_id),
+      reason TEXT NOT NULL,
+      revoked_by TEXT NOT NULL,
+      revoked_at TEXT NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_mission_authority_heads (
+      platform_identity TEXT PRIMARY KEY,
+      manifest_id TEXT NOT NULL UNIQUE
+        REFERENCES sint_mission_manifests (manifest_id),
+      manifest_version INTEGER NOT NULL CHECK (manifest_version > 0),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+
+  await pool.query(`
+    INSERT INTO sint_mission_authority_heads
+      (platform_identity, manifest_id, manifest_version)
+    SELECT DISTINCT ON (manifest->>'platformIdentity')
+      manifest->>'platformIdentity',
+      manifest_id,
+      (manifest->>'manifestVersion')::INTEGER
+    FROM sint_mission_manifests
+    WHERE manifest ? 'platformIdentity'
+      AND manifest ? 'manifestVersion'
+    ORDER BY
+      manifest->>'platformIdentity',
+      (manifest->>'manifestVersion')::INTEGER DESC,
+      registered_at DESC
+    ON CONFLICT (platform_identity) DO NOTHING;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_mission_action_claims (
+      action_ref TEXT PRIMARY KEY,
+      manifest_id TEXT NOT NULL
+        REFERENCES sint_mission_manifests (manifest_id),
+      effect_id TEXT,
+      claimed_at TEXT NOT NULL
+    );
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_sint_mission_action_claims_effect
+      ON sint_mission_action_claims (manifest_id, effect_id)
+      WHERE effect_id IS NOT NULL;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_mission_action_outcomes (
+      action_ref TEXT PRIMARY KEY
+        REFERENCES sint_mission_action_claims (action_ref),
+      manifest_id TEXT NOT NULL
+        REFERENCES sint_mission_manifests (manifest_id),
+      outcome TEXT NOT NULL,
+      completed_at TEXT NOT NULL,
+      report JSONB NOT NULL
+    );
+  `);
 }

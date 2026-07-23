@@ -8,6 +8,12 @@
 
 **Open-source runtime security and governance for AI agents, MCP tools, robotics, industrial automation, and physical AI.**
 
+**Mission Authority:** SINT also provides a hardware-agnostic authority and
+evidence protocol for autonomous air, ground, maritime, and robotic systems. It
+binds platform identity, mission scope, operator authorization, abort behavior,
+and signed after-action evidence without selecting targets or generating
+effects. See [`docs/mission-authority.md`](docs/mission-authority.md).
+
 SINT Protocol is an open protocol and TypeScript reference stack that sits
 between AI agent intent and real-world execution. Before a governed tool call,
 robot command, industrial write, payment-like action, or actuator movement can

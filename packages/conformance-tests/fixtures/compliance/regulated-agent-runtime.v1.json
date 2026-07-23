@@ -1,0 +1,525 @@
+{
+  "fixtureId": "regulated-agent-runtime-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Experimental runtime governance profile for AI agents that touch regulated data, downstream tools, model calls, processors, and external services.",
+  "status": "experimental",
+  "scopeNote": "These fixtures define runtime controls and evidence requirements only. They are not legal, medical, privacy, or regulatory compliance certification.",
+  "runtimeSurfaces": [
+    "agents",
+    "sub_agents",
+    "models",
+    "apis",
+    "mcp_tools",
+    "internal_systems",
+    "external_services",
+    "regulated_data_stores"
+  ],
+  "defaults": {
+    "enforcementChokePoint": "PolicyGateway.intercept",
+    "evidenceLedgerAppendOnly": true,
+    "contextInheritanceAttenuationOnly": true,
+    "rawSensitivePayloadsStoredInLedger": false,
+    "approvedProcessors": [
+      "ehr-core",
+      "eligibility-service",
+      "billing-service",
+      "in-region-model-router"
+    ],
+    "approvedRegions": [
+      "us-east-1",
+      "us-west-2"
+    ],
+    "approvedModels": [
+      "clinical-summary-local",
+      "intake-triage-approved",
+      "billing-code-helper"
+    ]
+  },
+  "dataClasses": [
+    {
+      "classId": "PHI",
+      "description": "Protected health information and clinical records.",
+      "examples": [
+        "treatment_notes",
+        "diagnostic_report",
+        "medication_request"
+      ],
+      "defaultTier": "T2_ACT",
+      "requiresConsent": true,
+      "allowedEvidence": [
+        "data_class",
+        "consent_id",
+        "purpose_of_use",
+        "field_digest",
+        "processor_id",
+        "region"
+      ],
+      "forbiddenEvidence": [
+        "raw_treatment_note",
+        "full_patient_record",
+        "diagnosis_free_text"
+      ]
+    },
+    {
+      "classId": "PII",
+      "description": "Directly identifying personal data.",
+      "examples": [
+        "name",
+        "date_of_birth",
+        "insurance_member_id"
+      ],
+      "defaultTier": "T1_PREPARE",
+      "requiresConsent": true,
+      "allowedEvidence": [
+        "data_class",
+        "field_digest",
+        "processor_id",
+        "region"
+      ],
+      "forbiddenEvidence": [
+        "full_name",
+        "date_of_birth",
+        "insurance_member_id"
+      ]
+    },
+    {
+      "classId": "ADMIN",
+      "description": "Operational records that can be used without clinical payload.",
+      "examples": [
+        "appointment_slot",
+        "billing_status",
+        "workflow_state"
+      ],
+      "defaultTier": "T0_OBSERVE",
+      "requiresConsent": false,
+      "allowedEvidence": [
+        "resource",
+        "action",
+        "processor_id"
+      ],
+      "forbiddenEvidence": [
+        "raw_patient_record"
+      ]
+    }
+  ],
+  "policyRequirements": [
+    {
+      "requirementId": "RAR-001",
+      "description": "Every governed request is evaluated by PolicyGateway.intercept before model, tool, processor, or vendor execution.",
+      "receiptFields": [
+        "requestId",
+        "tokenId",
+        "resource",
+        "action",
+        "decision",
+        "assignedTier"
+      ]
+    },
+    {
+      "requirementId": "RAR-002",
+      "description": "Consent, purpose, processor, model, and region are bound before regulated data leaves the safe execution path.",
+      "receiptFields": [
+        "consentId",
+        "purposeOfUse",
+        "processor",
+        "model",
+        "region"
+      ]
+    },
+    {
+      "requirementId": "RAR-003",
+      "description": "Delegated and downstream sub-agent context is attenuation-only and cannot inherit fields outside the parent token scope.",
+      "receiptFields": [
+        "delegatedFrom",
+        "requestedContextFields",
+        "effectiveContextFields",
+        "minimizedFields"
+      ]
+    },
+    {
+      "requirementId": "RAR-004",
+      "description": "Transform decisions explain redaction, minimization, and approved fallback routing without storing raw sensitive payloads in the ledger.",
+      "receiptFields": [
+        "transformations",
+        "fallbackProcessor",
+        "fallbackRegion",
+        "fallbackModel",
+        "evidenceDigest"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "approved_intake_summary_stays_in_region",
+      "principal": "did:example:agent:intake",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0001",
+        "resourcePattern": "health://intake/*",
+        "actions": [
+          "read",
+          "summarize"
+        ],
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": [
+          "TREAT"
+        ],
+        "allowedProcessors": [
+          "ehr-core",
+          "in-region-model-router"
+        ],
+        "allowedRegions": [
+          "us-east-1"
+        ],
+        "allowedModels": [
+          "clinical-summary-local"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z"
+      },
+      "request": {
+        "resource": "health://intake/patient-123/summary",
+        "action": "summarize",
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": "TREAT",
+        "processor": "in-region-model-router",
+        "region": "us-east-1",
+        "model": "clinical-summary-local",
+        "requestedContextFields": [
+          "symptoms",
+          "medications",
+          "allergies"
+        ]
+      },
+      "expected": {
+        "decisionAction": "allow",
+        "assignedTier": "T2_ACT",
+        "evidenceRequired": true,
+        "receiptFields": [
+          "consentId",
+          "purposeOfUse",
+          "processor",
+          "region",
+          "model",
+          "evidenceDigest"
+        ]
+      }
+    },
+    {
+      "name": "unapproved_processor_is_denied",
+      "principal": "did:example:agent:intake",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0002",
+        "resourcePattern": "health://intake/*",
+        "actions": [
+          "summarize"
+        ],
+        "dataClasses": [
+          "PHI"
+        ],
+        "purposeOfUse": [
+          "TREAT"
+        ],
+        "allowedProcessors": [
+          "ehr-core",
+          "in-region-model-router"
+        ],
+        "allowedRegions": [
+          "us-east-1"
+        ],
+        "allowedModels": [
+          "clinical-summary-local"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z"
+      },
+      "request": {
+        "resource": "health://intake/patient-123/summary",
+        "action": "summarize",
+        "dataClasses": [
+          "PHI"
+        ],
+        "purposeOfUse": "TREAT",
+        "processor": "unapproved-external-processor",
+        "region": "us-east-1",
+        "model": "clinical-summary-local",
+        "requestedContextFields": [
+          "treatment_notes"
+        ]
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "assignedTier": "T2_ACT",
+        "policyViolated": "PROCESSOR_NOT_APPROVED",
+        "evidenceRequired": true,
+        "receiptFields": [
+          "processor",
+          "policyViolated",
+          "evidenceDigest"
+        ]
+      }
+    },
+    {
+      "name": "cross_region_transfer_without_fallback_is_denied",
+      "principal": "did:example:agent:intake",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0003",
+        "resourcePattern": "health://intake/*",
+        "actions": [
+          "summarize"
+        ],
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": [
+          "TREAT"
+        ],
+        "allowedProcessors": [
+          "in-region-model-router"
+        ],
+        "allowedRegions": [
+          "us-east-1"
+        ],
+        "allowedModels": [
+          "clinical-summary-local"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z"
+      },
+      "request": {
+        "resource": "health://intake/patient-123/summary",
+        "action": "summarize",
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": "TREAT",
+        "processor": "in-region-model-router",
+        "region": "eu-central-1",
+        "model": "clinical-summary-local",
+        "requestedContextFields": [
+          "treatment_notes",
+          "insurance_member_id"
+        ]
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "assignedTier": "T2_ACT",
+        "policyViolated": "REGION_NOT_APPROVED",
+        "evidenceRequired": true,
+        "receiptFields": [
+          "region",
+          "policyViolated",
+          "evidenceDigest"
+        ]
+      }
+    },
+    {
+      "name": "billing_sub_agent_context_is_minimized",
+      "principal": "did:example:agent:billing",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0004",
+        "resourcePattern": "health://billing/*",
+        "actions": [
+          "code"
+        ],
+        "dataClasses": [
+          "PII",
+          "ADMIN"
+        ],
+        "purposeOfUse": [
+          "PAYMENT"
+        ],
+        "allowedProcessors": [
+          "billing-service"
+        ],
+        "allowedRegions": [
+          "us-east-1"
+        ],
+        "allowedModels": [
+          "billing-code-helper"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z",
+        "delegatedFrom": "018f3f70-64a6-7b4d-8d8f-0d3c7a0affff",
+        "inheritedContextFields": [
+          "encounter_code",
+          "insurance_plan",
+          "appointment_date"
+        ]
+      },
+      "request": {
+        "resource": "health://billing/claim-456/code",
+        "action": "code",
+        "dataClasses": [
+          "PII",
+          "ADMIN"
+        ],
+        "purposeOfUse": "PAYMENT",
+        "processor": "billing-service",
+        "region": "us-east-1",
+        "model": "billing-code-helper",
+        "requestedContextFields": [
+          "encounter_code",
+          "insurance_plan",
+          "appointment_date",
+          "treatment_notes"
+        ]
+      },
+      "expected": {
+        "decisionAction": "transform",
+        "assignedTier": "T1_PREPARE",
+        "transformations": [
+          "minimize_context",
+          "remove_treatment_notes"
+        ],
+        "evidenceRequired": true,
+        "receiptFields": [
+          "delegatedFrom",
+          "requestedContextFields",
+          "effectiveContextFields",
+          "minimizedFields",
+          "evidenceDigest"
+        ]
+      }
+    },
+    {
+      "name": "approved_fallback_reroutes_and_redacts",
+      "principal": "did:example:agent:intake",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0005",
+        "resourcePattern": "health://intake/*",
+        "actions": [
+          "summarize"
+        ],
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": [
+          "TREAT"
+        ],
+        "allowedProcessors": [
+          "ehr-core",
+          "in-region-model-router"
+        ],
+        "allowedRegions": [
+          "us-west-2"
+        ],
+        "allowedModels": [
+          "intake-triage-approved"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z"
+      },
+      "request": {
+        "resource": "health://intake/patient-789/triage",
+        "action": "summarize",
+        "dataClasses": [
+          "PHI",
+          "PII"
+        ],
+        "purposeOfUse": "TREAT",
+        "processor": "unapproved-external-processor",
+        "region": "eu-central-1",
+        "model": "unapproved-general-model",
+        "requestedContextFields": [
+          "symptoms",
+          "name",
+          "date_of_birth"
+        ],
+        "fallback": {
+          "processor": "in-region-model-router",
+          "region": "us-west-2",
+          "model": "intake-triage-approved",
+          "transformations": [
+            "redact_direct_identifiers",
+            "route_to_approved_region",
+            "route_to_approved_model"
+          ]
+        }
+      },
+      "expected": {
+        "decisionAction": "transform",
+        "assignedTier": "T2_ACT",
+        "transformations": [
+          "redact_direct_identifiers",
+          "route_to_approved_region",
+          "route_to_approved_model"
+        ],
+        "evidenceRequired": true,
+        "receiptFields": [
+          "transformations",
+          "fallbackProcessor",
+          "fallbackRegion",
+          "fallbackModel",
+          "evidenceDigest"
+        ]
+      }
+    },
+    {
+      "name": "consent_record_update_escalates",
+      "principal": "did:example:agent:intake-admin",
+      "token": {
+        "tokenId": "018f3f70-64a6-7b4d-8d8f-0d3c7a0a0006",
+        "resourcePattern": "health://consent/*",
+        "actions": [
+          "update"
+        ],
+        "dataClasses": [
+          "PII"
+        ],
+        "purposeOfUse": [
+          "ADMIN"
+        ],
+        "allowedProcessors": [
+          "ehr-core"
+        ],
+        "allowedRegions": [
+          "us-east-1"
+        ],
+        "allowedModels": [
+          "clinical-summary-local"
+        ],
+        "expiresAt": "2026-12-31T00:00:00.000Z"
+      },
+      "request": {
+        "resource": "health://consent/patient-123",
+        "action": "update",
+        "dataClasses": [
+          "PII"
+        ],
+        "purposeOfUse": "ADMIN",
+        "processor": "ehr-core",
+        "region": "us-east-1",
+        "model": "clinical-summary-local",
+        "requestedContextFields": [
+          "consent_status",
+          "grantor_ref"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "assignedTier": "T3_COMMIT",
+        "evidenceRequired": true,
+        "receiptFields": [
+          "consentId",
+          "purposeOfUse",
+          "processor",
+          "region",
+          "evidenceDigest"
+        ]
+      }
+    }
+  ],
+  "successCriteria": {
+    "everyDecisionFlowsThroughPolicyGateway": true,
+    "inheritedContextOnlyNarrows": true,
+    "unapprovedProcessorsDenied": true,
+    "crossRegionTransfersDeniedOrRerouted": true,
+    "sensitivePayloadsMinimizedInEvidence": true,
+    "transformReceiptsExplainRedactionAndFallback": true,
+    "claimsRemainRuntimeControlsNotCertification": true
+  }
+}

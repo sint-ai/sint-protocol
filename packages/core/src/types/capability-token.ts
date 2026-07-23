@@ -217,6 +217,11 @@ export interface SintVerifiableComputeRequirements {
 export interface SintExecutionEnvelope {
   /** Logical corridor identifier for traceability. */
   readonly corridorId?: string;
+  /**
+   * Mission class this envelope authorizes. Prevents dual-use mission drift
+   * (for example, a rescue/logistics token being replayed for a combat action).
+   */
+  readonly missionType?: "logistics" | "casualty_evac" | "civilian_rescue" | "inspection" | "security" | "combat";
   /** Corridor expiry in ISO8601 UTC format. */
   readonly expiresAt?: ISO8601;
   /** Maximum allowed lateral deviation from corridor centerline (meters). */
@@ -227,6 +232,17 @@ export interface SintExecutionEnvelope {
   readonly maxVelocityMps?: MetersPerSecond;
   /** Optional corridor-specific force cap (N). */
   readonly maxForceNewtons?: Newtons;
+  /**
+   * If true, each action under this envelope must carry fresh localization
+   * evidence with position, confidence, and observation time.
+   */
+  readonly requiresSpatialProof?: boolean;
+  /** Maximum permitted age for localization evidence in milliseconds. */
+  readonly maxLocalizationAgeMs?: DurationMs;
+  /** Minimum accepted localization confidence, from 0.0 to 1.0. */
+  readonly minLocalizationConfidence?: number;
+  /** Expected coordinate frame identifier for currentPosition evidence. */
+  readonly frameId?: string;
 }
 
 /**

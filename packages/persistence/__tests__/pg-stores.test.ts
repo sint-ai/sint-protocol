@@ -10,7 +10,12 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import pg from "pg";
 import { PgLedgerStore } from "../src/pg-ledger-store.js";
 import { PgTokenStore } from "../src/pg-token-store.js";
-import type { SintLedgerEvent, SintCapabilityToken } from "@pshkv/core";
+import { PgMissionManifestStore } from "../src/pg-mission-manifest-store.js";
+import type {
+  MissionManifest,
+  SintLedgerEvent,
+  SintCapabilityToken,
+} from "@pshkv/core";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -230,5 +235,92 @@ describeWithPg("PgTokenStore", () => {
     } as SintCapabilityToken);
     const retrieved = await store.get("tok-1");
     expect(retrieved!.actions).toEqual(["publish", "subscribe"]);
+  });
+});
+
+describeWithPg("PgMissionManifestStore", () => {
+  let pool: pg.Pool;
+  let store: PgMissionManifestStore;
+
+  const manifest: MissionManifest = {
+    manifestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+    protocolVersion: "0.3.0",
+    manifestVersion: 1,
+    issuer: "a".repeat(64),
+    platformId: "px4-air-01",
+    platformIdentity: "b".repeat(64),
+    missionClass: "isr",
+    validFrom: "2026-06-07T00:00:00.000000Z",
+    validUntil: "2026-06-08T00:00:00.000000Z",
+    resources: ["mavlink://vehicle/1/camera"],
+    actions: ["capture"],
+    effectConstraints: [],
+    approvalPolicy: {
+      minimumQuorum: 0,
+      authorizedOperatorIds: [],
+      authorizationMaxAgeMs: 60_000,
+    },
+    abortConditions: [
+      { conditionId: "estop", signal: "estop", response: "terminate" },
+    ],
+    maxDelegationDepth: 0,
+    delegationDepth: 0,
+    policyHash: "c".repeat(64),
+    signature: "d".repeat(128),
+  };
+
+  beforeAll(async () => {
+    pool = new pg.Pool({ connectionString: DATABASE_URL });
+    const migrationSql = readFileSync(
+      join(__dirname, "../migrations/003_create_mission_authority.sql"),
+      "utf-8",
+    );
+    await pool.query(migrationSql);
+    const authorityHeadSql = readFileSync(
+      join(__dirname, "../migrations/006_create_mission_authority_heads.sql"),
+      "utf-8",
+    );
+    await pool.query(authorityHeadSql);
+    store = new PgMissionManifestStore(pool);
+  });
+
+  afterAll(async () => {
+    await pool.query("DROP TABLE IF EXISTS sint_mission_manifest_revocations");
+    await pool.query("DROP TABLE IF EXISTS sint_mission_authority_heads");
+    await pool.query("DROP TABLE IF EXISTS sint_mission_manifests");
+    await pool.end();
+  });
+
+  beforeEach(async () => {
+    await pool.query("DELETE FROM sint_mission_manifest_revocations");
+    await pool.query("DELETE FROM sint_mission_authority_heads");
+    await pool.query("DELETE FROM sint_mission_manifests");
+  });
+
+  it("persists immutable manifests and append-only revocations", async () => {
+    expect((await store.store(manifest)).status).toBe("stored");
+    expect((await store.store({ ...manifest, missionClass: "logistics" })).status)
+      .toBe("duplicate");
+    expect(await store.get(manifest.manifestId)).toEqual(manifest);
+    expect(await store.list({ platformId: manifest.platformId })).toEqual([manifest]);
+
+    expect(await store.revoke({
+      manifestId: manifest.manifestId,
+      reason: "Mission cancelled",
+      revokedBy: "operator-1",
+      revokedAt: "2026-06-07T12:30:00.000000Z",
+    })).toBe(true);
+    expect(await store.revoke({
+      manifestId: manifest.manifestId,
+      reason: "Duplicate",
+      revokedBy: "operator-2",
+      revokedAt: "2026-06-07T12:31:00.000000Z",
+    })).toBe(false);
+    expect(await store.getRevocation(manifest.manifestId)).toEqual({
+      manifestId: manifest.manifestId,
+      reason: "Mission cancelled",
+      revokedBy: "operator-1",
+      revokedAt: "2026-06-07T12:30:00.000000Z",
+    });
   });
 });

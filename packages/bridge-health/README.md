@@ -249,6 +249,44 @@ if (decision.decision === "allow") {
 }
 ```
 
+### Regulated Runtime Metadata
+
+Bridge handlers can attach normalized regulated-data metadata under
+`params.regulatedData`. The Policy Gateway evaluates processor, region, model,
+purpose, fallback, and context-minimization rules inside `PolicyGateway.intercept()`.
+
+```typescript
+import {
+  buildFHIRRegulatedRuntimeMetadata,
+  mapFHIRToSint,
+  withRegulatedRuntimeParams,
+} from "@pshkv/bridge-health";
+
+const mapping = mapFHIRToSint({
+  serverUrl: "https://fhir.example.org",
+  resourceType: "Observation",
+  resourceId: "blood-pressure-123",
+  interaction: "read",
+  patientId: "patient-456",
+});
+
+const regulatedData = buildFHIRRegulatedRuntimeMetadata(mapping, {
+  purposeOfUse: "TREAT",
+  processor: "in-region-model-router",
+  region: "us-east-1",
+  model: "clinical-summary-local",
+  requestedContextFields: ["resourceType", "interaction", "resourceId"],
+});
+
+const params = withRegulatedRuntimeParams(
+  { fhir: mapping.context },
+  regulatedData,
+);
+
+// The bridge forwards `resource`, `action`, and `params` to PolicyGateway.intercept().
+// It does not authorize the request itself.
+```
+
 ### HealthKit On-Device Access
 
 ```typescript

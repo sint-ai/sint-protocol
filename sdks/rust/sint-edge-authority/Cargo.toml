@@ -1,0 +1,14 @@
+[package]
+name = "sint-edge-authority"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic, offline SINT Mission Authority evaluator for tactical edge nodes"
+license = "Apache-2.0"
+repository = "https://github.com/sint-ai/sint-protocol"
+keywords = ["authorization", "autonomy", "robotics", "defense", "edge"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+time = { workspace = true }

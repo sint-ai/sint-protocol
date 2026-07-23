@@ -1,0 +1,674 @@
+{
+  "fixtureId": "sint.physical-ai.physical-work-market.v1",
+  "schemaVersion": "2026-06-21",
+  "description": "Executable governance fixture for physical-work markets: task broadcast, collateralized robot bids, simulation proof, deployment escalation, PoPW evidence bundles, validator quorum, and settlement replay protection.",
+  "profile": {
+    "resources": [
+      "pwork://task/*",
+      "pwork://bid/*",
+      "pwork://proof/*",
+      "pwork://settlement/*"
+    ],
+    "actions": [
+      "broadcast_task",
+      "submit_bid",
+      "submit_sim_proof",
+      "deploy_policy",
+      "submit_popw",
+      "verify_popw",
+      "release_settlement"
+    ],
+    "taskStatuses": [
+      "draft",
+      "open",
+      "bid_submitted",
+      "bid_selected",
+      "sim_passed",
+      "executing",
+      "proof_submitted",
+      "verified",
+      "settled",
+      "failed"
+    ],
+    "decisionReasons": [
+      "ALLOW",
+      "SCOPE_NOT_AUTHORIZED",
+      "IDENTITY_REQUIRED",
+      "SUBNET_NOT_SUPPORTED",
+      "STAKE_BELOW_MINIMUM",
+      "VALUE_REQUIRES_APPROVAL",
+      "STATE_TRANSITION_INVALID",
+      "SIM_PROOF_REQUIRED",
+      "POPW_BUNDLE_REQUIRED",
+      "POPW_BUNDLE_INCOMPLETE",
+      "VALIDATOR_QUORUM_NOT_MET",
+      "VERIFIER_SAFETY_BELOW_THRESHOLD",
+      "DEADLINE_EXPIRED",
+      "SETTLEMENT_STATE_INVALID",
+      "RECEIPT_REPLAY"
+    ],
+    "evidenceRequiredFor": [
+      "deny",
+      "escalate",
+      "deploy_policy",
+      "submit_popw",
+      "verify_popw",
+      "release_settlement"
+    ]
+  },
+  "defaults": {
+    "referenceTime": "2026-06-21T12:00:00.000Z",
+    "highValueApprovalThresholdUsdc": 100,
+    "minStakeBySubnetUsdc": {
+      "subnet://warehouse-amr": 5,
+      "subnet://roboarm-sim": 10,
+      "subnet://shipyard-humanoid": 50
+    },
+    "supportedSubnets": [
+      "subnet://warehouse-amr",
+      "subnet://roboarm-sim",
+      "subnet://shipyard-humanoid"
+    ],
+    "registeredIdentities": [
+      "agent://requester-alpha",
+      "robot://amr-17",
+      "robot://roboarm-02",
+      "validator://alpha",
+      "validator://beta",
+      "validator://gamma"
+    ],
+    "requiredSensorsBySubnet": {
+      "subnet://warehouse-amr": ["gps", "imu", "video"],
+      "subnet://roboarm-sim": ["camera", "torque"],
+      "subnet://shipyard-humanoid": ["video", "imu", "torque", "thermal"]
+    },
+    "minSimulationSafetyScore": 90,
+    "minVerifierSafetyScore": 85,
+    "validatorQuorum": 2,
+    "usedSettlementReceiptIds": [
+      "settlement-duplicate"
+    ]
+  },
+  "cases": [
+    {
+      "name": "allow low value warehouse task broadcast",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://task/*"],
+        "actions": ["broadcast_task"]
+      },
+      "request": {
+        "resource": "pwork://task/job-001",
+        "action": "broadcast_task",
+        "task": {
+          "id": "job-001",
+          "subnet": "subnet://warehouse-amr",
+          "status": "draft",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "open",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "escalate high value shipyard task broadcast",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://task/*"],
+        "actions": ["broadcast_task"]
+      },
+      "request": {
+        "resource": "pwork://task/job-002",
+        "action": "broadcast_task",
+        "task": {
+          "id": "job-002",
+          "subnet": "subnet://shipyard-humanoid",
+          "status": "draft",
+          "rewardUsdc": 450,
+          "deadline": "2026-06-21T14:00:00.000Z",
+          "requiredTier": "T3_COMMIT"
+        }
+      },
+      "expected": {
+        "decision": "escalate",
+        "reason": "VALUE_REQUIRES_APPROVAL",
+        "requiredTier": "T3_COMMIT",
+        "nextStatus": "open",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny unsupported subnet task",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://task/*"],
+        "actions": ["broadcast_task"]
+      },
+      "request": {
+        "resource": "pwork://task/job-003",
+        "action": "broadcast_task",
+        "task": {
+          "id": "job-003",
+          "subnet": "subnet://unknown-yard",
+          "status": "draft",
+          "rewardUsdc": 18,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "SUBNET_NOT_SUPPORTED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny bid from unregistered robot",
+      "principal": "robot://ghost-bot",
+      "capability": {
+        "resources": ["pwork://bid/*"],
+        "actions": ["submit_bid"]
+      },
+      "request": {
+        "resource": "pwork://bid/job-004/ghost-bot",
+        "action": "submit_bid",
+        "task": {
+          "id": "job-004",
+          "subnet": "subnet://warehouse-amr",
+          "status": "open",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT"
+        },
+        "bid": {
+          "robotId": "robot://ghost-bot",
+          "stakeUsdc": 8,
+          "etaSeconds": 120
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "IDENTITY_REQUIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny bid below subnet stake minimum",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://bid/*"],
+        "actions": ["submit_bid"]
+      },
+      "request": {
+        "resource": "pwork://bid/job-005/amr-17",
+        "action": "submit_bid",
+        "task": {
+          "id": "job-005",
+          "subnet": "subnet://warehouse-amr",
+          "status": "open",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT"
+        },
+        "bid": {
+          "robotId": "robot://amr-17",
+          "stakeUsdc": 2,
+          "etaSeconds": 120
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "STAKE_BELOW_MINIMUM",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow collateralized robot bid",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://bid/*"],
+        "actions": ["submit_bid"]
+      },
+      "request": {
+        "resource": "pwork://bid/job-006/amr-17",
+        "action": "submit_bid",
+        "task": {
+          "id": "job-006",
+          "subnet": "subnet://warehouse-amr",
+          "status": "open",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT"
+        },
+        "bid": {
+          "robotId": "robot://amr-17",
+          "stakeUsdc": 8,
+          "etaSeconds": 120
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "bid_submitted",
+        "evidenceRequired": false
+      }
+    },
+    {
+      "name": "deny deployment without simulation proof",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://task/*"],
+        "actions": ["deploy_policy"]
+      },
+      "request": {
+        "resource": "pwork://task/job-007",
+        "action": "deploy_policy",
+        "task": {
+          "id": "job-007",
+          "subnet": "subnet://warehouse-amr",
+          "status": "bid_selected",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "SIM_PROOF_REQUIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow deterministic simulation proof",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["submit_sim_proof"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-008/sim",
+        "action": "submit_sim_proof",
+        "task": {
+          "id": "job-008",
+          "subnet": "subnet://warehouse-amr",
+          "status": "bid_selected",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "simulationProof": {
+          "digest": "sha256:sim-proof-008",
+          "deterministicReplay": true,
+          "safetyScore": 94
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "sim_passed",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "escalate physical deployment after simulation proof",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://task/*"],
+        "actions": ["deploy_policy"]
+      },
+      "request": {
+        "resource": "pwork://task/job-009",
+        "action": "deploy_policy",
+        "task": {
+          "id": "job-009",
+          "subnet": "subnet://warehouse-amr",
+          "status": "sim_passed",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "simulationProof": {
+          "digest": "sha256:sim-proof-009",
+          "deterministicReplay": true,
+          "safetyScore": 96
+        }
+      },
+      "expected": {
+        "decision": "escalate",
+        "reason": "VALUE_REQUIRES_APPROVAL",
+        "requiredTier": "T2_ACT",
+        "nextStatus": "executing",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny incomplete PoPW bundle",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["submit_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-010/popw",
+        "action": "submit_popw",
+        "task": {
+          "id": "job-010",
+          "subnet": "subnet://warehouse-amr",
+          "status": "executing",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "popwBundle": {
+          "taskId": "job-010",
+          "actionRef": "act-job-010",
+          "robotId": "robot://amr-17",
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "sensors": ["gps", "imu"],
+          "mediaHash": "sha256:media-010",
+          "bundleHash": "sha256:bundle-010"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "POPW_BUNDLE_INCOMPLETE",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow complete PoPW bundle",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["submit_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-011/popw",
+        "action": "submit_popw",
+        "task": {
+          "id": "job-011",
+          "subnet": "subnet://warehouse-amr",
+          "status": "executing",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "popwBundle": {
+          "taskId": "job-011",
+          "actionRef": "act-job-011",
+          "robotId": "robot://amr-17",
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "sensors": ["gps", "imu", "video"],
+          "mediaHash": "sha256:media-011",
+          "bundleHash": "sha256:bundle-011"
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "proof_submitted",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny expired PoPW submission",
+      "principal": "robot://amr-17",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["submit_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-012/popw",
+        "action": "submit_popw",
+        "task": {
+          "id": "job-012",
+          "subnet": "subnet://warehouse-amr",
+          "status": "executing",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T11:59:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "popwBundle": {
+          "taskId": "job-012",
+          "actionRef": "act-job-012",
+          "robotId": "robot://amr-17",
+          "deadline": "2026-06-21T11:59:00.000Z",
+          "sensors": ["gps", "imu", "video"],
+          "mediaHash": "sha256:media-012",
+          "bundleHash": "sha256:bundle-012"
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "DEADLINE_EXPIRED",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny validator verdict below safety threshold",
+      "principal": "validator://alpha",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["verify_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-013/verify",
+        "action": "verify_popw",
+        "task": {
+          "id": "job-013",
+          "subnet": "subnet://warehouse-amr",
+          "status": "proof_submitted",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "validatorAttestations": [
+          {
+            "validatorId": "validator://alpha",
+            "verdict": "success",
+            "safety": 82,
+            "finalPct": 90,
+            "evidenceHash": "sha256:validator-alpha-013"
+          },
+          {
+            "validatorId": "validator://beta",
+            "verdict": "success",
+            "safety": 88,
+            "finalPct": 91,
+            "evidenceHash": "sha256:validator-beta-013"
+          }
+        ]
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "VERIFIER_SAFETY_BELOW_THRESHOLD",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny validator quorum not met",
+      "principal": "validator://alpha",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["verify_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-014/verify",
+        "action": "verify_popw",
+        "task": {
+          "id": "job-014",
+          "subnet": "subnet://warehouse-amr",
+          "status": "proof_submitted",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "validatorAttestations": [
+          {
+            "validatorId": "validator://alpha",
+            "verdict": "success",
+            "safety": 90,
+            "finalPct": 91,
+            "evidenceHash": "sha256:validator-alpha-014"
+          }
+        ]
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "VALIDATOR_QUORUM_NOT_MET",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow validator quorum with safe verdicts",
+      "principal": "validator://alpha",
+      "capability": {
+        "resources": ["pwork://proof/*"],
+        "actions": ["verify_popw"]
+      },
+      "request": {
+        "resource": "pwork://proof/job-015/verify",
+        "action": "verify_popw",
+        "task": {
+          "id": "job-015",
+          "subnet": "subnet://warehouse-amr",
+          "status": "proof_submitted",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "validatorAttestations": [
+          {
+            "validatorId": "validator://alpha",
+            "verdict": "success",
+            "safety": 91,
+            "finalPct": 92,
+            "evidenceHash": "sha256:validator-alpha-015"
+          },
+          {
+            "validatorId": "validator://beta",
+            "verdict": "success",
+            "safety": 89,
+            "finalPct": 90,
+            "evidenceHash": "sha256:validator-beta-015"
+          }
+        ]
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "verified",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny settlement before verification",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://settlement/*"],
+        "actions": ["release_settlement"]
+      },
+      "request": {
+        "resource": "pwork://settlement/job-016",
+        "action": "release_settlement",
+        "task": {
+          "id": "job-016",
+          "subnet": "subnet://warehouse-amr",
+          "status": "proof_submitted",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "settlement": {
+          "receiptId": "settlement-016",
+          "recipient": "robot://amr-17",
+          "amountUsdc": 24
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "SETTLEMENT_STATE_INVALID",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "deny settlement receipt replay",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://settlement/*"],
+        "actions": ["release_settlement"]
+      },
+      "request": {
+        "resource": "pwork://settlement/job-017",
+        "action": "release_settlement",
+        "task": {
+          "id": "job-017",
+          "subnet": "subnet://warehouse-amr",
+          "status": "verified",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "settlement": {
+          "receiptId": "settlement-duplicate",
+          "recipient": "robot://amr-17",
+          "amountUsdc": 24
+        }
+      },
+      "expected": {
+        "decision": "deny",
+        "reason": "RECEIPT_REPLAY",
+        "evidenceRequired": true
+      }
+    },
+    {
+      "name": "allow verified settlement release",
+      "principal": "agent://requester-alpha",
+      "capability": {
+        "resources": ["pwork://settlement/*"],
+        "actions": ["release_settlement"]
+      },
+      "request": {
+        "resource": "pwork://settlement/job-018",
+        "action": "release_settlement",
+        "task": {
+          "id": "job-018",
+          "subnet": "subnet://warehouse-amr",
+          "status": "verified",
+          "rewardUsdc": 24,
+          "deadline": "2026-06-21T12:30:00.000Z",
+          "requiredTier": "T2_ACT",
+          "selectedRobot": "robot://amr-17"
+        },
+        "settlement": {
+          "receiptId": "settlement-018",
+          "recipient": "robot://amr-17",
+          "amountUsdc": 24
+        }
+      },
+      "expected": {
+        "decision": "allow",
+        "reason": "ALLOW",
+        "nextStatus": "settled",
+        "evidenceRequired": true
+      }
+    }
+  ]
+}

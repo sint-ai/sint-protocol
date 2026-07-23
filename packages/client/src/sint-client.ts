@@ -6,7 +6,14 @@
  * @module @sint/client/sint-client
  */
 
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import type {
+  AuthorityDecision,
+  MissionActionProposal,
+  MissionActionOutcomeReport,
+  MissionManifest,
+  MissionManifestRevocation,
+  SintCapabilityTokenRequest,
+} from "@pshkv/core";
 
 export interface SintClientOptions {
   /** Gateway base URL (e.g. "http://localhost:3100"). */
@@ -42,6 +49,34 @@ export interface TokenResult {
 export interface LedgerResult {
   events: readonly Record<string, unknown>[];
   chainIntegrity: boolean;
+}
+
+export interface MissionManifestRecord {
+  manifest: MissionManifest;
+  revocation?: MissionManifestRevocation;
+}
+
+export interface MissionAuthorityResult {
+  authorityDecision: AuthorityDecision;
+  policyDecision: InterceptResult;
+  executable: boolean;
+  gateReceiptEventId: string;
+  executionClaim?: {
+    status: "claimed" | "duplicate" | "effect_limit_exceeded";
+    claim?: {
+      actionRef: string;
+      manifestId: string;
+      effectId?: string;
+      claimedAt: string;
+    };
+  };
+}
+
+export interface MissionActionOutcomeResult {
+  status: "finalized";
+  outcome: MissionActionOutcomeReport;
+  gateReceiptEventId: string;
+  completionReceiptEventId: string;
 }
 
 /** SSE approval event received from the gateway. */
@@ -162,6 +197,105 @@ export class SintClient {
     if (!res.ok) {
       throw new Error(`Ledger query failed: ${res.status}`);
     }
+    return res.json() as any;
+  }
+
+  /** Register an immutable signed mission manifest. */
+  async registerMissionManifest(manifest: MissionManifest): Promise<MissionManifestRecord> {
+    const res = await this._fetch(`${this.baseUrl}/v1/mission-authority/manifests`, {
+      method: "POST",
+      headers: this.headers(),
+      body: JSON.stringify(manifest),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`Manifest registration failed (${res.status}): ${JSON.stringify(body)}`);
+    }
+    return res.json() as any;
+  }
+
+  /** List mission manifests and their revocation state. */
+  async listMissionManifests(filters?: {
+    platformId?: string;
+    missionClass?: MissionManifest["missionClass"];
+    activeAt?: string;
+  }): Promise<{ manifests: MissionManifestRecord[]; total: number }> {
+    const params = filters
+      ? `?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== undefined) as [string, string][])}`
+      : "";
+    const res = await this._fetch(
+      `${this.baseUrl}/v1/mission-authority/manifests${params}`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) throw new Error(`Manifest list failed: ${res.status}`);
+    return res.json() as any;
+  }
+
+  /** Revoke a mission manifest without mutating its signed contents. */
+  async revokeMissionManifest(
+    manifestId: string,
+    reason: string,
+    revokedBy: string,
+  ): Promise<{ status: "revoked"; revocation: MissionManifestRevocation }> {
+    const res = await this._fetch(
+      `${this.baseUrl}/v1/mission-authority/manifests/${manifestId}/revoke`,
+      {
+        method: "POST",
+        headers: this.headers(),
+        body: JSON.stringify({ reason, revokedBy }),
+      },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`Manifest revocation failed (${res.status}): ${JSON.stringify(body)}`);
+    }
+    return res.json() as any;
+  }
+
+  /** Evaluate a proposed action through mission authority and PolicyGateway. */
+  async evaluateMissionAction(input: {
+    manifestId: string;
+    proposal: MissionActionProposal;
+    request: InterceptRequest;
+  }): Promise<MissionAuthorityResult> {
+    const res = await this._fetch(`${this.baseUrl}/v1/mission-authority/evaluate`, {
+      method: "POST",
+      headers: this.headers(),
+      body: JSON.stringify(input),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`Mission evaluation failed (${res.status}): ${JSON.stringify(body)}`);
+    }
+    return res.json() as any;
+  }
+
+  /** Append the platform-signed terminal outcome for a claimed mission action. */
+  async finalizeMissionAction(
+    report: MissionActionOutcomeReport,
+  ): Promise<MissionActionOutcomeResult> {
+    const res = await this._fetch(
+      `${this.baseUrl}/v1/mission-authority/actions/${encodeURIComponent(report.actionRef)}/outcome`,
+      {
+        method: "POST",
+        headers: this.headers(),
+        body: JSON.stringify(report),
+      },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`Mission outcome failed (${res.status}): ${JSON.stringify(body)}`);
+    }
+    return res.json() as any;
+  }
+
+  /** Retrieve the tamper-evident ledger trail for a mission action. */
+  async getMissionEvidence(actionRef: string): Promise<LedgerResult & { actionRef: string }> {
+    const res = await this._fetch(
+      `${this.baseUrl}/v1/mission-authority/actions/${encodeURIComponent(actionRef)}/evidence`,
+      { headers: this.headers() },
+    );
+    if (!res.ok) throw new Error(`Mission evidence query failed: ${res.status}`);
     return res.json() as any;
   }
 

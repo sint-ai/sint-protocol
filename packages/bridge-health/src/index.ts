@@ -73,3 +73,12 @@ export {
   type DPQuery,
   type DPLedgerState,
 } from "./differential-privacy.js";
+
+// Regulated runtime metadata for PolicyGateway regulated-data policy
+export {
+  buildFHIRRegulatedRuntimeMetadata,
+  classifyFHIRDataClasses,
+  withRegulatedRuntimeParams,
+  type RegulatedRuntimeRouteContext,
+  type RegulatedRuntimeParams,
+} from "./regulated-runtime-metadata.js";

@@ -133,6 +133,8 @@ export interface SintHardwareSafetyContext {
 export interface SintPreapprovedCorridor {
   /** Identifier of the corridor envelope previously approved for this agent. */
   readonly corridorId: string;
+  /** Mission class approved for this corridor execution window. */
+  readonly missionType?: "logistics" | "casualty_evac" | "civilian_rescue" | "inspection" | "security" | "combat";
   /** Corridor expiry; requests arriving after this must re-seek approval. */
   readonly expiresAt: ISO8601;
   /** Maximum allowed deviation from the corridor centerline, in metres. */
@@ -214,6 +216,10 @@ export interface SintRequest {
     readonly currentForceNewtons?: number;
     readonly currentVelocityMps?: number;
     readonly currentPosition?: { x: number; y: number; z: number };
+    readonly currentHeadingDeg?: number;
+    readonly localizationConfidence?: number;
+    readonly localizationObservedAt?: ISO8601;
+    readonly frameId?: string;
   };
 
   /** Sequence of recent actions by this agent (for combo detection). */

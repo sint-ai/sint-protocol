@@ -121,8 +121,8 @@ The near-term goal is to finish tightening the core:
 Q3 is about proving that the protocol can survive outside a friendly demo
 environment.
 
-- [ ] reference gateway path documented as the default durable deployment slice
-- [ ] conformance and certification artifacts kept green on every release lane
+- [x] reference gateway path documented as the default durable deployment slice
+- [x] conformance and certification artifacts kept green on every release lane
 - [ ] at least one external collaborator thread turns into a shared fixture,
   adapter sketch, or PR
 - [ ] independent maintainer evidence accumulates across a real multi-month

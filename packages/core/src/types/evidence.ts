@@ -108,6 +108,11 @@ export type SintEventType =
   | "autonomy.authority.revoked"
   | "autonomy.authority.restored"
   | "governance.control.surrendered"
+  // Mission authority
+  | "mission.manifest.registered"
+  | "mission.manifest.revoked"
+  | "mission.authority.evaluated"
+  | "mission.evidence.exported"
   // Operator (Layer 5) — memory, voice, HUD, notifications, mode
   | "operator.memory.stored"
   | "operator.memory.recalled"

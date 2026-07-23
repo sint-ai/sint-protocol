@@ -19,3 +19,23 @@ export {
 export type { SiemFormat, SiemExportOptions } from "./siem-exporter.js";
 export { generateProof, verifyProof } from "./chain-of-custody.js";
 export type { ChainOfCustodyProof } from "./chain-of-custody.js";
+export {
+  buildMissionEvidenceBundle,
+  verifyMissionEvidenceBundle,
+} from "./mission-evidence-bundle.js";
+export type { MissionEvidenceBundleInput } from "./mission-evidence-bundle.js";
+export {
+  buildPopwEvidenceBundle,
+  computePopwBundleHash,
+  validatePopwBundleCompleteness,
+  verifyPopwEvidenceBundle,
+} from "./popw-bundle.js";
+export type {
+  PopwCompletenessResult,
+  PopwEvidenceBundle,
+  PopwEvidenceBundleInput,
+  PopwMediaEvidence,
+  PopwSensorEvidence,
+  PopwValidatorAttestation,
+  PopwValidatorMetrics,
+} from "./popw-bundle.js";
