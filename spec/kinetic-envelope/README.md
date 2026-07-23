@@ -116,7 +116,7 @@ export const ROS2_REFERENCE_V0_1 = {
 
 ## Conformance
 
-Vectors live in [`conformance/ros2-reference-v0.1.json`](conformance/ros2-reference-v0.1.json). Six cases: a safe move, a self-check escalation, two capacity-driven escalations (human present, close obstacle), and two physics vetoes (force and torque over limit).
+Vectors live in [`conformance/ros2-reference-v0.1.json`](conformance/ros2-reference-v0.1.json). Seven cases: a safe move, a self-check escalation, two capacity-driven escalations (human present, close obstacle), two physics vetoes (force and torque over limit), and an unknown-capacity clamp (a safe-looking margin forced to `assisted` because the trajectory is novel).
 
 Normative fields per vector: `marginBand`, `supervision`, `decision`, `policyCode` (on a veto), and `tightenedAtMost`, a ceiling the result must not exceed. `referenceMargin` is informative, computed from the profile above. A richer A/E provider passes as long as it matches `decision` and `supervision`, emits the right `policyCode` on a veto, and tightens at least as hard.
 
