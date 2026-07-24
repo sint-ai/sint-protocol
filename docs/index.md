@@ -69,6 +69,7 @@ limits, and tamper-evident audit evidence before execution.
 - MITRE ATLAS candidate mappings: [Security/MITRE ATLAS](./security/mitre-atlas-agent-technique-mappings.md)
 - Agent commerce governance profile: [Spec](./specs/agent-commerce-governance-profile-v1.md)
 - Regulated agent runtime profile: [Spec](./specs/regulated-agent-runtime-profile-v1.md)
+- A2A Agent Card external evidence: [Spec](./specs/a2a-agent-card-external-evidence.md)
 - Persona AI shipyard safety brief: [Community Brief](./community/persona-ai-shipyard-safety-brief.md)
 - NIST submission bundle report: [Report](./reports/nist-submission-bundle.md)
 - Latest security bulletin: [July 2026](./security-bulletins/2026-07.md)
