@@ -13,7 +13,7 @@
  * @module @sint/bridge-a2a/agent-card-registry
  */
 
-import type { A2AAgentCard } from "./types.js";
+import type { A2AAgentCard, A2AExternalEvidenceReference } from "./types.js";
 
 /**
  * In-memory registry of A2A Agent Cards.
@@ -107,4 +107,33 @@ export async function fetchAgentCard(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Filter Agent Card evidence references without treating them as card identity. */
+export function getExternalEvidenceReferences(
+  card: A2AAgentCard,
+  options?: {
+    readonly type?: A2AExternalEvidenceReference["type"];
+    readonly subject?: string;
+    readonly now?: Date;
+    readonly includeExpired?: boolean;
+  },
+): readonly A2AExternalEvidenceReference[] {
+  const now = options?.now ?? new Date();
+  return (card.externalEvidence ?? []).filter((evidence) => {
+    if (options?.type && evidence.type !== options.type) return false;
+    if (options?.subject && evidence.subject !== options.subject) return false;
+    if (!options?.includeExpired && !isExternalEvidenceFresh(evidence, now)) return false;
+    return true;
+  });
+}
+
+/** Freshness check for evidence that rides alongside an Agent Card. */
+export function isExternalEvidenceFresh(
+  evidence: A2AExternalEvidenceReference,
+  now = new Date(),
+): boolean {
+  if (!evidence.freshUntil) return true;
+  const deadline = Date.parse(evidence.freshUntil);
+  return Number.isFinite(deadline) && deadline >= now.getTime();
 }

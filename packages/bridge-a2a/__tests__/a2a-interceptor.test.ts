@@ -17,6 +17,8 @@ import {
   A2AInterceptor,
   AgentCardRegistry,
   buildResourceUri,
+  getExternalEvidenceReferences,
+  isExternalEvidenceFresh,
   type A2AAgentCard,
   type A2ASendTaskParams,
 } from "../src/index.js";
@@ -43,6 +45,37 @@ const FLEET_MANAGER_CARD: A2AAgentCard = {
     },
   ],
   streaming: true,
+};
+
+const CARD_WITH_EXTERNAL_EVIDENCE: A2AAgentCard = {
+  ...FLEET_MANAGER_CARD,
+  externalEvidence: [
+    {
+      type: "tool-surface-scan",
+      subject: "skill:navigate",
+      issuer: "sint:mcp-scanner",
+      uri: "sint://evidence/tool-surface/navigate",
+      hash: {
+        alg: "sha256",
+        digest: "a".repeat(64),
+      },
+      issuedAt: "2026-07-24T00:00:00.000Z",
+      freshUntil: "2026-07-25T00:00:00.000Z",
+      scope: "connect-time",
+    },
+    {
+      type: "authority-receipt",
+      subject: FLEET_MANAGER_CARD.url,
+      issuer: "sint:policy-gateway",
+      hash: {
+        alg: "sha256",
+        digest: "b".repeat(64),
+      },
+      issuedAt: "2026-07-20T00:00:00.000Z",
+      freshUntil: "2026-07-21T00:00:00.000Z",
+      scope: "pre-action",
+    },
+  ],
 };
 
 function makeNavTask(overrides?: Partial<A2ASendTaskParams>): A2ASendTaskParams {
@@ -304,5 +337,52 @@ describe("AgentCardRegistry", () => {
     expect(reg.size).toBe(0);
     reg.register(FLEET_MANAGER_CARD);
     expect(reg.size).toBe(1);
+  });
+
+  it("preserves external evidence references without treating them as identity", () => {
+    const reg = new AgentCardRegistry();
+    reg.register(CARD_WITH_EXTERNAL_EVIDENCE);
+
+    const card = reg.get(FLEET_MANAGER_CARD.url);
+    expect(card?.url).toBe(FLEET_MANAGER_CARD.url);
+    expect(card?.externalEvidence).toHaveLength(2);
+  });
+
+  it("filters fresh external evidence by type and subject", () => {
+    const evidence = getExternalEvidenceReferences(CARD_WITH_EXTERNAL_EVIDENCE, {
+      type: "tool-surface-scan",
+      subject: "skill:navigate",
+      now: new Date("2026-07-24T12:00:00.000Z"),
+    });
+
+    expect(evidence).toHaveLength(1);
+    expect(evidence[0]?.issuer).toBe("sint:mcp-scanner");
+  });
+
+  it("excludes stale external evidence unless explicitly requested", () => {
+    const now = new Date("2026-07-24T12:00:00.000Z");
+
+    expect(getExternalEvidenceReferences(CARD_WITH_EXTERNAL_EVIDENCE, {
+      type: "authority-receipt",
+      now,
+    })).toHaveLength(0);
+
+    expect(getExternalEvidenceReferences(CARD_WITH_EXTERNAL_EVIDENCE, {
+      type: "authority-receipt",
+      now,
+      includeExpired: true,
+    })).toHaveLength(1);
+  });
+
+  it("treats missing freshness as admissible to local policy", () => {
+    expect(isExternalEvidenceFresh({
+      type: "verification-state",
+      subject: FLEET_MANAGER_CARD.url,
+      issuer: "verifier:example",
+      hash: {
+        alg: "sha256",
+        digest: "c".repeat(64),
+      },
+    })).toBe(true);
   });
 });

@@ -38,6 +38,53 @@ export interface A2AAgentCard {
   readonly streaming?: boolean;
   /** Whether this agent supports push notifications. */
   readonly pushNotifications?: boolean;
+  /**
+   * Optional external evidence references keyed to this card, its authority,
+   * or its exposed tool/skill surface.
+   *
+   * These records are not part of Agent Card identity. A consuming runtime
+   * decides whether each freshness-bounded evidence item is admissible for a
+   * specific interaction.
+   */
+  readonly externalEvidence?: readonly A2AExternalEvidenceReference[];
+}
+
+/** What an external evidence reference claims about an Agent Card or surface. */
+export type A2AExternalEvidenceType =
+  | "authority-receipt"
+  | "tool-surface-scan"
+  | "signed-tool-definition"
+  | "counterparty-safety"
+  | "verification-state"
+  | (string & {});
+
+/** Content-addressed evidence that composes alongside, not inside, Agent Card identity. */
+export interface A2AExternalEvidenceReference {
+  /** Evidence type understood by the consuming runtime. */
+  readonly type: A2AExternalEvidenceType;
+  /** Subject this evidence covers, such as an agent URL, skill id, or tool digest. */
+  readonly subject: string;
+  /** Evidence issuer, for example a scanner, gateway, verifier DID, or JWKS subject. */
+  readonly issuer: string;
+  /** Optional dereferenceable evidence location. */
+  readonly uri?: string;
+  /** Digest over canonical evidence bytes. */
+  readonly hash: {
+    readonly alg: "sha256" | (string & {});
+    readonly digest: string;
+  };
+  /** Optional detached or envelope signature over the evidence. */
+  readonly signature?: {
+    readonly alg: "Ed25519" | "ES256" | (string & {});
+    readonly kid?: string;
+    readonly value: string;
+  };
+  /** When this evidence was issued. */
+  readonly issuedAt?: ISO8601;
+  /** Last time the evidence should be accepted without refresh. */
+  readonly freshUntil?: ISO8601;
+  /** Optional local policy scope, such as connect-time, pre-action, or audit-only. */
+  readonly scope?: string;
 }
 
 /** A skill offered by an A2A agent. */

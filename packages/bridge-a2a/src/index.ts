@@ -28,6 +28,8 @@ export type {
   A2AAgentCard,
   A2ASkill,
   A2AAuthScheme,
+  A2AExternalEvidenceReference,
+  A2AExternalEvidenceType,
   A2ATask,
   A2ATaskStatus,
   A2AMessage,
@@ -69,6 +71,8 @@ export {
 export {
   AgentCardRegistry,
   fetchAgentCard,
+  getExternalEvidenceReferences,
+  isExternalEvidenceFresh,
 } from "./agent-card-registry.js";
 
 // APS ↔ SINT interoperability mapping
