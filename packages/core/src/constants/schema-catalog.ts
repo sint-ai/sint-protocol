@@ -44,6 +44,7 @@ const CAPABILITY_TOKEN_SCHEMA: JsonSchemaDoc = {
     attestationRequirements: { type: "object" },
     verifiableComputeRequirements: { type: "object" },
     executionEnvelope: { type: "object" },
+    humanAuthorityRequirements: { type: "object" },
     delegationChain: { type: "object" },
     issuedAt: { type: "string", format: "date-time" },
     expiresAt: { type: "string", format: "date-time" },
@@ -169,6 +170,24 @@ const REQUEST_SCHEMA: JsonSchemaDoc = {
           },
           additionalProperties: false,
         },
+        humanAuthority: {
+          type: "object",
+          properties: {
+            principalRef: { type: "string" },
+            assuranceLevel: {
+              type: "string",
+              enum: ["humanhood", "uniqueness", "delegation", "contextual_binding"],
+            },
+            proofRef: { type: "string" },
+            proofHash: { type: "string" },
+            verifierRef: { type: "string" },
+            observedAt: { type: "string", format: "date-time" },
+            revokedAt: { type: "string", format: "date-time" },
+            binding: { type: "object" },
+            delegationChain: { type: "object" },
+          },
+          additionalProperties: false,
+        },
       },
       additionalProperties: false,
     },
@@ -214,6 +233,49 @@ const POLICY_DECISION_SCHEMA: JsonSchemaDoc = {
       additionalProperties: false,
     },
   },
+};
+
+const HUMAN_AUTHORITY_PROOF_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/human-authority-proof.schema.json",
+  title: "SINT HumanAuthorityProof",
+  type: "object",
+  required: ["principalRef", "assuranceLevel"],
+  properties: {
+    principalRef: { type: "string" },
+    assuranceLevel: {
+      type: "string",
+      enum: ["humanhood", "uniqueness", "delegation", "contextual_binding"],
+    },
+    proofRef: { type: "string" },
+    proofHash: { type: "string" },
+    verifierRef: { type: "string" },
+    observedAt: { type: "string", format: "date-time" },
+    revokedAt: { type: "string", format: "date-time" },
+    binding: { type: "object" },
+    delegationChain: { type: "object" },
+  },
+  additionalProperties: false,
+};
+
+const HUMAN_AUTHORITY_REQUIREMENTS_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/human-authority-requirements.schema.json",
+  title: "SINT HumanAuthorityRequirements",
+  type: "object",
+  required: ["requiredAssuranceLevel"],
+  properties: {
+    requiredAssuranceLevel: {
+      type: "string",
+      enum: ["humanhood", "uniqueness", "delegation", "contextual_binding"],
+    },
+    allowedProofProviders: { type: "array", items: { type: "string" } },
+    maxProofAgeMs: { type: "integer", minimum: 1 },
+    requiredBinding: { type: "object" },
+    allowedDelegationDepth: { type: "integer", minimum: 0 },
+    requireUniquePrincipal: { type: "boolean" },
+  },
+  additionalProperties: false,
 };
 
 const EVIDENCE_EVENT_SCHEMA: JsonSchemaDoc = {
@@ -689,4 +751,6 @@ export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "mission-manifest": MISSION_MANIFEST_SCHEMA,
   "authority-decision": AUTHORITY_DECISION_SCHEMA,
   "mission-evidence-bundle": MISSION_EVIDENCE_BUNDLE_SCHEMA,
+  "human-authority-proof": HUMAN_AUTHORITY_PROOF_SCHEMA,
+  "human-authority-requirements": HUMAN_AUTHORITY_REQUIREMENTS_SCHEMA,
 } as const;

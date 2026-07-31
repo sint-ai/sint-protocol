@@ -8,6 +8,10 @@
  */
 
 import { z } from "zod";
+import {
+  humanAuthorityRequirementsSchema,
+  humanAuthorityProofSchema,
+} from "./authority.schema.js";
 
 const ISO8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/;
 const HEX_REGEX = /^[a-f0-9]+$/i;
@@ -156,6 +160,10 @@ export const executionEnvelopeSchema = z.object({
   frameId: z.string().min(1).max(128).optional(),
 }).strict();
 
+export const humanAuthorityRequirementsOrProofSchema = z.object({
+  humanAuthority: humanAuthorityProofSchema.optional(),
+}).strict();
+
 export const delegationChainSchema = z.object({
   parentTokenId: uuidV7Schema.nullable(),
   depth: z.number().int().min(0).max(10),
@@ -179,6 +187,8 @@ export const capabilityTokenSchema = z.object({
   behavioralConstraints: behavioralConstraintsSchema.optional(),
   /** Managed-autonomy authority policy. */
   autonomyPolicy: autonomyPolicySchema.optional(),
+  /** Optional human authority requirements. */
+  humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */
@@ -209,6 +219,8 @@ export const capabilityTokenRequestSchema = z.object({
   behavioralConstraints: behavioralConstraintsSchema.optional(),
   /** Managed-autonomy authority policy. */
   autonomyPolicy: autonomyPolicySchema.optional(),
+  /** Optional human authority requirements. */
+  humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */

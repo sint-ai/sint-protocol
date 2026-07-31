@@ -169,6 +169,11 @@ For the fuller execution plan, use:
 - [End-of-Year 2026 Execution Plan](./roadmaps/end-of-year-2026-execution-plan.md)
 - [Factory Action Pack Upgrade Sprints](./roadmaps/factory-action-pack-upgrade-sprints.md)
 - [Graph-First Coordination Upgrade 2026](./roadmaps/graph-first-coordination-upgrade-2026.md)
+- [Deployment Readiness Execution Plan](./roadmaps/deployment-readiness-execution-plan-2026.md)
+- [Autonomous Factory Readiness Roadmap](./roadmaps/autonomous-factory-readiness-2026.md)
+- [Roadway Edge Intelligence Roadmap](./roadmaps/roadway-edge-intelligence-2026.md)
+- [Humanoid Deployment Governance Roadmap](./roadmaps/humanoid-deployment-governance-2026.md)
+- [Human-Agent Authority Roadmap](./roadmaps/human-agent-authority-2026.md)
 
 ## Detailed Tracks
 

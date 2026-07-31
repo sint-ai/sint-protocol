@@ -21,6 +21,7 @@ import type {
   Newtons,
   UUIDv7,
 } from "./primitives.js";
+import type { HumanAuthorityEnvelope } from "./authority.js";
 import type { ApprovalTier } from "./policy.js";
 
 /**
@@ -381,6 +382,8 @@ export interface SintCapabilityToken {
   readonly behavioralConstraints?: SintBehavioralConstraints;
   /** Optional managed-autonomy authority policy. */
   readonly autonomyPolicy?: SintAutonomyPolicy;
+  /** Optional human authority requirements. */
+  readonly humanAuthorityRequirements?: HumanAuthorityEnvelope;
 
   // --- Cross-protocol identity (Agent Passport System interop) ---
   /**
@@ -458,6 +461,8 @@ export interface SintCapabilityTokenRequest {
   readonly behavioralConstraints?: SintBehavioralConstraints;
   /** Optional managed-autonomy authority policy. */
   readonly autonomyPolicy?: SintAutonomyPolicy;
+  /** Optional human authority requirements. */
+  readonly humanAuthorityRequirements?: HumanAuthorityEnvelope;
   /** APS passport identifier for cross-protocol identity linkage. */
   readonly passportId?: string;
   /** Delegation depth in the APS chain (0 = root). */

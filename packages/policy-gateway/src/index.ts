@@ -58,6 +58,8 @@ export type {
   RegulatedDataPolicyPlugin,
   RegulatedDataRequestMetadata,
 } from "./regulated-data-policy.js";
+export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
+export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 export {
   DefaultCodeAsPolicyGuard,
   decisionForCodeAsPolicyViolation,

@@ -12,6 +12,7 @@ import type {
   SintPhysicalConstraints,
   SintVerifiableComputeProofType,
 } from "./capability-token.js";
+import type { HumanAuthorityProof } from "./authority.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -184,6 +185,8 @@ export interface SintExecutionContext {
   readonly preapprovedCorridor?: SintPreapprovedCorridor;
   /** Compact append-only factory evidence chain for operator approval context. */
   readonly factoryReceiptChain?: readonly SintFactoryReceiptChainEntry[];
+  /** Privacy-preserving human authority proof attached to the request. */
+  readonly humanAuthority?: HumanAuthorityProof;
 }
 
 /**

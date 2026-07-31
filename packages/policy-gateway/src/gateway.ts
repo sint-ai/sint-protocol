@@ -35,6 +35,8 @@ import type { SafetyPermitPlugin } from "./safety-permit.js";
 import type { ArgInjectionDetector } from "./arg-injection-detector.js";
 import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
+import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -316,6 +318,11 @@ export interface PolicyGatewayConfig {
    */
   readonly regulatedDataPolicy?: RegulatedDataPolicyPlugin;
   /**
+   * Optional human authority policy hook.
+   * When omitted, the gateway uses the built-in default policy evaluator.
+   */
+  readonly humanAuthorityPolicy?: HumanAuthorityPolicyPlugin;
+  /**
    * Optional deployment-profile spatial integrity policy.
    * Enforces fresh localization evidence for GPS-denied, underground, or other
    * degraded physical deployments before normal tier assignment.
@@ -536,6 +543,35 @@ export class PolicyGateway {
         policyViolated: tokenValidation.error,
       });
       return decision;
+    }
+
+    // 4a-human. Human authority proof gate.
+    // Tokens can require a bound human proof before any other policy logic runs.
+    // This gate is fail-closed and uses the built-in policy evaluator by default.
+    const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy();
+    try {
+      const humanDecision = await humanAuthorityPolicy.evaluate(
+        request,
+        token,
+        { requestId, timestamp },
+      );
+      if (humanDecision) {
+        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          decision: humanDecision.action,
+          tier: humanDecision.assignedTier,
+          risk: humanDecision.assignedRisk,
+          source: "human_authority_policy",
+          policyViolated: humanDecision.denial?.policyViolated,
+        });
+        return humanDecision;
+      }
+    } catch {
+      return this.deny(
+        requestId,
+        timestamp,
+        "HUMAN_AUTHORITY_POLICY_ERROR",
+        "Human authority policy failed closed before permission evaluation",
+      );
     }
 
     // 4a-spatial. Deployment-profile spatial integrity policy.
