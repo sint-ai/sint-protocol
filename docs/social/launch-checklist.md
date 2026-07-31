@@ -6,10 +6,12 @@ Day-of sequence. Work top to bottom — each step depends on the previous.
 
 ## Pre-Launch (Do First)
 
-- [ ] `git pull --rebase` — confirm on latest master
+- [ ] `git pull --rebase` — confirm on latest `main`
 - [ ] `pnpm run build && pnpm run test` — all 1,105 tests pass
 - [ ] `pnpm run demo:interceptor-quickstart` — demo transcript prints allow, escalate, and fail-closed paths
 - [ ] `pnpm run docs:build` — quickstart guide resolves cleanly in docs site
+- [ ] `npm view sint-mcp version` — public npm version matches `.mcp/server.json`
+- [ ] `npx -y sint-mcp --help` — published package prints CLI help from a clean directory
 
 ---
 

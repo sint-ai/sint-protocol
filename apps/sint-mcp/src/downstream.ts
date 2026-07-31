@@ -72,7 +72,7 @@ export class DownstreamManager {
     }
 
     const client = new Client(
-      { name: `sint-mcp-client-${name}`, version: "0.1.0" },
+      { name: `sint-mcp-client-${name}`, version: "0.1.1" },
       { capabilities: {} },
     );
 

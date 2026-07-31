@@ -53,6 +53,7 @@ limits, and tamper-evident audit evidence before execution.
 - NIST submission playbook: [Guide](./guides/nist-submission-playbook.md)
 - Mission Authority reference gateway: [Guide](./guides/mission-authority-reference-gateway.md)
 - Regulated agent runtime quickstart: [Guide](./guides/regulated-agent-runtime-quickstart.md)
+- Spatial integrity policy: [Guide](./guides/spatial-integrity-policy.md)
 - Community launch runbook: [Discord Launch](./community/discord-launch-runbook.md)
 - AAIF RFC-001 submission packet: [Community/AAIF Packet](./community/aaif-rfc001-submission-packet.md)
 - Discord launch kit: [Community/Discord Launch Kit](./community/discord-launch-kit.md)
@@ -61,6 +62,7 @@ limits, and tamper-evident audit evidence before execution.
 - Physical AI runtime safety working group: [Community/Working Group](./community/physical-ai-runtime-safety-working-group.md)
 - Industrial humanoid shipyard safety pack: [Guide](./guides/industrial-humanoid-shipyard-safety-pack.md)
 - Industrial humanoid shipyard safety sprint: [Roadmap](./roadmaps/industrial-humanoid-shipyard-safety-sprint.md)
+- Code-as-policy robot agent safety: [Guide](./guides/code-as-policy-robot-agent-safety.md)
 - Shipyard humanoid evidence export sample: `docs/reports/shipyard-humanoid-evidence-export.jsonl`
 - OWASP Agentic Landscape submission packet: [Community/OWASP Packet](./community/owasp-agentic-landscape-submission.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)

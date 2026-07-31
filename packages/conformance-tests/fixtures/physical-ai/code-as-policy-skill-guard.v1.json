@@ -1,0 +1,215 @@
+{
+  "fixtureId": "code-as-policy-skill-guard-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Project-neutral fixture for guarding agent-generated robot programs, reusable skills, and physical primitive execution.",
+  "scope": {
+    "bridge": "ros2",
+    "projectContext": "code-as-policy-robot-agent",
+    "boundary": "agent-generated robot program to physical actuation",
+    "goal": "Test whether a robot agent that writes and revises control programs can stage code, register reusable skills, and execute primitives only through SINT-governed receipts.",
+    "nonGoal": "This fixture does not depend on a specific vendor API, model family, robot embodiment, or training stack."
+  },
+  "requirements": {
+    "generatedProgramsArePrepareTier": true,
+    "skillLibraryMutationRequiresContentBinding": true,
+    "primitiveExecutionRoutesThroughGateway": true,
+    "concurrentRobotCoordinationRequiresReceipts": true,
+    "postApprovalProgramMutationDenied": true,
+    "negativeOutcomesCarryReceipt": true
+  },
+  "deployment": {
+    "siteId": "robot-agent-lab-01",
+    "agentId": "robot-agent-master-01",
+    "robotIds": ["arm-left-01", "arm-right-01"],
+    "programRef": "sint://program/code-as-policy/robot-agent-lab-01/fold-shirt-7782.py",
+    "programDigest": "digest:sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "skillRef": "sint://skill/code-as-policy/fold-grasp/v4",
+    "skillDigest": "digest:sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "primitiveSetRef": "sint://primitive-set/manipulation-safe-v1",
+    "hardwareProfileRef": "sint://hardware/dual-arm-tabletop/v1",
+    "workspaceId": "bench-cell-a"
+  },
+  "receiptSchema": {
+    "requiredFields": [
+      "receiptId",
+      "actionRef",
+      "resource",
+      "operation",
+      "decision",
+      "assignedTier",
+      "agentId",
+      "robotIds",
+      "programRef",
+      "programDigest",
+      "skillRef",
+      "skillDigest",
+      "primitiveSetRef",
+      "hardwareProfileRef",
+      "workspaceId",
+      "decisionDigest",
+      "eventHash",
+      "previousHash",
+      "timestamp"
+    ],
+    "sample": {
+      "receiptId": "code-policy:robot-agent-lab-01:fold-shirt-7782",
+      "actionRef": "action:code-policy:execute:robot-agent-lab-01:fold-shirt-7782",
+      "resource": "ros2:///joint_trajectory_controller/follow_joint_trajectory",
+      "operation": "publish",
+      "decision": "escalate",
+      "assignedTier": "T2_act",
+      "agentId": "robot-agent-master-01",
+      "robotIds": "arm-left-01,arm-right-01",
+      "programRef": "sint://program/code-as-policy/robot-agent-lab-01/fold-shirt-7782.py",
+      "programDigest": "digest:sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "skillRef": "sint://skill/code-as-policy/fold-grasp/v4",
+      "skillDigest": "digest:sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "primitiveSetRef": "sint://primitive-set/manipulation-safe-v1",
+      "hardwareProfileRef": "sint://hardware/dual-arm-tabletop/v1",
+      "workspaceId": "bench-cell-a",
+      "decisionDigest": "digest:sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "eventHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "previousHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "timestamp": "2026-07-28T17:00:00.000Z"
+    }
+  },
+  "mappingCases": [
+    {
+      "id": "generated_program_routes_through_prepare_boundary",
+      "name": "Generated robot program is staged before execution",
+      "resourceSource": "engine",
+      "resource": "engine://system2/plan",
+      "operation": "generate",
+      "expectedResource": "engine://system2/plan",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "skill_registration_routes_through_capsule_boundary",
+      "name": "Reusable skill registration is content-bound",
+      "resourceSource": "capsule",
+      "resource": "engine://capsule/skill-library/register",
+      "operation": "register",
+      "expectedResource": "engine://capsule/skill-library/register",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "program_execution_routes_through_engine_boundary",
+      "name": "Approved generated program executes through the engine boundary",
+      "resourceSource": "engine",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedResource": "engine://system2/execute",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    },
+    {
+      "id": "primitive_actuation_routes_through_ros2_boundary",
+      "name": "Trajectory primitive resolves to the ROS 2 actuation boundary",
+      "resourceSource": "topic",
+      "topicName": "/joint_trajectory_controller/follow_joint_trajectory",
+      "operation": "publish",
+      "expectedResource": "ros2:///joint_trajectory_controller/follow_joint_trajectory",
+      "expectedTier": "T2_act",
+      "receiptRequired": true
+    }
+  ],
+  "policyCases": [
+    {
+      "id": "program_generation_is_prepare_tier",
+      "name": "Generated program staging stays below physical execution",
+      "resource": "engine://system2/plan",
+      "operation": "generate",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "receiptRequired": true
+    },
+    {
+      "id": "skill_registration_requires_matching_digest",
+      "name": "Reusable skill registration is accepted only with matching content digest",
+      "resource": "engine://capsule/skill-library/register",
+      "operation": "register",
+      "expectedDecision": "allow",
+      "expectedTier": "T1_prepare",
+      "programDigestMatches": true,
+      "skillDigestMatches": true,
+      "receiptRequired": true
+    },
+    {
+      "id": "generated_program_execution_requires_review",
+      "name": "Executing generated code remains high consequence",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 0.2,
+        "maxForceNewtons": 80,
+        "allowedPrimitives": ["bounding_box", "detect_in_base", "preset", "approach_until", "reset_home"]
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "concurrent_robot_primitive_execution_requires_receipts",
+      "name": "Coordinated dual-arm actuation carries one receipt per robot path",
+      "resource": "ros2:///joint_trajectory_controller/follow_joint_trajectory",
+      "operation": "publish",
+      "expectedDecision": "escalate",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "maxVelocityMps": 0.18,
+        "maxForceNewtons": 70
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "human_workspace_escalates_generated_trajectory",
+      "name": "Human presence raises generated-code trajectory execution consequence",
+      "resource": "ros2:///joint_trajectory_controller/follow_joint_trajectory",
+      "operation": "publish",
+      "expectedDecision": "escalate",
+      "expectedTier": "T3_commit",
+      "physicalContext": {
+        "humanDetected": true,
+        "currentVelocityMps": 0.06,
+        "currentForceNewtons": 22
+      },
+      "receiptRequired": true
+    },
+    {
+      "id": "program_mutation_without_reapproval_denied",
+      "name": "Reject a generated program body change after approval",
+      "resource": "engine://system2/execute",
+      "operation": "execute",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "programDigestMatches": false,
+      "skillDigestMatches": true,
+      "policyViolated": "CONSTRAINT_VIOLATION",
+      "receiptRequired": true
+    },
+    {
+      "id": "new_primitive_after_approval_denied",
+      "name": "Reject a newly introduced primitive that was not approved",
+      "resource": "ros2:///joint_trajectory_controller/follow_joint_trajectory",
+      "operation": "publish",
+      "expectedDecision": "deny",
+      "expectedTier": "T2_act",
+      "constraints": {
+        "allowedPrimitives": ["bounding_box", "detect_in_base", "preset", "approach_until", "reset_home"]
+      },
+      "skillDigestMatches": false,
+      "policyViolated": "FORBIDDEN_COMBINATION",
+      "receiptRequired": true
+    }
+  ],
+  "successCriteria": {
+    "generatedProgramStagingIsPrepareTier": true,
+    "generatedSkillRegistrationIsContentBound": true,
+    "physicalPrimitiveExecutionIsHighConsequence": true,
+    "concurrentRobotActuationCarriesReceipts": true,
+    "programMutationWithoutReapprovalDenied": true,
+    "allOutcomesCarryReceipts": true
+  }
+}
