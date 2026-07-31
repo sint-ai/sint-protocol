@@ -66,6 +66,38 @@
 
 **Where SINT fits:** AutoGPT agents controlling physical tools/robots need SINT's gateway between their decisions and physical actions.
 
+### Code-As-Policy Robot Agents
+
+**Examples:** Waddle-style systems that connect an API to a robot, take a
+natural-language task, write an editable robot control program, and grow a
+shared skill library from successful attempts.
+
+**What they do:** Move robot learning closer to the software-agent workflow:
+agents decompose goals, inspect camera feedback, write and revise code, call
+specialist action models, and execute physical primitives on real hardware.
+
+**Security posture:** Generated robot code and reusable skills create a new
+authority boundary. The agent may safely revise software, but a changed
+program, changed skill body, new primitive, or new workspace should not inherit
+prior approval to move hardware.
+
+**Where SINT fits:** SINT sits below the robot-agent platform as the runtime
+authorization and evidence layer. Generated programs stage through
+`engine://system2/plan`; approved execution routes through
+`engine://system2/execute`; reusable skills are content-bound through
+`engine://capsule/skill-library/register`; physical primitives still resolve to
+bridge resources such as ROS 2 actuation topics.
+
+**Gap SINT fills:** Content-digest binding for generated programs and skills,
+T2/T3 review before actuation, human-workspace escalation, primitive vocabulary
+constraints, and hash-chained receipts for every allow, deny, and escalation.
+
+Executable artifact:
+`packages/conformance-tests/fixtures/physical-ai/code-as-policy-skill-guard.v1.json`
+
+Runtime guard:
+`DefaultCodeAsPolicyGuard` in `@pshkv/gate-policy-gateway`
+
 ## SINT's Unique Position
 
 SINT is **not a competing agent protocol**. It is an **execution-governance layer** that sits between agent protocols and real execution surfaces. This positioning means:

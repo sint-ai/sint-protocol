@@ -1616,6 +1616,90 @@ export function loadLeRobotPolicyActuationReceiptsFixture(): LeRobotPolicyActuat
   );
 }
 
+export interface CodeAsPolicySkillGuardFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly description: string;
+  readonly scope: {
+    readonly bridge: "ros2";
+    readonly projectContext: "code-as-policy-robot-agent";
+    readonly boundary: "agent-generated robot program to physical actuation";
+    readonly goal: string;
+    readonly nonGoal: string;
+  };
+  readonly requirements: {
+    readonly generatedProgramsArePrepareTier: boolean;
+    readonly skillLibraryMutationRequiresContentBinding: boolean;
+    readonly primitiveExecutionRoutesThroughGateway: boolean;
+    readonly concurrentRobotCoordinationRequiresReceipts: boolean;
+    readonly postApprovalProgramMutationDenied: boolean;
+    readonly negativeOutcomesCarryReceipt: boolean;
+  };
+  readonly deployment: {
+    readonly siteId: string;
+    readonly agentId: string;
+    readonly robotIds: readonly string[];
+    readonly programRef: string;
+    readonly programDigest: string;
+    readonly skillRef: string;
+    readonly skillDigest: string;
+    readonly primitiveSetRef: string;
+    readonly hardwareProfileRef: string;
+    readonly workspaceId: string;
+  };
+  readonly receiptSchema: {
+    readonly requiredFields: readonly string[];
+    readonly sample: Record<string, string>;
+  };
+  readonly mappingCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resourceSource: "engine" | "capsule" | "topic";
+    readonly resource?: string;
+    readonly topicName?: string;
+    readonly operation: "generate" | "register" | "execute" | "publish";
+    readonly expectedResource: string;
+    readonly expectedTier: ApprovalTier;
+    readonly receiptRequired: boolean;
+  }>;
+  readonly policyCases: readonly Array<{
+    readonly id: string;
+    readonly name: string;
+    readonly resource: string;
+    readonly operation: "generate" | "register" | "execute" | "publish";
+    readonly expectedDecision: DecisionAction;
+    readonly expectedTier: ApprovalTier;
+    readonly constraints?: {
+      readonly maxVelocityMps?: number;
+      readonly maxForceNewtons?: number;
+      readonly allowedPrimitives?: readonly string[];
+    };
+    readonly physicalContext?: {
+      readonly humanDetected?: boolean;
+      readonly currentVelocityMps?: number;
+      readonly currentForceNewtons?: number;
+    };
+    readonly programDigestMatches?: boolean;
+    readonly skillDigestMatches?: boolean;
+    readonly policyViolated?: "CONSTRAINT_VIOLATION" | "FORBIDDEN_COMBINATION";
+    readonly receiptRequired: boolean;
+  }>;
+  readonly successCriteria: {
+    readonly generatedProgramStagingIsPrepareTier: boolean;
+    readonly generatedSkillRegistrationIsContentBound: boolean;
+    readonly physicalPrimitiveExecutionIsHighConsequence: boolean;
+    readonly concurrentRobotActuationCarriesReceipts: boolean;
+    readonly programMutationWithoutReapprovalDenied: boolean;
+    readonly allOutcomesCarryReceipts: boolean;
+  };
+}
+
+export function loadCodeAsPolicySkillGuardFixture(): CodeAsPolicySkillGuardFixture {
+  return loadFixture<CodeAsPolicySkillGuardFixture>(
+    "physical-ai/code-as-policy-skill-guard.v1.json",
+  );
+}
+
 export interface SolarFieldOperationsPolicyReceiptsFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;

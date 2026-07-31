@@ -34,6 +34,11 @@ import type { SupplyChainVerifierPlugin } from "./supply-chain.js";
 import type { SafetyPermitPlugin } from "./safety-permit.js";
 import type { ArgInjectionDetector } from "./arg-injection-detector.js";
 import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
+import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
+import {
+  decisionForCodeAsPolicyViolation,
+  type CodeAsPolicyGuardPlugin,
+} from "./code-as-policy-guard.js";
 
 const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
 const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
@@ -310,6 +315,20 @@ export interface PolicyGatewayConfig {
    * carrying regulated data metadata. Fail-closed on plugin errors.
    */
   readonly regulatedDataPolicy?: RegulatedDataPolicyPlugin;
+  /**
+   * Optional deployment-profile spatial integrity policy.
+   * Enforces fresh localization evidence for GPS-denied, underground, or other
+   * degraded physical deployments before normal tier assignment.
+   * Fail-closed on plugin errors.
+   */
+  readonly spatialIntegrityPolicy?: SpatialIntegrityPolicyPlugin;
+  /**
+   * Optional code-as-policy robot-agent guard.
+   * Enforces generated-program/skill digest binding, fixed primitive
+   * vocabulary, robot identity shape, and trial-loop budgets for agents that
+   * write robot control programs. Fail-closed on plugin errors.
+   */
+  readonly codeAsPolicyGuard?: CodeAsPolicyGuardPlugin;
 }
 
 /**
@@ -517,6 +536,63 @@ export class PolicyGateway {
         policyViolated: tokenValidation.error,
       });
       return decision;
+    }
+
+    // 4a-spatial. Deployment-profile spatial integrity policy.
+    // Token execution envelopes handle per-token spatial proof. This hook
+    // handles deployment-wide GPS-denied/degraded-perception requirements.
+    if (this.config.spatialIntegrityPolicy) {
+      try {
+        const spatialDecision = await this.config.spatialIntegrityPolicy.evaluate(
+          request,
+          token,
+          { requestId, timestamp },
+        );
+        if (spatialDecision) {
+          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+            decision: spatialDecision.action,
+            tier: spatialDecision.assignedTier,
+            risk: spatialDecision.assignedRisk,
+            source: "spatial_integrity_policy",
+            policyViolated: spatialDecision.denial?.policyViolated,
+            escalationReason: spatialDecision.escalation?.reason,
+          });
+          return spatialDecision;
+        }
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "SPATIAL_INTEGRITY_POLICY_ERROR",
+          "Spatial integrity policy failed closed before permission evaluation",
+        );
+      }
+    }
+
+    // 4a-code. Code-as-policy robot-agent guard.
+    // Generated robot programs and learned skill-library updates must be bound
+    // to stable digests and fixed primitive contracts before actuation.
+    if (this.config.codeAsPolicyGuard) {
+      try {
+        const guardResult = this.config.codeAsPolicyGuard.verify(request, token);
+        if (!guardResult.verified) {
+          this.emitEvent("robot.code_policy.guard_violation", request.agentId, request.tokenId, {
+            violations: guardResult.violations,
+            severity: guardResult.severity,
+            programRef: guardResult.metadata?.programRef,
+            skillRef: guardResult.metadata?.skillRef,
+            primitiveSetRef: guardResult.metadata?.primitiveSetRef,
+          });
+          return decisionForCodeAsPolicyViolation(request, guardResult);
+        }
+      } catch {
+        return this.deny(
+          requestId,
+          timestamp,
+          "CODE_AS_POLICY_GUARD_ERROR",
+          "Code-as-policy guard failed closed before permission evaluation",
+        );
+      }
     }
 
     // 4a-pre. Regulated-data runtime policy.

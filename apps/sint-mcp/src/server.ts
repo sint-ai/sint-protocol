@@ -79,7 +79,7 @@ export class SintMCPServer {
 
     // Create MCP Server
     this.server = new Server(
-      { name: "sint-mcp", version: "0.1.0" },
+      { name: "sint-mcp", version: "0.1.1" },
       {
         capabilities: {
           tools: {},

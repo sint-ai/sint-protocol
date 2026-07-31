@@ -17,6 +17,13 @@ export type {
   StaticCorridorGeometry,
   StaticCorridorResolver,
 } from "./spatial-corridor.js";
+export { DefaultSpatialIntegrityPolicy } from "./spatial-integrity-policy.js";
+export type {
+  DefaultSpatialIntegrityPolicyOptions,
+  SpatialIntegrityPolicyContext,
+  SpatialIntegrityPolicyPlugin,
+  SpatialIntegrityProfile,
+} from "./spatial-integrity-policy.js";
 export { DefaultSupplyChainVerifier } from "./supply-chain.js";
 export type {
   SupplyChainVerifierPlugin,
@@ -51,6 +58,16 @@ export type {
   RegulatedDataPolicyPlugin,
   RegulatedDataRequestMetadata,
 } from "./regulated-data-policy.js";
+export {
+  DefaultCodeAsPolicyGuard,
+  decisionForCodeAsPolicyViolation,
+} from "./code-as-policy-guard.js";
+export type {
+  CodeAsPolicyGuardConfig,
+  CodeAsPolicyGuardPlugin,
+  CodeAsPolicyGuardResult,
+  CodeAsPolicyMetadata,
+} from "./code-as-policy-guard.js";
 export { ApprovalQueue } from "./approval-flow.js";
 export type {
   ApprovalRequest,
