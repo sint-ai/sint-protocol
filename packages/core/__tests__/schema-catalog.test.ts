@@ -41,4 +41,8 @@ describe("schema catalog request contract", () => {
   it("publishes the shared trace bundle base schema", () => {
     expect(SINT_SCHEMA_CATALOG["trace-bundle"]).toBeDefined();
   });
+
+  it("publishes the manufacturing execution envelope schema", () => {
+    expect(SINT_SCHEMA_CATALOG["manufacturing-execution-envelope"]).toBeDefined();
+  });
 });

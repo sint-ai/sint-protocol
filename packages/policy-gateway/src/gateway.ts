@@ -39,6 +39,8 @@ import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 import type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
 import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
+import type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
+import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -330,6 +332,11 @@ export interface PolicyGatewayConfig {
    */
   readonly deploymentEnvelopePolicy?: DeploymentEnvelopePolicyPlugin;
   /**
+   * Optional manufacturing execution-envelope policy hook.
+   * When omitted, the gateway uses the built-in default policy evaluator.
+   */
+  readonly manufacturingExecutionPolicy?: ManufacturingExecutionPolicyPlugin;
+  /**
    * Optional deployment-profile spatial integrity policy.
    * Enforces fresh localization evidence for GPS-denied, underground, or other
    * degraded physical deployments before normal tier assignment.
@@ -608,6 +615,36 @@ export class PolicyGateway {
         timestamp,
         "DEPLOYMENT_ENVELOPE_POLICY_ERROR",
         "Deployment envelope policy failed closed before permission evaluation",
+      );
+    }
+
+    // 4a-factory. Manufacturing execution envelope checks.
+    // These bind shop-floor requests to part, program, cell, tooling, and
+    // inspection facts before any further factory-specific policy can proceed.
+    const manufacturingExecutionPolicy =
+      this.config.manufacturingExecutionPolicy ?? new DefaultManufacturingExecutionPolicy();
+    try {
+      const manufacturingDecision = await manufacturingExecutionPolicy.evaluate(
+        request,
+        token,
+        { requestId, timestamp },
+      );
+      if (manufacturingDecision) {
+        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          decision: manufacturingDecision.action,
+          tier: manufacturingDecision.assignedTier,
+          risk: manufacturingDecision.assignedRisk,
+          source: "manufacturing_execution_policy",
+          policyViolated: manufacturingDecision.denial?.policyViolated,
+        });
+        return manufacturingDecision;
+      }
+    } catch {
+      return this.deny(
+        requestId,
+        timestamp,
+        "FACTORY_ENVELOPE_POLICY_ERROR",
+        "Manufacturing execution policy failed closed before permission evaluation",
       );
     }
 

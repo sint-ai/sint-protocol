@@ -39,6 +39,10 @@ export const SINT_EVENTS = {
   DEPLOYMENT_PROOF_MISSING: "deployment.proof.missing",
   DEPLOYMENT_CONTEXT_MISMATCH: "deployment.context.mismatch",
   DEPLOYMENT_ENVELOPE_VIOLATION: "deployment.envelope.violation",
+  FACTORY_PROOF_MISSING: "factory.proof.missing",
+  FACTORY_CONTEXT_MISMATCH: "factory.context.mismatch",
+  FACTORY_SEQUENCE_VIOLATION: "factory.sequence.violation",
+  FACTORY_ENVELOPE_VIOLATION: "factory.envelope.violation",
 
   // Engine — System 1
   SYSTEM1_INFERENCE: "engine.system1.inference",

@@ -62,6 +62,8 @@ export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
 export type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
+export { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
+export type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
 export {
   DefaultCodeAsPolicyGuard,
   decisionForCodeAsPolicyViolation,

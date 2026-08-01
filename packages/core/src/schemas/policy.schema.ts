@@ -12,6 +12,7 @@ import {
 } from "./capability-token.schema.js";
 import { humanAuthorityProofSchema } from "./authority.schema.js";
 import { deploymentEvidenceRefSchema } from "./deployment-envelope.schema.js";
+import { manufacturingExecutionContextSchema } from "./manufacturing-execution.schema.js";
 
 export const physicalContextSchema = z.object({
   humanDetected: z.boolean().optional(),
@@ -111,6 +112,7 @@ export const executionContextSchema = z.object({
   factoryReceiptChain: z.array(factoryReceiptChainEntrySchema).max(32).optional(),
   humanAuthority: humanAuthorityProofSchema.optional(),
   deploymentEvidence: z.array(deploymentEvidenceRefSchema).max(32).optional(),
+  manufacturingExecution: manufacturingExecutionContextSchema.optional(),
 }).strict();
 
 export const sintRequestSchema = z.object({

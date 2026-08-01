@@ -14,6 +14,7 @@ import type {
 } from "./capability-token.js";
 import type { HumanAuthorityProof } from "./authority.js";
 import type { DeploymentEvidenceRef } from "./deployment-envelope.js";
+import type { ManufacturingExecutionContext } from "./manufacturing-execution.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -190,6 +191,8 @@ export interface SintExecutionContext {
   readonly humanAuthority?: HumanAuthorityProof;
   /** Shared deployment evidence refs attached to the request. */
   readonly deploymentEvidence?: readonly DeploymentEvidenceRef[];
+  /** Manufacturing execution context attached to the request. */
+  readonly manufacturingExecution?: ManufacturingExecutionContext;
 }
 
 /**

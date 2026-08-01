@@ -6,3 +6,4 @@ export * from "./engine.schema.js";
 export * from "./mission-authority.schema.js";
 export * from "./kinetic-envelope.schema.js";
 export * from "./trace-bundle.schema.js";
+export * from "./manufacturing-execution.schema.js";
