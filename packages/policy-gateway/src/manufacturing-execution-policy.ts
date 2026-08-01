@@ -143,15 +143,33 @@ export class DefaultManufacturingExecutionPolicy
       return deny(context, "FACTORY_CONTEXT_MISMATCH", "Flowdown tags do not satisfy manufacturing envelope");
     }
     if (envelope.inspectionRequired === true) {
-      if (!execution.inspectionReceiptRef || execution.inspectionStatus !== "pass") {
-        return deny(context, "FACTORY_PROOF_MISSING", "Inspection receipt is required before factory execution");
-      }
-      if (!execution.inspectedAt) {
-        return deny(context, "FACTORY_PROOF_MISSING", "Inspection timestamp is required before factory execution");
+      const receipt = execution.inspectionReceipt;
+      if (receipt) {
+        if (receipt.disposition !== "pass") {
+          return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection receipt disposition must be pass before factory execution");
+        }
+        if (receipt.calibrationState !== "fresh") {
+          return deny(context, "FACTORY_PROOF_MISSING", "Inspection calibration must be fresh before factory execution");
+        }
+        if (!receipt.inspectedAt) {
+          return deny(context, "FACTORY_PROOF_MISSING", "Inspection timestamp is required before factory execution");
+        }
+        if (envelope.qualityPlanDigest !== undefined && receipt.inspectionPlanDigest !== envelope.qualityPlanDigest) {
+          return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection plan digest does not match manufacturing envelope");
+        }
+        if (execution.inspectionReceiptRef && receipt.receiptRef && execution.inspectionReceiptRef !== receipt.receiptRef) {
+          return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection receipt ref does not match manufacturing execution context");
+        }
+      } else {
+        if (!execution.inspectionReceiptRef || execution.inspectionStatus !== "pass") {
+          return deny(context, "FACTORY_PROOF_MISSING", "Inspection receipt is required before factory execution");
+        }
+        if (!execution.inspectedAt) {
+          return deny(context, "FACTORY_PROOF_MISSING", "Inspection timestamp is required before factory execution");
+        }
       }
     }
 
     return undefined;
   }
 }
-

@@ -116,6 +116,9 @@ describe("Manufacturing execution envelope conformance", () => {
       manufacturingExecution: {
         ...fixture.token.executionContext.manufacturingExecution,
         ...manufacturingExecutionOverrides,
+        inspectionReceipt:
+          manufacturingExecutionOverrides.inspectionReceipt ??
+          fixture.token.executionContext.manufacturingExecution.inspectionReceipt,
       },
     };
   }
@@ -124,6 +127,19 @@ describe("Manufacturing execution envelope conformance", () => {
     const { token, gateway } = makeGateway();
     const decision = await gateway.intercept(makeRequest(token, freshExecutionContext()));
     expect(decision.action).toBe("allow");
+  });
+
+  it("denies an inspection receipt whose calibration is stale", async () => {
+    const { token, gateway } = makeGateway();
+    const request = makeRequest(token, freshExecutionContext({
+      inspectionReceipt: {
+        ...fixture.token.executionContext.manufacturingExecution.inspectionReceipt,
+        calibrationState: "stale",
+      },
+    }));
+    const decision = await gateway.intercept(request);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("FACTORY_PROOF_MISSING");
   });
 
   it("denies a program digest mismatch", async () => {

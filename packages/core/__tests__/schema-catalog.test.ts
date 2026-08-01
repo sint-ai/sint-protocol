@@ -45,4 +45,8 @@ describe("schema catalog request contract", () => {
   it("publishes the manufacturing execution envelope schema", () => {
     expect(SINT_SCHEMA_CATALOG["manufacturing-execution-envelope"]).toBeDefined();
   });
+
+  it("publishes the inspection receipt schema", () => {
+    expect(SINT_SCHEMA_CATALOG["inspection-receipt"]).toBeDefined();
+  });
 });

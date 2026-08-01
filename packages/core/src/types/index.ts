@@ -11,4 +11,5 @@ export * from "./protocol.js";
 export * from "./mission-authority.js";
 export * from "./kinetic-envelope.js";
 export * from "./trace-bundle.js";
+export * from "./inspection.js";
 export * from "./manufacturing-execution.js";

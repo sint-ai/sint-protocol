@@ -7,6 +7,7 @@
  */
 
 import type { DeploymentEnvelopeBase } from "./deployment-envelope.js";
+import type { InspectionReceipt } from "./inspection.js";
 import type { ISO8601, SHA256 } from "./primitives.js";
 
 export interface ManufacturingExecutionContext {
@@ -28,6 +29,7 @@ export interface ManufacturingExecutionContext {
   readonly inspectionReceiptRef?: string;
   readonly inspectionStatus?: "pass" | "conditional" | "fail";
   readonly inspectedAt?: ISO8601;
+  readonly inspectionReceipt?: InspectionReceipt;
   readonly flowdownTags?: readonly string[];
 }
 
@@ -50,4 +52,3 @@ export interface ManufacturingExecutionEnvelope
   readonly inspectionRequired?: boolean;
   readonly flowdownTags?: readonly string[];
 }
-

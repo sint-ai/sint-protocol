@@ -3,6 +3,7 @@
  */
 
 import { z } from "zod";
+import { inspectionReceiptSchema } from "./inspection.schema.js";
 
 const ISO8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/;
 const HEX_REGEX = /^[a-f0-9]+$/i;
@@ -29,6 +30,7 @@ export const manufacturingExecutionContextSchema = z.object({
   inspectionReceiptRef: z.string().min(1).max(512).optional(),
   inspectionStatus: z.enum(["pass", "conditional", "fail"]).optional(),
   inspectedAt: iso8601Schema.optional(),
+  inspectionReceipt: inspectionReceiptSchema.optional(),
   flowdownTags: z.array(z.string().min(1).max(128)).max(64).optional(),
 }).strict();
 
