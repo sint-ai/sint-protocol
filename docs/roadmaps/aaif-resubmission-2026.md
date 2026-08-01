@@ -200,7 +200,7 @@ Do not resubmit until all required items are true:
 - [ ] at least one independent maintainer has 90+ days of sustained merge
       activity
 - [ ] reference gateway is built, released, and running from public docs
-- [ ] conformance tooling is packaged and externally runnable
+- [x] conformance tooling is packaged and externally runnable
 - [ ] OpenSSF Best Practices badge is started and major gaps are tracked or
       resolved
 - [ ] release candidate has passed build, test, docs, and conformance gates

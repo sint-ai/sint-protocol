@@ -1,0 +1,2447 @@
+{
+  "artifactVersion": "v1",
+  "artifactType": "conformance-validation",
+  "generatedAt": "2026-08-01T05:02:48.256Z",
+  "gitSha": "3b8034f5f49e6b789a366aafb7536ca7f18ca470",
+  "command": "pnpm --filter @pshkv/conformance-tests exec vitest run --reporter=json",
+  "redactionBoundary": {
+    "include": [
+      "suite status",
+      "test durations",
+      "assertion names",
+      "git sha",
+      "generation timestamp"
+    ],
+    "exclude": [
+      "secret material",
+      "live deployment credentials",
+      "private endpoints",
+      "raw local environment values"
+    ]
+  },
+  "summary": {
+    "success": true,
+    "suiteCount": 55,
+    "passedSuiteCount": 55,
+    "failedSuiteCount": 0,
+    "testCount": 382,
+    "passedTestCount": 382,
+    "failedTestCount": 0
+  },
+  "suites": [
+    {
+      "file": "packages/conformance-tests/src/a2a-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 34.181396484375,
+      "assertions": [
+        {
+          "fullName": "A2A Fixture Conformance read-only report skill forwards and emits policy evidence",
+          "status": "passed",
+          "durationMs": 19.800084000000027
+        },
+        {
+          "fullName": "A2A Fixture Conformance navigate request with report-only token fails closed on scope mismatch",
+          "status": "passed",
+          "durationMs": 4.843332999999973
+        },
+        {
+          "fullName": "A2A Fixture Conformance navigate request with matching token escalates at T2 and emits policy evidence",
+          "status": "passed",
+          "durationMs": 4.6200000000000045
+        },
+        {
+          "fullName": "A2A Fixture Conformance revoked navigate token is denied before task forwarding",
+          "status": "passed",
+          "durationMs": 2.6982080000000224
+        },
+        {
+          "fullName": "A2A Fixture Conformance subject mismatch denies cross-agent token replay",
+          "status": "passed",
+          "durationMs": 2.1813750000000027
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/action-ref-explainability-conformance.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 1.58935546875,
+      "assertions": [
+        {
+          "fullName": "ActionRef Identity + Explainability Conformance fixture profile shape is valid",
+          "status": "passed",
+          "durationMs": 1.2506249999999568
+        },
+        {
+          "fullName": "ActionRef Identity + Explainability Conformance enforces action_ref equivalence, explainability comparability, and linkage checks",
+          "status": "passed",
+          "durationMs": 0.5893750000000182
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/agent-commerce-governance-conformance.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "failed": 0,
+      "durationMs": 2.64990234375,
+      "assertions": [
+        {
+          "fullName": "Agent Commerce Governance Fixture Conformance fixture exposes the v1 market and payment control vocabulary",
+          "status": "passed",
+          "durationMs": 1.6683340000000157
+        },
+        {
+          "fullName": "Agent Commerce Governance Fixture Conformance keeps every case tied to a stable decision reason and evidence rule",
+          "status": "passed",
+          "durationMs": 0.9639169999999808
+        },
+        {
+          "fullName": "Agent Commerce Governance Fixture Conformance evaluates task-market and x402 controls deterministically",
+          "status": "passed",
+          "durationMs": 0.6499170000000163
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/agentskill-authz-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 355.31884765625,
+      "assertions": [
+        {
+          "fullName": "AgentSkill Delegated Authority Fixture Conformance fixture has required schema and executable scenarios",
+          "status": "passed",
+          "durationMs": 2.0309169999999312
+        },
+        {
+          "fullName": "AgentSkill Delegated Authority Fixture Conformance enforces delegated authority scenarios at the AgentSkill boundary",
+          "status": "passed",
+          "durationMs": 353.31883400000004
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/aps-sint-handshake.test.ts",
+      "status": "passed",
+      "passed": 11,
+      "failed": 0,
+      "durationMs": 65.14501953125,
+      "assertions": [
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance fixture: aps-sint-handshake.v1.json loads and has 3 cases covering scenarios A, B, C",
+          "status": "passed",
+          "durationMs": 1.6841249999999945
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario A: authorized call — token scoped to readFile, request for readFile → allow",
+          "status": "passed",
+          "durationMs": 17.738
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario A: authorized call — MCPInterceptor forwards to MCP server",
+          "status": "passed",
+          "durationMs": 4.32650000000001
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario A: authorized call — ledger receives policy.evaluated event",
+          "status": "passed",
+          "durationMs": 3.901999999999987
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario B: scope-exceeded denial — filesystem/* token denied for exec/run (RESOURCE_MISMATCH)",
+          "status": "passed",
+          "durationMs": 4.4737499999999955
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario B: scope-exceeded denial — MCPInterceptor must not forward a denied call",
+          "status": "passed",
+          "durationMs": 5.8912090000000035
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario C: cascade revocation — child token denied after explicit revocation",
+          "status": "passed",
+          "durationMs": 4.442125000000033
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Scenario C: cascade gap — child token NOT denied if only parent is revoked (operator must cascade)",
+          "status": "passed",
+          "durationMs": 7.3354589999999575
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance APS identity: did:key subject round-trips through keyToDid / didToKey",
+          "status": "passed",
+          "durationMs": 0.8029579999999896
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Delegation depth: chain at max depth (3) is accepted; depth 4 is rejected",
+          "status": "passed",
+          "durationMs": 9.075707999999963
+        },
+        {
+          "fullName": "APS-SINT-MCP Cross-Protocol Handshake — conformance Monotonic narrowing: delegated child inherits parent resource (cannot be independently broadened)",
+          "status": "passed",
+          "durationMs": 5.144957999999974
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/autogen-interop-conformance.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "failed": 0,
+      "durationMs": 88.22802734375,
+      "assertions": [
+        {
+          "fullName": "AutoGen Interop Conformance equivalence scenarios match between direct gateway path and autogen callback path",
+          "status": "passed",
+          "durationMs": 50.11387500000001
+        },
+        {
+          "fullName": "AutoGen Interop Conformance trust matrix fixture produces deterministic tier/action outcomes",
+          "status": "passed",
+          "durationMs": 33.552291999999966
+        },
+        {
+          "fullName": "AutoGen Interop Conformance edge disconnect fixture denies trust-escalated T2/T3 actions fail-closed",
+          "status": "passed",
+          "durationMs": 5.228042000000073
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/autonomy-supervisor-conformance.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 3.534423828125,
+      "assertions": [
+        {
+          "fullName": "Managed-autonomy supervisor package conformance declares the 12 required autonomy conformance scenarios",
+          "status": "passed",
+          "durationMs": 0.8982910000000288
+        },
+        {
+          "fullName": "Managed-autonomy supervisor package conformance keeps external output structurally gated to stable clean guards",
+          "status": "passed",
+          "durationMs": 0.318416999999954
+        },
+        {
+          "fullName": "Managed-autonomy supervisor package conformance rejects non-external regulated restoration controllers",
+          "status": "passed",
+          "durationMs": 0.6335829999999874
+        },
+        {
+          "fullName": "Managed-autonomy supervisor package conformance maps regulated transitions to append-only authority revocation events",
+          "status": "passed",
+          "durationMs": 1.5345000000000368
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/backward-compatibility-v0-clients.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "failed": 0,
+      "durationMs": 84.07568359375,
+      "assertions": [
+        {
+          "fullName": "Backward Compatibility (v0 clients) legacy token payloads without v0.2 optional fields remain valid",
+          "status": "passed",
+          "durationMs": 42.553292
+        },
+        {
+          "fullName": "Backward Compatibility (v0 clients) legacy requests without executionContext continue to pass gateway",
+          "status": "passed",
+          "durationMs": 28.307166999999936
+        },
+        {
+          "fullName": "Backward Compatibility (v0 clients) legacy delegation requests remain valid without new optional fields",
+          "status": "passed",
+          "durationMs": 13.075709000000074
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/bridge-mcp-regression.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0,
+      "durationMs": 54.445068359375,
+      "assertions": [
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-1. Read-only filesystem tool call should be forwarded",
+          "status": "passed",
+          "durationMs": 19.415499999999952
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-2. Tool call with revoked token must be denied",
+          "status": "passed",
+          "durationMs": 1.6374999999999318
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-3. Forbidden combo filesystem.write → exec.run is detected",
+          "status": "passed",
+          "durationMs": 0.22625000000005002
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-4. Tool call with invalid session must be denied",
+          "status": "passed",
+          "durationMs": 0.11775000000000091
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-5. Recent actions accumulate across intercepted calls",
+          "status": "passed",
+          "durationMs": 7.902541999999926
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-6. Exec tool call gets T3 COMMIT tier assignment",
+          "status": "passed",
+          "durationMs": 8.460124999999948
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-7. Credential tool call gets T3 COMMIT tier assignment",
+          "status": "passed",
+          "durationMs": 4.523957999999993
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-8. All policy evaluations generate ledger events",
+          "status": "passed",
+          "durationMs": 3.282333000000108
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-9. Removed session cannot make further calls",
+          "status": "passed",
+          "durationMs": 5.355041000000028
+        },
+        {
+          "fullName": "Bridge-MCP Regression Tests MCP-10. Prompt injection in tool arguments does not alter tier assignment",
+          "status": "passed",
+          "durationMs": 3.4451669999999694
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/bridge-ros2-regression.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0,
+      "durationMs": 56.118896484375,
+      "assertions": [
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-1. Camera sensor subscribe should be forwarded",
+          "status": "passed",
+          "durationMs": 19.00841699999995
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-2. cmd_vel publish gets T2_ACT tier requiring review",
+          "status": "passed",
+          "durationMs": 4.2225839999999835
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-3. cmd_vel publish exceeding velocity constraint must be denied",
+          "status": "passed",
+          "durationMs": 3.6603749999999877
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-4. cmd_vel with human presence escalates to T3_COMMIT",
+          "status": "passed",
+          "durationMs": 5.897833999999989
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-5. Publish with revoked token must be denied",
+          "status": "passed",
+          "durationMs": 2.2167500000000473
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-6. Service call routes through gateway correctly",
+          "status": "passed",
+          "durationMs": 4.498917000000006
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-7. Action goal routes through gateway correctly",
+          "status": "passed",
+          "durationMs": 3.844000000000051
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-8. All intercepts generate audit ledger events",
+          "status": "passed",
+          "durationMs": 3.2233340000000226
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-9. Twist message with estimated force exceeding limit is denied",
+          "status": "passed",
+          "durationMs": 2.8424580000000788
+        },
+        {
+          "fullName": "Bridge-ROS2 Regression Tests ROS2-10. Mode change gets T3_COMMIT tier (irreversible)",
+          "status": "passed",
+          "durationMs": 4.118790999999987
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/canonical-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 65.45751953125,
+      "assertions": [
+        {
+          "fullName": "Canonical Fixture Conformance well-known discovery fixture preserves v0.2 boundary contract",
+          "status": "passed",
+          "durationMs": 2.5049170000000913
+        },
+        {
+          "fullName": "Canonical Fixture Conformance tier compliance crosswalk fixture stays aligned with exported core mapping",
+          "status": "passed",
+          "durationMs": 0.6222920000000158
+        },
+        {
+          "fullName": "Canonical Fixture Conformance warehouse move fixture yields equivalent escalation semantics across ROS2, Sparkplug, and Open-RMF",
+          "status": "passed",
+          "durationMs": 28.639040999999906
+        },
+        {
+          "fullName": "Canonical Fixture Conformance OPC UA safety fixture enforces read/write/critical-write tier behavior",
+          "status": "passed",
+          "durationMs": 12.432332999999971
+        },
+        {
+          "fullName": "Canonical Fixture Conformance hardware safety handshake fixture enforces fail-closed industrial permit behavior",
+          "status": "passed",
+          "durationMs": 21.457625000000007
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/code-as-policy-skill-guard-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 5.305419921875,
+      "assertions": [
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 declares a vendor-neutral robot-agent scope",
+          "status": "passed",
+          "durationMs": 1.074124999999981
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 defines receipt fields that bind generated code, skills, primitives, and hardware",
+          "status": "passed",
+          "durationMs": 0.8122920000000136
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 derives expected resources from engine, capsule, and ROS 2 boundaries",
+          "status": "passed",
+          "durationMs": 0.19462499999997362
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 keeps generated program and skill staging below live execution",
+          "status": "passed",
+          "durationMs": 0.30562500000002046
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 models coordinated primitive actuation and human-workspace escalation",
+          "status": "passed",
+          "durationMs": 2.5914169999999785
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 rejects generated-code or skill mutations after approval",
+          "status": "passed",
+          "durationMs": 0.195541999999989
+        },
+        {
+          "fullName": "Code-as-policy skill guard fixture v1 keeps all outcomes receipt-backed",
+          "status": "passed",
+          "durationMs": 0.30545799999998735
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/deployment-envelope-base-conformance.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 46.791748046875,
+      "assertions": [
+        {
+          "fullName": "Deployment envelope base conformance keeps the shared fixture, command, and negative-case list intact",
+          "status": "passed",
+          "durationMs": 1.2132090000000062
+        },
+        {
+          "fullName": "Deployment envelope base conformance allows the positive request shape and fails closed on missing evidence",
+          "status": "passed",
+          "durationMs": 45.79174999999998
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/e2e-demo.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0,
+      "durationMs": 37.66455078125,
+      "assertions": [
+        {
+          "fullName": "SINT Protocol End-to-End issues a root capability token with Ed25519 signature",
+          "status": "passed",
+          "durationMs": 12.899833000000001
+        },
+        {
+          "fullName": "SINT Protocol End-to-End validates the token signature cryptographically",
+          "status": "passed",
+          "durationMs": 3.423583000000008
+        },
+        {
+          "fullName": "SINT Protocol End-to-End delegates with attenuation (restricts actions)",
+          "status": "passed",
+          "durationMs": 4.805292000000009
+        },
+        {
+          "fullName": "SINT Protocol End-to-End allows read operations (T0_OBSERVE, auto-approved)",
+          "status": "passed",
+          "durationMs": 6.076415999999995
+        },
+        {
+          "fullName": "SINT Protocol End-to-End escalates dangerous operations (T3_COMMIT, needs human)",
+          "status": "passed",
+          "durationMs": 2.7946249999999964
+        },
+        {
+          "fullName": "SINT Protocol End-to-End detects forbidden combination: write → exec (code injection)",
+          "status": "passed",
+          "durationMs": 5.256916999999987
+        },
+        {
+          "fullName": "SINT Protocol End-to-End maps MCP tool calls to SINT requests correctly",
+          "status": "passed",
+          "durationMs": 0.30925000000002
+        },
+        {
+          "fullName": "SINT Protocol End-to-End enqueues, resolves, and drains approval requests",
+          "status": "passed",
+          "durationMs": 0.3298330000000078
+        },
+        {
+          "fullName": "SINT Protocol End-to-End revokes a token and gateway denies subsequent requests",
+          "status": "passed",
+          "durationMs": 0.41575000000000273
+        },
+        {
+          "fullName": "SINT Protocol End-to-End maintains hash-chain integrity across all events",
+          "status": "passed",
+          "durationMs": 0.6645000000000323
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/economy-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "failed": 0,
+      "durationMs": 2.553466796875,
+      "assertions": [
+        {
+          "fullName": "Economy Fixture Conformance cost-aware routing fixture remains deterministic with and without x402 quotes",
+          "status": "passed",
+          "durationMs": 2.55337499999996
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/economy-regression.test.ts",
+      "status": "passed",
+      "passed": 15,
+      "failed": 0,
+      "durationMs": 103.532958984375,
+      "assertions": [
+        {
+          "fullName": "SINT Economy Regression Tests allowed action deducts tokens equal to computed cost",
+          "status": "passed",
+          "durationMs": 27.96712500000001
+        },
+        {
+          "fullName": "SINT Economy Regression Tests budget exceeded denies without billing",
+          "status": "passed",
+          "durationMs": 4.415625000000091
+        },
+        {
+          "fullName": "SINT Economy Regression Tests trust blocked agent is denied",
+          "status": "passed",
+          "durationMs": 5.323709000000008
+        },
+        {
+          "fullName": "SINT Economy Regression Tests high_risk trust escalates T0 resource to T3",
+          "status": "passed",
+          "durationMs": 1.7810829999999669
+        },
+        {
+          "fullName": "SINT Economy Regression Tests unrestricted trust allows T0 auto-approve",
+          "status": "passed",
+          "durationMs": 12.555166999999983
+        },
+        {
+          "fullName": "SINT Economy Regression Tests zero balance denies action",
+          "status": "passed",
+          "durationMs": 2.9615420000000086
+        },
+        {
+          "fullName": "SINT Economy Regression Tests postIntercept billing failure does not revoke the allow decision",
+          "status": "passed",
+          "durationMs": 2.742040999999972
+        },
+        {
+          "fullName": "SINT Economy Regression Tests gateway without economy plugin behaves identically to Phase 1/2",
+          "status": "passed",
+          "durationMs": 10.913999999999987
+        },
+        {
+          "fullName": "SINT Economy Regression Tests default MCP tool call costs 9 tokens (6 × 1.0 × 1.5)",
+          "status": "passed",
+          "durationMs": 0.5830419999999776
+        },
+        {
+          "fullName": "SINT Economy Regression Tests multiple sequential actions decrement balance correctly",
+          "status": "passed",
+          "durationMs": 7.645582999999988
+        },
+        {
+          "fullName": "SINT Economy Regression Tests budget exceeded takes precedence over trust blocked",
+          "status": "passed",
+          "durationMs": 3.0753330000000005
+        },
+        {
+          "fullName": "SINT Economy Regression Tests economic events are recorded in the evidence ledger",
+          "status": "passed",
+          "durationMs": 8.408792000000062
+        },
+        {
+          "fullName": "SINT Economy Regression Tests ledger chain is valid with economic events included",
+          "status": "passed",
+          "durationMs": 11.031083999999964
+        },
+        {
+          "fullName": "SINT Economy Regression Tests in-memory adapters satisfy balance, budget, trust contracts",
+          "status": "passed",
+          "durationMs": 0.27416599999992286
+        },
+        {
+          "fullName": "SINT Economy Regression Tests budget alert is emitted when usage exceeds 80%",
+          "status": "passed",
+          "durationMs": 3.5330410000000256
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/edge-mode-conformance.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 30.380859375,
+      "assertions": [
+        {
+          "fullName": "Edge Mode Conformance offline mode allows local T0/T1 but denies T2/T3 fail-open risk",
+          "status": "passed",
+          "durationMs": 23.694124999999985
+        },
+        {
+          "fullName": "Edge Mode Conformance reconnect reconciliation restores central escalation path",
+          "status": "passed",
+          "durationMs": 7.380958000000021
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/eu-ai-act-conformity-pack-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 8.242919921875,
+      "assertions": [
+        {
+          "fullName": "EU AI Act conformity pack fixture v1 anchors the pack to current Regulation (EU) 2024/1689 conformity surfaces",
+          "status": "passed",
+          "durationMs": 5.375458000000037
+        },
+        {
+          "fullName": "EU AI Act conformity pack fixture v1 generates Article 13 transparency export fields from fixture evidence",
+          "status": "passed",
+          "durationMs": 1.2269170000000145
+        },
+        {
+          "fullName": "EU AI Act conformity pack fixture v1 generates Article 14 human-oversight export with T2/T3 review evidence",
+          "status": "passed",
+          "durationMs": 0.48679200000003675
+        },
+        {
+          "fullName": "EU AI Act conformity pack fixture v1 requires every Annex IV checklist item to point at SINT artifacts",
+          "status": "passed",
+          "durationMs": 0.5394170000000145
+        },
+        {
+          "fullName": "EU AI Act conformity pack fixture v1 includes a service-robot ISO 13482 crosswalk for physical safety review",
+          "status": "passed",
+          "durationMs": 0.24295899999998483
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/factory-action-demo-conformance.test.ts",
+      "status": "passed",
+      "passed": 11,
+      "failed": 0,
+      "durationMs": 22.8203125,
+      "assertions": [
+        {
+          "fullName": "Factory Action Pack demo fixture v1 keeps the demo scoped to simulation and control semantics",
+          "status": "passed",
+          "durationMs": 0.7001669999999649
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 compiles prompt intent into a cell graph and robot action profile",
+          "status": "passed",
+          "durationMs": 0.8894999999999982
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 requires valid simulation proof before any execution path can proceed",
+          "status": "passed",
+          "durationMs": 0.16870899999997846
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 proves deny -> escalate -> allow control semantics",
+          "status": "passed",
+          "durationMs": 0.3324999999999818
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 fans the same action profile into four vendor adapter stubs",
+          "status": "passed",
+          "durationMs": 1.7050409999999943
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 maps the factory action profile into the ROS2 bridge command surface",
+          "status": "passed",
+          "durationMs": 1.8422919999999863
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 derives UR ROS2 and SRCI adapter profiles from the same gated action",
+          "status": "passed",
+          "durationMs": 1.3402079999999614
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 generates robot-program export stubs from fixture adapter targets",
+          "status": "passed",
+          "durationMs": 1.5972919999999817
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 creates simulator receipt stubs for generated vendor programs",
+          "status": "passed",
+          "durationMs": 12.575458000000026
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 records an append-only receipt chain across plan, simulation, approval, and execution",
+          "status": "passed",
+          "durationMs": 0.3377500000000282
+        },
+        {
+          "fullName": "Factory Action Pack demo fixture v1 carries the receipt chain as schema-valid operator approval context",
+          "status": "passed",
+          "durationMs": 0.8202080000000365
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/hardware-safety-handshake-conformance.test.ts",
+      "status": "passed",
+      "passed": 21,
+      "failed": 0,
+      "durationMs": 110.279296875,
+      "assertions": [
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 1: SafetyPermitPlugin integration plugin returns estopState: triggered → gateway denies T2 action with HARDWARE_ESTOP_ACTIVE",
+          "status": "passed",
+          "durationMs": 23.604124999999954
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 1: SafetyPermitPlugin integration plugin returns permitState: denied on T2 with industrial profile → deny HARDWARE_PERMIT_REQUIRED",
+          "status": "passed",
+          "durationMs": 6
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 1: SafetyPermitPlugin integration plugin throws → fail-open, T1 action still passes (no hardware context needed)",
+          "status": "passed",
+          "durationMs": 4.345667000000049
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 1: SafetyPermitPlugin integration plugin returns undefined → falls through to request executionContext hardwareSafety",
+          "status": "passed",
+          "durationMs": 3.241041999999993
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 2: IotInterceptor hardware safety bridge MQTT estop topic payload with estop triggered → hardwareSafety populated → gateway denies",
+          "status": "passed",
+          "durationMs": 5.454958000000033
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 2: IotInterceptor hardware safety bridge MQTT payload with stale observedAt (6000ms ago) → HARDWARE_STATE_STALE from gateway",
+          "status": "passed",
+          "durationMs": 3.6357080000000224
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 2: IotInterceptor hardware safety bridge PLC cmd topic via gateway with warehouse-amr profile → T2 without safety context → deny HARDWARE_PERMIT_REQUIRED",
+          "status": "passed",
+          "durationMs": 2.9971249999999827
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 2: IotInterceptor hardware safety bridge actuator interlock open in hardwareSafety context → deny HARDWARE_INTERLOCK_OPEN",
+          "status": "passed",
+          "durationMs": 2.6204999999999927
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 2: IotInterceptor hardware safety bridge onEstopTriggered callback fires when estop triggered in safety topic payload",
+          "status": "passed",
+          "durationMs": 4.602415999999948
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios runs all hardware-safety-handshake.v1.json fixture cases",
+          "status": "passed",
+          "durationMs": 12.097167000000013
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture permit_missing scenario: T2 action without permit → HARDWARE_PERMIT_REQUIRED",
+          "status": "passed",
+          "durationMs": 2.2384170000000267
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture permit_revoked_mid_action: permit:denied mid-action → deny",
+          "status": "passed",
+          "durationMs": 2.7916669999999613
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture estop_under_load: estop triggered during concurrent T2 commands → all denied",
+          "status": "passed",
+          "durationMs": 10.716167000000041
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture interlock_open: guard door opened → interlock.open → deny HARDWARE_INTERLOCK_OPEN",
+          "status": "passed",
+          "durationMs": 2.486791999999923
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture reconnect_stale_cache: broker reconnect with observedAt > 5000ms → HARDWARE_STATE_STALE",
+          "status": "passed",
+          "durationMs": 2.857417000000055
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 3: Fixture conformance scenarios fixture nominal_t2_with_permit: T2 with permit:granted, estop:clear, interlock:closed → allow/escalate",
+          "status": "passed",
+          "durationMs": 5.0049999999999955
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 4: Cross-bridge hardware safety consistency ROS2 bridge estop in executionContext → same deny code HARDWARE_ESTOP_ACTIVE as IoT bridge",
+          "status": "passed",
+          "durationMs": 6.10345899999993
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 4: Cross-bridge hardware safety consistency OPC-UA resource with hardware safety context → same interlock deny behavior",
+          "status": "passed",
+          "durationMs": 2.350999999999999
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 4: Cross-bridge hardware safety consistency stale hardware safety state produces HARDWARE_STATE_STALE for both ROS2 and OPC-UA resources",
+          "status": "passed",
+          "durationMs": 4.0169160000000375
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 4: Cross-bridge hardware safety consistency evidence events are emitted for each hardware safety denial",
+          "status": "passed",
+          "durationMs": 2.2793750000000728
+        },
+        {
+          "fullName": "Hardware Safety Phase A — Conformance Group 4: Cross-bridge hardware safety consistency hardwareSafetyContextFromPayload maps MQTT payload fields to SintHardwareSafetyContext correctly",
+          "status": "passed",
+          "durationMs": 0.11754099999996015
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/humanoid-multivendor-fleet-conformance.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "failed": 0,
+      "durationMs": 2.650390625,
+      "assertions": [
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 declares the H4 fleet governance contract",
+          "status": "passed",
+          "durationMs": 0.990333000000021
+        },
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 rejects handoff evidence that lacks an auditable receipt",
+          "status": "passed",
+          "durationMs": 0.5854999999999677
+        },
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 denies conflicting shared-zone claims fail-closed",
+          "status": "passed",
+          "durationMs": 0.19395900000000665
+        },
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 preserves equivalent high-consequence tiering across bridge replay paths",
+          "status": "passed",
+          "durationMs": 0.489167000000009
+        },
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 maps Open-RMF shared-zone reservations into T1 prepare claims",
+          "status": "passed",
+          "durationMs": 0.15399999999999636
+        },
+        {
+          "fullName": "Humanoid multi-vendor fleet fixture v1 defines bounded audit queries for 1,000+ robot dashboard review",
+          "status": "passed",
+          "durationMs": 0.6503339999999866
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/humanoid-profile-conformance.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 70.40576171875,
+      "assertions": [
+        {
+          "fullName": "Humanoid profile fixture v1 declares the humanoid integration contract",
+          "status": "passed",
+          "durationMs": 1.385832999999991
+        },
+        {
+          "fullName": "Humanoid profile fixture v1 enforces canonical humanoid resources through PolicyGateway.intercept",
+          "status": "passed",
+          "durationMs": 42.19804199999999
+        },
+        {
+          "fullName": "Humanoid profile fixture v1 keeps ROS2 and Open-RMF mappings equivalent to humanoid intents",
+          "status": "passed",
+          "durationMs": 26.405750000000012
+        },
+        {
+          "fullName": "Humanoid profile fixture v1 requires handoff intents to declare auditable receipt semantics",
+          "status": "passed",
+          "durationMs": 0.13291700000002038
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/humanoid-warehouse-pilot-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 29.3564453125,
+      "assertions": [
+        {
+          "fullName": "Humanoid warehouse pilot fixture v1 declares a 10-50 robot warehouse/RaaS pilot scope",
+          "status": "passed",
+          "durationMs": 1.103749999999991
+        },
+        {
+          "fullName": "Humanoid warehouse pilot fixture v1 exports required per-shift audit fields from hash-chained ledger events",
+          "status": "passed",
+          "durationMs": 27.955084
+        },
+        {
+          "fullName": "Humanoid warehouse pilot fixture v1 requires T2/T3 rows to carry approval, denial, incident, or rollback evidence",
+          "status": "passed",
+          "durationMs": 0.184708999999998
+        },
+        {
+          "fullName": "Humanoid warehouse pilot fixture v1 requires humanoid-to-AMR handoff rows to carry handoff receipts",
+          "status": "passed",
+          "durationMs": 0.35654100000004973
+        },
+        {
+          "fullName": "Humanoid warehouse pilot fixture v1 requires e-stop evidence to include incident and rollback context",
+          "status": "passed",
+          "durationMs": 0.21437499999996135
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/industrial-benchmark-scenarios.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 67.89794921875,
+      "assertions": [
+        {
+          "fullName": "Industrial Benchmark Scenarios human enters aisle: cmd_vel request escalates to T3",
+          "status": "passed",
+          "durationMs": 20.410125000000107
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios stale corridor request is deterministically denied",
+          "status": "passed",
+          "durationMs": 4.799332999999933
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios revocation under load never fails open",
+          "status": "passed",
+          "durationMs": 24.786958000000027
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios safety-zone breach is deterministically denied",
+          "status": "passed",
+          "durationMs": 5.420541999999955
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios model swap against token modelConstraints is denied",
+          "status": "passed",
+          "durationMs": 3.1326250000000755
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios edge disconnect never allows T2/T3 fail-open behavior",
+          "status": "passed",
+          "durationMs": 5.980624999999918
+        },
+        {
+          "fullName": "Industrial Benchmark Scenarios multi-fleet conflict path escalates to T3 with approval quorum",
+          "status": "passed",
+          "durationMs": 2.8978329999999914
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/industrial-cell-safety-pack-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 6.29052734375,
+      "assertions": [
+        {
+          "fullName": "Industrial cell safety pack fixture v1 declares support-only safety-case boundaries",
+          "status": "passed",
+          "durationMs": 2.061916999999994
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 defines industrial policy templates with hardware safety requirements",
+          "status": "passed",
+          "durationMs": 2.312000000000012
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 covers guard-door interlock, zone occupancy, permit revocation, and e-stop scenarios",
+          "status": "passed",
+          "durationMs": 0.2863750000000209
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 maps safety-controller OPC UA resources into high-consequence handling",
+          "status": "passed",
+          "durationMs": 0.5348749999999995
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 exports FMEA rows that reference executable scenarios and evidence fields",
+          "status": "passed",
+          "durationMs": 0.3786670000000072
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 anchors timing report to hardware permit and e-stop KPIs",
+          "status": "passed",
+          "durationMs": 0.29058300000002646
+        },
+        {
+          "fullName": "Industrial cell safety pack fixture v1 keeps SOTIF / ISO 26262 language as alignment support, not certification",
+          "status": "passed",
+          "durationMs": 0.239750000000015
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/industrial-humanoid-shipyard-safety-pack-conformance.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "failed": 0,
+      "durationMs": 4.113037109375,
+      "assertions": [
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 declares the shipyard humanoid scope and keeps certification boundaries explicit",
+          "status": "passed",
+          "durationMs": 1.1807909999999993
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 defines shipyard policy templates for hot work, confined spaces, material handling, and inspection",
+          "status": "passed",
+          "durationMs": 0.6936249999999973
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 covers the minimum shipyard hazard scenarios with deterministic decisions",
+          "status": "passed",
+          "durationMs": 0.287666999999999
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 requires receipts for every shipyard outcome and high-consequence action",
+          "status": "passed",
+          "durationMs": 0.5380829999999719
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 binds simulation receipts to offline welding program digests",
+          "status": "passed",
+          "durationMs": 0.168124999999975
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 defines ABS-style evidence export fields and data quality rules",
+          "status": "passed",
+          "durationMs": 0.13562500000000455
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 exports FMEA rows tied to executable scenarios",
+          "status": "passed",
+          "durationMs": 0.7513340000000426
+        },
+        {
+          "fullName": "Industrial humanoid shipyard safety pack fixture v1 keeps the sprint plan complete enough for execution tracking",
+          "status": "passed",
+          "durationMs": 0.11304100000000972
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/industrial-interoperability.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 51.92822265625,
+      "assertions": [
+        {
+          "fullName": "Industrial Interoperability Conformance warehouse move intent yields equivalent tiering for RMF->ROS2 and Sparkplug paths",
+          "status": "passed",
+          "durationMs": 34.43595899999997
+        },
+        {
+          "fullName": "Industrial Interoperability Conformance A2A -> Open-RMF dispatch path maps into the same gateway approval semantics",
+          "status": "passed",
+          "durationMs": 5.335959000000003
+        },
+        {
+          "fullName": "Industrial Interoperability Conformance Gazebo model-scoped cmd_vel maps to equivalent ROS2 control-tier semantics",
+          "status": "passed",
+          "durationMs": 5.262082999999961
+        },
+        {
+          "fullName": "Industrial Interoperability Conformance Isaac Sim namespaced cmd_vel maps to equivalent ROS2 control-tier semantics",
+          "status": "passed",
+          "durationMs": 5.92816700000003
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/kinetic-envelope-conformance.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "failed": 0,
+      "durationMs": 4.267333984375,
+      "assertions": [
+        {
+          "fullName": "Kinetic envelope conformance vectors loads the ROS2 reference fixture with the unknown-capacity clamp case",
+          "status": "passed",
+          "durationMs": 0.9799580000000105
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V1-cmd_vel-safe: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 1.550833999999952
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V2-cmd_vel-near-margin: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.6566669999999704
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V3-human-near: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.25012500000002547
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V4-force-over-limit: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.17400000000003502
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V5-obstacle-proximity: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.26729199999999764
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V6-torque-over-limit: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.13437499999997726
+        },
+        {
+          "fullName": "Kinetic envelope conformance vectors V7-novel-workspace-unknown-capacity: produces the expected decision surface",
+          "status": "passed",
+          "durationMs": 0.13437499999997726
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/lerobot-policy-actuation-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 3.41748046875,
+      "assertions": [
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 1.521583000000021
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 defines receipt fields that bind checkpoint, dataset lineage, and hardware profile",
+          "status": "passed",
+          "durationMs": 0.5617500000000177
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 derives expected resources from engine and ROS 2 boundaries",
+          "status": "passed",
+          "durationMs": 0.1616669999999658
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 keeps rollout staging below live execution",
+          "status": "passed",
+          "durationMs": 0.13779199999999037
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 models human-workspace escalation for learned actuation",
+          "status": "passed",
+          "durationMs": 0.19429199999996172
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 rejects silent checkpoint swaps after rollout approval",
+          "status": "passed",
+          "durationMs": 0.44145800000001145
+        },
+        {
+          "fullName": "LeRobot policy actuation receipts fixture v1 keeps all outcomes receipt-backed",
+          "status": "passed",
+          "durationMs": 0.41741700000000037
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/manufacturing-execution-envelope-conformance.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 38.63330078125,
+      "assertions": [
+        {
+          "fullName": "Manufacturing execution envelope conformance allows matching manufacturing execution evidence",
+          "status": "passed",
+          "durationMs": 25.220834000000025
+        },
+        {
+          "fullName": "Manufacturing execution envelope conformance denies an inspection receipt whose calibration is stale",
+          "status": "passed",
+          "durationMs": 5.853042000000016
+        },
+        {
+          "fullName": "Manufacturing execution envelope conformance denies a program digest mismatch",
+          "status": "passed",
+          "durationMs": 4.202625000000012
+        },
+        {
+          "fullName": "Manufacturing execution envelope conformance denies when required inspection evidence is stale",
+          "status": "passed",
+          "durationMs": 2.6332499999999754
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/mcp-attack-surface.test.ts",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0,
+      "durationMs": 145.26318359375,
+      "assertions": [
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI01. Tool name spoofing: readFile session cannot call writeFile on a different server",
+          "status": "passed",
+          "durationMs": 43.87029100000001
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI02. Description injection in tool params must not influence tier assignment",
+          "status": "passed",
+          "durationMs": 31.472375
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI03. exec/* resource (canonical shell escalation) must be assigned T3_COMMIT",
+          "status": "passed",
+          "durationMs": 4.12337500000001
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI04. Token scoped to filesystem/* must be denied for exec/* resource",
+          "status": "passed",
+          "durationMs": 4.227833000000032
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI05. Rate limit exhaustion: (maxCalls+1)th call must be denied",
+          "status": "passed",
+          "durationMs": 39.17904199999998
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI06. Token delegated beyond max depth (3) must be rejected",
+          "status": "passed",
+          "durationMs": 12.745166999999924
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI07. Expired token must be denied on replay",
+          "status": "passed",
+          "durationMs": 3.8668329999999287
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI08. Revoked token must be denied even if not yet expired",
+          "status": "passed",
+          "durationMs": 2.248790999999983
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI09. Sequential filesystem.write → exec.run combo must trigger forbidden detection",
+          "status": "passed",
+          "durationMs": 0.42124999999998636
+        },
+        {
+          "fullName": "MCP Attack Surface — SINT mitigation coverage ASI10. Mismatched model fingerprint must be denied pre-execution",
+          "status": "passed",
+          "durationMs": 3.2632079999999632
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/mission-authority-conformance.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 4.300537109375,
+      "assertions": [
+        {
+          "fullName": "Mission Authority heterogeneous fleet conformance commits every authority-bearing field to the policy hash",
+          "status": "passed",
+          "durationMs": 3.283917000000031
+        },
+        {
+          "fullName": "Mission Authority heterogeneous fleet conformance requires every delegated manifest to attenuate parent authority",
+          "status": "passed",
+          "durationMs": 0.9648749999999495
+        },
+        {
+          "fullName": "Mission Authority heterogeneous fleet conformance applies the same authority contract to PX4 and ROS 2 platforms",
+          "status": "passed",
+          "durationMs": 0.30045800000004874
+        },
+        {
+          "fullName": "Mission Authority heterogeneous fleet conformance fails closed for compromised autonomy and communications loss",
+          "status": "passed",
+          "durationMs": 0.23266699999999219
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/mission-authority-reference-gateway-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 3.254150390625,
+      "assertions": [
+        {
+          "fullName": "Mission Authority reference gateway readiness declares the public reference path and keeps every referenced file present",
+          "status": "passed",
+          "durationMs": 0.7939169999999933
+        },
+        {
+          "fullName": "Mission Authority reference gateway readiness keeps package scripts aligned with the documented runnable commands",
+          "status": "passed",
+          "durationMs": 0.46675000000001887
+        },
+        {
+          "fullName": "Mission Authority reference gateway readiness requires the full pilot-readiness gate set before the reference path is called ready",
+          "status": "passed",
+          "durationMs": 0.5792499999999734
+        },
+        {
+          "fullName": "Mission Authority reference gateway readiness keeps the guide tied to the same gates, commands, and negative drills",
+          "status": "passed",
+          "durationMs": 0.943458000000021
+        },
+        {
+          "fullName": "Mission Authority reference gateway readiness preserves the public-data boundary and does not present the slice as live hardware",
+          "status": "passed",
+          "durationMs": 0.2541249999999877
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/mission-authority-reference-slice-conformance.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "failed": 0,
+      "durationMs": 83.0244140625,
+      "assertions": [
+        {
+          "fullName": "Mission Authority reference slice conformance runs register, evaluate, claim, dispatch, edge execution, and outcome finalization",
+          "status": "passed",
+          "durationMs": 83.02449999999999
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/mission-authority-release-lane-evidence-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 2.180908203125,
+      "assertions": [
+        {
+          "fullName": "Mission Authority release-lane evidence declares the release lane and exact green commands",
+          "status": "passed",
+          "durationMs": 0.9845840000000123
+        },
+        {
+          "fullName": "Mission Authority release-lane evidence keeps command declarations aligned with package scripts and docs",
+          "status": "passed",
+          "durationMs": 0.74837500000001
+        },
+        {
+          "fullName": "Mission Authority release-lane evidence requires every named artifact to exist in the public repo",
+          "status": "passed",
+          "durationMs": 0.2938749999999857
+        },
+        {
+          "fullName": "Mission Authority release-lane evidence pins the security invariants this lane must preserve",
+          "status": "passed",
+          "durationMs": 0.16912499999997976
+        },
+        {
+          "fullName": "Mission Authority release-lane evidence tracks the expected GitHub checks without requiring local config to be committed",
+          "status": "passed",
+          "durationMs": 0.18079199999999673
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/moveit-manipulation-policy-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 3.107177734375,
+      "assertions": [
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 0.9809999999999945
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 defines receipt fields that bind plan, trajectory, constraints, and decision",
+          "status": "passed",
+          "durationMs": 0.5733749999999986
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 derives expected ROS 2 resources from mapper helpers",
+          "status": "passed",
+          "durationMs": 0.23112499999996317
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 keeps planning below execution consequence",
+          "status": "passed",
+          "durationMs": 0.11516699999998536
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 models human-workspace execution escalation",
+          "status": "passed",
+          "durationMs": 0.1938339999999812
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 rejects execution evidence that lacks a plan receipt",
+          "status": "passed",
+          "durationMs": 0.09741700000000719
+        },
+        {
+          "fullName": "MoveIt manipulation policy receipts fixture v1 keeps all outcomes receipt-backed",
+          "status": "passed",
+          "durationMs": 0.10720899999995481
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/nav2-navigation-policy-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 4.19921875,
+      "assertions": [
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 2.2694999999999936
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 defines receipt fields that bind route, zone access, docking target, and decision",
+          "status": "passed",
+          "durationMs": 0.59862499999997
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 routes navigation goals through the canonical ROS 2 action boundary",
+          "status": "passed",
+          "durationMs": 0.1084589999999821
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 keeps route staging below physical motion",
+          "status": "passed",
+          "durationMs": 0.215041000000042
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 models human-workspace escalation during navigation motion",
+          "status": "passed",
+          "durationMs": 0.1992089999999962
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 rejects docking motion without zone-access evidence",
+          "status": "passed",
+          "durationMs": 0.119624999999985
+        },
+        {
+          "fullName": "Nav2 navigation policy receipts fixture v1 keeps all critical navigation paths receipt-backed",
+          "status": "passed",
+          "durationMs": 0.12312500000001592
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/open-rmf-handoff-policy-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "failed": 0,
+      "durationMs": 3.57958984375,
+      "assertions": [
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 0.9937919999999849
+        },
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 defines the minimal receipt fields needed to audit a cross-fleet handoff",
+          "status": "passed",
+          "durationMs": 0.9476660000000265
+        },
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 maps fixture operations to existing Open-RMF bridge action and tier semantics",
+          "status": "passed",
+          "durationMs": 0.2033749999999941
+        },
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 derives expected Open-RMF resources from canonical mapper helpers",
+          "status": "passed",
+          "durationMs": 0.15670799999998053
+        },
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 captures the collaboration-critical policy outcomes",
+          "status": "passed",
+          "durationMs": 0.5796669999999722
+        },
+        {
+          "fullName": "Open-RMF handoff policy receipts fixture v1 keeps every allow, deny, escalation, and emergency path receipt-backed",
+          "status": "passed",
+          "durationMs": 0.2559590000000185
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/owasp-asi-conformance.test.ts",
+      "status": "passed",
+      "passed": 29,
+      "failed": 0,
+      "durationMs": 163.855712890625,
+      "assertions": [
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI01 — Goal Hijack ASI01-attack: prompt injection 'ignore previous instructions' must be denied with GOAL_HIJACK",
+          "status": "passed",
+          "durationMs": 20.315750000000094
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI01 — Goal Hijack ASI01-attack: role-override injection 'you are now a different agent' must be denied with GOAL_HIJACK",
+          "status": "passed",
+          "durationMs": 4.905666999999994
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI01 — Goal Hijack ASI01-safe: clean read params must not trigger goal hijack detection",
+          "status": "passed",
+          "durationMs": 7.263084000000049
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI02 — Tool Misuse ASI02-attack: filesystem token used for exec resource must be denied (RESOURCE_MISMATCH)",
+          "status": "passed",
+          "durationMs": 5.1835419999999885
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI02 — Tool Misuse ASI02-attack: token authorises 'call' but request uses 'subscribe' must be denied",
+          "status": "passed",
+          "durationMs": 6.7190839999999525
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI02 — Tool Misuse ASI02-safe: matching resource scope and action must be allowed",
+          "status": "passed",
+          "durationMs": 5.557666999999924
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI03 — Identity Abuse ASI03-attack: expired token must be denied",
+          "status": "passed",
+          "durationMs": 4.675499999999943
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI03 — Identity Abuse ASI03-attack: token presented by wrong agent (subject mismatch) must be denied",
+          "status": "passed",
+          "durationMs": 1.0390410000001111
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI03 — Identity Abuse ASI03-safe: valid token from correct agent must proceed normally",
+          "status": "passed",
+          "durationMs": 3.106208000000038
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI04 — Supply Chain ASI04-attack: model fingerprint mismatch must be denied with SUPPLY_CHAIN_VIOLATION",
+          "status": "passed",
+          "durationMs": 3.5819999999999936
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI04 — Supply Chain ASI04-attack: model ID not in allowlist must be denied",
+          "status": "passed",
+          "durationMs": 3.150207999999907
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI04 — Supply Chain ASI04-safe: matching model fingerprint and ID must pass supply chain verification",
+          "status": "passed",
+          "durationMs": 3.2657500000000255
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI05 — Code Execution ASI05-attack: filesystem.write → exec.run sequence must trigger forbidden combo at T3_COMMIT",
+          "status": "passed",
+          "durationMs": 0.20054100000004382
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI05 — Code Execution ASI05-attack: mcp://exec/run must be assigned T3_COMMIT and escalated",
+          "status": "passed",
+          "durationMs": 4.588208000000009
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI05 — Code Execution ASI05-safe: read-only history with no exec action must not trigger forbidden combo",
+          "status": "passed",
+          "durationMs": 0.09562500000004093
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI06 — Memory Poisoning ASI06-attack: recentActions with privilege claim must be denied with MEMORY_POISONING",
+          "status": "passed",
+          "durationMs": 1.8643749999999955
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI06 — Memory Poisoning ASI06-attack: 8 consecutive identical actions in history must be flagged as anomaly",
+          "status": "passed",
+          "durationMs": 1.569250000000011
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI06 — Memory Poisoning ASI06-safe: varied clean history must not trigger memory integrity check",
+          "status": "passed",
+          "durationMs": 0.7500410000000102
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI07 — Inter-Agent Trust ASI07-attack: delegation beyond max depth (3) must fail with DELEGATION_DEPTH error",
+          "status": "passed",
+          "durationMs": 10.865791000000058
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI07 — Inter-Agent Trust ASI07-safe: three-hop delegation chain (depth 0→3) must succeed",
+          "status": "passed",
+          "durationMs": 10.88487500000008
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI08 — Resource Exhaustion ASI08-attack: 6th call when maxCalls=5 must be denied with RATE_LIMIT_EXCEEDED",
+          "status": "passed",
+          "durationMs": 12.87662499999999
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI08 — Resource Exhaustion ASI08-attack: operator trip() must block all subsequent requests with CIRCUIT_OPEN",
+          "status": "passed",
+          "durationMs": 1.8546250000000555
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI08 — Resource Exhaustion ASI08-safe: 5 calls within maxCalls=10 must all be allowed",
+          "status": "passed",
+          "durationMs": 10.448374999999942
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI09 — Human Oversight Bypass ASI09-attack: T3_COMMIT resource (exec/run) must escalate — never silently allow",
+          "status": "passed",
+          "durationMs": 11.540290999999911
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI09 — Human Oversight Bypass ASI09-attack: revoked token must be denied even if not expired (fail-closed)",
+          "status": "passed",
+          "durationMs": 0.849042000000054
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI09 — Human Oversight Bypass ASI09-safe: T1 write (filesystem/writeFile) must be allowed without human approval",
+          "status": "passed",
+          "durationMs": 4.302209000000062
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI10 — Rogue / Autonomous Agent ASI10-attack: 5 denials must auto-open circuit; 6th request denied with CIRCUIT_OPEN",
+          "status": "passed",
+          "durationMs": 1.0806670000000622
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI10 — Rogue / Autonomous Agent ASI10-attack: manual trip() must block all requests and not auto-recover (manualTrip=true)",
+          "status": "passed",
+          "durationMs": 15.839291000000003
+        },
+        {
+          "fullName": "OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json ASI10 — Rogue / Autonomous Agent ASI10-safe: CLOSED circuit allows normal requests through",
+          "status": "passed",
+          "durationMs": 3.855707999999936
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/payment-governance-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 0.782470703125,
+      "assertions": [
+        {
+          "fullName": "Payment Governance Fixture Conformance fixture has required shape",
+          "status": "passed",
+          "durationMs": 0.7823750000000018
+        },
+        {
+          "fullName": "Payment Governance Fixture Conformance enforces payment governance controls deterministically",
+          "status": "passed",
+          "durationMs": 0.5333329999999705
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/phase4-regression.test.ts",
+      "status": "passed",
+      "passed": 18,
+      "failed": 0,
+      "durationMs": 104.260986328125,
+      "assertions": [
+        {
+          "fullName": "Phase 4 Invariant: Rate limiting INVARIANT: calls within limit are always allowed",
+          "status": "passed",
+          "durationMs": 36.315624999999955
+        },
+        {
+          "fullName": "Phase 4 Invariant: Rate limiting INVARIANT: the (maxCalls+1)th call is always denied",
+          "status": "passed",
+          "durationMs": 9.867624999999975
+        },
+        {
+          "fullName": "Phase 4 Invariant: Rate limiting INVARIANT: rate limiting is per-token (different tokens have independent counters)",
+          "status": "passed",
+          "durationMs": 10.035167000000001
+        },
+        {
+          "fullName": "Phase 4 Invariant: Rate limiting INVARIANT: absent rateLimitStore means no rate limiting (fail-open)",
+          "status": "passed",
+          "durationMs": 25.92775000000006
+        },
+        {
+          "fullName": "Phase 4 Invariant: Multi-party quorum approval INVARIANT: 2-of-3 quorum requires exactly 2 approvals",
+          "status": "passed",
+          "durationMs": 0.38324999999997544
+        },
+        {
+          "fullName": "Phase 4 Invariant: Multi-party quorum approval INVARIANT: unauthorized operator cannot vote",
+          "status": "passed",
+          "durationMs": 0.11350000000004457
+        },
+        {
+          "fullName": "Phase 4 Invariant: Multi-party quorum approval INVARIANT: any denial immediately blocks regardless of prior approvals",
+          "status": "passed",
+          "durationMs": 0.08995900000002166
+        },
+        {
+          "fullName": "Phase 4 Invariant: W3C DID identity INVARIANT: every Ed25519 key produces a valid did:key: DID",
+          "status": "passed",
+          "durationMs": 6.560583000000065
+        },
+        {
+          "fullName": "Phase 4 Invariant: W3C DID identity INVARIANT: DID → key → DID round-trip is lossless",
+          "status": "passed",
+          "durationMs": 4.65604200000007
+        },
+        {
+          "fullName": "Phase 4 Invariant: W3C DID identity INVARIANT: two different keys produce different DIDs",
+          "status": "passed",
+          "durationMs": 0.5281250000000455
+        },
+        {
+          "fullName": "Phase 4 Invariant: W3C DID identity INVARIANT: non-Ed25519 DIDs are rejected",
+          "status": "passed",
+          "durationMs": 0.07462499999996908
+        },
+        {
+          "fullName": "Phase 4 Invariant: W3C DID identity INVARIANT: random strings are not valid DIDs",
+          "status": "passed",
+          "durationMs": 0.05437500000005002
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: A2A task without a valid token is always denied",
+          "status": "passed",
+          "durationMs": 1.0539999999999736
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: A2A task with wrong resource is denied",
+          "status": "passed",
+          "durationMs": 2.200666999999953
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: A2A status check (read-only) is auto-approved (T0)",
+          "status": "passed",
+          "durationMs": 2.3215000000000146
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: buildResourceUri produces a2a:// URIs",
+          "status": "passed",
+          "durationMs": 0.10424999999997908
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: AgentCardRegistry provides isolation between registered agents",
+          "status": "passed",
+          "durationMs": 0.09883299999989958
+        },
+        {
+          "fullName": "Phase 4 Invariant: A2A bridge security INVARIANT: physical A2A task (navigate) is escalated (not auto-approved)",
+          "status": "passed",
+          "durationMs": 3.2610839999999826
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/physical-ai-runtime-safety-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "failed": 0,
+      "durationMs": 47.407958984375,
+      "assertions": [
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 declares a stable physical-AI interoperability profile",
+          "status": "passed",
+          "durationMs": 3.1841249999999945
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 enforces SROS2 transport non-bypass: 'sros2_bypass_publish_fails'",
+          "status": "passed",
+          "durationMs": 0.9329999999999927
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 matches gateway decision semantics: 'ros2_cmd_vel_authorized_escalates'",
+          "status": "passed",
+          "durationMs": 19.21312499999999
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 matches gateway decision semantics: 'ros2_cmd_vel_denied_by_scope'",
+          "status": "passed",
+          "durationMs": 4.911749999999984
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 matches gateway decision semantics: 'ros2_cmd_vel_escalates_human_present'",
+          "status": "passed",
+          "durationMs": 4.097082999999998
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 matches gateway decision semantics: 'estop_always_rolls_back'",
+          "status": "passed",
+          "durationMs": 6.193458999999962
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 matches gateway decision semantics: 'receipt_verifies_policy_decision'",
+          "status": "passed",
+          "durationMs": 5.346625000000017
+        },
+        {
+          "fullName": "Physical AI runtime safety fixtures v0.1 requires receipts and evidence pointers for every physical boundary case",
+          "status": "passed",
+          "durationMs": 0.40800000000001546
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/physical-work-market-conformance.test.ts",
+      "status": "passed",
+      "passed": 19,
+      "failed": 0,
+      "durationMs": 18.054443359375,
+      "assertions": [
+        {
+          "fullName": "physical work market conformance declares the physical work market profile vocabulary",
+          "status": "passed",
+          "durationMs": 1.2905000000000086
+        },
+        {
+          "fullName": "physical work market conformance allow low value warehouse task broadcast",
+          "status": "passed",
+          "durationMs": 0.669667000000004
+        },
+        {
+          "fullName": "physical work market conformance escalate high value shipyard task broadcast",
+          "status": "passed",
+          "durationMs": 0.09804199999996399
+        },
+        {
+          "fullName": "physical work market conformance deny unsupported subnet task",
+          "status": "passed",
+          "durationMs": 3.3559589999999844
+        },
+        {
+          "fullName": "physical work market conformance deny bid from unregistered robot",
+          "status": "passed",
+          "durationMs": 4.384999999999991
+        },
+        {
+          "fullName": "physical work market conformance deny bid below subnet stake minimum",
+          "status": "passed",
+          "durationMs": 1.0426249999999868
+        },
+        {
+          "fullName": "physical work market conformance allow collateralized robot bid",
+          "status": "passed",
+          "durationMs": 5.013290999999981
+        },
+        {
+          "fullName": "physical work market conformance deny deployment without simulation proof",
+          "status": "passed",
+          "durationMs": 0.13204200000001265
+        },
+        {
+          "fullName": "physical work market conformance allow deterministic simulation proof",
+          "status": "passed",
+          "durationMs": 0.31279200000000174
+        },
+        {
+          "fullName": "physical work market conformance escalate physical deployment after simulation proof",
+          "status": "passed",
+          "durationMs": 0.12299999999999045
+        },
+        {
+          "fullName": "physical work market conformance deny incomplete PoPW bundle",
+          "status": "passed",
+          "durationMs": 0.21708300000000236
+        },
+        {
+          "fullName": "physical work market conformance allow complete PoPW bundle",
+          "status": "passed",
+          "durationMs": 0.04612499999996089
+        },
+        {
+          "fullName": "physical work market conformance deny expired PoPW submission",
+          "status": "passed",
+          "durationMs": 0.04158300000000281
+        },
+        {
+          "fullName": "physical work market conformance deny validator verdict below safety threshold",
+          "status": "passed",
+          "durationMs": 0.07558299999999463
+        },
+        {
+          "fullName": "physical work market conformance deny validator quorum not met",
+          "status": "passed",
+          "durationMs": 0.0342080000000351
+        },
+        {
+          "fullName": "physical work market conformance allow validator quorum with safe verdicts",
+          "status": "passed",
+          "durationMs": 0.031542000000001735
+        },
+        {
+          "fullName": "physical work market conformance deny settlement before verification",
+          "status": "passed",
+          "durationMs": 0.054417000000000826
+        },
+        {
+          "fullName": "physical work market conformance deny settlement receipt replay",
+          "status": "passed",
+          "durationMs": 0.029875000000004093
+        },
+        {
+          "fullName": "physical work market conformance allow verified settlement release",
+          "status": "passed",
+          "durationMs": 0.03195899999997209
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/post-quantum-crypto-agility-conformance.test.ts",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0,
+      "durationMs": 81.30224609375,
+      "assertions": [
+        {
+          "fullName": "Post-quantum crypto agility fixture v1 declares the migration contract",
+          "status": "passed",
+          "durationMs": 1.0526660000000447
+        },
+        {
+          "fullName": "Post-quantum crypto agility fixture v1 keeps classic Ed25519 tokens valid",
+          "status": "passed",
+          "durationMs": 45.079542000000004
+        },
+        {
+          "fullName": "Post-quantum crypto agility fixture v1 fails closed for mandatory hybrid/PQ profiles until verifier support is wired",
+          "status": "passed",
+          "durationMs": 3.4271249999999895
+        },
+        {
+          "fullName": "Post-quantum crypto agility fixture v1 allows explicit verifier providers to handle reserved profiles",
+          "status": "passed",
+          "durationMs": 28.192917000000023
+        },
+        {
+          "fullName": "Post-quantum crypto agility fixture v1 binds crypto profile fields into the signing payload",
+          "status": "passed",
+          "durationMs": 3.3022920000000227
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/px4-offboard-policy-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "failed": 0,
+      "durationMs": 3.27490234375,
+      "assertions": [
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 1.3122920000000136
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 defines receipt fields that bind vehicle, mission corridor, mode, and decision",
+          "status": "passed",
+          "durationMs": 1.256749999999954
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 routes MAVLink intercepts through the canonical bridge mapper",
+          "status": "passed",
+          "durationMs": 0.5137080000000083
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 keeps arming and OFFBOARD transitions at the commit boundary",
+          "status": "passed",
+          "durationMs": 0.13512500000001637
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 keeps continuous setpoints below commit unless the takeoff zone is human occupied",
+          "status": "passed",
+          "durationMs": 0.27487500000000864
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 rejects fence disable evidence when corridor authorization is missing",
+          "status": "passed",
+          "durationMs": 0.11787499999996953
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 rejects OFFBOARD transitions when encrypted-log correlation evidence is missing",
+          "status": "passed",
+          "durationMs": 0.08679200000000264
+        },
+        {
+          "fullName": "PX4 offboard policy receipts fixture v1 keeps all outcomes receipt-backed",
+          "status": "passed",
+          "durationMs": 0.157291999999984
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/px4-ulog-correlation-artifact-conformance.test.ts",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0,
+      "durationMs": 3.149658203125,
+      "assertions": [
+        {
+          "fullName": "PX4 ULog correlation artifact fixture v1 declares canonical artifact metadata",
+          "status": "passed",
+          "durationMs": 1.757082999999966
+        },
+        {
+          "fullName": "PX4 ULog correlation artifact fixture v1 contains all required top-level fields",
+          "status": "passed",
+          "durationMs": 0.4334580000000301
+        },
+        {
+          "fullName": "PX4 ULog correlation artifact fixture v1 binds policy decision and telemetry evidence with verifiable digests",
+          "status": "passed",
+          "durationMs": 0.35300000000000864
+        },
+        {
+          "fullName": "PX4 ULog correlation artifact fixture v1 declares a bounded correlation window and timing threshold",
+          "status": "passed",
+          "durationMs": 0.14974999999998317
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/regulated-agent-runtime-conformance.test.ts",
+      "status": "passed",
+      "passed": 9,
+      "failed": 0,
+      "durationMs": 5.34130859375,
+      "assertions": [
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 declares conservative runtime-control boundaries",
+          "status": "passed",
+          "durationMs": 0.9772500000000264
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 covers the governed runtime surfaces expected in an agent control plane",
+          "status": "passed",
+          "durationMs": 1.2867499999999836
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 minimizes sensitive evidence for regulated data classes",
+          "status": "passed",
+          "durationMs": 1.0545000000000186
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 evaluates allow, deny, transform, and escalate decisions from the fixture",
+          "status": "passed",
+          "durationMs": 0.8258749999999964
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 requires receipts for processor, residency, minimization, and fallback decisions",
+          "status": "passed",
+          "durationMs": 0.5128750000000082
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 keeps delegated context attenuation-only",
+          "status": "passed",
+          "durationMs": 0.12966699999998355
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 binds regulated data authority to signed token policy",
+          "status": "passed",
+          "durationMs": 0.10258300000003828
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 requires regulated data delegation to attenuate token-bound authority",
+          "status": "passed",
+          "durationMs": 0.1877499999999941
+        },
+        {
+          "fullName": "Regulated agent runtime profile fixture v1 denies or reroutes unsafe processor, region, and model paths",
+          "status": "passed",
+          "durationMs": 0.3412500000000023
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/regulated-consent-extensions-conformance.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "failed": 0,
+      "durationMs": 7.588134765625,
+      "assertions": [
+        {
+          "fullName": "Regulated consent extensions fixture v1 declares experimental regulated-domain boundaries",
+          "status": "passed",
+          "durationMs": 2.4187080000000094
+        },
+        {
+          "fullName": "Regulated consent extensions fixture v1 defines a multimodal consent event schema with minimized evidence",
+          "status": "passed",
+          "durationMs": 2.899124999999998
+        },
+        {
+          "fullName": "Regulated consent extensions fixture v1 keeps consent scopes token-bound, time-bounded, and revocable",
+          "status": "passed",
+          "durationMs": 0.6360419999999749
+        },
+        {
+          "fullName": "Regulated consent extensions fixture v1 denies actions after consent revocation",
+          "status": "passed",
+          "durationMs": 0.16483300000001577
+        },
+        {
+          "fullName": "Regulated consent extensions fixture v1 forbids raw camera, microphone, and biometric evidence in audit rows",
+          "status": "passed",
+          "durationMs": 0.5881669999999986
+        },
+        {
+          "fullName": "Regulated consent extensions fixture v1 marks home and medical incident export prototypes as experimental",
+          "status": "passed",
+          "durationMs": 0.28641600000000267
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/ros2-agent-scenarios.test.ts",
+      "status": "passed",
+      "passed": 8,
+      "failed": 0,
+      "durationMs": 67.434326171875,
+      "assertions": [
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S1. Two agents on /cmd_vel within constraints both get escalated (T2_ACT requires review)",
+          "status": "passed",
+          "durationMs": 25.64712499999996
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S2. Agent exceeding velocity limit is denied; compliant agent escalates normally",
+          "status": "passed",
+          "durationMs": 10.559334000000035
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S3. Sequential stop then move command is processed correctly (T2 escalation)",
+          "status": "passed",
+          "durationMs": 7.152791999999977
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S4. Emergency stop publish reaches gateway and is not silently dropped",
+          "status": "passed",
+          "durationMs": 3.3359159999999974
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S5. Agent commanding motion outside geofence polygon is denied or escalated",
+          "status": "passed",
+          "durationMs": 3.2668750000000273
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S6. Multiple T0 sensor reads from different agents all return forward",
+          "status": "passed",
+          "durationMs": 6.137292000000002
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S7. Gripper service call escalates to T2_ACT and ledger records event with intact chain",
+          "status": "passed",
+          "durationMs": 2.9856250000000273
+        },
+        {
+          "fullName": "ROS2 + Agent Multi-Agent Scenarios S8. Fleet manager delegates to robot; robot is denied if exceeding delegated velocity constraint",
+          "status": "passed",
+          "durationMs": 8.43420900000001
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/ros2-control-loop-latency.test.ts",
+      "status": "passed",
+      "passed": 1,
+      "failed": 0,
+      "durationMs": 1838.759033203125,
+      "assertions": [
+        {
+          "fullName": "ROS2 control-loop latency cmd_vel gateway path stays below 10ms p99",
+          "status": "passed",
+          "durationMs": 1838.7591249999998
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/security-iot-fixtures-conformance.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "failed": 0,
+      "durationMs": 78.899169921875,
+      "assertions": [
+        {
+          "fullName": "Security and IoT Fixture Conformance supply-chain fixture enforces deny-on-high and warn-on-medium semantics",
+          "status": "passed",
+          "durationMs": 31.393875000000094
+        },
+        {
+          "fullName": "Security and IoT Fixture Conformance mqtt session fixture enforces tiered gateway action and fail-closed forwarding",
+          "status": "passed",
+          "durationMs": 33.89408299999991
+        },
+        {
+          "fullName": "Security and IoT Fixture Conformance verifiable compute fixture enforces proof metadata on critical actions",
+          "status": "passed",
+          "durationMs": 13.899083000000019
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/security-regression.test.ts",
+      "status": "passed",
+      "passed": 9,
+      "failed": 0,
+      "durationMs": 113.72705078125,
+      "assertions": [
+        {
+          "fullName": "SINT Security Regression Tests 4. Prompt injection must NOT change approval tier",
+          "status": "passed",
+          "durationMs": 50.739082999999994
+        },
+        {
+          "fullName": "SINT Security Regression Tests 5. Capability laundering sequence must require T3 approval",
+          "status": "passed",
+          "durationMs": 0.28529200000002675
+        },
+        {
+          "fullName": "SINT Security Regression Tests 6. Delegation depth exceeding max (4+ hops) must be rejected",
+          "status": "passed",
+          "durationMs": 33.36237500000004
+        },
+        {
+          "fullName": "SINT Security Regression Tests 7. Expired token must be rejected with no grace period",
+          "status": "passed",
+          "durationMs": 2.48279100000002
+        },
+        {
+          "fullName": "SINT Security Regression Tests 8. Revoked token must fail validation",
+          "status": "passed",
+          "durationMs": 0.7629590000000235
+        },
+        {
+          "fullName": "SINT Security Regression Tests 9. Action commanding > token maxForceNewtons must be blocked",
+          "status": "passed",
+          "durationMs": 4.066250000000082
+        },
+        {
+          "fullName": "SINT Security Regression Tests 10. Action outside token geofence polygon must be blocked",
+          "status": "passed",
+          "durationMs": 10.695917000000009
+        },
+        {
+          "fullName": "SINT Security Regression Tests Evidence Ledger hash chain must be tamper-evident",
+          "status": "passed",
+          "durationMs": 8.281624999999963
+        },
+        {
+          "fullName": "SINT Security Regression Tests Token with tampered fields must fail signature validation",
+          "status": "passed",
+          "durationMs": 2.727166000000011
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/signed-effect-pack-conformance.test.ts",
+      "status": "passed",
+      "passed": 3,
+      "failed": 0,
+      "durationMs": 81.88525390625,
+      "assertions": [
+        {
+          "fullName": "Signed Effect Pack Conformance I-E1: changed pack bytes must block execution",
+          "status": "passed",
+          "durationMs": 36.719416999999964
+        },
+        {
+          "fullName": "Signed Effect Pack Conformance I-E2: a dispatch is single-use and runner-bound",
+          "status": "passed",
+          "durationMs": 31.523707999999942
+        },
+        {
+          "fullName": "Signed Effect Pack Conformance I-E3: token physical limits are rechecked immediately before execution",
+          "status": "passed",
+          "durationMs": 13.88516699999991
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/sint-industrial-pack-conformance.test.ts",
+      "status": "passed",
+      "passed": 6,
+      "failed": 0,
+      "durationMs": 6.837158203125,
+      "assertions": [
+        {
+          "fullName": "SINT Industrial Pack manifest v1 packages Sprint 3 under a real sint-industrial root",
+          "status": "passed",
+          "durationMs": 2.787916999999993
+        },
+        {
+          "fullName": "SINT Industrial Pack manifest v1 points schemas and policies at files that exist",
+          "status": "passed",
+          "durationMs": 0.47366599999998016
+        },
+        {
+          "fullName": "SINT Industrial Pack manifest v1 defines settlement as receipt-backed attribution, not execution authority",
+          "status": "passed",
+          "durationMs": 0.8459169999999858
+        },
+        {
+          "fullName": "SINT Industrial Pack manifest v1 expresses at least three shared industrial execution paths",
+          "status": "passed",
+          "durationMs": 1.6885410000000434
+        },
+        {
+          "fullName": "SINT Industrial Pack manifest v1 keeps planned vendor paths scoped as non-live adapter contracts",
+          "status": "passed",
+          "durationMs": 0.20849999999995816
+        },
+        {
+          "fullName": "SINT Industrial Pack manifest v1 keeps simulator and example profiles receipt-backed",
+          "status": "passed",
+          "durationMs": 0.8372079999999755
+        }
+      ]
+    },
+    {
+      "file": "packages/conformance-tests/src/solar-field-operations-policy-receipts-conformance.test.ts",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0,
+      "durationMs": 3.203369140625,
+      "assertions": [
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 declares a project-neutral collaboration scope",
+          "status": "passed",
+          "durationMs": 1.5546659999999974
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 defines receipt fields that bind site, row, mission, and permit evidence",
+          "status": "passed",
+          "durationMs": 0.6413750000000391
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 derives expected resources from engine and ROS 2 boundaries",
+          "status": "passed",
+          "durationMs": 0.24341599999996788
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 keeps inspection and planning below physical actuation",
+          "status": "passed",
+          "durationMs": 0.19291600000002518
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 models human-presence escalation in the service aisle",
+          "status": "passed",
+          "durationMs": 0.2033749999999941
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 requires weather and lockout evidence for high-consequence field actions",
+          "status": "passed",
+          "durationMs": 0.16466700000000856
+        },
+        {
+          "fullName": "Solar field operations policy receipts fixture v1 keeps all outcomes receipt-backed",
+          "status": "passed",
+          "durationMs": 0.16616700000002993
+        }
+      ]
+    }
+  ],
+  "signature": {
+    "algorithm": "ed25519",
+    "payloadHash": "44f73b1ab74364788f51101b62f3b59f64d918e63f4c0d16d6a515e4308bccf9",
+    "signature": "TCM/KxnkysrxCZNvn6x5l6hXdblFXuEe9uk85I8tRPaPadoT5or1yRq9qfFWi5m/o7e3RvpK1MgVsY16hxX4AA==",
+    "verificationKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAYnhpNpsKpGruR9JiewsN2T2R4sTkpaEr8Hq62kOqPT8=\n-----END PUBLIC KEY-----\n",
+    "verificationKeyFingerprintSha256": "0b3d26acea3ba1ea15756f8ede7e174f17f1fe390af7899f6280a7ec61be3d4b",
+    "keyScope": "report-local-ephemeral",
+    "verificationNote": "The artifact payload is signed with an ephemeral report key to prove immutability of this published report body."
+  }
+}

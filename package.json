@@ -28,6 +28,7 @@
     "benchmark:report": "node ./scripts/generate-industrial-benchmark-report.mjs",
     "security:dependency-review": "node ./scripts/generate-dependency-review-report.mjs",
     "security:production-slice-artifact": "node ./scripts/generate-production-slice-validation-artifact.mjs",
+    "conformance:report": "node ./scripts/generate-conformance-validation-artifact.mjs",
     "security:sbom": "node ./scripts/generate-spdx-sbom.mjs",
     "verify:autonomy-supervisor": "pnpm --filter @pshkv/autonomy-supervisor verify",
     "community:starter-board": "node ./scripts/generate-community-starter-board.mjs",
