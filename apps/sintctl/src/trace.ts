@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import {
+  partTraceBundleSchema,
   traceBundleBaseSchema,
   type TraceBundleBase,
 } from "@pshkv/core";
@@ -32,11 +33,32 @@ async function loadTraceBundle(inputPath: string): Promise<unknown> {
   return JSON.parse(raw) as unknown;
 }
 
+function parseTraceBundle(bundleJson: unknown):
+  | { readonly success: true; readonly data: TraceBundleBase }
+  | { readonly success: false; readonly errors: readonly string[] } {
+  const baseParsed = traceBundleBaseSchema.safeParse(bundleJson);
+  if (baseParsed.success) {
+    return { success: true, data: baseParsed.data as TraceBundleBase };
+  }
+
+  const partParsed = partTraceBundleSchema.safeParse(bundleJson);
+  if (partParsed.success) {
+    return { success: true, data: partParsed.data as TraceBundleBase };
+  }
+
+  return {
+    success: false,
+    errors: [...baseParsed.error.issues, ...partParsed.error.issues].map(
+      (issue) => `${issue.path.join(".") || "<root>"}: ${issue.message}`,
+    ),
+  };
+}
+
 export async function runTraceVerify(
   options: TraceVerifyOptions,
 ): Promise<TraceVerifySummary> {
   const bundleJson = await loadTraceBundle(options.inputPath);
-  const parsed = traceBundleBaseSchema.safeParse(bundleJson);
+  const parsed = parseTraceBundle(bundleJson);
   if (!parsed.success) {
     return {
       mode: "trace-verify",
@@ -44,9 +66,7 @@ export async function runTraceVerify(
       schemaValid: false,
       signatureValid: false,
       valid: false,
-      errors: parsed.error.issues.map((issue) =>
-        `${issue.path.join(".") || "<root>"}: ${issue.message}`,
-      ),
+      errors: parsed.errors,
     };
   }
 
@@ -69,4 +89,3 @@ export async function runTraceVerify(
     redactionMode: bundle.redactionProfile?.mode,
   };
 }
-

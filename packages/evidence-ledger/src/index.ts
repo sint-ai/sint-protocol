@@ -31,6 +31,12 @@ export {
 } from "./trace-bundle.js";
 export type { TraceBundleInput } from "./trace-bundle.js";
 export {
+  buildPartTraceBundle,
+  redactPartTraceBundle,
+  verifyPartTraceBundle,
+} from "./factory-trace-bundle.js";
+export type { PartTraceBundleInput } from "./factory-trace-bundle.js";
+export {
   buildPopwEvidenceBundle,
   computePopwBundleHash,
   validatePopwBundleCompleteness,

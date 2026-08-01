@@ -963,6 +963,75 @@ const TRACE_BUNDLE_BASE_SCHEMA: JsonSchemaDoc = {
   additionalProperties: false,
 };
 
+const PART_TRACE_BUNDLE_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/factory-part-trace-bundle.schema.json",
+  title: "SINT PartTraceBundle",
+  type: "object",
+  required: [
+    "bundleId",
+    "traceKind",
+    "generatedAt",
+    "evidenceArtifacts",
+    "bundleHash",
+    "signerPublicKey",
+    "signature",
+    "partNumber",
+    "routeSteps",
+    "authorityTokenRefs",
+    "inspectionReceiptRefs",
+    "approvalRefs",
+    "nonconformanceRefs",
+    "reworkRefs",
+    "shipmentDisposition",
+  ],
+  properties: {
+    bundleId: { type: "string" },
+    traceKind: { const: "factory-part" },
+    generatedAt: { type: "string", format: "date-time" },
+    evidenceArtifacts: { type: "array", items: { type: "object" } },
+    redactionProfile: { type: "object" },
+    correctionEvents: { type: "array", items: { type: "object" } },
+    previousBundleHash: { type: "string" },
+    bundleHash: { type: "string" },
+    signerPublicKey: { type: "string" },
+    signature: { type: "string" },
+    partNumber: { type: "string" },
+    revision: { type: "string" },
+    materialLotId: { type: "string" },
+    routeId: { type: "string" },
+    routeSteps: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          stepId: { type: "string" },
+          operation: { type: "string" },
+          machineId: { type: "string" },
+          cellId: { type: "string" },
+          programDigest: { type: "string" },
+          simulationReceiptRef: { type: "string" },
+          inspectionReceiptRef: { type: "string" },
+          approvalRef: { type: "string" },
+          completedAt: { type: "string", format: "date-time" },
+        },
+        additionalProperties: false,
+      },
+    },
+    authorityTokenRefs: { type: "array", items: { type: "string" } },
+    inspectionReceiptRefs: { type: "array", items: { type: "string" } },
+    approvalRefs: { type: "array", items: { type: "string" } },
+    nonconformanceRefs: { type: "array", items: { type: "string" } },
+    reworkRefs: { type: "array", items: { type: "string" } },
+    shipmentDisposition: {
+      type: "string",
+      enum: ["release", "hold", "quarantine", "ship"],
+    },
+    customerSafe: { type: "boolean" },
+  },
+  additionalProperties: false,
+};
+
 /**
  * Registry of public JSON Schema documents for every SINT wire type.
  *
@@ -998,6 +1067,7 @@ export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "authority-decision": AUTHORITY_DECISION_SCHEMA,
   "mission-evidence-bundle": MISSION_EVIDENCE_BUNDLE_SCHEMA,
   "trace-bundle": TRACE_BUNDLE_BASE_SCHEMA,
+  "factory-part-trace-bundle": PART_TRACE_BUNDLE_SCHEMA,
   "manufacturing-execution-envelope": MANUFACTURING_EXECUTION_SCHEMA,
   "inspection-receipt": INSPECTION_RECEIPT_SCHEMA,
   "human-authority-proof": HUMAN_AUTHORITY_PROOF_SCHEMA,

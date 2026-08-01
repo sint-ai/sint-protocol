@@ -42,6 +42,10 @@ describe("schema catalog request contract", () => {
     expect(SINT_SCHEMA_CATALOG["trace-bundle"]).toBeDefined();
   });
 
+  it("publishes the factory part trace bundle schema", () => {
+    expect(SINT_SCHEMA_CATALOG["factory-part-trace-bundle"]).toBeDefined();
+  });
+
   it("publishes the manufacturing execution envelope schema", () => {
     expect(SINT_SCHEMA_CATALOG["manufacturing-execution-envelope"]).toBeDefined();
   });

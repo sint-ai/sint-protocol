@@ -1,0 +1,55 @@
+{
+  "signerPublicKey": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "bundle": {
+    "bundleId": "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6c1",
+    "traceKind": "factory-part",
+    "generatedAt": "2026-08-01T10:30:00.000000Z",
+    "evidenceArtifacts": [
+      {
+        "evidenceType": "inspection",
+        "evidenceRef": "inspection://part-42",
+        "proofHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ],
+    "partNumber": "PN-42",
+    "revision": "B",
+    "materialLotId": "lot-9",
+    "routeId": "route-1",
+    "routeSteps": [
+      {
+        "stepId": "route-1-step-1",
+        "operation": "mill",
+        "machineId": "cnc-7",
+        "cellId": "cell-a",
+        "programDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "simulationReceiptRef": "simulation://part-42",
+        "inspectionReceiptRef": "inspection://part-42",
+        "approvalRef": "approval://part-42/quality",
+        "completedAt": "2026-08-01T10:00:00.000000Z"
+      },
+      {
+        "stepId": "route-1-step-2",
+        "operation": "inspect",
+        "machineId": "cmm-2",
+        "cellId": "cell-a",
+        "inspectionReceiptRef": "inspection://part-42",
+        "approvalRef": "approval://part-42/inspection",
+        "completedAt": "2026-08-01T10:15:00.000000Z"
+      }
+    ],
+    "authorityTokenRefs": [
+      "token://factory/authority/001"
+    ],
+    "inspectionReceiptRefs": [
+      "inspection://part-42"
+    ],
+    "approvalRefs": [
+      "approval://part-42/quality",
+      "approval://part-42/inspection"
+    ],
+    "nonconformanceRefs": [],
+    "reworkRefs": [],
+    "shipmentDisposition": "release",
+    "customerSafe": false
+  }
+}

@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { buildQuery, requestJson, type CliConfig } from "./client.js";
 import { runStandaloneCertification } from "./certification.js";
+import { runFactoryTraceExport } from "./factory.js";
 import { runTraceVerify } from "./trace.js";
 import {
   runShipyardEvidenceExport,
@@ -95,6 +96,7 @@ Commands:
   keypair create            Generate keypair via gateway utility endpoint
   certify run               Run standalone conformance certification suite
   trace verify              Verify a trace bundle signature and hash
+  factory trace export      Export a signed per-part factory trace bundle
   registry publish          Publish a capability token to the public registry
   registry list             List published tokens (--issuer, --resource filters)
   shipyard evidence export  Export shipyard humanoid safety evidence JSONL
@@ -107,6 +109,7 @@ Examples:
   sintctl intercept run --agent-id <pub> --token-id <id> --resource ros2:///cmd_vel --action publish --params-json '{"twist":{"linear":0.2}}'
   sintctl certify run --output docs/reports/standalone-conformance-certification.json
   sintctl trace verify --input ./bundle.json
+  sintctl factory trace export --private-key <priv> --input ./factory-trace.json
   sintctl registry publish --token ./token.json --note "prod filesystem token"
   sintctl registry list --issuer <pub>
   sintctl registry list --resource mcp://filesystem
@@ -244,6 +247,26 @@ async function run(): Promise<void> {
   if (group === "trace" && command === "verify") {
     const inputPath = getStringFlag(flags, "input", true)!;
     printJson(await runTraceVerify({ inputPath }));
+    return;
+  }
+
+  if (group === "factory" && command === "trace" && subcommand === "export") {
+    const privateKey = getStringFlag(flags, "private-key", true)!;
+    const inputPath = getStringFlag(flags, "input");
+    const outputPath = getStringFlag(flags, "output");
+    const redactionMode = (getStringFlag(flags, "redaction-mode") ?? "unredacted") as
+      | "unredacted"
+      | "partial"
+      | "redacted";
+    printJson(
+      await runFactoryTraceExport({
+        rootDir: process.cwd(),
+        privateKey,
+        inputPath,
+        outputPath,
+        redactionMode,
+      }),
+    );
     return;
   }
 
