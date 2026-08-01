@@ -118,7 +118,7 @@ resubmission.
 
 Evidence required:
 
-- OpenSSF Best Practices badge started and gaps tracked
+- OpenSSF Best Practices profile page published and gaps tracked
 - security policy and vulnerability reporting path verified
 - release checklist used on at least one tagged release candidate
 - docs build, full test suite, and conformance suite pass for that release
