@@ -37,6 +37,8 @@ import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
 import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
+import type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
+import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -323,6 +325,11 @@ export interface PolicyGatewayConfig {
    */
   readonly humanAuthorityPolicy?: HumanAuthorityPolicyPlugin;
   /**
+   * Optional shared deployment-envelope policy hook.
+   * When omitted, the gateway uses the built-in default policy evaluator.
+   */
+  readonly deploymentEnvelopePolicy?: DeploymentEnvelopePolicyPlugin;
+  /**
    * Optional deployment-profile spatial integrity policy.
    * Enforces fresh localization evidence for GPS-denied, underground, or other
    * degraded physical deployments before normal tier assignment.
@@ -571,6 +578,36 @@ export class PolicyGateway {
         timestamp,
         "HUMAN_AUTHORITY_POLICY_ERROR",
         "Human authority policy failed closed before permission evaluation",
+      );
+    }
+
+    // 4a-deploy. Shared deployment envelope checks.
+    // This layer enforces freshness and context-binding for deployment packs
+    // before vertical-specific policies run.
+    const deploymentEnvelopePolicy =
+      this.config.deploymentEnvelopePolicy ?? new DefaultDeploymentEnvelopePolicy();
+    try {
+      const deploymentDecision = await deploymentEnvelopePolicy.evaluate(
+        request,
+        token,
+        { requestId, timestamp },
+      );
+      if (deploymentDecision) {
+        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          decision: deploymentDecision.action,
+          tier: deploymentDecision.assignedTier,
+          risk: deploymentDecision.assignedRisk,
+          source: "deployment_envelope_policy",
+          policyViolated: deploymentDecision.denial?.policyViolated,
+        });
+        return deploymentDecision;
+      }
+    } catch {
+      return this.deny(
+        requestId,
+        timestamp,
+        "DEPLOYMENT_ENVELOPE_POLICY_ERROR",
+        "Deployment envelope policy failed closed before permission evaluation",
       );
     }
 

@@ -60,6 +60,8 @@ export type {
 } from "./regulated-data-policy.js";
 export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
+export type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
 export {
   DefaultCodeAsPolicyGuard,
   decisionForCodeAsPolicyViolation,

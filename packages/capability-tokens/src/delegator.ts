@@ -258,6 +258,7 @@ export function delegateCapabilityToken(
       behavioralConstraints: parentToken.behavioralConstraints,
       autonomyPolicy: parentToken.autonomyPolicy,
       humanAuthorityRequirements: parentToken.humanAuthorityRequirements,
+      deploymentEnvelope: parentToken.deploymentEnvelope,
       delegationChain: {
         parentTokenId: parentToken.tokenId,
         depth: newDepth,

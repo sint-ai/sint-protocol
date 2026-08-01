@@ -10,9 +10,8 @@ import {
   iso8601Schema,
   uuidV7Schema,
 } from "./capability-token.schema.js";
-import {
-  humanAuthorityProofSchema,
-} from "./authority.schema.js";
+import { humanAuthorityProofSchema } from "./authority.schema.js";
+import { deploymentEvidenceRefSchema } from "./deployment-envelope.schema.js";
 
 export const physicalContextSchema = z.object({
   humanDetected: z.boolean().optional(),
@@ -111,6 +110,7 @@ export const executionContextSchema = z.object({
   preapprovedCorridor: preapprovedCorridorSchema.optional(),
   factoryReceiptChain: z.array(factoryReceiptChainEntrySchema).max(32).optional(),
   humanAuthority: humanAuthorityProofSchema.optional(),
+  deploymentEvidence: z.array(deploymentEvidenceRefSchema).max(32).optional(),
 }).strict();
 
 export const sintRequestSchema = z.object({

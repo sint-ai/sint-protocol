@@ -35,6 +35,10 @@ export const SINT_EVENTS = {
   HARDWARE_INTERLOCK_OPEN: "safety.hardware.interlock.open",
   HARDWARE_STATE_STALE: "safety.hardware.state.stale",
   VERIFIABLE_COMPUTE_VERIFIED: "verifiable.compute.verified",
+  DEPLOYMENT_PROOF_VERIFIED: "deployment.proof.verified",
+  DEPLOYMENT_PROOF_MISSING: "deployment.proof.missing",
+  DEPLOYMENT_CONTEXT_MISMATCH: "deployment.context.mismatch",
+  DEPLOYMENT_ENVELOPE_VIOLATION: "deployment.envelope.violation",
 
   // Engine — System 1
   SYSTEM1_INFERENCE: "engine.system1.inference",

@@ -37,4 +37,8 @@ describe("schema catalog request contract", () => {
     expect(SINT_SCHEMA_CATALOG["authority-decision"]).toBeDefined();
     expect(SINT_SCHEMA_CATALOG["mission-evidence-bundle"]).toBeDefined();
   });
+
+  it("publishes the shared trace bundle base schema", () => {
+    expect(SINT_SCHEMA_CATALOG["trace-bundle"]).toBeDefined();
+  });
 });

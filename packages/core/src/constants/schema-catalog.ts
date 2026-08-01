@@ -45,6 +45,7 @@ const CAPABILITY_TOKEN_SCHEMA: JsonSchemaDoc = {
     verifiableComputeRequirements: { type: "object" },
     executionEnvelope: { type: "object" },
     humanAuthorityRequirements: { type: "object" },
+    deploymentEnvelope: { type: "object" },
     delegationChain: { type: "object" },
     issuedAt: { type: "string", format: "date-time" },
     expiresAt: { type: "string", format: "date-time" },
@@ -188,9 +189,75 @@ const REQUEST_SCHEMA: JsonSchemaDoc = {
           },
           additionalProperties: false,
         },
+        deploymentEvidence: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              evidenceType: { type: "string" },
+              evidenceRef: { type: "string" },
+              proofHash: { type: "string" },
+              verifierRef: { type: "string" },
+              observedAt: { type: "string", format: "date-time" },
+              maxAgeMs: { type: "integer", minimum: 1 },
+            },
+            additionalProperties: false,
+          },
+        },
       },
       additionalProperties: false,
     },
+  },
+  additionalProperties: false,
+};
+
+const DEPLOYMENT_ENVELOPE_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/deployment-envelope.schema.json",
+  title: "SINT DeploymentEnvelopeBase",
+  type: "object",
+  properties: {
+    envelopeId: { type: "string" },
+    contextualBinding: {
+      type: "object",
+      properties: {
+        deploymentProfile: { type: "string" },
+        siteId: { type: "string" },
+        bridgeId: { type: "string" },
+        bridgeProtocol: { type: "string" },
+        robotId: { type: "string" },
+        fleetId: { type: "string" },
+        controllerId: { type: "string" },
+        zoneId: { type: "string" },
+        resource: { type: "string" },
+        action: { type: "string" },
+      },
+      additionalProperties: false,
+    },
+    proofFreshness: {
+      type: "object",
+      properties: {
+        maxProofAgeMs: { type: "integer", minimum: 1 },
+        requireObservedAt: { type: "boolean" },
+      },
+      additionalProperties: false,
+    },
+    requiredEvidenceRefs: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          evidenceType: { type: "string" },
+          evidenceRef: { type: "string" },
+          proofHash: { type: "string" },
+          verifierRef: { type: "string" },
+          observedAt: { type: "string", format: "date-time" },
+          maxAgeMs: { type: "integer", minimum: 1 },
+        },
+        additionalProperties: false,
+      },
+    },
+    allowedVerifiers: { type: "array", items: { type: "string" } },
   },
   additionalProperties: false,
 };
@@ -717,6 +784,35 @@ const MISSION_EVIDENCE_BUNDLE_SCHEMA: JsonSchemaDoc = {
   additionalProperties: false,
 };
 
+const TRACE_BUNDLE_BASE_SCHEMA: JsonSchemaDoc = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://schemas.sint.ai/trace-bundle.schema.json",
+  title: "SINT TraceBundleBase",
+  type: "object",
+  required: [
+    "bundleId",
+    "traceKind",
+    "generatedAt",
+    "evidenceArtifacts",
+    "bundleHash",
+    "signerPublicKey",
+    "signature",
+  ],
+  properties: {
+    bundleId: { type: "string" },
+    traceKind: { type: "string" },
+    generatedAt: { type: "string", format: "date-time" },
+    evidenceArtifacts: { type: "array", items: { type: "object" } },
+    redactionProfile: { type: "object" },
+    correctionEvents: { type: "array", items: { type: "object" } },
+    previousBundleHash: { type: "string" },
+    bundleHash: { type: "string" },
+    signerPublicKey: { type: "string" },
+    signature: { type: "string" },
+  },
+  additionalProperties: false,
+};
+
 /**
  * Registry of public JSON Schema documents for every SINT wire type.
  *
@@ -751,6 +847,8 @@ export const SINT_SCHEMA_CATALOG: Readonly<Record<string, JsonSchemaDoc>> = {
   "mission-manifest": MISSION_MANIFEST_SCHEMA,
   "authority-decision": AUTHORITY_DECISION_SCHEMA,
   "mission-evidence-bundle": MISSION_EVIDENCE_BUNDLE_SCHEMA,
+  "trace-bundle": TRACE_BUNDLE_BASE_SCHEMA,
   "human-authority-proof": HUMAN_AUTHORITY_PROOF_SCHEMA,
   "human-authority-requirements": HUMAN_AUTHORITY_REQUIREMENTS_SCHEMA,
+  "deployment-envelope": DEPLOYMENT_ENVELOPE_SCHEMA,
 } as const;
