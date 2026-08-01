@@ -41,9 +41,8 @@ if (!content.includes(marker)) {
 }
 
 const newRow = `| ${weekEnding} | TBD | TBD | 0 | 0 | 0 | 0 | 0 | 0 |  |`;
-const updated = content.replace(marker, `${newRow}\n${marker}`);
+const updated = content.replace(marker, `${marker}\n${newRow}`);
 writeFileSync(scorecardPath, updated, "utf8");
 
 console.log(`[scorecard] added week row for ${weekEnding}`);
 console.log(`[scorecard] updated ${path.relative(repoRoot, scorecardPath)}`);
-
