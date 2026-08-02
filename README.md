@@ -80,8 +80,14 @@ systems:
   for managed autonomy: `stable -> metacognitive_recovery ->
   assisted_recovery -> regulated_control`.
 - **External evidence packets:** OWASP Agentic AI landscape, MITRE ATLAS
-  candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review, and
-  production-slice validation artifacts are published under `docs/`.
+  candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review,
+  OpenSSF profile, release-gate report, and production-slice validation
+  artifacts are published under `docs/`.
+
+- **OpenSSF readiness page:** the published
+  [`docs/community/openssf-best-practices-profile.md`](docs/community/openssf-best-practices-profile.md)
+  collects the current security, release, conformance, and gap-tracking
+  evidence in one place.
 
 Academic and compliance grounding: SINT is designed with reference to IEC 62443
 FR1-FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework
