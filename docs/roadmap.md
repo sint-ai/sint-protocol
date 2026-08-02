@@ -13,7 +13,8 @@ The current repo already includes:
 - production hardening guides and release gates
 - approval streaming and durable deployment paths
 - AAIF evidence and maintainer workflows
-- OpenSSF gap tracking and dependency review artifacts
+- OpenSSF gap tracking, dependency review artifacts, and the published
+  project profile
 - collaborator-facing physical AI fixtures for Open-RMF, MoveIt, Nav2, PX4,
   LeRobot, and solar field operations
 - public onboarding and contribution docs for external collaborators

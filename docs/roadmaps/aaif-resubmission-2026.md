@@ -201,8 +201,8 @@ Do not resubmit until all required items are true:
       activity
 - [ ] reference gateway is built, released, and running from public docs
 - [x] conformance tooling is packaged and externally runnable
-- [ ] OpenSSF Best Practices badge is started and major gaps are tracked or
-      resolved
+- [ ] OpenSSF Best Practices profile page is published and major gaps are
+      tracked or resolved
 - [ ] release candidate has passed build, test, docs, and conformance gates
 - [ ] proposal distinguishes co-design, interop, pilot, and production evidence
 - [ ] proposal asks for the correct AAIF stage based on the evidence available
