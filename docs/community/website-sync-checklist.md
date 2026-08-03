@@ -40,6 +40,8 @@ For protocol and roadmap updates, use:
 - `docs/protocol.md`
 - `docs/roadmap.md`
 - `docs/roadmaps/end-of-year-2026-execution-plan.md`
+- `docs/community/openssf-best-practices-profile.md`
+- `docs/reports/aaif-release-gate-2026-08-01.md`
 - `docs/community/lovable-sint-gg-refresh-prompt.md`
 
 ## Recommended Update Flow
@@ -61,6 +63,8 @@ For protocol and roadmap updates, use:
   `docs/roadmap.md`
 - end-of-year execution plan:
   `docs/roadmaps/end-of-year-2026-execution-plan.md`
+- OpenSSF profile:
+  `docs/community/openssf-best-practices-profile.md`
 
 ## Don’t Do This
 
