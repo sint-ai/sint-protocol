@@ -134,6 +134,35 @@ describe("Gateway Server API", () => {
 
   // ── Intercept ──
 
+  it("POST /v1/simulation/preflight returns a non-authorizing exact effect plan", async () => {
+    const token = await issueAndStoreToken({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+    const request = {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      params: { linear: { x: 0.2 } },
+    };
+
+    const res = await app.request("/v1/simulation/preflight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.authorizesExecution).toBe(false);
+    expect(body.assignedTier).toBe("T2_act");
+    expect(body.effectPlan.resource).toBe(request.resource);
+    expect(body.effectPlan.params).toEqual(request.params);
+  });
+
   it("POST /v1/intercept with valid request", async () => {
     const token = await issueAndStoreToken();
 

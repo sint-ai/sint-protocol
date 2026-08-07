@@ -10,13 +10,17 @@
  */
 
 import {
-  type ApprovalTier,
+  ApprovalTier,
   type PolicyDecision,
   type RateLimitStore,
+  type Result,
+  type SimulationPreflight,
   type SintCapabilityToken,
   type SintRequest,
   sintRequestSchema,
   DEFAULT_APPROVAL_TIMEOUT_MS,
+  err,
+  ok,
 } from "@pshkv/core";
 import {
   validateCapabilityToken,
@@ -41,6 +45,8 @@ import type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-polic
 import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
 import type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
 import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
+import type { SimulationEvidencePolicyPlugin } from "./simulation-evidence-policy.js";
+import { createSimulationPreflight } from "./simulation-evidence-policy.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -337,6 +343,11 @@ export interface PolicyGatewayConfig {
    */
   readonly manufacturingExecutionPolicy?: ManufacturingExecutionPolicyPlugin;
   /**
+   * Optional signed predictive-simulation evidence gate.
+   * When configured, it runs after token/deployment checks and fails closed.
+   */
+  readonly simulationEvidencePolicy?: SimulationEvidencePolicyPlugin;
+  /**
    * Optional deployment-profile spatial integrity policy.
    * Enforces fresh localization evidence for GPS-denied, underground, or other
    * degraded physical deployments before normal tier assignment.
@@ -350,6 +361,17 @@ export interface PolicyGatewayConfig {
    * write robot control programs. Fail-closed on plugin errors.
    */
   readonly codeAsPolicyGuard?: CodeAsPolicyGuardPlugin;
+}
+
+export interface SimulationPreflightError {
+  readonly code:
+    | "MALFORMED_REQUEST"
+    | "TOKEN_NOT_FOUND"
+    | "TOKEN_SUBJECT_MISMATCH"
+    | "TOKEN_REVOKED"
+    | "TOKEN_INVALID"
+    | "SIMULATION_PREFLIGHT_POLICY_ERROR";
+  readonly reason: string;
 }
 
 /**
@@ -380,6 +402,83 @@ export class PolicyGateway {
 
   constructor(config: PolicyGatewayConfig) {
     this.config = config;
+  }
+
+  /**
+   * Describe the exact effect plan and tier-selected simulation requirement.
+   *
+   * This method is advisory and can never authorize execution. Clients submit
+   * the returned effect plan to an EffectSimulator, attach the signed receipt,
+   * and call intercept() for the actual policy decision.
+   */
+  async preflightSimulation(
+    request: SintRequest,
+  ): Promise<Result<SimulationPreflight, SimulationPreflightError>> {
+    const parsed = sintRequestSchema.safeParse(request);
+    if (!parsed.success) {
+      return err({ code: "MALFORMED_REQUEST", reason: "Request failed schema validation" });
+    }
+
+    const token = await this.config.resolveToken(request.tokenId);
+    if (!token) {
+      return err({ code: "TOKEN_NOT_FOUND", reason: "Capability token not found" });
+    }
+    if (token.subject !== request.agentId) {
+      return err({
+        code: "TOKEN_SUBJECT_MISMATCH",
+        reason: "Capability token subject does not match requesting agent identity",
+      });
+    }
+    if (this.config.revocationStore && !this.config.revocationStore.checkRevocation(token.tokenId).ok) {
+      return err({ code: "TOKEN_REVOKED", reason: "Capability token has been revoked" });
+    }
+
+    const tokenValidation = this.validateTokenForRequest(token, request);
+    if (!tokenValidation.ok) {
+      return err({
+        code: "TOKEN_INVALID",
+        reason: `Token validation failed: ${tokenValidation.error}`,
+      });
+    }
+
+    const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
+    let tierAssignment = assignTier(request, { agentTrustLevel });
+    if (this.config.csmlEscalation) {
+      try {
+        const csmlDecision = await this.config.csmlEscalation.evaluateAgent(
+          request.agentId,
+          tierAssignment.approvalTier,
+        );
+        if (csmlDecision.escalated) {
+          tierAssignment = {
+            ...tierAssignment,
+            approvalTier: csmlDecision.resultTier,
+            escalationReasons: [...tierAssignment.escalationReasons, csmlDecision.reason],
+          };
+        }
+      } catch {
+        // Match intercept(): CSML is an additive, fail-open escalation signal.
+      }
+    }
+
+    try {
+      const requirement = this.config.simulationEvidencePolicy?.getRequirement?.(
+        request,
+        token,
+        tierAssignment.approvalTier,
+      );
+      return ok(createSimulationPreflight(
+        request,
+        token,
+        tierAssignment.approvalTier,
+        requirement,
+      ));
+    } catch {
+      return err({
+        code: "SIMULATION_PREFLIGHT_POLICY_ERROR",
+        reason: "Simulation requirement policy failed during advisory preflight",
+      });
+    }
   }
 
   /**
@@ -513,36 +612,7 @@ export class PolicyGateway {
     }
 
     // 4. Validate the capability token (signature, expiry, permissions, constraints)
-    const tokenValidation = validateCapabilityToken(token, {
-      resource: request.resource,
-      action: request.action,
-      modelContext: {
-        modelId: request.executionContext?.model?.modelId,
-        modelVersion: request.executionContext?.model?.modelVersion,
-        modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
-        attestationGrade: request.executionContext?.attestation?.grade,
-        teeBackend: request.executionContext?.attestation?.teeBackend,
-        verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
-        verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
-        verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,
-        verifiableComputePublicInputsHash: request.executionContext?.verifiableCompute?.publicInputsHash,
-        verifiableComputeGeneratedAt: request.executionContext?.verifiableCompute?.generatedAt,
-        verifiableComputeVerifierRef: request.executionContext?.verifiableCompute?.verifierRef,
-      },
-      physicalContext: request.physicalContext
-        ? {
-            commandedForceNewtons: request.physicalContext.currentForceNewtons,
-            commandedVelocityMps: request.physicalContext.currentVelocityMps,
-            humanPresenceDetected: request.physicalContext.humanDetected,
-            position: request.physicalContext.currentPosition
-              ? {
-                  x: request.physicalContext.currentPosition.x,
-                  y: request.physicalContext.currentPosition.y,
-                }
-              : undefined,
-          }
-        : undefined,
-    });
+    const tokenValidation = this.validateTokenForRequest(token, request);
     if (!tokenValidation.ok) {
       const decision = this.deny(
         requestId,
@@ -936,6 +1006,81 @@ export class PolicyGateway {
       }
     }
 
+    // 5c-sim. Tier-aware signed predictive-simulation evidence gate.
+    // This runs after base assignment and CSML escalation so evidence depth is
+    // selected from the final consequence tier. A valid receipt is evidence
+    // only; normal gateway authorization and approval still continue.
+    if (this.config.simulationEvidencePolicy) {
+      let simulationEnforcementMode: "enforce" | "shadow" = "enforce";
+      try {
+        const requestedSimulationEnforcementMode = this.config.simulationEvidencePolicy.getEnforcementMode?.(
+          request,
+          token,
+          tierAssignment.approvalTier,
+        ) ?? "enforce";
+        // Shadow is a calibration state for T1 only. The gateway clamps this
+        // invariant even when a custom policy plugin is misconfigured.
+        simulationEnforcementMode = requestedSimulationEnforcementMode === "shadow"
+          && tierAssignment.approvalTier === ApprovalTier.T1_PREPARE
+          ? "shadow"
+          : "enforce";
+        const simulationDecision = await this.config.simulationEvidencePolicy.evaluate(
+          request,
+          token,
+          tierAssignment.approvalTier,
+          { requestId, timestamp },
+        );
+        if (simulationDecision) {
+          this.emitEvent("simulation.receipt.rejected", request.agentId, request.tokenId, {
+            receiptId: request.executionContext?.simulationEvidence?.receiptId,
+            evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
+            assignedTier: tierAssignment.approvalTier,
+            policyViolated: simulationDecision.denial?.policyViolated,
+            enforcementMode: simulationEnforcementMode,
+          });
+          if (simulationEnforcementMode === "enforce") {
+            this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+              decision: simulationDecision.action,
+              tier: simulationDecision.assignedTier,
+              risk: simulationDecision.assignedRisk,
+              source: "simulation_evidence_policy",
+              assignedTier: tierAssignment.approvalTier,
+              policyViolated: simulationDecision.denial?.policyViolated,
+            });
+            return simulationDecision;
+          }
+        }
+        if (!simulationDecision && request.executionContext?.simulationEvidence) {
+          this.emitEvent("simulation.receipt.verified", request.agentId, request.tokenId, {
+            receiptId: request.executionContext.simulationEvidence.receiptId,
+            evidenceGrade: request.executionContext.simulationEvidence.evidenceGrade,
+            requestDigest: request.executionContext.simulationEvidence.requestDigest,
+            effectPlanDigest: request.executionContext.simulationEvidence.effectPlanDigest,
+            artifactDigest: request.executionContext.simulationEvidence.artifactDigest,
+            assignedTier: tierAssignment.approvalTier,
+            enforcementMode: simulationEnforcementMode,
+          });
+        }
+      } catch {
+        if (simulationEnforcementMode === "shadow") {
+          this.emitEvent("simulation.receipt.rejected", request.agentId, request.tokenId, {
+            receiptId: request.executionContext?.simulationEvidence?.receiptId,
+            evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
+            assignedTier: tierAssignment.approvalTier,
+            policyViolated: "SIMULATION_EVIDENCE_POLICY_ERROR",
+            enforcementMode: simulationEnforcementMode,
+          });
+        } else {
+          return this.deny(
+            requestId,
+            timestamp,
+            "SIMULATION_EVIDENCE_POLICY_ERROR",
+            "Simulation evidence policy failed closed after tier assignment",
+          );
+        }
+      }
+    }
+
     // 5f-pre. SafetyPermitPlugin — resolve external hardware safety state before built-in check
     let currentRequest = request; // mutable local for SafetyPermitPlugin merge
     if (this.config.safetyPermit) {
@@ -1255,6 +1400,43 @@ export class PolicyGateway {
    */
   async evaluatePolicy(request: SintRequest): Promise<PolicyDecision> {
     return this.intercept(request);
+  }
+
+  /** Shared capability validation used by advisory preflight and interception. */
+  private validateTokenForRequest(
+    token: SintCapabilityToken,
+    request: SintRequest,
+  ): ReturnType<typeof validateCapabilityToken> {
+    return validateCapabilityToken(token, {
+      resource: request.resource,
+      action: request.action,
+      modelContext: {
+        modelId: request.executionContext?.model?.modelId,
+        modelVersion: request.executionContext?.model?.modelVersion,
+        modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
+        attestationGrade: request.executionContext?.attestation?.grade,
+        teeBackend: request.executionContext?.attestation?.teeBackend,
+        verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
+        verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
+        verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,
+        verifiableComputePublicInputsHash: request.executionContext?.verifiableCompute?.publicInputsHash,
+        verifiableComputeGeneratedAt: request.executionContext?.verifiableCompute?.generatedAt,
+        verifiableComputeVerifierRef: request.executionContext?.verifiableCompute?.verifierRef,
+      },
+      physicalContext: request.physicalContext
+        ? {
+            commandedForceNewtons: request.physicalContext.currentForceNewtons,
+            commandedVelocityMps: request.physicalContext.currentVelocityMps,
+            humanPresenceDetected: request.physicalContext.humanDetected,
+            position: request.physicalContext.currentPosition
+              ? {
+                  x: request.physicalContext.currentPosition.x,
+                  y: request.physicalContext.currentPosition.y,
+                }
+              : undefined,
+          }
+        : undefined,
+    });
   }
 
   /**

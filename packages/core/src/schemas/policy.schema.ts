@@ -13,6 +13,7 @@ import {
 import { humanAuthorityProofSchema } from "./authority.schema.js";
 import { deploymentEvidenceRefSchema } from "./deployment-envelope.schema.js";
 import { manufacturingExecutionContextSchema } from "./manufacturing-execution.schema.js";
+import { simulationEvidenceReceiptSchema } from "./simulation-evidence.schema.js";
 
 export const physicalContextSchema = z.object({
   humanDetected: z.boolean().optional(),
@@ -113,6 +114,7 @@ export const executionContextSchema = z.object({
   humanAuthority: humanAuthorityProofSchema.optional(),
   deploymentEvidence: z.array(deploymentEvidenceRefSchema).max(32).optional(),
   manufacturingExecution: manufacturingExecutionContextSchema.optional(),
+  simulationEvidence: simulationEvidenceReceiptSchema.optional(),
 }).strict();
 
 export const sintRequestSchema = z.object({

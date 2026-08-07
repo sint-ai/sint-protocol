@@ -88,6 +88,13 @@ describe("Deployment envelope base conformance", () => {
       resolveToken: () => tokenResult.value,
     });
 
+    const positiveExecutionContext = {
+      ...fixture.positiveRequest.executionContext,
+      deploymentEvidence: (
+        fixture.positiveRequest.executionContext.deploymentEvidence as readonly Record<string, unknown>[]
+      ).map((entry) => ({ ...entry, observedAt: nowISO8601() })),
+    };
+
     const allowDecision = await gateway.intercept({
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e70001" as any,
       timestamp: nowISO8601(),
@@ -96,7 +103,7 @@ describe("Deployment envelope base conformance", () => {
       resource: fixture.positiveRequest.resource,
       action: fixture.positiveRequest.action,
       params: {},
-      executionContext: fixture.positiveRequest.executionContext,
+      executionContext: positiveExecutionContext,
     });
 
     expect(allowDecision.action).toBe("allow");

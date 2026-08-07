@@ -9,3 +9,4 @@ export * from "./factory-trace-bundle.schema.js";
 export * from "./trace-bundle.schema.js";
 export * from "./inspection.schema.js";
 export * from "./manufacturing-execution.schema.js";
+export * from "./simulation-evidence.schema.js";

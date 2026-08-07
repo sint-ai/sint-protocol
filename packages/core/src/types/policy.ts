@@ -15,6 +15,7 @@ import type {
 import type { HumanAuthorityProof } from "./authority.js";
 import type { DeploymentEvidenceRef } from "./deployment-envelope.js";
 import type { ManufacturingExecutionContext } from "./manufacturing-execution.js";
+import type { SimulationEvidenceReceipt } from "./simulation-evidence.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -193,6 +194,8 @@ export interface SintExecutionContext {
   readonly deploymentEvidence?: readonly DeploymentEvidenceRef[];
   /** Manufacturing execution context attached to the request. */
   readonly manufacturingExecution?: ManufacturingExecutionContext;
+  /** Signed predictive-simulation evidence bound to this exact request and token. */
+  readonly simulationEvidence?: SimulationEvidenceReceipt;
 }
 
 /**

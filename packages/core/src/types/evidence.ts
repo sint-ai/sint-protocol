@@ -48,6 +48,14 @@ export type SintEventType =
   | "safety.hardware.state.stale"
   // Verifiable compute / provable execution
   | "verifiable.compute.verified"
+  // Proof-carrying effects / predictive safety
+  | "simulation.preflight.created"
+  | "simulation.preflight.rejected"
+  | "simulation.receipt.issued"
+  | "simulation.receipt.verified"
+  | "simulation.receipt.rejected"
+  | "simulation.receipt.consumed"
+  | "simulation.execution.drift_detected"
   // Token management
   | "token.issued"
   | "token.revoked"

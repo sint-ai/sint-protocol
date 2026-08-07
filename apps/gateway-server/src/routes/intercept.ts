@@ -18,6 +18,48 @@ const STREAMABLE_TIERS: ReadonlySet<string> = new Set([
 export function interceptRoutes(ctx: ServerContext): Hono {
   const app = new Hono();
 
+  // Non-authorizing simulation/effect preflight.
+  app.post("/v1/simulation/preflight", async (c) => {
+    const body = await c.req.json();
+    const parsed = sintRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json({ error: "Invalid request", details: parsed.error.issues }, 400);
+    }
+
+    const result = await ctx.gateway.preflightSimulation(parsed.data as SintRequest);
+    if (!result.ok) {
+      ctx.ledger.append({
+        eventType: "simulation.preflight.rejected",
+        agentId: parsed.data.agentId,
+        tokenId: parsed.data.tokenId,
+        payload: { code: result.error.code, reason: result.error.reason },
+      });
+      const status = result.error.code === "TOKEN_NOT_FOUND"
+        ? 404
+        : result.error.code === "TOKEN_SUBJECT_MISMATCH"
+          ? 401
+          : result.error.code === "TOKEN_REVOKED"
+            ? 409
+            : result.error.code === "SIMULATION_PREFLIGHT_POLICY_ERROR"
+              ? 500
+              : 422;
+      return c.json({ error: result.error.code, reason: result.error.reason }, status);
+    }
+
+    ctx.ledger.append({
+      eventType: "simulation.preflight.created",
+      agentId: parsed.data.agentId,
+      tokenId: parsed.data.tokenId,
+      payload: {
+        assignedTier: result.value.assignedTier,
+        effectPlanDigest: result.value.effectPlan.effectPlanDigest,
+        requirement: result.value.requirement,
+        authorizesExecution: false,
+      },
+    });
+    return c.json(result.value);
+  });
+
   // Single request interception
   app.post("/v1/intercept", async (c) => {
     const body = await c.req.json();

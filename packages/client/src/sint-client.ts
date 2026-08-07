@@ -12,6 +12,7 @@ import type {
   MissionActionOutcomeReport,
   MissionManifest,
   MissionManifestRevocation,
+  SimulationPreflight,
   SintCapabilityTokenRequest,
 } from "@pshkv/core";
 
@@ -131,6 +132,20 @@ export class SintClient {
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       throw new Error(`Intercept failed (${res.status}): ${JSON.stringify(body)}`);
+    }
+    return res.json() as any;
+  }
+
+  /** Describe the exact effect plan and required evidence without authorizing it. */
+  async preflightSimulation(request: InterceptRequest): Promise<SimulationPreflight> {
+    const res = await this._fetch(`${this.baseUrl}/v1/simulation/preflight`, {
+      method: "POST",
+      headers: this.headers(),
+      body: JSON.stringify(request),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`Simulation preflight failed (${res.status}): ${JSON.stringify(body)}`);
     }
     return res.json() as any;
   }

@@ -1,4 +1,5 @@
 export { LedgerWriter } from "./writer.js";
+export { EvidenceLedgerSimulationReceiptRecorder } from "./simulation-receipt-recorder.js";
 export { queryLedger, replayEvents } from "./reader.js";
 export {
   computeReceiptLinkageHash,
