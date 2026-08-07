@@ -61,7 +61,8 @@ The repository already ships a production-minded protocol surface:
   - solar field operations
 
 This is not just a spec repo. The current work is focused on making the
-reference implementation legible, reviewable, and deployable.
+reference implementation legible, reviewable, and deployable, with public
+evidence pages for release gates and OpenSSF readiness.
 
 ## Production Direction
 
@@ -124,6 +125,8 @@ The first shipped factory-control pack now includes:
 - [Simulation Receipt Schema](./specs/simulation-receipt.schema.json)
 - [Industrial Policy Pack](./specs/industrial-policy.yaml)
 - [Factory Action Pack Demo](./guides/factory-action-pack-demo.md)
+- [OpenSSF Best Practices Project Profile](./community/openssf-best-practices-profile.md)
+- [AAIF Release Gate Report 2026-08-01](./reports/aaif-release-gate-2026-08-01.md)
 
 The active roadmap for that lane lives here:
 

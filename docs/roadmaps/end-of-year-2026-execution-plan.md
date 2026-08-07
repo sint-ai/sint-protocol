@@ -31,8 +31,8 @@ For the next 30 days, prioritize:
 
 In practice, that means:
 
-- close OpenSSF evidence work that still points to missing proof rather than
-  missing words
+- close the remaining OpenSSF evidence work now that the project profile is
+  published
 - convert the bug bounty planning contribution into a repeatable security lane
 - move from the factory-control standard pack into the simulation-first demo
   lane and adapter stubs

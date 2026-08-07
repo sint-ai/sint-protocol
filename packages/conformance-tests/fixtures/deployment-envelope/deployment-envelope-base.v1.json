@@ -1,0 +1,74 @@
+{
+  "fixtureId": "deployment-envelope-base-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Canonical shared deployment-envelope fixture for warehouse planning actions.",
+  "token": {
+    "resource": "ros2:///plan",
+    "actions": ["publish"],
+    "deploymentEnvelope": {
+      "contextualBinding": {
+        "deploymentProfile": "warehouse-amr",
+        "siteId": "site-9",
+        "bridgeId": "bridge-1",
+        "bridgeProtocol": "ros2",
+        "resource": "ros2:///plan",
+        "action": "publish",
+        "robotId": "robot-7",
+        "zoneId": "corridor-3"
+      },
+      "proofFreshness": {
+        "maxProofAgeMs": 5000,
+        "requireObservedAt": true
+      },
+      "requiredEvidenceRefs": [
+        {
+          "evidenceType": "site-permit",
+          "evidenceRef": "permit://site-9/robot-7",
+          "maxAgeMs": 5000
+        }
+      ],
+      "allowedVerifiers": ["verifier://deployment-attestor"]
+    }
+  },
+  "positiveRequest": {
+    "resource": "ros2:///plan",
+    "action": "publish",
+    "executionContext": {
+      "deploymentProfile": "warehouse-amr",
+      "siteId": "site-9",
+      "bridgeId": "bridge-1",
+      "bridgeProtocol": "ros2",
+      "executor": {
+        "nodeId": "robot-7",
+        "runtimeId": "fleet-alpha"
+      },
+      "preapprovedCorridor": {
+        "corridorId": "corridor-3",
+        "expiresAt": "2026-08-01T13:00:00.000000Z"
+      },
+      "hardwareSafety": {
+        "permitState": "granted",
+        "interlockState": "closed",
+        "estopState": "clear",
+        "observedAt": "2026-08-01T12:00:00.000000Z",
+        "controllerId": "plc-1"
+      },
+      "deploymentEvidence": [
+        {
+          "evidenceType": "site-permit",
+          "evidenceRef": "permit://site-9/robot-7",
+          "proofHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "verifierRef": "verifier://deployment-attestor",
+          "observedAt": "2026-08-01T12:00:00.000000Z",
+          "maxAgeMs": 5000
+        }
+      ]
+    }
+  },
+  "negativeCases": [
+    "missing_deployment_evidence",
+    "stale_deployment_evidence",
+    "wrong_deployment_context"
+  ],
+  "conformanceCommand": "pnpm --filter @pshkv/conformance-tests exec vitest run src/deployment-envelope-base-conformance.test.ts"
+}

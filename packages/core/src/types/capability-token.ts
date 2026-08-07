@@ -22,6 +22,8 @@ import type {
   UUIDv7,
 } from "./primitives.js";
 import type { HumanAuthorityEnvelope } from "./authority.js";
+import type { DeploymentEnvelopeBase } from "./deployment-envelope.js";
+import type { ManufacturingExecutionEnvelope } from "./manufacturing-execution.js";
 import type { ApprovalTier } from "./policy.js";
 
 /**
@@ -384,6 +386,10 @@ export interface SintCapabilityToken {
   readonly autonomyPolicy?: SintAutonomyPolicy;
   /** Optional human authority requirements. */
   readonly humanAuthorityRequirements?: HumanAuthorityEnvelope;
+  /** Optional shared deployment envelope requirements. */
+  readonly deploymentEnvelope?: DeploymentEnvelopeBase;
+  /** Optional manufacturing execution envelope requirements. */
+  readonly manufacturingEnvelope?: ManufacturingExecutionEnvelope;
 
   // --- Cross-protocol identity (Agent Passport System interop) ---
   /**
@@ -463,6 +469,10 @@ export interface SintCapabilityTokenRequest {
   readonly autonomyPolicy?: SintAutonomyPolicy;
   /** Optional human authority requirements. */
   readonly humanAuthorityRequirements?: HumanAuthorityEnvelope;
+  /** Optional shared deployment envelope requirements. */
+  readonly deploymentEnvelope?: DeploymentEnvelopeBase;
+  /** Optional manufacturing execution envelope requirements. */
+  readonly manufacturingEnvelope?: ManufacturingExecutionEnvelope;
   /** APS passport identifier for cross-protocol identity linkage. */
   readonly passportId?: string;
   /** Delegation depth in the APS chain (0 = root). */

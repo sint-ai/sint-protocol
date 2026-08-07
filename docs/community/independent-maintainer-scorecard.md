@@ -33,6 +33,7 @@ organization with sustained merge and review activity over 90 days.
 | 2026-07-12 | TBD | TBD | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | 2026-07-19 | TBD | TBD | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | 2026-07-26 | TBD | TBD | 0 | 0 | 0 | 0 | 0 | 0 | 90-day checkpoint |
+| 2026-08-09 | TBD | TBD | 0 | 0 | 0 | 0 | 0 | 0 |  |
 
 ## Acceptance Thresholds
 

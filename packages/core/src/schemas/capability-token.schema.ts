@@ -12,6 +12,8 @@ import {
   humanAuthorityRequirementsSchema,
   humanAuthorityProofSchema,
 } from "./authority.schema.js";
+import { deploymentEnvelopeSchema } from "./deployment-envelope.schema.js";
+import { manufacturingExecutionEnvelopeSchema } from "./manufacturing-execution.schema.js";
 
 const ISO8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/;
 const HEX_REGEX = /^[a-f0-9]+$/i;
@@ -189,6 +191,10 @@ export const capabilityTokenSchema = z.object({
   autonomyPolicy: autonomyPolicySchema.optional(),
   /** Optional human authority requirements. */
   humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
+  /** Optional shared deployment envelope requirements. */
+  deploymentEnvelope: deploymentEnvelopeSchema.optional(),
+  /** Optional manufacturing execution envelope requirements. */
+  manufacturingEnvelope: manufacturingExecutionEnvelopeSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */
@@ -221,6 +227,10 @@ export const capabilityTokenRequestSchema = z.object({
   autonomyPolicy: autonomyPolicySchema.optional(),
   /** Optional human authority requirements. */
   humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
+  /** Optional shared deployment envelope requirements. */
+  deploymentEnvelope: deploymentEnvelopeSchema.optional(),
+  /** Optional manufacturing execution envelope requirements. */
+  manufacturingEnvelope: manufacturingExecutionEnvelopeSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */

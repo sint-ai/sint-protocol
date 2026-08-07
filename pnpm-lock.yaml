@@ -260,6 +260,16 @@ importers:
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
   apps/sintctl:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../../packages/capability-tokens
+      '@pshkv/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../../packages/evidence-ledger
     devDependencies:
       esbuild:
         specifier: ^0.25.0

@@ -1,0 +1,115 @@
+{
+  "artifactVersion": "v1",
+  "artifactType": "aaif-release-gate",
+  "generatedAt": "2026-08-01T05:16:20.277Z",
+  "gitSha": "2769d013ca3c9e5e4451d761b008b25ca86125c1",
+  "releaseCandidate": "unspecified",
+  "command": "pnpm run aaif:release-gate",
+  "gateSteps": [
+    {
+      "label": "build",
+      "command": "pnpm run build",
+      "status": "passed",
+      "durationMs": 689,
+      "stdoutTail": [
+        "@pshkv/openclaw-adapter:build: ",
+        "@pshkv/openclaw-adapter:build: > @pshkv/openclaw-adapter@0.1.0 build /Users/pshkv/sint-protocol/packages/openclaw-adapter",
+        "@pshkv/openclaw-adapter:build: > tsc",
+        "@pshkv/openclaw-adapter:build: ",
+        "@pshkv/os-core:build: cache hit, replaying logs 210d31e1c2fcf3a5",
+        "@pshkv/os-core:build: ",
+        "@pshkv/os-core:build: > @pshkv/os-core@0.1.0 build /Users/pshkv/sint-protocol/packages/os-core",
+        "@pshkv/os-core:build: > tsc",
+        "@pshkv/os-core:build: ",
+        " Tasks:    49 successful, 49 total",
+        "Cached:    49 cached, 49 total",
+        "  Time:    87ms >>> FULL TURBO"
+      ],
+      "stderrTail": [
+        "• turbo 2.8.17"
+      ]
+    },
+    {
+      "label": "test",
+      "command": "pnpm run test",
+      "status": "passed",
+      "durationMs": 33518,
+      "stdoutTail": [
+        "@pshkv/conformance-tests:test:  ✓ src/humanoid-multivendor-fleet-conformance.test.ts (6 tests) 4ms",
+        "@pshkv/conformance-tests:test:  ✓ src/payment-governance-fixtures-conformance.test.ts (2 tests) 2ms",
+        "@pshkv/conformance-tests:test:  ✓ src/moveit-manipulation-policy-receipts-conformance.test.ts (7 tests) 3ms",
+        "@pshkv/conformance-tests:test: ",
+        "@pshkv/conformance-tests:test:  Test Files  55 passed (55)",
+        "@pshkv/conformance-tests:test:       Tests  382 passed (382)",
+        "@pshkv/conformance-tests:test:    Start at  22:15:51",
+        "@pshkv/conformance-tests:test:    Duration  6.44s (transform 2.39s, setup 0ms, collect 20.76s, tests 5.87s, environment 40ms, prepare 6.73s)",
+        "@pshkv/conformance-tests:test: ",
+        " Tasks:    96 successful, 96 total",
+        "Cached:    49 cached, 96 total",
+        "  Time:    33.042s"
+      ],
+      "stderrTail": [
+        "• turbo 2.8.17"
+      ]
+    },
+    {
+      "label": "docs:build",
+      "command": "pnpm run docs:build",
+      "status": "passed",
+      "durationMs": 17865,
+      "stdoutTail": [
+        "> sint-protocol@0.1.0 docs:build /Users/pshkv/sint-protocol",
+        "> vitepress build docs",
+        "  vitepress v1.6.4",
+        "build complete in 16.95s."
+      ],
+      "stderrTail": [
+        "- building client + server bundles...",
+        "(!) Some chunks are larger than 500 kB after minification. Consider:",
+        "- Using dynamic import() to code-split the application",
+        "- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks",
+        "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
+        "\u001b[32m✓\u001b[0m building client + server bundles...",
+        "- rendering pages...",
+        "\u001b[32m✓\u001b[0m rendering pages...",
+        "- generating sitemap...",
+        "\u001b[32m✓\u001b[0m generating sitemap..."
+      ]
+    },
+    {
+      "label": "conformance:report",
+      "command": "pnpm run conformance:report",
+      "status": "passed",
+      "durationMs": 4776,
+      "stdoutTail": [
+        "> sint-protocol@0.1.0 conformance:report /Users/pshkv/sint-protocol",
+        "> node ./scripts/generate-conformance-validation-artifact.mjs",
+        "[conformance] running conformance validation...",
+        "JSON report written to /Users/pshkv/sint-protocol/docs/reports/conformance-validation-vitest.json",
+        "[conformance] wrote docs/reports/conformance-validation-artifact.json",
+        "[conformance] wrote docs/reports/conformance-validation-artifact.md"
+      ],
+      "stderrTail": []
+    }
+  ],
+  "summary": {
+    "success": true,
+    "stepCount": 4,
+    "passedStepCount": 4,
+    "failedStepCount": 0
+  },
+  "evidenceLinks": {
+    "conformanceReportJson": "docs/reports/conformance-validation-artifact.json",
+    "conformanceReportMd": "docs/reports/conformance-validation-artifact.md",
+    "productionSliceReportJson": "docs/reports/production-slice-validation-artifact.json",
+    "productionSliceReportMd": "docs/reports/production-slice-validation-artifact.md"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "payloadHash": "a1288d91d0fb6c32d6443ee818fdd1e09685598cb782815e90dd115fff4ddcc4",
+    "signature": "1GGLkzE/yC10s0zn3NN3je4aKslLAlfo7U6UF5qXJY6CTJ3mm1Bk84Py057CW1lWy1U8mhihV4mKZ9DX4TJuDA==",
+    "verificationKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4kdHQ8Hqe6vszT5XBFYld0ieFeCkMlmVTK1I8JjRwk4=\n-----END PUBLIC KEY-----\n",
+    "verificationKeyFingerprintSha256": "6a527b83bb938687245699ed6c514bdbf8559b879d4f728d10329d275a4149c1",
+    "keyScope": "report-local-ephemeral"
+  }
+}

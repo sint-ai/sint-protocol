@@ -118,7 +118,7 @@ resubmission.
 
 Evidence required:
 
-- OpenSSF Best Practices badge started and gaps tracked
+- OpenSSF Best Practices profile page published and gaps tracked
 - security policy and vulnerability reporting path verified
 - release checklist used on at least one tagged release candidate
 - docs build, full test suite, and conformance suite pass for that release
@@ -200,9 +200,9 @@ Do not resubmit until all required items are true:
 - [ ] at least one independent maintainer has 90+ days of sustained merge
       activity
 - [ ] reference gateway is built, released, and running from public docs
-- [ ] conformance tooling is packaged and externally runnable
-- [ ] OpenSSF Best Practices badge is started and major gaps are tracked or
-      resolved
+- [x] conformance tooling is packaged and externally runnable
+- [ ] OpenSSF Best Practices profile page is published and major gaps are
+      tracked or resolved
 - [ ] release candidate has passed build, test, docs, and conformance gates
 - [ ] proposal distinguishes co-design, interop, pilot, and production evidence
 - [ ] proposal asks for the correct AAIF stage based on the evidence available
