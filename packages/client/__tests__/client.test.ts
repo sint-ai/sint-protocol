@@ -92,6 +92,26 @@ describe("SintClient", () => {
     expect(result.action).toBe("allow");
   });
 
+  it("preflightSimulation() returns a non-authorizing effect plan", async () => {
+    const token = await issueAndStoreToken({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+    const result = await client.preflightSimulation({
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      params: { linear: { x: 0.2 } },
+    });
+
+    expect(result.authorizesExecution).toBe(false);
+    expect(result.assignedTier).toBe("T2_act");
+    expect(result.effectPlan.resource).toBe("ros2:///cmd_vel");
+  });
+
   it("interceptBatch() evaluates multiple requests", async () => {
     const token = await issueAndStoreToken();
     const timestamp = new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");

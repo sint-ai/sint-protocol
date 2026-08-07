@@ -175,6 +175,7 @@ For the fuller execution plan, use:
 - [Roadway Edge Intelligence Roadmap](./roadmaps/roadway-edge-intelligence-2026.md)
 - [Humanoid Deployment Governance Roadmap](./roadmaps/humanoid-deployment-governance-2026.md)
 - [Human-Agent Authority Roadmap](./roadmaps/human-agent-authority-2026.md)
+- [Proof-Carrying Effects and Predictive Safety Roadmap](./roadmaps/predictive-safety-plane-2026.md)
 
 ## Detailed Tracks
 

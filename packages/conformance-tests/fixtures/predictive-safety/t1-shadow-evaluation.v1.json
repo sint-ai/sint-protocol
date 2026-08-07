@@ -1,0 +1,36 @@
+{
+  "fixtureId": "predictive-safety-t1-shadow-v1",
+  "schemaVersion": "1.0.0",
+  "description": "Recorded T1 preparation actions used to calibrate simulation evidence before enforcement promotion.",
+  "token": {
+    "resource": "mcp://workspace/stage-change",
+    "action": "call"
+  },
+  "cases": [
+    {
+      "id": "missing-receipt",
+      "params": { "path": "plans/route.json", "operation": "stage" },
+      "evidence": "missing",
+      "expectedDecision": "allow",
+      "expectedEvent": "simulation.receipt.rejected",
+      "expectedViolation": "SIMULATION_EVIDENCE_MISSING"
+    },
+    {
+      "id": "unsafe-receipt",
+      "params": { "path": "plans/route.json", "operation": "stage", "predictedChanges": 17 },
+      "evidence": "unsafe",
+      "expectedDecision": "allow",
+      "expectedEvent": "simulation.receipt.rejected",
+      "expectedViolation": "SIMULATION_UNSAFE"
+    },
+    {
+      "id": "passing-receipt",
+      "params": { "path": "plans/route.json", "operation": "stage", "predictedChanges": 1 },
+      "evidence": "pass",
+      "expectedDecision": "allow",
+      "expectedEvent": "simulation.receipt.verified"
+    }
+  ],
+  "promotionRule": "Shadow observations never authorize or block. Promote an action family only after calibrated false-positive and false-negative targets are met.",
+  "conformanceCommand": "pnpm --filter @pshkv/conformance-tests exec vitest run src/predictive-safety-shadow-conformance.test.ts"
+}

@@ -10,6 +10,7 @@ export type {
   SpatialCorridorVerifierPlugin,
   EdgeControlPlanePlugin,
   VerifiableComputePlugin,
+  SimulationPreflightError,
 } from "./gateway.js";
 export { StaticSpatialCorridorVerifier } from "./spatial-corridor.js";
 export type {
@@ -64,6 +65,21 @@ export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js
 export type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
 export { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
 export type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
+export {
+  DefaultSimulationEvidencePolicy,
+  InMemorySimulationReceiptReplayStore,
+  computeSimulationEvidenceSigningPayload,
+  computeSimulationRequestDigest,
+  computeSimulationEffectPlanDigest,
+  computeSimulationTokenDigest,
+  createSimulationPreflight,
+} from "./simulation-evidence-policy.js";
+export type {
+  DefaultSimulationEvidencePolicyOptions,
+  SimulationEvidenceEnforcementMode,
+  SimulationEvidencePolicyPlugin,
+  SimulationReceiptReplayStore,
+} from "./simulation-evidence-policy.js";
 export {
   DefaultCodeAsPolicyGuard,
   decisionForCodeAsPolicyViolation,

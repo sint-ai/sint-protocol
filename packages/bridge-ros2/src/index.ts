@@ -117,3 +117,18 @@ export {
   matchTopicPattern,
 } from "./sros2-enclave.js";
 export type { Sros2Enclave, Sros2Discovery } from "./sros2-enclave.js";
+export { createROS2WorldSnapshot, persistROS2WorldSnapshot } from "./world-snapshot-adapter.js";
+export type {
+  ROS2MapState,
+  ROS2ObstacleState,
+  ROS2SafetyControllerState,
+  ROS2Stamped,
+  ROS2TransformState,
+  ROS2WorldSnapshotCapture,
+  ROS2WorldSnapshotError,
+  ROS2WorldSnapshotOptions,
+  ROS2WorldSnapshotPersistenceError,
+  ROS2WorldSnapshotPayload,
+  ROS2WorldStateInput,
+  ROS2WorldStateSource,
+} from "./world-snapshot-adapter.js";

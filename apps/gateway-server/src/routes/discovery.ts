@@ -104,6 +104,9 @@ export function discoveryRoutes(): Hono {
         "/v1/ready": { get: { summary: "Readiness checks for configured store/cache backends" } },
         "/v1/metrics": { get: { summary: "Prometheus metrics" } },
         "/v1/intercept": { post: { summary: "Intercept one request" } },
+        "/v1/simulation/preflight": {
+          post: { summary: "Describe an advisory effect plan and simulation evidence requirement" },
+        },
         "/v1/intercept/batch": { post: { summary: "Intercept a batch of requests" } },
         "/v1/tokens": { post: { summary: "Issue capability token" } },
         "/v1/tokens/delegate": { post: { summary: "Delegate capability token" } },

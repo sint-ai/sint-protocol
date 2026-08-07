@@ -14,3 +14,4 @@ export * from "./factory-trace-bundle.js";
 export * from "./trace-bundle.js";
 export * from "./inspection.js";
 export * from "./manufacturing-execution.js";
+export * from "./simulation-evidence.js";

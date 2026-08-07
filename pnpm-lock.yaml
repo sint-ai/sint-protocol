@@ -162,6 +162,40 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  apps/simulation-server:
+    dependencies:
+      '@hono/node-server':
+        specifier: '>=2.0.5'
+        version: 2.0.11(hono@4.12.31)
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@pshkv/engine-effect-simulator':
+        specifier: workspace:*
+        version: link:../../packages/engine-effect-simulator
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../../packages/capability-tokens
+      '@pshkv/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../../packages/evidence-ledger
+      hono:
+        specifier: '>=4.12.27'
+        version: 4.12.31
+    devDependencies:
+      '@pshkv/predictive-safety-client':
+        specifier: workspace:*
+        version: link:../../packages/predictive-safety-client
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   apps/sint-interface:
     dependencies:
       react:
@@ -717,6 +751,9 @@ importers:
       '@pshkv/core':
         specifier: workspace:*
         version: link:../core
+      '@pshkv/engine-effect-simulator':
+        specifier: workspace:*
+        version: link:../engine-effect-simulator
       '@pshkv/gate-capability-tokens':
         specifier: workspace:*
         version: link:../capability-tokens
@@ -761,6 +798,25 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/engine-effect-simulator:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+    devDependencies:
+      '@pshkv/gate-policy-gateway':
+        specifier: workspace:*
+        version: link:../policy-gateway
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -974,6 +1030,25 @@ importers:
       '@pshkv/persistence':
         specifier: workspace:*
         version: link:../persistence
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/predictive-safety-client:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.19.15
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
