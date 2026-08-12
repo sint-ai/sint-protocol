@@ -15,16 +15,13 @@ pnpm install
 # Build all packages
 pnpm run build
 
-# Run all tests (370+)
-pnpm run test
-
-# Type-check
-pnpm run typecheck
+# Run the same core validation sequence expected before a PR
+pnpm run verify
 ```
 
 ## Development Workflow
 
-1. **Create a branch** from `master`:
+1. **Create a branch** from `main`:
    ```bash
    git checkout -b feat/your-feature-name
    ```
@@ -41,7 +38,7 @@ pnpm run typecheck
    pnpm run test
    ```
 
-5. **Submit a pull request** against `master`.
+5. **Submit a pull request** against `main`.
 
 ## Coding Conventions
 
@@ -75,6 +72,13 @@ These are non-negotiable:
 2. **Attenuation only** — Delegated capability tokens can only reduce permissions, never escalate.
 3. **Append-only ledger** — The Evidence Ledger is insert-only. No updates, no deletes.
 4. **Interface-first persistence** — Storage adapters implement interfaces from `@sint/persistence`.
+
+## AI Coding Agents
+
+Start with [`AGENTS.md`](./AGENTS.md), then follow the focused
+[`Agent Onboarding Guide`](./docs/agent-onboarding.md). The guide defines the
+safe repository-reading order, change boundaries, targeted-test workflow, and
+the commands an agent should report in its handoff.
 
 ## What We're Looking For
 

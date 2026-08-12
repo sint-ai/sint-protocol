@@ -19,6 +19,7 @@
     "@pshkv/gate-policy-gateway": "workspace:*",
     "@pshkv/gate-evidence-ledger": "workspace:*",
     "@pshkv/engine-effect-simulator": "workspace:*",
+    "@pshkv/execution-broker": "workspace:*",
     "@pshkv/bridge-mcp": "workspace:*",
     "@pshkv/bridge-ros2": "workspace:*",
     "@pshkv/bridge-mavlink": "workspace:*",

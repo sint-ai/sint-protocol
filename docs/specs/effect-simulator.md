@@ -206,6 +206,21 @@ The execution broker, not policy evaluation, performs atomic nonce consumption.
 This preserves safe/idempotent approval retries while preventing two dispatches
 from the same receipt.
 
+## Execution Broker Boundary
+
+`@pshkv/execution-broker` is the reference proof-carrying dispatch boundary.
+It requires a deployment-provided verifier for the trusted gateway decision,
+completed approval, and receipt signature. It also performs local
+defense-in-depth checks for the exact request/effect/resource/action and safe
+receipt outcome, re-reads the current world digest and epoch, rejects expiry or
+drift, and then atomically consumes the receipt nonce before making one adapter
+dispatch attempt. A failed hardware dispatch cannot reuse the receipt; a
+pre-dispatch world-drift rejection does not consume it.
+
+The included nonce store is an in-memory reference implementation. Distributed
+deployments still require the roadmap's Redis/Postgres atomic store before the
+broker is used across multiple processes.
+
 ## Threat Model
 
 The contract explicitly addresses:

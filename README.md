@@ -364,6 +364,8 @@ See [docs/guides/sint-interface.md](docs/guides/sint-interface.md) for full setu
 
 If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo, read **[AGENTS.md](AGENTS.md)** first. It covers key invariants, common mistakes, and entry points for the most common tasks. For deeper implementation details, see **[CLAUDE.md](CLAUDE.md)**.
 
+For a clone-to-validated-change workflow, use the **[Agent Onboarding Guide](docs/agent-onboarding.md)**. Run `pnpm run verify` before handing work back; it builds, type-checks, and tests the full workspace.
+
 ## Architecture
 
 ```

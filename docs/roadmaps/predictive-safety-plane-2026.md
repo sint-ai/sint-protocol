@@ -190,8 +190,9 @@ closed for the canary policy.
 
 ### Phase 2 — Execution integrity (weeks 4–6)
 
-- [ ] add an execution broker that atomically consumes the receipt nonce
-- [ ] re-read world epoch immediately before dispatch and reject drift beyond
+- [x] add a reference execution broker that atomically consumes the receipt
+  nonce immediately before its single dispatch attempt
+- [x] re-read world epoch immediately before dispatch and reject drift beyond
   the declared tolerance
 - [ ] bind approval resolution and execution receipt to the simulation receipt
 - [ ] implement a local runtime shield in ROS 2 and one PLC/OPC UA path
