@@ -204,6 +204,49 @@ export interface PhysicalAiRuntimeSafetyFixture {
   }>;
 }
 
+export interface ContinuousEffectLifecycleFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly status: "proposal";
+  readonly adoptionRequirement: string;
+  readonly profile: {
+    readonly effectClass: "continuous_physical_effect";
+    readonly enforcementChokePoint: "PolicyGateway.intercept";
+    readonly evidenceLedger: "append_only";
+    readonly requiredChecks: readonly [
+      "admission",
+      "renewal_live_state",
+      "expiry_or_revocation",
+      "stop_fail_safe",
+      "minimal_evidence_receipts",
+    ];
+  };
+  readonly effect: {
+    readonly resource: string;
+    readonly action: string;
+    readonly assignedTier: ApprovalTier;
+  };
+  readonly cases: readonly Array<{
+    readonly id: string;
+    readonly phase:
+      | "admission"
+      | "renewal_live_state"
+      | "expiry"
+      | "revocation"
+      | "stop_fail_safe";
+    readonly liveState?: {
+      readonly currentForceNewtons?: number;
+      readonly currentVelocityMps?: number;
+    };
+    readonly expected: {
+      readonly decisionAction: DecisionAction | "rollback";
+      readonly policyViolated?: string;
+      readonly effectState: "pending_approval" | "active" | "suspended" | "rolled_back";
+      readonly receiptEventTypes: readonly string[];
+    };
+  }>;
+}
+
 export interface A2ASkillCapabilityEnforcementFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
@@ -836,6 +879,12 @@ export function loadHardwareSafetyHandshakeFixture(): HardwareSafetyHandshakeFix
 export function loadPhysicalAiRuntimeSafetyFixture(): PhysicalAiRuntimeSafetyFixture {
   return loadFixture<PhysicalAiRuntimeSafetyFixture>(
     "physical-ai/runtime-safety-fixtures.v0.1.json",
+  );
+}
+
+export function loadContinuousEffectLifecycleFixture(): ContinuousEffectLifecycleFixture {
+  return loadFixture<ContinuousEffectLifecycleFixture>(
+    "interop/continuous-effect-lifecycle.v1.json",
   );
 }
 

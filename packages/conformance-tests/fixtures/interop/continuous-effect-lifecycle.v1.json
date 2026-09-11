@@ -1,0 +1,93 @@
+{
+  "fixtureId": "continuous-effect-lifecycle-v1",
+  "schemaVersion": "1.0",
+  "status": "proposal",
+  "adoptionRequirement": "Do not describe this vocabulary as adopted until two independent implementations pass the fixture without implementation-specific exceptions.",
+  "profile": {
+    "effectClass": "continuous_physical_effect",
+    "enforcementChokePoint": "PolicyGateway.intercept",
+    "evidenceLedger": "append_only",
+    "requiredChecks": [
+      "admission",
+      "renewal_live_state",
+      "expiry_or_revocation",
+      "stop_fail_safe",
+      "minimal_evidence_receipts"
+    ]
+  },
+  "effect": {
+    "resource": "ros2:///gripper/left",
+    "action": "publish",
+    "assignedTier": "T2_act"
+  },
+  "cases": [
+    {
+      "id": "admission-requires-gate-decision",
+      "phase": "admission",
+      "expected": {
+        "decisionAction": "escalate",
+        "effectState": "pending_approval",
+        "receiptEventTypes": ["policy.evaluated"]
+      }
+    },
+    {
+      "id": "renewal-rechecks-live-state",
+      "phase": "renewal_live_state",
+      "liveState": {
+        "currentForceNewtons": 40,
+        "currentVelocityMps": 0.05
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "effectState": "active",
+        "receiptEventTypes": ["policy.evaluated"]
+      }
+    },
+    {
+      "id": "renewal-denies-live-envelope-breach",
+      "phase": "renewal_live_state",
+      "liveState": {
+        "currentForceNewtons": 120,
+        "currentVelocityMps": 0.05
+      },
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "CONSTRAINT_VIOLATION",
+        "effectState": "suspended",
+        "receiptEventTypes": ["policy.evaluated"]
+      }
+    },
+    {
+      "id": "expired-authority-fails-closed",
+      "phase": "expiry",
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "TOKEN_EXPIRED",
+        "effectState": "suspended",
+        "receiptEventTypes": ["policy.evaluated"]
+      }
+    },
+    {
+      "id": "revoked-authority-fails-closed",
+      "phase": "revocation",
+      "expected": {
+        "decisionAction": "deny",
+        "policyViolated": "TOKEN_REVOKED",
+        "effectState": "suspended",
+        "receiptEventTypes": ["policy.evaluated"]
+      }
+    },
+    {
+      "id": "stop-emits-rollback-and-safe-command",
+      "phase": "stop_fail_safe",
+      "expected": {
+        "decisionAction": "rollback",
+        "effectState": "rolled_back",
+        "receiptEventTypes": [
+          "safety.estop.triggered",
+          "action.rolledback"
+        ]
+      }
+    }
+  ]
+}

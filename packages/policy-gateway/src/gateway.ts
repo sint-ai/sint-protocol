@@ -484,7 +484,18 @@ export class PolicyGateway {
             }),
           );
         }
-        return this.deny(requestId, timestamp, "TOKEN_REVOKED", "Capability token has been revoked");
+        const decision = this.deny(
+          requestId,
+          timestamp,
+          "TOKEN_REVOKED",
+          "Capability token has been revoked",
+        );
+        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          decision: decision.action,
+          tier: decision.assignedTier,
+          policyViolated: "TOKEN_REVOKED",
+        });
+        return decision;
       }
     }
 

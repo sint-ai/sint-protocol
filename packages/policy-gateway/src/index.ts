@@ -1,4 +1,10 @@
 export { PolicyGateway } from "./gateway.js";
+export { ContinuousEffectCoordinator } from "./continuous-effect-coordinator.js";
+export type {
+  ContinuousEffectAdmission,
+  ContinuousEffectCoordinatorError,
+  ContinuousEffectCoordinatorOptions,
+} from "./continuous-effect-coordinator.js";
 export type {
   PolicyGatewayConfig,
   TokenResolver,
