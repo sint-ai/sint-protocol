@@ -2432,3 +2432,126 @@ export function loadRegulatedAgentRuntimeFixture(): RegulatedAgentRuntimeFixture
     "compliance/regulated-agent-runtime.v1.json",
   );
 }
+
+// ---------------------------------------------------------------------------
+// Physical Envelope Attestation Profile v0.1 — adversarial fixture
+// ---------------------------------------------------------------------------
+
+export interface EnvelopeAttestationLimits {
+  readonly maxVelocityMps?: number;
+  readonly maxForceNewtons?: number;
+}
+
+export interface EnvelopeAttestationDeployment {
+  readonly authorizedLimits: EnvelopeAttestationLimits;
+  readonly baseline: { readonly envelopeId: string; readonly limits: EnvelopeAttestationLimits };
+  readonly permissive: {
+    readonly envelopeId: string;
+    readonly limits: EnvelopeAttestationLimits;
+    readonly requires: ReadonlyArray<{
+      readonly condition: string;
+      readonly value: boolean;
+      readonly minSources?: number;
+    }>;
+  };
+  readonly maxTtlMs: number;
+  readonly maxClockSkewMs?: number;
+  readonly selectorFailurePolicy: {
+    readonly mode: "fail-open" | "fallback" | "deny";
+    readonly fallback?: EnvelopeAttestationLimits;
+  };
+}
+
+export type EnvelopeAttestationRejectionCode =
+  | "EVIDENCE_MALFORMED"
+  | "SOURCE_UNTRUSTED"
+  | "PROOF_INVALID"
+  | "VERIFIER_UNAVAILABLE"
+  | "TTL_INVALID"
+  | "EVIDENCE_EXPIRED"
+  | "EVIDENCE_FROM_FUTURE"
+  | "EVIDENCE_PREDATES_BOOT"
+  | "SEQUENCE_REPLAYED"
+  | "SEQUENCE_CONFLICT"
+  | "STORE_UNAVAILABLE";
+
+export type EnvelopeAttestationStep =
+  | {
+      readonly op: "ingest";
+      readonly at: number;
+      readonly signer: string;
+      readonly proofOverride?: "opaque-string" | "none";
+      readonly tamperAfterSigning?: Record<string, unknown>;
+      readonly evidence: {
+        readonly evidenceId: string;
+        readonly sourceId: string;
+        readonly condition: string;
+        readonly value: boolean;
+        readonly sequence: number;
+        readonly issuedAt: number;
+        readonly ttlMs: number | "unbounded";
+      };
+      readonly expect: {
+        readonly accepted: boolean;
+        readonly code?: EnvelopeAttestationRejectionCode | readonly EnvelopeAttestationRejectionCode[];
+      };
+    }
+  | {
+      readonly op: "probe";
+      readonly at: number;
+      readonly commandedVelocityMps?: number;
+      readonly expect: {
+        readonly activeEnvelope?: string;
+        readonly outcome: "pass" | "violation" | "refused";
+        readonly events?: ReadonlyArray<"envelope.applied" | "envelope.fallback">;
+        readonly binding?: {
+          readonly evidenceRefs?: readonly string[];
+          readonly effectiveLimits?: EnvelopeAttestationLimits;
+          readonly captureAs?: string;
+          readonly evidenceDigestEquals?: string;
+          readonly evidenceDigestDiffersFrom?: string;
+          readonly envelopeDigestEquals?: string;
+          readonly envelopeDigestDiffersFrom?: string;
+        };
+      };
+    }
+  | { readonly op: "restart"; readonly at: number; readonly preserveSequenceStore: boolean }
+  | { readonly op: "verifier"; readonly at: number; readonly state: "available" | "unavailable" }
+  | { readonly op: "store"; readonly at: number; readonly state: "available" | "unavailable" }
+  | {
+      readonly op: "fault";
+      readonly at: number;
+      readonly component: "envelope-selector";
+      readonly state: "throwing" | "healthy";
+    };
+
+export interface EnvelopeAttestationCase {
+  readonly caseId: string;
+  readonly requirement: 1 | 2 | 3 | 4 | 5;
+  readonly name: string;
+  readonly deploymentOverride?: Partial<
+    Pick<EnvelopeAttestationDeployment, "authorizedLimits" | "permissive" | "selectorFailurePolicy">
+  >;
+  readonly steps: readonly EnvelopeAttestationStep[];
+}
+
+export interface EnvelopeAttestationFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly profile: string;
+  readonly clock: { readonly epoch: string };
+  readonly signers: Readonly<Record<string, { readonly trusted: boolean }>>;
+  readonly deployment: EnvelopeAttestationDeployment;
+  readonly probe: {
+    readonly resource: string;
+    readonly action: string;
+    readonly commandedVelocityMps: number;
+  };
+  readonly cases: readonly EnvelopeAttestationCase[];
+}
+
+export function loadEnvelopeAttestationAdversarialFixture(): EnvelopeAttestationFixture {
+  return loadFixture<EnvelopeAttestationFixture>(
+    "physical-ai/envelope-attestation-adversarial.v0.1.json",
+  );
+}
