@@ -278,3 +278,148 @@ describe("DynamicEnvelopePlugin", () => {
     expect(computeEnvelope).toHaveBeenCalledWith(req);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Failure policy + envelope binding (Physical Envelope Attestation Profile v0.1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("DynamicEnvelopeFailurePolicy", () => {
+  const broken: DynamicEnvelopePlugin = {
+    computeEnvelope: vi.fn().mockRejectedValue(new Error("selector offline")),
+  };
+
+  it("mode fallback → applies the fallback envelope and emits policy.envelope.fallback", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const emitted: Array<{ eventType: string; payload: Record<string, unknown> }> = [];
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+      dynamicEnvelopeFailurePolicy: { mode: "fallback", fallback: { maxVelocityMps: 0.2 } },
+      emitLedgerEvent: (ev) => emitted.push(ev),
+    });
+    const decision = await gw.intercept(makeRequest(token, 1.5));
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+    const fallback = emitted.find((e) => e.eventType === "policy.envelope.fallback");
+    expect(fallback?.payload["mode"]).toBe("fallback");
+    expect(fallback?.payload["error"]).toBe("selector offline");
+    const binding = decision.transformations?.additionalAuditFields?.["envelopeBinding"] as
+      | { envelopeId: string; source: string; effective: { maxVelocityMps?: number } }
+      | undefined;
+    expect(binding?.source).toBe("fallback");
+    expect(binding?.effective.maxVelocityMps).toBe(0.2);
+  });
+
+  it("mode fallback → a command inside the fallback envelope still proceeds", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+      dynamicEnvelopeFailurePolicy: { mode: "fallback", fallback: { maxVelocityMps: 0.2 } },
+    });
+    const decision = await gw.intercept(makeRequest(token, 0.1));
+    expect(decision.action).toBe("allow");
+  });
+
+  it("mode deny → DYNAMIC_ENVELOPE_UNAVAILABLE", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+      dynamicEnvelopeFailurePolicy: { mode: "deny" },
+    });
+    const decision = await gw.intercept(makeRequest(token, 0.1));
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
+  });
+
+  it("mode fallback without a fallback envelope behaves as deny", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+      dynamicEnvelopeFailurePolicy: { mode: "fallback" },
+    });
+    const decision = await gw.intercept(makeRequest(token, 0.1));
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
+  });
+
+  it("default (fail-open) is unchanged", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const gw = new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: broken });
+    const decision = await gw.intercept(makeRequest(token, 1.9));
+    expect(decision.action).toBe("allow");
+  });
+});
+
+describe("EnvelopeBinding", () => {
+  it("binds the decision to the effective envelope, evidence digest and refs", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const envelope = makeEnvelope({
+      maxVelocityMps: 0.5,
+      reason: "fenced cell proven",
+      envelopeId: "cell-a/fenced",
+      evidenceDigest: "ab".repeat(32),
+      evidenceRefs: ["ev-1"],
+    } as never);
+    const emitted: Array<{ eventType: string; payload: Record<string, unknown> }> = [];
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: envelope,
+      emitLedgerEvent: (ev) => emitted.push(ev),
+    });
+    const decision = await gw.intercept(makeRequest(token, 0.3));
+    expect(decision.action).toBe("allow");
+    const binding = decision.transformations?.additionalAuditFields?.["envelopeBinding"] as Record<string, unknown>;
+    expect(binding).toMatchObject({
+      envelopeId: "cell-a/fenced",
+      source: "dynamic",
+      effective: { maxVelocityMps: 0.5 },
+      evidenceDigest: "ab".repeat(32),
+      evidenceRefs: ["ev-1"],
+    });
+    expect(binding["envelopeDigest"]).toMatch(/^[0-9a-f]{64}$/);
+    const evaluated = emitted.find((e) => e.eventType === "policy.evaluated");
+    expect(evaluated?.payload["envelopeDigest"]).toBe(binding["envelopeDigest"]);
+    const applied = emitted.find((e) => e.eventType === "policy.envelope.applied");
+    expect(applied?.payload["envelopeId"]).toBe("cell-a/fenced");
+  });
+
+  it("denials for constraint violations also carry the binding", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const envelope = makeEnvelope({ maxVelocityMps: 0.1, reason: "obstacle", envelopeId: "slow" } as never);
+    const gw = new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: envelope });
+    const decision = await gw.intercept(makeRequest(token, 0.5));
+    expect(decision.action).toBe("deny");
+    const binding = decision.transformations?.additionalAuditFields?.["envelopeBinding"] as Record<string, unknown>;
+    expect(binding["envelopeId"]).toBe("slow");
+  });
+
+  it("token-only limits produce a token-sourced binding; no limits produce none", async () => {
+    const limited = makeToken({ maxVelocityMps: 2.0 });
+    const gw1 = new PolicyGateway({ resolveToken: () => limited });
+    const d1 = await gw1.intercept(makeRequest(limited, 1.0));
+    const b1 = d1.transformations?.additionalAuditFields?.["envelopeBinding"] as Record<string, unknown>;
+    expect(b1["source"]).toBe("token");
+    expect(b1["effective"]).toEqual({ maxVelocityMps: 2.0, maxForceNewtons: undefined });
+
+    const unlimited = makeToken({});
+    const gw2 = new PolicyGateway({ resolveToken: () => unlimited });
+    const d2 = await gw2.intercept(makeRequest(unlimited));
+    expect(d2.transformations?.additionalAuditFields?.["envelopeBinding"]).toBeUndefined();
+  });
+
+  it("envelope digest is deterministic for identical inputs and changes with evidence", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const mk = (digest: string) =>
+      makeEnvelope({ maxVelocityMps: 0.5, envelopeId: "x", evidenceDigest: digest } as never);
+    const g = (plugin: DynamicEnvelopePlugin) => new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: plugin });
+    const read = (d: Awaited<ReturnType<PolicyGateway["intercept"]>>) =>
+      (d.transformations?.additionalAuditFields?.["envelopeBinding"] as { envelopeDigest: string }).envelopeDigest;
+    const a1 = read(await g(mk("11".repeat(32))).intercept(makeRequest(token, 0.3)));
+    const a2 = read(await g(mk("11".repeat(32))).intercept(makeRequest(token, 0.3)));
+    const b = read(await g(mk("22".repeat(32))).intercept(makeRequest(token, 0.3)));
+    expect(a1).toBe(a2);
+    expect(a1).not.toBe(b);
+  });
+});
