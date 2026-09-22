@@ -13,7 +13,7 @@
  *   mavlink://1/cmd/fence       — DO_FENCE_ENABLE
  *   mavlink://1/cmd/nav         — navigation waypoint
  *
- * @module @sint/bridge-mavlink/mavlink-resource-mapper
+ * @module @pshkv/bridge-mavlink/mavlink-resource-mapper
  */
 
 import { ApprovalTier } from "@pshkv/core";

@@ -11,7 +11,7 @@ Current count: **5**
 1. [#18](https://github.com/sint-ai/sint-protocol/issues/18) Add README badges (CI, license, npm)
 2. [#17](https://github.com/sint-ai/sint-protocol/issues/17) Add JSON Schema definitions for heartbeat messages
 3. [#9](https://github.com/sint-ai/sint-protocol/issues/9) Create example: minimal MCP server with SINT protection
-4. [#8](https://github.com/sint-ai/sint-protocol/issues/8) Add JSDoc comments to @sint/core exported types
+4. [#8](https://github.com/sint-ai/sint-protocol/issues/8) Add JSDoc comments to @pshkv/core exported types
 5. [#7](https://github.com/sint-ai/sint-protocol/issues/7) Add unit tests for constraint validation edge cases
 
 ## Refresh Command

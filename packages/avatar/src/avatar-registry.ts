@@ -2,13 +2,13 @@
  * SINT Protocol — Avatar Registry.
  *
  * In-memory store for AvatarProfiles. In production, back this with a
- * PostgreSQL adapter (same pattern as @sint/persistence).
+ * PostgreSQL adapter (same pattern as @pshkv/persistence).
  *
  * The registry computes profiles from raw ledger events via
  * `updateFromEvents()`. It does NOT query the ledger directly — the caller
  * provides the events (dependency injection, testable without ledger).
  *
- * @module @sint/avatar/avatar-registry
+ * @module @pshkv/avatar/avatar-registry
  */
 
 import { computeCsml } from "@pshkv/gate-evidence-ledger";

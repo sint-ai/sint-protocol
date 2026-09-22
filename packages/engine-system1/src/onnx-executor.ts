@@ -6,7 +6,7 @@
  * executor fails gracefully with a Result error. A static mock factory
  * is provided for testing without any ONNX dependencies.
  *
- * @module @sint/engine-system1/onnx-executor
+ * @module @pshkv/engine-system1/onnx-executor
  */
 
 import type { Result, SintHardwareDeploymentProfile } from "@pshkv/core";

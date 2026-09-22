@@ -4,7 +4,7 @@
  * These schemas validate capsule manifests, hardware profiles,
  * world state, and plans before processing.
  *
- * @module @sint/core/schemas/engine
+ * @module @pshkv/core/schemas/engine
  */
 
 import { z } from "zod";

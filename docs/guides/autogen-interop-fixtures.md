@@ -122,8 +122,8 @@ If your runtime cannot surface event IDs directly, `requestId` is the minimum tr
 ## Run locally
 
 ```bash
-pnpm --filter @sint/conformance-tests test -- src/autogen-interop-conformance.test.ts
-pnpm --filter @sint/conformance-tests test:fixtures
+pnpm --filter @pshkv/conformance-tests test -- src/autogen-interop-conformance.test.ts
+pnpm --filter @pshkv/conformance-tests test:fixtures
 ```
 
 ## Maintainer notes

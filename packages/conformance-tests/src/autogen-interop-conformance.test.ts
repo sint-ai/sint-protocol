@@ -9,9 +9,8 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { AgentTrustLevel, ApprovalTier, RiskTier } from "@pshkv/core";
 import type {
-  AgentTrustLevel,
-  ApprovalTier,
   PolicyDecision,
   SintCapabilityToken,
   SintCapabilityTokenRequest,
@@ -37,15 +36,15 @@ function futureISO(hoursFromNow: number): string {
 function toAgentTrustLevel(signal: TrustSignal): AgentTrustLevel {
   switch (signal) {
     case "high_risk":
-      return "untrusted";
+      return AgentTrustLevel.UNTRUSTED;
     case "medium_risk":
-      return "provisional";
+      return AgentTrustLevel.PROVISIONAL;
     case "low_risk":
-      return "trusted";
+      return AgentTrustLevel.TRUSTED;
     case "unrestricted":
-      return "verified";
+      return AgentTrustLevel.VERIFIED;
     case "blocked":
-      return "untrusted";
+      return AgentTrustLevel.UNTRUSTED;
   }
 }
 
@@ -72,8 +71,8 @@ function blockedDecision(request: SintRequest): PolicyDecision {
       reason: "Trust signal blocked execution",
       policyViolated: "TRUST_BLOCKED",
     },
-    assignedTier: "T3_commit",
-    assignedRisk: "T3_irreversible",
+    assignedTier: ApprovalTier.T3_COMMIT,
+    assignedRisk: RiskTier.T3_IRREVERSIBLE,
   };
 }
 

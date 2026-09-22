@@ -4,7 +4,7 @@
  * Manages Ed25519 keypairs and capability tokens for the MCP session.
  * Auto-generates a keypair if not provided via config.
  *
- * @module @sint/mcp/identity
+ * @module sint-mcp/identity
  */
 
 import type { SintCapabilityToken } from "@pshkv/core";

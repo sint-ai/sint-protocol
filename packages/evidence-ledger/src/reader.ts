@@ -4,7 +4,7 @@
  * Query interface for the Evidence Ledger.
  * Supports filtering by agent, event type, time range, and sequence range.
  *
- * @module @sint/gate-evidence-ledger/reader
+ * @module @pshkv/gate-evidence-ledger/reader
  */
 
 import type {

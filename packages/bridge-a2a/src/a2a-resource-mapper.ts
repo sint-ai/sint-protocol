@@ -10,7 +10,7 @@
  * where <agent-hostname> is derived from the target agent's URL and
  * <skillId> is the skill being invoked (or "task" for generic calls).
  *
- * @module @sint/bridge-a2a/resource-mapper
+ * @module @pshkv/bridge-a2a/resource-mapper
  */
 
 import type { A2AAgentCard, A2ASendTaskParams, A2ASkill } from "./types.js";

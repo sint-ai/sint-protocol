@@ -6,7 +6,7 @@
  *
  * Call `runMigrations(pool)` once at startup before any reads or writes.
  *
- * @module @sint/persistence-postgres/migrations
+ * @module @pshkv/persistence-postgres/migrations
  */
 
 import type { PgPool } from "./pg-pool.js";

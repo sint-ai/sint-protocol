@@ -1,5 +1,5 @@
 /**
- * @sint/persistence-postgres — Adapter unit tests.
+ * @pshkv/persistence-postgres — Adapter unit tests.
  *
  * All PostgreSQL I/O is replaced with a mock pool (vi.fn()).
  * No real database connection is required.

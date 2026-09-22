@@ -4,7 +4,7 @@
  * Wraps any MCP server's tool handler to enforce SINT policy
  * on every tool call. Auto-creates sessions per agent.
  *
- * @module @sint/bridge-mcp/mcp-middleware
+ * @module @pshkv/bridge-mcp/mcp-middleware
  */
 
 import type { PolicyGateway } from "@pshkv/gate-policy-gateway";

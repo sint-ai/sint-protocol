@@ -38,13 +38,13 @@ Runtimes should emit and compare at minimum:
 From repository root:
 
 ```bash
-pnpm --filter @sint/conformance-tests test:fixtures
+pnpm --filter @pshkv/conformance-tests test:fixtures
 ```
 
 Or run only this fixture test:
 
 ```bash
-pnpm --filter @sint/conformance-tests test src/agentskill-authz-fixtures-conformance.test.ts
+pnpm --filter @pshkv/conformance-tests test src/agentskill-authz-fixtures-conformance.test.ts
 ```
 
 ## Cross-Runtime Validation

@@ -4,7 +4,7 @@
  * Implements IPricingPort by calling the product API's MCP marketplace:
  * - GET /mcps/:id/pricing → getPrice
  *
- * @module @sint/bridge-economy/adapters/http-pricing-adapter
+ * @module @pshkv/bridge-economy/adapters/http-pricing-adapter
  */
 
 import { ok, type Result } from "@pshkv/core";

@@ -15,7 +15,7 @@
  * pipeline.start();
  * ```
  *
- * @module @sint/engine-system1
+ * @module @pshkv/engine-system1
  */
 
 export type {

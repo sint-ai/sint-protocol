@@ -1,7 +1,7 @@
 /**
  * SINT Persistence — PostgreSQL Token Store.
  *
- * @module @sint/persistence/pg-token-store
+ * @module @pshkv/persistence/pg-token-store
  */
 
 import type pg from "pg";

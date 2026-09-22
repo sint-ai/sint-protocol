@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Event type constants.
  *
- * @module @sint/core/constants/events
+ * @module @pshkv/core/constants/events
  */
 
 /** All SINT event types as string constants for switch/case usage. */

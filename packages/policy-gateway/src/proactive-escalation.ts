@@ -12,7 +12,7 @@
  * This class implements CsmlEscalationPlugin so it can be plugged
  * directly into PolicyGateway.
  *
- * @module @sint/gate-policy-gateway/proactive-escalation
+ * @module @pshkv/gate-policy-gateway/proactive-escalation
  */
 
 import type { ApprovalTier, SintLedgerEvent } from "@pshkv/core";

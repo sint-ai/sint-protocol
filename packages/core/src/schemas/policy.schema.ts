@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Zod validation schemas for policy gateway requests.
  *
- * @module @sint/core/schemas/policy
+ * @module @pshkv/core/schemas/policy
  */
 
 import { z } from "zod";

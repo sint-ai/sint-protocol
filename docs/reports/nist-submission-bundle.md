@@ -15,9 +15,9 @@ Result: READY
 | Artifact | Present | SHA-256 |
 |---|---|---|
 | `docs/specs/nist-ai-rmf-crosswalk.md` | yes | c0f2cd1f4c1bf2c4edb08d2852c446e6ed14219dc889c0108b6da856827e96ad |
-| `docs/SINT_v0.2_SPEC.md` | yes | a79a7f8a395679e5e7080a716e26e54bad5a55905ab324788a3dac22aa202adb |
-| `docs/SPAI_2026_ABSTRACT.md` | yes | 8b67b9457c0670e0f474da82e0df622d151728b370392a6a8f52a732375b8ca7 |
-| `docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md` | yes | c28a1644583b4989520f3fea06c9019bb81403479b4322391de24ea64e81e61e |
+| `docs/specs/SINT_v0.2_SPEC.md` | yes | a79a7f8a395679e5e7080a716e26e54bad5a55905ab324788a3dac22aa202adb |
+| `docs/papers/SPAI_2026_ABSTRACT.md` | yes | 8b67b9457c0670e0f474da82e0df622d151728b370392a6a8f52a732375b8ca7 |
+| `docs/conformance/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md` | yes | c28a1644583b4989520f3fea06c9019bb81403479b4322391de24ea64e81e61e |
 | `docs/reports/certification-bundle-summary.json` | yes | ac878f735b4fdae9422b3654670bd9da0a77284c5cd31f092ce2335655936516 |
 | `docs/reports/certification-bundle-summary.md` | yes | 9c41101e4acd361003fbb1e01df0bb98279d8db5f8cf3de482902a2eea51bd68 |
 | `docs/reports/industrial-benchmark-report.json` | yes | bcc89aa2d9d2f668b85971b6a42e78d70e26cd7240052edae518af5394c6733f |

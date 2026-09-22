@@ -4,7 +4,7 @@
  * Defines the capsule lifecycle states, instance metadata,
  * error codes, and the restricted API surface exposed to capsules.
  *
- * @module @sint/engine-capsule-sandbox/types
+ * @module @pshkv/engine-capsule-sandbox/types
  */
 
 import type {

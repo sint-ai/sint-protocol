@@ -4,7 +4,7 @@
  * Validates plan steps against token-defined physical constraints
  * (force limits, velocity limits, geofence boundaries).
  *
- * @module @sint/engine-system2/planner/constraint-checker
+ * @module @pshkv/engine-system2/planner/constraint-checker
  */
 
 import type { Result, SintPlan } from "@pshkv/core";

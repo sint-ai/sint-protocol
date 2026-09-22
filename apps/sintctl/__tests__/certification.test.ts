@@ -16,7 +16,7 @@ describe("certification summary helpers", () => {
     expect(summary.success).toBe(true);
     expect(summary.evidence.status).toBe("passed");
     expect(summary.fixtureTestCommand).toBe(
-      "pnpm --filter @sint/conformance-tests test:fixtures",
+      "pnpm --filter @pshkv/conformance-tests test:fixtures",
     );
   });
 

@@ -4,7 +4,7 @@
  * Testing implementation of ITrustPort with configurable
  * trust levels per agent/user.
  *
- * @module @sint/bridge-economy/adapters/in-memory-trust-adapter
+ * @module @pshkv/bridge-economy/adapters/in-memory-trust-adapter
  */
 
 import { ok, type Result } from "@pshkv/core";

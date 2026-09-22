@@ -8,21 +8,21 @@ SINT is a security enforcement layer between AI agents and high-impact operation
 
 ## 2. Top-Level Components
 
-- `apps/sint-mcp` (`@sint/mcp`): MCP proxy that mediates upstream clients and downstream MCP servers.
-- `apps/gateway-server` (`@sint/gateway-server`): HTTP API for interception, token ops, approvals, ledger query, and metrics.
-- `apps/dashboard` (`@sint/dashboard`): operator UI for pending approvals and audit visibility.
+- `apps/sint-mcp` (`sint-mcp`): MCP proxy that mediates upstream clients and downstream MCP servers.
+- `apps/gateway-server` (`@pshkv/gateway-server`): HTTP API for interception, token ops, approvals, ledger query, and metrics.
+- `apps/dashboard` (`@pshkv/dashboard`): operator UI for pending approvals and audit visibility.
 
 Core packages:
 
-- `packages/core` (`@sint/core`): shared types, schemas, constants.
-- `packages/capability-tokens` (`@sint/gate-capability-tokens`): Ed25519 token issue/delegate/validate/revoke.
-- `packages/policy-gateway` (`@sint/gate-policy-gateway`): policy engine and interception decisions.
-- `packages/evidence-ledger` (`@sint/gate-evidence-ledger`): hash-chained append-only evidence log.
-- `packages/bridge-mcp` (`@sint/bridge-mcp`): MCP call-to-SINT request mapping.
-- `packages/bridge-ros2` (`@sint/bridge-ros2`): ROS2 action mapping and physics-context extraction.
-- `packages/persistence` (`@sint/persistence`): storage interfaces plus in-memory, PostgreSQL, and Redis adapters.
-- `packages/client` (`@sint/client`): TS client SDK for gateway APIs.
-- `packages/conformance-tests` (`@sint/conformance-tests`): regression suite for security invariants.
+- `packages/core` (`@pshkv/core`): shared types, schemas, constants.
+- `packages/capability-tokens` (`@pshkv/gate-capability-tokens`): Ed25519 token issue/delegate/validate/revoke.
+- `packages/policy-gateway` (`@pshkv/gate-policy-gateway`): policy engine and interception decisions.
+- `packages/evidence-ledger` (`@pshkv/gate-evidence-ledger`): hash-chained append-only evidence log.
+- `packages/bridge-mcp` (`@pshkv/bridge-mcp`): MCP call-to-SINT request mapping.
+- `packages/bridge-ros2` (`@pshkv/bridge-ros2`): ROS2 action mapping and physics-context extraction.
+- `packages/persistence` (`@pshkv/persistence`): storage interfaces plus in-memory, PostgreSQL, and Redis adapters.
+- `packages/client` (`@pshkv/client`): TS client SDK for gateway APIs.
+- `packages/conformance-tests` (`@pshkv/conformance-tests`): regression suite for security invariants.
 
 ## 3. Decision Flow
 
@@ -65,5 +65,5 @@ When architecture changes:
 
 1. Update this file.
 2. Update `CLAUDE.md` if agent guidance changes.
-3. Add an ADR entry in `DECISIONS.md` for architectural choices.
+3. Add an ADR entry in `docs/tsc/DECISIONS.md` for architectural choices.
 4. Ensure conformance tests cover new security-relevant behavior.

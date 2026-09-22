@@ -33,7 +33,6 @@ import {
   InMemoryBalanceAdapter,
   InMemoryBudgetAdapter,
   InMemoryTrustAdapter,
-  InMemoryPricingAdapter,
   computeActionCost,
   BASE_TOOL_CALL_COST,
   GLOBAL_MARKUP_MULTIPLIER,
@@ -255,7 +254,6 @@ describe("SINT Economy Regression Tests", () => {
   it("postIntercept billing failure does not revoke the allow decision", async () => {
     // Create a balance adapter that fails on withdraw
     const failingBalance: InMemoryBalanceAdapter = new InMemoryBalanceAdapter(250);
-    const originalWithdraw = failingBalance.withdraw.bind(failingBalance);
     failingBalance.withdraw = async () => {
       throw new Error("Balance service down");
     };

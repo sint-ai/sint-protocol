@@ -8,7 +8,7 @@
  * forming a tamper-evident chain. Any modification to a past
  * event breaks the chain and is detectable.
  *
- * @module @sint/gate-evidence-ledger/writer
+ * @module @pshkv/gate-evidence-ledger/writer
  */
 
 import { sha256 } from "@noble/hashes/sha2";

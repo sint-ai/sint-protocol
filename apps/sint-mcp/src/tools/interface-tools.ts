@@ -6,7 +6,7 @@
  * All tools are prefixed with "sint__" and handled without policy enforcement
  * (they are operator-facing, not agent-facing actions).
  *
- * @module @sint/mcp/tools/interface-tools
+ * @module sint-mcp/tools/interface-tools
  */
 
 import { InterfaceStateManager } from "@pshkv/interface-bridge";

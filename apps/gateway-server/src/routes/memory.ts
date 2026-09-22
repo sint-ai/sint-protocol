@@ -1,7 +1,7 @@
 /**
  * SINT Gateway — Memory API routes.
  *
- * Exposes @sint/memory MemoryBank operations as REST endpoints
+ * Exposes @pshkv/memory MemoryBank operations as REST endpoints
  * for SINT Console Operator module integration.
  *
  * GET  /v1/memory/recall?q=<query>&limit=<n>  — search memory

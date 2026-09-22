@@ -4,7 +4,7 @@
  * Testing implementation of IBalancePort that stores balances
  * in a Map. No external dependencies.
  *
- * @module @sint/bridge-economy/adapters/in-memory-balance-adapter
+ * @module @pshkv/bridge-economy/adapters/in-memory-balance-adapter
  */
 
 import { ok, err, type Result } from "@pshkv/core";

@@ -74,7 +74,7 @@ export interface OpcUaSafetyControlFixture {
   readonly description: string;
   readonly token: TokenFixture;
   readonly endpoint: string;
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly operation: OpcUaOperation;
     readonly nodeId: string;
@@ -92,7 +92,7 @@ export interface HardwareSafetyHandshakeFixture {
   readonly schemaVersion: string;
   readonly description: string;
   readonly token: TokenFixture;
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly request: {
       readonly resource: string;
@@ -117,7 +117,7 @@ export interface PhysicalAiRuntimeSafetyFixture {
     readonly transport: "ros2/sros2";
     readonly actionBoundary: "pre-actuation";
     readonly decisionVocabulary: readonly PhysicalAiDecisionAction[];
-    readonly transportOutcomes: readonly Array<
+    readonly transportOutcomes: ReadonlyArray<
       | "forwarded"
       | "held_for_review"
       | "publish_rejected"
@@ -146,7 +146,7 @@ export interface PhysicalAiRuntimeSafetyFixture {
       readonly maxForceNewtons?: number;
     };
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly description: string;
@@ -212,14 +212,14 @@ export interface A2ASkillCapabilityEnforcementFixture {
     readonly url: string;
     readonly name: string;
     readonly version: string;
-    readonly skills: readonly Array<{
+    readonly skills: ReadonlyArray<{
       readonly id: string;
       readonly name: string;
       readonly tags?: readonly string[];
     }>;
   };
   readonly tokens: Record<string, TokenFixture>;
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly tokenRef: string;
     readonly agentRef: "primary" | "secondary";
@@ -230,7 +230,7 @@ export interface A2ASkillCapabilityEnforcementFixture {
       readonly skillId?: string;
       readonly message: {
         readonly role: "user" | "agent";
-        readonly parts: readonly Array<
+        readonly parts: ReadonlyArray<
           | { readonly type: "text"; readonly text: string }
           | { readonly type: "data"; readonly data: Record<string, unknown> }
         >;
@@ -254,7 +254,7 @@ export interface WellKnownDiscoveryFixture {
   readonly attestationModes: readonly string[];
   readonly deploymentProfiles: readonly Record<string, unknown>[];
   readonly supportedBridges: readonly Record<string, unknown>[];
-  readonly schemaCatalog: readonly Array<{ name: string; path: string }>;
+  readonly schemaCatalog: ReadonlyArray<{ name: string; path: string }>;
   readonly complianceCrosswalk?: {
     readonly path: string;
     readonly frameworks: readonly string[];
@@ -267,7 +267,7 @@ export interface TierComplianceCrosswalkFixture {
   readonly schemaVersion: string;
   readonly description: string;
   readonly frameworks: readonly string[];
-  readonly tiers: readonly Array<{
+  readonly tiers: ReadonlyArray<{
     readonly tier: ApprovalTier;
     readonly consequenceClass: "monitoring" | "bounded-write" | "physical-state-change" | "irreversible-commit";
     readonly requiredReferences: readonly string[];
@@ -293,7 +293,7 @@ export interface SupplyChainVerificationFixture {
       readonly modelFingerprintHash?: string;
     };
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly request: {
       readonly resource: string;
@@ -321,7 +321,7 @@ export interface MqttGatewaySessionFixture {
   readonly description: string;
   readonly broker: string;
   readonly token: TokenFixture;
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly mode: "publish" | "subscribe";
     readonly topic: string;
@@ -347,7 +347,7 @@ export interface VerifiableComputeCriticalActionsFixture {
       readonly requirePublicInputsHash?: boolean;
     };
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly request: {
       readonly resource: string;
@@ -367,7 +367,7 @@ export interface EconomyRoutingFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
   readonly description: string;
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly input: {
       readonly request: {
@@ -381,7 +381,7 @@ export interface EconomyRoutingFixture {
       readonly maxLatencyMs?: number;
       readonly latencyWeight?: number;
     };
-    readonly x402Quotes?: readonly Array<{
+    readonly x402Quotes?: ReadonlyArray<{
       readonly routeId: string;
       readonly endpoint: string;
       readonly priceUsd: number;
@@ -399,7 +399,7 @@ export interface AutogenCapabilityTrustFixture {
   readonly schemaVersion: string;
   readonly description: string;
   readonly token: TokenFixture;
-  readonly equivalenceScenarios: readonly Array<{
+  readonly equivalenceScenarios: ReadonlyArray<{
     readonly name: string;
     readonly request: {
       readonly resource: string;
@@ -413,7 +413,7 @@ export interface AutogenCapabilityTrustFixture {
       readonly expectedEvidenceEvent?: string;
     };
   }>;
-  readonly trustMatrix: readonly Array<{
+  readonly trustMatrix: ReadonlyArray<{
     readonly name: string;
     readonly trustSignal: "unrestricted" | "low_risk" | "medium_risk" | "high_risk" | "blocked";
     readonly request: {
@@ -452,7 +452,7 @@ export interface AgentSkillDelegatedAuthorityFixture {
     readonly delegationDepth: number;
     readonly revocable?: boolean;
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly tokenOverrides?: {
       readonly resource?: string;
@@ -460,7 +460,7 @@ export interface AgentSkillDelegatedAuthorityFixture {
       readonly expiresAt?: string;
       readonly attestationRequirements?: {
         readonly minAttestationGrade?: 0 | 1 | 2 | 3;
-        readonly allowedTeeBackends?: readonly Array<"intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none">;
+        readonly allowedTeeBackends?: ReadonlyArray<"intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none">;
         readonly requireForTiers?: readonly ApprovalTier[];
       };
     };
@@ -493,7 +493,7 @@ export interface ActionRefExplainabilityFixture {
     readonly hashAlgorithm: "sha256";
     readonly identityTuple: readonly ["agentId", "resource", "action", "scope", "timestamp"];
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly identity: {
       readonly engineA: {
@@ -555,11 +555,11 @@ export interface PaymentGovernanceFixture {
     readonly rollingWindowCapTokens: number;
     readonly approvedRecipients: readonly string[];
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly name: string;
     readonly setup?: {
       readonly usedTodayTokens?: number;
-      readonly priorTxsInWindow?: readonly Array<{
+      readonly priorTxsInWindow?: ReadonlyArray<{
         readonly tokens: number;
         readonly atOffsetMs: number;
       }>;
@@ -787,7 +787,7 @@ export interface PhysicalWorkMarketCase {
       readonly mediaHash?: string;
       readonly bundleHash?: string;
     };
-    readonly validatorAttestations?: readonly Array<{
+    readonly validatorAttestations?: ReadonlyArray<{
       readonly validatorId: string;
       readonly verdict: "success" | "failure" | "inconclusive";
       readonly safety: number;
@@ -989,7 +989,7 @@ export interface PostQuantumCryptoAgilityFixture {
   readonly fixtureId: string;
   readonly schemaVersion: string;
   readonly description: string;
-  readonly profiles: readonly Array<{
+  readonly profiles: ReadonlyArray<{
     readonly cryptoProfile:
       | "classic-ed25519"
       | "hybrid-ed25519-mldsa65"
@@ -1024,7 +1024,7 @@ export interface HumanoidProfileFixture {
     readonly handoffRequiresReceipt: boolean;
     readonly estopIsT3Override: boolean;
   };
-  readonly intents: readonly Array<{
+  readonly intents: ReadonlyArray<{
     readonly name: string;
     readonly humanoidResource: string;
     readonly humanoidAction: string;
@@ -1096,7 +1096,7 @@ export interface HumanoidWarehousePilotFixture {
     readonly estopRequiresRollbackOrDenyEvidence: boolean;
     readonly exportAcceptedByExternalReviewer: boolean;
   };
-  readonly sampleEvents: readonly Array<{
+  readonly sampleEvents: ReadonlyArray<{
     readonly name: string;
     readonly robotId: string;
     readonly eventType: string;
@@ -1129,7 +1129,7 @@ export interface HumanoidMultivendorFleetFixture {
   readonly deployment: {
     readonly siteId: string;
     readonly fleetId: string;
-    readonly robots: readonly Array<{
+    readonly robots: ReadonlyArray<{
       readonly id: string;
       readonly kind: "humanoid" | "amr" | "conveyor";
       readonly vendor: string;
@@ -1147,7 +1147,7 @@ export interface HumanoidMultivendorFleetFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly sharedZoneClaims: readonly Array<{
+  readonly sharedZoneClaims: ReadonlyArray<{
     readonly claimId: string;
     readonly robotId: string;
     readonly workspaceId: string;
@@ -1166,14 +1166,14 @@ export interface HumanoidMultivendorFleetFixture {
     readonly semanticIntent: "move_payload_to_packout";
     readonly expectedAssignedTier: ApprovalTier;
     readonly expectedDecisionAction: DecisionAction;
-    readonly paths: readonly Array<{
+    readonly paths: ReadonlyArray<{
       readonly bridge: "ros2" | "open-rmf" | "opcua" | "sparkplug";
       readonly resource: string;
       readonly action: "publish" | "call";
       readonly mapperInput: Record<string, string>;
     }>;
   };
-  readonly dashboardAuditQueries: readonly Array<{
+  readonly dashboardAuditQueries: ReadonlyArray<{
     readonly name: string;
     readonly purpose: string;
     readonly requiredFilters: readonly string[];
@@ -1221,7 +1221,7 @@ export interface OpenRmfHandoffPolicyReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly operation: RmfOperation;
@@ -1284,7 +1284,7 @@ export interface MoveItManipulationPolicyReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly cases: readonly Array<{
+  readonly cases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resourceSource: "topic" | "action";
@@ -1352,7 +1352,7 @@ export interface Nav2NavigationPolicyReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly mappingCases: readonly Array<{
+  readonly mappingCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly actionName: string;
@@ -1360,7 +1360,7 @@ export interface Nav2NavigationPolicyReceiptsFixture {
     readonly expectedResource: string;
     readonly receiptRequired: boolean;
   }>;
-  readonly policyCases: readonly Array<{
+  readonly policyCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly topicName: string;
@@ -1428,7 +1428,7 @@ export interface Px4OffboardPolicyReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string | number>;
   };
-  readonly mappingCases: readonly Array<{
+  readonly mappingCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly intercept: {
@@ -1445,7 +1445,7 @@ export interface Px4OffboardPolicyReceiptsFixture {
     };
     readonly receiptRequired: boolean;
   }>;
-  readonly policyCases: readonly Array<{
+  readonly policyCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly expectedResource: string;
@@ -1513,7 +1513,7 @@ export interface LeRobotPolicyActuationReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly mappingCases: readonly Array<{
+  readonly mappingCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resourceSource: "engine" | "topic";
@@ -1524,7 +1524,7 @@ export interface LeRobotPolicyActuationReceiptsFixture {
     readonly expectedTier: ApprovalTier;
     readonly receiptRequired: boolean;
   }>;
-  readonly policyCases: readonly Array<{
+  readonly policyCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resource: string;
@@ -1586,7 +1586,7 @@ export interface Px4UlogCorrelationArtifactFixture {
       };
     };
     readonly correlation: {
-      readonly matchedEvents: readonly Array<{
+      readonly matchedEvents: ReadonlyArray<{
         readonly type: string;
         readonly targetMode?: string;
         readonly sintEventTimestamp: string;
@@ -1651,7 +1651,7 @@ export interface CodeAsPolicySkillGuardFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly mappingCases: readonly Array<{
+  readonly mappingCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resourceSource: "engine" | "capsule" | "topic";
@@ -1662,7 +1662,7 @@ export interface CodeAsPolicySkillGuardFixture {
     readonly expectedTier: ApprovalTier;
     readonly receiptRequired: boolean;
   }>;
-  readonly policyCases: readonly Array<{
+  readonly policyCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resource: string;
@@ -1734,7 +1734,7 @@ export interface SolarFieldOperationsPolicyReceiptsFixture {
     readonly requiredFields: readonly string[];
     readonly sample: Record<string, string>;
   };
-  readonly mappingCases: readonly Array<{
+  readonly mappingCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resourceSource: "engine" | "topic";
@@ -1745,7 +1745,7 @@ export interface SolarFieldOperationsPolicyReceiptsFixture {
     readonly expectedTier: ApprovalTier;
     readonly receiptRequired: boolean;
   }>;
-  readonly policyCases: readonly Array<{
+  readonly policyCases: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly resource: string;
@@ -1789,7 +1789,7 @@ export interface EuAiActConformityPackFixture {
     readonly name: "Regulation (EU) 2024/1689";
     readonly officialTextDate: string;
     readonly scopeNote: string;
-    readonly references: readonly Array<{
+    readonly references: ReadonlyArray<{
       readonly id:
         | "eu-ai-act-article-13"
         | "eu-ai-act-article-14"
@@ -1807,7 +1807,7 @@ export interface EuAiActConformityPackFixture {
   };
   readonly article13TransparencyExport: {
     readonly requiredFields: readonly string[];
-    readonly resourceCatalog: readonly Array<{
+    readonly resourceCatalog: ReadonlyArray<{
       readonly resourcePattern: string;
       readonly action: string;
       readonly tier: ApprovalTier;
@@ -1819,7 +1819,7 @@ export interface EuAiActConformityPackFixture {
   readonly article14HumanOversightExport: {
     readonly requiredFields: readonly string[];
     readonly oversightRole: string;
-    readonly interventionPoints: readonly Array<{
+    readonly interventionPoints: ReadonlyArray<{
       readonly tier: ApprovalTier;
       readonly mechanism: string;
       readonly evidenceSource: string;
@@ -1839,12 +1839,12 @@ export interface EuAiActConformityPackFixture {
       readonly artifactRef: string;
     };
   };
-  readonly annexIVChecklist: readonly Array<{
+  readonly annexIVChecklist: ReadonlyArray<{
     readonly id: string;
     readonly title: string;
     readonly sintArtifactRefs: readonly string[];
   }>;
-  readonly iso13482Crosswalk: readonly Array<{
+  readonly iso13482Crosswalk: ReadonlyArray<{
     readonly topic: string;
     readonly sintControl: string;
     readonly evidenceSource: string;
@@ -1869,7 +1869,7 @@ export interface HardwareSafetyPhaseAKpisFixture {
   readonly phase: string;
   readonly quarter: string;
   readonly description: string;
-  readonly kpis: readonly Array<{
+  readonly kpis: ReadonlyArray<{
     readonly id: string;
     readonly name: string;
     readonly target: string;
@@ -1898,7 +1898,7 @@ export interface IndustrialCellSafetyPackFixture {
     readonly actors: readonly string[];
     readonly resources: readonly string[];
   };
-  readonly policyTemplates: readonly Array<{
+  readonly policyTemplates: ReadonlyArray<{
     readonly templateId: string;
     readonly resourcePattern: string;
     readonly requiredHardwareSafety: {
@@ -1909,7 +1909,7 @@ export interface IndustrialCellSafetyPackFixture {
     };
     readonly defaultTier: ApprovalTier;
   }>;
-  readonly cellScenarios: readonly Array<{
+  readonly cellScenarios: ReadonlyArray<{
     readonly id: string;
     readonly description: string;
     readonly resource: string;
@@ -1930,7 +1930,7 @@ export interface IndustrialCellSafetyPackFixture {
     readonly evidenceEvent: string;
     readonly rollbackTargetRef?: string;
   }>;
-  readonly fmeaExport: readonly Array<{
+  readonly fmeaExport: ReadonlyArray<{
     readonly failureMode: string;
     readonly sourceScenarioId: string;
     readonly hazard: string;
@@ -1941,7 +1941,7 @@ export interface IndustrialCellSafetyPackFixture {
     readonly detection: number;
     readonly requiredEvidence: readonly string[];
   }>;
-  readonly sotifIso26262Mapping: readonly Array<{
+  readonly sotifIso26262Mapping: ReadonlyArray<{
     readonly topic: string;
     readonly sintSupport: string;
     readonly claimBoundary: string;
@@ -1977,14 +1977,14 @@ export interface IndustrialHumanoidShipyardSafetyPackFixture {
     readonly vesselBlockId: string;
     readonly profile: "industrial-humanoid-shipyard";
     readonly actors: readonly string[];
-    readonly robots: readonly Array<{
+    readonly robots: ReadonlyArray<{
       readonly id: string;
       readonly kind: "humanoid";
       readonly primaryTools: readonly string[];
     }>;
     readonly resources: readonly string[];
   };
-  readonly policyTemplates: readonly Array<{
+  readonly policyTemplates: ReadonlyArray<{
     readonly templateId: string;
     readonly resourcePattern: string;
     readonly defaultTier: ApprovalTier;
@@ -1996,7 +1996,7 @@ export interface IndustrialHumanoidShipyardSafetyPackFixture {
       readonly maxObservedAgeMs: number;
     };
   }>;
-  readonly shipyardScenarios: readonly Array<{
+  readonly shipyardScenarios: ReadonlyArray<{
     readonly id: string;
     readonly description: string;
     readonly resource: string;
@@ -2039,14 +2039,14 @@ export interface IndustrialHumanoidShipyardSafetyPackFixture {
     readonly purpose: string;
     readonly format: "json-lines";
     readonly requiredFields: readonly string[];
-    readonly dataQualityRules: readonly Array<{
+    readonly dataQualityRules: ReadonlyArray<{
       readonly ruleId: string;
       readonly description: string;
       readonly maxSkewMs?: number;
       readonly required?: boolean;
     }>;
   };
-  readonly fmeaExport: readonly Array<{
+  readonly fmeaExport: ReadonlyArray<{
     readonly failureMode: string;
     readonly sourceScenarioId: string;
     readonly hazard: string;
@@ -2057,7 +2057,7 @@ export interface IndustrialHumanoidShipyardSafetyPackFixture {
     readonly detection: number;
     readonly requiredEvidence: readonly string[];
   }>;
-  readonly safetyCaseMapping: readonly Array<{
+  readonly safetyCaseMapping: ReadonlyArray<{
     readonly topic: string;
     readonly sintSupport: string;
     readonly claimBoundary: string;
@@ -2065,7 +2065,7 @@ export interface IndustrialHumanoidShipyardSafetyPackFixture {
   readonly sprintPlan: {
     readonly duration: string;
     readonly goal: string;
-    readonly workstreams: readonly Array<{
+    readonly workstreams: ReadonlyArray<{
       readonly id: string;
       readonly name: string;
       readonly deliverables: readonly string[];
@@ -2116,7 +2116,7 @@ export interface FactoryActionDemoFixture {
   };
   readonly cellGraph: {
     readonly cell_id: string;
-    readonly assets: readonly Array<{
+    readonly assets: ReadonlyArray<{
       readonly asset_id: string;
       readonly type: string;
       readonly vendor: string;
@@ -2125,7 +2125,7 @@ export interface FactoryActionDemoFixture {
       readonly safety_zone?: string;
       readonly capabilities?: readonly string[];
     }>;
-    readonly flows: readonly Array<{
+    readonly flows: ReadonlyArray<{
       readonly from: string;
       readonly to: string;
       readonly material: string;
@@ -2168,7 +2168,7 @@ export interface FactoryActionDemoFixture {
     readonly signed_by: string;
     readonly metadata?: Record<string, unknown>;
   };
-  readonly decisionPath: readonly Array<{
+  readonly decisionPath: ReadonlyArray<{
     readonly id:
       | "deny-without-simulation"
       | "escalate-after-simulation"
@@ -2202,7 +2202,7 @@ export interface FactoryActionDemoFixture {
     readonly approverRef: string;
     readonly evidenceEvent: string;
   };
-  readonly adapterStubs: readonly Array<{
+  readonly adapterStubs: ReadonlyArray<{
     readonly adapterId: string;
     readonly vendor: string;
     readonly targetLanguage: string;
@@ -2210,7 +2210,7 @@ export interface FactoryActionDemoFixture {
     readonly generatedProgramHash: string;
     readonly mapsActionFields: readonly string[];
   }>;
-  readonly receiptChain: readonly Array<{
+  readonly receiptChain: ReadonlyArray<{
     readonly step: string;
     readonly eventType: string;
     readonly digest: string;
@@ -2250,7 +2250,7 @@ export interface RegulatedConsentExtensionsFixture {
       readonly minimizeGrantorRef: boolean;
     };
   };
-  readonly consentScopes: readonly Array<{
+  readonly consentScopes: ReadonlyArray<{
     readonly scopeId: string;
     readonly subjectRole: "patient" | "worker" | "resident";
     readonly grantorRef: string;
@@ -2260,7 +2260,7 @@ export interface RegulatedConsentExtensionsFixture {
     readonly maxAgeSeconds: number;
     readonly revocable: boolean;
   }>;
-  readonly sampleEvents: readonly Array<{
+  readonly sampleEvents: ReadonlyArray<{
     readonly name: string;
     readonly consentId: string;
     readonly grantorRef: string;
@@ -2279,12 +2279,12 @@ export interface RegulatedConsentExtensionsFixture {
     readonly assignedTier: ApprovalTier;
     readonly policyViolated?: string;
   }>;
-  readonly privacyPreservingEvidenceRules: readonly Array<{
+  readonly privacyPreservingEvidenceRules: ReadonlyArray<{
     readonly sensor: "camera" | "microphone" | "biometric";
     readonly allowedEvidence: readonly string[];
     readonly forbiddenEvidence: readonly string[];
   }>;
-  readonly incidentExportPrototypes: readonly Array<{
+  readonly incidentExportPrototypes: ReadonlyArray<{
     readonly domain: "home" | "medical";
     readonly name: string;
     readonly requiredFields: readonly string[];
@@ -2321,7 +2321,7 @@ export interface RegulatedAgentRuntimeFixture {
     readonly approvedRegions: readonly string[];
     readonly approvedModels: readonly string[];
   };
-  readonly dataClasses: readonly Array<{
+  readonly dataClasses: ReadonlyArray<{
     readonly classId: string;
     readonly description: string;
     readonly examples: readonly string[];
@@ -2330,12 +2330,12 @@ export interface RegulatedAgentRuntimeFixture {
     readonly allowedEvidence: readonly string[];
     readonly forbiddenEvidence: readonly string[];
   }>;
-  readonly policyRequirements: readonly Array<{
+  readonly policyRequirements: ReadonlyArray<{
     readonly requirementId: string;
     readonly description: string;
     readonly receiptFields: readonly string[];
   }>;
-  readonly scenarios: readonly Array<{
+  readonly scenarios: ReadonlyArray<{
     readonly name: string;
     readonly principal: string;
     readonly token: {
@@ -2369,7 +2369,8 @@ export interface RegulatedAgentRuntimeFixture {
     };
     readonly expected: {
       readonly decisionAction: DecisionAction;
-      readonly assignedTier: ApprovalTier;
+      /** Fixture encodes the ApprovalTier enum KEY (e.g. "T3_COMMIT"), not its value. */
+      readonly assignedTier: keyof typeof ApprovalTier;
       readonly policyViolated?: string;
       readonly transformations?: readonly string[];
       readonly evidenceRequired: boolean;
@@ -2400,7 +2401,7 @@ export interface RegulatedAgentRuntimeFixture {
       readonly allowedContextFields: readonly string[];
       readonly allowFallback: boolean;
     };
-    readonly invalidDelegations: readonly Array<{
+    readonly invalidDelegations: ReadonlyArray<{
       readonly name: string;
       readonly requestedPolicy: {
         readonly allowedDataClasses?: readonly string[];
@@ -2430,5 +2431,128 @@ export interface RegulatedAgentRuntimeFixture {
 export function loadRegulatedAgentRuntimeFixture(): RegulatedAgentRuntimeFixture {
   return loadFixture<RegulatedAgentRuntimeFixture>(
     "compliance/regulated-agent-runtime.v1.json",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Physical Envelope Attestation Profile v0.1 — adversarial fixture
+// ---------------------------------------------------------------------------
+
+export interface EnvelopeAttestationLimits {
+  readonly maxVelocityMps?: number;
+  readonly maxForceNewtons?: number;
+}
+
+export interface EnvelopeAttestationDeployment {
+  readonly authorizedLimits: EnvelopeAttestationLimits;
+  readonly baseline: { readonly envelopeId: string; readonly limits: EnvelopeAttestationLimits };
+  readonly permissive: {
+    readonly envelopeId: string;
+    readonly limits: EnvelopeAttestationLimits;
+    readonly requires: ReadonlyArray<{
+      readonly condition: string;
+      readonly value: boolean;
+      readonly minSources?: number;
+    }>;
+  };
+  readonly maxTtlMs: number;
+  readonly maxClockSkewMs?: number;
+  readonly selectorFailurePolicy: {
+    readonly mode: "fail-open" | "fallback" | "deny";
+    readonly fallback?: EnvelopeAttestationLimits;
+  };
+}
+
+export type EnvelopeAttestationRejectionCode =
+  | "EVIDENCE_MALFORMED"
+  | "SOURCE_UNTRUSTED"
+  | "PROOF_INVALID"
+  | "VERIFIER_UNAVAILABLE"
+  | "TTL_INVALID"
+  | "EVIDENCE_EXPIRED"
+  | "EVIDENCE_FROM_FUTURE"
+  | "EVIDENCE_PREDATES_BOOT"
+  | "SEQUENCE_REPLAYED"
+  | "SEQUENCE_CONFLICT"
+  | "STORE_UNAVAILABLE";
+
+export type EnvelopeAttestationStep =
+  | {
+      readonly op: "ingest";
+      readonly at: number;
+      readonly signer: string;
+      readonly proofOverride?: "opaque-string" | "none";
+      readonly tamperAfterSigning?: Record<string, unknown>;
+      readonly evidence: {
+        readonly evidenceId: string;
+        readonly sourceId: string;
+        readonly condition: string;
+        readonly value: boolean;
+        readonly sequence: number;
+        readonly issuedAt: number;
+        readonly ttlMs: number | "unbounded";
+      };
+      readonly expect: {
+        readonly accepted: boolean;
+        readonly code?: EnvelopeAttestationRejectionCode | readonly EnvelopeAttestationRejectionCode[];
+      };
+    }
+  | {
+      readonly op: "probe";
+      readonly at: number;
+      readonly commandedVelocityMps?: number;
+      readonly expect: {
+        readonly activeEnvelope?: string;
+        readonly outcome: "pass" | "violation" | "refused";
+        readonly events?: ReadonlyArray<"envelope.applied" | "envelope.fallback">;
+        readonly binding?: {
+          readonly evidenceRefs?: readonly string[];
+          readonly effectiveLimits?: EnvelopeAttestationLimits;
+          readonly captureAs?: string;
+          readonly evidenceDigestEquals?: string;
+          readonly evidenceDigestDiffersFrom?: string;
+          readonly envelopeDigestEquals?: string;
+          readonly envelopeDigestDiffersFrom?: string;
+        };
+      };
+    }
+  | { readonly op: "restart"; readonly at: number; readonly preserveSequenceStore: boolean }
+  | { readonly op: "verifier"; readonly at: number; readonly state: "available" | "unavailable" }
+  | { readonly op: "store"; readonly at: number; readonly state: "available" | "unavailable" }
+  | {
+      readonly op: "fault";
+      readonly at: number;
+      readonly component: "envelope-selector";
+      readonly state: "throwing" | "healthy";
+    };
+
+export interface EnvelopeAttestationCase {
+  readonly caseId: string;
+  readonly requirement: 1 | 2 | 3 | 4 | 5;
+  readonly name: string;
+  readonly deploymentOverride?: Partial<
+    Pick<EnvelopeAttestationDeployment, "authorizedLimits" | "permissive" | "selectorFailurePolicy">
+  >;
+  readonly steps: readonly EnvelopeAttestationStep[];
+}
+
+export interface EnvelopeAttestationFixture {
+  readonly fixtureId: string;
+  readonly schemaVersion: string;
+  readonly profile: string;
+  readonly clock: { readonly epoch: string };
+  readonly signers: Readonly<Record<string, { readonly trusted: boolean }>>;
+  readonly deployment: EnvelopeAttestationDeployment;
+  readonly probe: {
+    readonly resource: string;
+    readonly action: string;
+    readonly commandedVelocityMps: number;
+  };
+  readonly cases: readonly EnvelopeAttestationCase[];
+}
+
+export function loadEnvelopeAttestationAdversarialFixture(): EnvelopeAttestationFixture {
+  return loadFixture<EnvelopeAttestationFixture>(
+    "physical-ai/envelope-attestation-adversarial.v0.1.json",
   );
 }

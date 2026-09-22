@@ -4,7 +4,7 @@
  * Executes an asynchronous action function. The action function should
  * route through PolicyGateway for any physical state changes.
  *
- * @module @sint/engine-system2/bt/nodes/action
+ * @module @pshkv/engine-system2/bt/nodes/action
  */
 
 import type { Blackboard } from "../blackboard.js";

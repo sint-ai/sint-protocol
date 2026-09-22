@@ -5,7 +5,7 @@
  * tool call, ROS 2 topic publish, actuator command, capsule execution —
  * EVER bypasses the Policy Gateway.
  *
- * @module @sint/core/types/policy
+ * @module @pshkv/core/types/policy
  */
 
 import type {

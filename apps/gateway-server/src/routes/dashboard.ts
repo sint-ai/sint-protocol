@@ -10,7 +10,7 @@
  *   [ ] Display ASI01-10 coverage matrix with live pass/fail
  *   [ ] Tier distribution pie chart (T0/T1/T2/T3 breakdown from ledger)
  *
- * @module @sint/gateway-server/routes/dashboard
+ * @module @pshkv/gateway-server/routes/dashboard
  */
 
 // Placeholder — implementation in this branch

@@ -9,7 +9,7 @@
  * (BalanceService, BudgetService, TrustService) without coupling
  * to its internals.
  *
- * @module @sint/bridge-economy/interfaces
+ * @module @pshkv/bridge-economy/interfaces
  */
 
 import type { Result } from "@pshkv/core";

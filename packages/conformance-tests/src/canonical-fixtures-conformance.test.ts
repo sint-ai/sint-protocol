@@ -27,6 +27,7 @@ import {
 import {
   rmfDispatchResourceUri,
   rmfOperationToAction,
+  type RmfOperation,
 } from "@pshkv/bridge-open-rmf";
 import { opcUaNodeToResourceUri, opcUaOperationToAction } from "@pshkv/bridge-opcua";
 import {
@@ -169,7 +170,7 @@ describe("Canonical Fixture Conformance", () => {
 
     const rmfResource = rmfDispatchResourceUri(fixture.requests.openRmf.fleetName);
     expect(rmfResource).toBe(fixture.requests.openRmf.expectedResource);
-    const rmfAction = rmfOperationToAction(fixture.requests.openRmf.operation);
+    const rmfAction = rmfOperationToAction(fixture.requests.openRmf.operation as RmfOperation);
     expect(rmfAction).toBe(fixture.requests.openRmf.expectedAction);
 
     const rmfDecision = await gateway.intercept({

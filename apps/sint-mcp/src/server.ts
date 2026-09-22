@@ -5,7 +5,7 @@
  * enforces SINT policy on every call, and exposes built-in SINT tools
  * for approval workflows, audit trail, and server management.
  *
- * @module @sint/mcp/server
+ * @module sint-mcp/server
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";

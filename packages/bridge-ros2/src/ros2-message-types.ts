@@ -7,7 +7,7 @@
  * These are protocol-compatible with standard ROS 2 message definitions
  * (geometry_msgs, sensor_msgs, etc.) but don't require rclnodejs.
  *
- * @module @sint/bridge-ros2/ros2-message-types
+ * @module @pshkv/bridge-ros2/ros2-message-types
  */
 
 import { z } from "zod";

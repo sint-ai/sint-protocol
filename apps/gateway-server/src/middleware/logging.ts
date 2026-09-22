@@ -3,7 +3,7 @@
  *
  * JSON-formatted request/response logging with latency tracking.
  *
- * @module @sint/gateway-server/middleware/logging
+ * @module @pshkv/gateway-server/middleware/logging
  */
 
 import type { Context, Next } from "hono";

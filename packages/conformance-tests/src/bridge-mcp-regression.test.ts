@@ -5,8 +5,8 @@
  * security gate with proper tier assignment, denial, forbidden
  * combo detection, and escalation.
  *
- * These tests MUST pass on every PR that touches @sint/bridge-mcp
- * or @sint/gate-policy-gateway.
+ * These tests MUST pass on every PR that touches @pshkv/bridge-mcp
+ * or @pshkv/gate-policy-gateway.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";

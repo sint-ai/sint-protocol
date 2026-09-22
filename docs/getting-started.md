@@ -128,4 +128,4 @@ curl "http://localhost:3100/v1/ledger/query?agentId=$SUBJECT_PUB&limit=20"
 - MCP proxy hardening: `docs/guides/claude-desktop-integration.md`
 - Cursor MCP setup: `docs/guides/cursor-integration.md`
 - Deployment profiles: `docs/guides/docker-deployment.md`
-- Protocol reference: `docs/SINT_v0.2_SPEC.md`
+- Protocol reference: `docs/specs/SINT_v0.2_SPEC.md`

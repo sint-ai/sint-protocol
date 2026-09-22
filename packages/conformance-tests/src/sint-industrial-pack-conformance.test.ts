@@ -22,19 +22,19 @@ type IndustrialPackManifest = {
   readonly root: string;
   readonly invariants: readonly string[];
   readonly paths: Record<string, string>;
-  readonly schemas: readonly Array<{
+  readonly schemas: ReadonlyArray<{
     readonly id: string;
     readonly packPath: string;
     readonly sourcePath: string;
     readonly object: string;
   }>;
-  readonly policies: readonly Array<{
+  readonly policies: ReadonlyArray<{
     readonly id: string;
     readonly packPath: string;
     readonly sourcePath: string;
     readonly requires: readonly string[];
   }>;
-  readonly settlementProfiles: readonly Array<{
+  readonly settlementProfiles: ReadonlyArray<{
     readonly id: string;
     readonly status: "active-profile" | "planned";
     readonly schemaPath: string;
@@ -46,7 +46,7 @@ type IndustrialPackManifest = {
     readonly paymentMethods: readonly string[];
     readonly claimsExecutionAuthority: boolean;
   }>;
-  readonly adapters: readonly Array<{
+  readonly adapters: ReadonlyArray<{
     readonly id: string;
     readonly path: string;
     readonly status:
@@ -61,7 +61,7 @@ type IndustrialPackManifest = {
     readonly defaultTier: string;
     readonly claimsLiveControl: boolean;
   }>;
-  readonly simulators: readonly Array<{
+  readonly simulators: ReadonlyArray<{
     readonly id: string;
     readonly path: string;
     readonly status: "active-receipt-stub" | "planned";
@@ -70,7 +70,7 @@ type IndustrialPackManifest = {
     readonly requiredOutputs: readonly string[];
     readonly claimsLiveControl: boolean;
   }>;
-  readonly examples: readonly Array<{
+  readonly examples: ReadonlyArray<{
     readonly id: string;
     readonly path: string;
     readonly status: "active-fixture-backed" | "planned";
@@ -96,7 +96,7 @@ type FactorySettlementSample = {
     readonly on_event: string;
     readonly require_receipt_chain: boolean;
   };
-  readonly contributors: readonly Array<{
+  readonly contributors: ReadonlyArray<{
     readonly type: string;
     readonly id: string;
     readonly role?: string;

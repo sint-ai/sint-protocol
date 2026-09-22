@@ -55,7 +55,7 @@ pandoc SINT_PROTOCOL_ARXIV_2026.md -o sint-paper.pdf --bibliography=references.b
        -V geometry:margin=1in -V documentclass:article -V papersize:letter
 ```
 
-For an arXiv submission shell, see `docs/SPAI_2026_SUBMISSION.tex` in the repo root as a starting template (IEEE conference style).
+For an arXiv submission shell, see `docs/papers/SPAI_2026_SUBMISSION.tex` in the repo root as a starting template (IEEE conference style).
 
 ## Recommended Next Actions
 

@@ -9,7 +9,7 @@
 ## Run
 
 ```bash
-pnpm --filter @sint/conformance-tests exec vitest run src/industrial-interoperability.test.ts
+pnpm --filter @pshkv/conformance-tests exec vitest run src/industrial-interoperability.test.ts
 ```
 
 ## Threat model focus

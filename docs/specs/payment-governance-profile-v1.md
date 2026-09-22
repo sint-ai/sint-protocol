@@ -34,7 +34,7 @@ Executable test:
 ## Run
 
 ```bash
-pnpm --filter @sint/conformance-tests test:fixtures
+pnpm --filter @pshkv/conformance-tests test:fixtures
 ```
 
 ## Notes

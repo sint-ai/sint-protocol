@@ -4,7 +4,7 @@
  * Public API for the behavior tree engine, task planner,
  * and System 1/System 2 arbitration layer.
  *
- * @module @sint/engine-system2
+ * @module @pshkv/engine-system2
  */
 
 // Behavior Tree

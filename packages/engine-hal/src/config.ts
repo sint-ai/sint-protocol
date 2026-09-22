@@ -4,7 +4,7 @@
  * Loads, validates, and merges engine configuration from a JSON file.
  * Falls back to sensible defaults when no configuration file is found.
  *
- * @module @sint/engine-hal/config
+ * @module @pshkv/engine-hal/config
  */
 
 import { readFile } from "node:fs/promises";

@@ -4,7 +4,7 @@
  * Testing implementation of IPricingPort with configurable
  * per-resource cost multipliers.
  *
- * @module @sint/bridge-economy/adapters/in-memory-pricing-adapter
+ * @module @pshkv/bridge-economy/adapters/in-memory-pricing-adapter
  */
 
 import { ok, type Result } from "@pshkv/core";

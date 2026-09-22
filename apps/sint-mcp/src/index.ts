@@ -11,7 +11,7 @@
  *   npx sint-mcp --sse --port 3200         # SSE remote
  *   npx sint-mcp --config ./config.json     # custom config
  *
- * @module @sint/mcp
+ * @module sint-mcp
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";

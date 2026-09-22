@@ -5,7 +5,7 @@
  * and middleware configured. Supports in-memory and
  * persistent (PostgreSQL/Redis) storage backends.
  *
- * @module @sint/gateway-server/server
+ * @module @pshkv/gateway-server/server
  */
 
 import { Hono } from "hono";

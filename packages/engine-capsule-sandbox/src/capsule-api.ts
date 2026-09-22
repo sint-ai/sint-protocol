@@ -5,7 +5,7 @@
  * may only read sensors they declared in their manifest and must
  * route all actions through the provided action gateway.
  *
- * @module @sint/engine-capsule-sandbox/capsule-api
+ * @module @pshkv/engine-capsule-sandbox/capsule-api
  */
 
 import type {

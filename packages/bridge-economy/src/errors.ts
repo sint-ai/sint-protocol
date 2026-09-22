@@ -4,7 +4,7 @@
  * Typed errors for economy-related failures. Each extends Error
  * with structured fields for programmatic handling.
  *
- * @module @sint/bridge-economy/errors
+ * @module @pshkv/bridge-economy/errors
  */
 
 /**

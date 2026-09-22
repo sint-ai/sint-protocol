@@ -10,8 +10,8 @@ Run gateway, mint a token, intercept one request, and inspect ledger output.
 
 ```bash
 pnpm install
-pnpm --filter @sint/core build
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/core build
+pnpm --filter @pshkv/gateway-server dev
 ```
 
 2. In another terminal, create a keypair:

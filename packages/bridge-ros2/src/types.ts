@@ -1,7 +1,7 @@
 /**
  * SINT Bridge-ROS2 — Types for ROS 2 interception.
  *
- * @module @sint/bridge-ros2/types
+ * @module @pshkv/bridge-ros2/types
  */
 
 import type {

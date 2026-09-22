@@ -4,7 +4,7 @@
  * Executes a validated plan step-by-step, routing each step through
  * an action callback (typically connected to PolicyGateway).
  *
- * @module @sint/engine-system2/planner/plan-executor
+ * @module @pshkv/engine-system2/planner/plan-executor
  */
 
 import type { Result, SintPlan, SintPlanStep } from "@pshkv/core";

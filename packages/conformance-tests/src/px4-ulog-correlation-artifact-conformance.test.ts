@@ -45,6 +45,7 @@ describe("PX4 ULog correlation artifact fixture v1", () => {
     expect(sample.correlation.matchedEvents.length).toBeGreaterThan(0);
 
     const first = sample.correlation.matchedEvents[0];
-    expect(first.deltaMs).toBeLessThanOrEqual(sample.correlation.maxAllowedDeltaMs);
+    expect(first).toBeDefined();
+    expect(first?.deltaMs).toBeLessThanOrEqual(sample.correlation.maxAllowedDeltaMs);
   });
 });

@@ -24,7 +24,7 @@ interface RuntimeDecisionResult {
 }
 
 class RegulatedAgentRuntimeHarness {
-  constructor(private readonly fixture: RegulatedAgentRuntimeFixture) {}
+  constructor(_fixture: RegulatedAgentRuntimeFixture) {}
 
   evaluate(scenario: RuntimeScenario): RuntimeDecisionResult {
     if (!this.resourceMatches(scenario)) {

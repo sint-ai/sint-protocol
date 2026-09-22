@@ -7,7 +7,7 @@
  *
  * Every engine action routes through the Policy Gateway — no exceptions.
  *
- * @module @sint/core/types/engine
+ * @module @pshkv/core/types/engine
  */
 
 import type {

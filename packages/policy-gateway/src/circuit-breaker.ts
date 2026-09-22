@@ -15,7 +15,7 @@
  *   HALF_OPEN ──(failure)───────────▶ OPEN
  *   * ──(operator trip())───────────▶ OPEN  (immediate)
  *
- * @module @sint/gate-policy-gateway/circuit-breaker
+ * @module @pshkv/gate-policy-gateway/circuit-breaker
  */
 
 /** Circuit state for a single agent. */

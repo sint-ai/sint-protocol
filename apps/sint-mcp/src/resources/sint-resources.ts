@@ -4,7 +4,7 @@
  * Exposes SINT data (ledger events, tokens, server info, approvals)
  * as browseable MCP resources.
  *
- * @module @sint/mcp/resources/sint-resources
+ * @module sint-mcp/resources/sint-resources
  */
 
 import type { SintCapabilityToken } from "@pshkv/core";

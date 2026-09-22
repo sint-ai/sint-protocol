@@ -1,5 +1,5 @@
 /**
- * @sint/bridge-a2a — A2AInterceptor tests.
+ * @pshkv/bridge-a2a — A2AInterceptor tests.
  *
  * Verifies that A2A tasks flow correctly through the SINT PolicyGateway:
  * allow → "forward", deny → "deny", escalate → "escalate".

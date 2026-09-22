@@ -20,13 +20,13 @@ interface ReadinessFixture {
     readonly demoCommand: string;
     readonly conformanceCommand: string;
   };
-  readonly requiredGates: readonly Array<{
+  readonly requiredGates: ReadonlyArray<{
     readonly id: string;
     readonly status: "implemented";
     readonly evidence: readonly string[];
   }>;
   readonly negativeCases: readonly string[];
-  readonly productionReplacements: readonly Array<{
+  readonly productionReplacements: ReadonlyArray<{
     readonly reference: string;
     readonly production: string;
   }>;

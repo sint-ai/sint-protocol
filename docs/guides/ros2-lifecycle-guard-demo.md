@@ -35,7 +35,7 @@ The `ros2-guard` container will:
 The repo already includes two benchmark surfaces:
 
 - In-process gateway microbenchmarks:
-  - `pnpm --filter @sint/gate-policy-gateway bench`
+  - `pnpm --filter @pshkv/gate-policy-gateway bench`
 - ROS 2 `/cmd_vel` control-loop SLA conformance run:
   - `pnpm run benchmark:ros2-loop`
   - `pnpm run benchmark:ros2-report` (generates the report artefacts in `docs/reports/`)

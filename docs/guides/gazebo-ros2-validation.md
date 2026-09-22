@@ -51,7 +51,7 @@ ros2:///cmd_vel
 Run:
 
 ```bash
-pnpm --filter @sint/conformance-tests test -- src/industrial-interoperability.test.ts
+pnpm --filter @pshkv/conformance-tests test -- src/industrial-interoperability.test.ts
 ```
 
 The test `Gazebo model-scoped cmd_vel maps to equivalent ROS2 control-tier semantics` verifies equivalence between canonical ROS2 and Gazebo-scoped control paths.

@@ -4,7 +4,7 @@
  * A typed key-value store shared between all nodes in a behavior tree.
  * Provides the communication mechanism for nodes to share state.
  *
- * @module @sint/engine-system2/bt/blackboard
+ * @module @pshkv/engine-system2/bt/blackboard
  */
 
 /**

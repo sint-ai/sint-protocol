@@ -5,7 +5,7 @@
  * configurable thresholds, and emits callbacks when warning or critical
  * levels are exceeded.
  *
- * @module @sint/engine-hal/resource-monitor
+ * @module @pshkv/engine-hal/resource-monitor
  */
 
 import os from "node:os";

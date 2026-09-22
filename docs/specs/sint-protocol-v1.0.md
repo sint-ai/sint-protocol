@@ -59,7 +59,7 @@ These six invariants are enforced by the reference implementation and must hold 
 
 > **All agent actions must flow through `PolicyGateway.intercept()` before execution.**
 
-No bridge adapter, route handler, engine component, or service module may make an independent authorization decision. The PolicyGateway is the sole authority for allow/deny/escalate decisions. This is verified by the conformance test suite (`@sint/conformance-tests`) on every pull request.
+No bridge adapter, route handler, engine component, or service module may make an independent authorization decision. The PolicyGateway is the sole authority for allow/deny/escalate decisions. This is verified by the conformance test suite (`@pshkv/conformance-tests`) on every pull request.
 
 Implication: a bridge that forwards an action without calling `intercept()` — even if the action appears benign — is non-conformant.
 
@@ -84,7 +84,7 @@ The first event in a chain has `previousHash = "0000...0000"` (64 zero hex chars
 
 > **A delegated CapabilityToken may only narrow the permissions of its parent token — never widen them.**
 
-The delegator (`@sint/gate-capability-tokens`) enforces that:
+The delegator (`@pshkv/gate-capability-tokens`) enforces that:
 - The delegated `resource` must match or be a strict sub-path of the parent `resource`.
 - The delegated `actions` must be a subset of the parent `actions`.
 - All physical constraints in the delegated token must be equal to or stricter than the parent's constraints (lower velocity/force caps, smaller geofence, shorter expiry).
@@ -523,7 +523,7 @@ Sum of weights: α + β + γ − δ + ε = 0.4 + 0.2 + 0.2 − 0.1 + 0.1 = 0.8 (
 
 **θ = 0.3** is the default human workspace deployment threshold.
 
-When `CSML > θ`, the PolicyGateway applies a +1 tier escalation to all subsequent requests from that agent/model backend until the score drops below threshold. This is computed by `computeCsml()` in `@sint/gate-evidence-ledger` and applied by `ProactiveEscalation` in `@sint/gate-policy-gateway`.
+When `CSML > θ`, the PolicyGateway applies a +1 tier escalation to all subsequent requests from that agent/model backend until the score drops below threshold. This is computed by `computeCsml()` in `@pshkv/gate-evidence-ledger` and applied by `ProactiveEscalation` in `@pshkv/gate-policy-gateway`.
 
 Minimum data requirement: CSML recommendation is `"insufficient_data"` when fewer than 10 request events exist in the analysis window. Escalation is not triggered on insufficient data.
 
@@ -539,16 +539,16 @@ SINT provides coverage against all ten OWASP Agentic Security Initiative (ASI) c
 
 | # | Category | Coverage | SINT Components | Notes |
 |---|---|---|---|---|
-| ASI01 | Goal & Objective Hijacking | Full | `@sint/gate-policy-gateway` (GoalHijackPlugin, forbidden-combos), `@sint/avatar` (CSML drift detection) | GoalHijackPlugin implements 5-layer heuristic detection: prompt injection, role override, semantic escalation, exfiltration probe, cross-agent injection. Forbidden action-sequence detection catches known hijack patterns (e.g., read + exfiltrate). CSML drift detects anomalous action-frequency shifts. |
-| ASI02 | Tool & Function Misuse | Full | `@sint/bridge-mcp` (TAM enforcement), `@sint/gate-policy-gateway` (tier assignment), `@sint/gate-capability-tokens` (resource scope) | Tool Authorization Manifests (TAM) are operator-defined — a malicious tool cannot self-declare elevated permissions. Every MCP tool call is validated against the TAM before forwarding. Capability token resource scope ensures tools can only be called within the authorized resource pattern. |
-| ASI03 | Identity & Authentication Abuse | Full | `@sint/gate-capability-tokens` (Ed25519 signing, did:key identity, delegation chain) | Every capability token is Ed25519-signed. Agent identity = did:key (Ed25519 public key). Delegation chain is verified at every level — a forged token or broken chain is rejected at step 1 of intercept(). Revocation store provides instant invalidation with cascade propagation. |
-| ASI04 | Supply Chain Compromise | Full | `@sint/bridge-mcp` (TAM manifest validation), `@sint/gate-capability-tokens` (Ed25519 plugin signing), `@sint/gate-policy-gateway` (DefaultSupplyChainVerifier) | DefaultSupplyChainVerifier checks model fingerprint hash, model ID allowlist, and bridge protocol consistency at runtime to detect tampered tools or swapped model versions. TAM manifests are operator-controlled — tool providers cannot self-escalate permissions. |
-| ASI05 | Sensitive Data Exfiltration via Code Execution | Partial | `@sint/gate-policy-gateway` (forbidden-combos), `@sint/engine-capsule-sandbox` (process isolation) | Capsule sandbox provides process-level isolation. Forbidden combo rules block known shell-execution sequences (filesystem.write → exec.run). Gap: no semantic analysis of tool arguments for code injection; shell tool calls not classified at T3_COMMIT by default. |
-| ASI06 | Memory Poisoning & Context Manipulation | Partial | `@sint/gate-policy-gateway` (DefaultMemoryIntegrityChecker) | DefaultMemoryIntegrityChecker detects: suspicious repetition (replay attack), unauthorized privilege claims in recentActions, history length overflow, UUIDv7 timestamp monotonicity violations. High-severity anomalies → deny; medium/low → warn-and-allow with audit. Gap: checker state is per-gateway-instance only (not persisted); no semantic analysis of vector embedding space for poisoning; cross-session continuity not yet verified. |
-| ASI07 | Inter-Agent Trust Exploitation | Full | `@sint/bridge-a2a` (A2A protocol enforcement), `@sint/gate-capability-tokens` (did:key per agent) | A2A bridge validates the sender's capability token before processing any inter-agent message. Each agent's identity is a did:key — spoofed messages from unknown or unauthorized senders are rejected. APS↔SINT interop mapping covers cross-organization agent communication. |
-| ASI08 | Cascading Failure & Agent Storms | Full | `@sint/gate-policy-gateway` (CircuitBreakerPlugin, rate limiting), `@sint/bridge-swarm` (SwarmCoordinator collective constraints) | CircuitBreakerPlugin opens the circuit when an agent trips N consecutive denials — all subsequent requests auto-deny without evaluation. Rate limiting prevents runaway tool-call storms. SwarmCoordinator caps collective kinetic energy Σ(½mv²) and escalated-fraction across robot fleets. |
-| ASI09 | Deceptive Intent & Trust Exploitation | Full | `@sint/gate-policy-gateway` (T2/T3 human approval, M-of-N quorum), `@sint/avatar` (CSML drift detection) | T2_act requires operator review before physical execution. T3_commit requires explicit human sign-off with configurable M-of-N quorum. CSML drift detection auto-escalates agents showing deceptive behavioral patterns (anomalous persona) regardless of their token tier. |
-| ASI10 | Autonomous Rogue Behavior | Full | `@sint/gate-policy-gateway` (CircuitBreakerPlugin, DynamicEnvelopePlugin), `@sint/avatar` (CSML anomalous persona) | CircuitBreakerPlugin provides the EU AI Act Article 14(4)(e) stop button: operators can manually `trip()` the circuit, instantly blocking all actions from an agent. CSML anomalous persona auto-trips the circuit when safety events are detected. DynamicEnvelopePlugin enforces environment-adaptive physical limits even when the agent presents a valid token. |
+| ASI01 | Goal & Objective Hijacking | Full | `@pshkv/gate-policy-gateway` (GoalHijackPlugin, forbidden-combos), `@pshkv/avatar` (CSML drift detection) | GoalHijackPlugin implements 5-layer heuristic detection: prompt injection, role override, semantic escalation, exfiltration probe, cross-agent injection. Forbidden action-sequence detection catches known hijack patterns (e.g., read + exfiltrate). CSML drift detects anomalous action-frequency shifts. |
+| ASI02 | Tool & Function Misuse | Full | `@pshkv/bridge-mcp` (TAM enforcement), `@pshkv/gate-policy-gateway` (tier assignment), `@pshkv/gate-capability-tokens` (resource scope) | Tool Authorization Manifests (TAM) are operator-defined — a malicious tool cannot self-declare elevated permissions. Every MCP tool call is validated against the TAM before forwarding. Capability token resource scope ensures tools can only be called within the authorized resource pattern. |
+| ASI03 | Identity & Authentication Abuse | Full | `@pshkv/gate-capability-tokens` (Ed25519 signing, did:key identity, delegation chain) | Every capability token is Ed25519-signed. Agent identity = did:key (Ed25519 public key). Delegation chain is verified at every level — a forged token or broken chain is rejected at step 1 of intercept(). Revocation store provides instant invalidation with cascade propagation. |
+| ASI04 | Supply Chain Compromise | Full | `@pshkv/bridge-mcp` (TAM manifest validation), `@pshkv/gate-capability-tokens` (Ed25519 plugin signing), `@pshkv/gate-policy-gateway` (DefaultSupplyChainVerifier) | DefaultSupplyChainVerifier checks model fingerprint hash, model ID allowlist, and bridge protocol consistency at runtime to detect tampered tools or swapped model versions. TAM manifests are operator-controlled — tool providers cannot self-escalate permissions. |
+| ASI05 | Sensitive Data Exfiltration via Code Execution | Partial | `@pshkv/gate-policy-gateway` (forbidden-combos), `@pshkv/engine-capsule-sandbox` (process isolation) | Capsule sandbox provides process-level isolation. Forbidden combo rules block known shell-execution sequences (filesystem.write → exec.run). Gap: no semantic analysis of tool arguments for code injection; shell tool calls not classified at T3_COMMIT by default. |
+| ASI06 | Memory Poisoning & Context Manipulation | Partial | `@pshkv/gate-policy-gateway` (DefaultMemoryIntegrityChecker) | DefaultMemoryIntegrityChecker detects: suspicious repetition (replay attack), unauthorized privilege claims in recentActions, history length overflow, UUIDv7 timestamp monotonicity violations. High-severity anomalies → deny; medium/low → warn-and-allow with audit. Gap: checker state is per-gateway-instance only (not persisted); no semantic analysis of vector embedding space for poisoning; cross-session continuity not yet verified. |
+| ASI07 | Inter-Agent Trust Exploitation | Full | `@pshkv/bridge-a2a` (A2A protocol enforcement), `@pshkv/gate-capability-tokens` (did:key per agent) | A2A bridge validates the sender's capability token before processing any inter-agent message. Each agent's identity is a did:key — spoofed messages from unknown or unauthorized senders are rejected. APS↔SINT interop mapping covers cross-organization agent communication. |
+| ASI08 | Cascading Failure & Agent Storms | Full | `@pshkv/gate-policy-gateway` (CircuitBreakerPlugin, rate limiting), `@pshkv/bridge-swarm` (SwarmCoordinator collective constraints) | CircuitBreakerPlugin opens the circuit when an agent trips N consecutive denials — all subsequent requests auto-deny without evaluation. Rate limiting prevents runaway tool-call storms. SwarmCoordinator caps collective kinetic energy Σ(½mv²) and escalated-fraction across robot fleets. |
+| ASI09 | Deceptive Intent & Trust Exploitation | Full | `@pshkv/gate-policy-gateway` (T2/T3 human approval, M-of-N quorum), `@pshkv/avatar` (CSML drift detection) | T2_act requires operator review before physical execution. T3_commit requires explicit human sign-off with configurable M-of-N quorum. CSML drift detection auto-escalates agents showing deceptive behavioral patterns (anomalous persona) regardless of their token tier. |
+| ASI10 | Autonomous Rogue Behavior | Full | `@pshkv/gate-policy-gateway` (CircuitBreakerPlugin, DynamicEnvelopePlugin), `@pshkv/avatar` (CSML anomalous persona) | CircuitBreakerPlugin provides the EU AI Act Article 14(4)(e) stop button: operators can manually `trip()` the circuit, instantly blocking all actions from an agent. CSML anomalous persona auto-trips the circuit when safety events are detected. DynamicEnvelopePlugin enforces environment-adaptive physical limits even when the agent presents a valid token. |
 
 **Summary:** Full coverage on 8/10 ASI categories; partial coverage on ASI05 (code execution semantic analysis) and ASI06 (cross-session memory continuity). Both gaps are tracked in the project roadmap (Phase 10+ items).
 
@@ -600,7 +600,7 @@ For industrial deployments, SINT maps to IEC 62443-3-3 system security requireme
 | SR 1.2 (Software Process Identification) | Identification and authentication for software processes | Agent identity = did:key (Ed25519 public key); CapabilityToken binds identity to scope. |
 | SR 2.1 (Authorization Enforcement) | Enforce assigned privileges | PolicyGateway enforces token scope, physical constraints, and tier assignment on every request. |
 | SR 3.1 (Communication Integrity) | Protect communication integrity | Ed25519 token signatures; SHA-256 hash chain on ledger; TLS on HTTP transport. |
-| SR 3.3 (Security Functionality Verification) | Support verification of security functions | Conformance test suite (`@sint/conformance-tests`) provides security regression verification. |
+| SR 3.3 (Security Functionality Verification) | Support verification of security functions | Conformance test suite (`@pshkv/conformance-tests`) provides security regression verification. |
 | SR 6.1 (Audit Log Accessibility) | Condition of audit log content | EvidenceLedger provides queryable, hash-chained, timestamped audit events. |
 | SR 6.2 (Continuous Monitoring) | Monitoring and reporting of cyber security events | CSML metric provides continuous behavioral safety monitoring; `risk.score.computed` events are streamable. |
 
@@ -612,13 +612,13 @@ For industrial deployments, SINT maps to IEC 62443-3-3 system security requireme
 
 Initial public release covering the security wedge core:
 
-- `@sint/core`: Base types, Zod schemas, tier constants, compliance types.
-- `@sint/gate-capability-tokens`: Ed25519 token issuance, delegation (attenuation-only), revocation, cascade revocation.
-- `@sint/gate-policy-gateway`: `PolicyGateway.intercept()` implementation, tier assignment engine, forbidden combination detection, physical constraint enforcement.
-- `@sint/gate-evidence-ledger`: SHA-256 hash-chained append-only ledger, CSML metric computation.
-- `@sint/conformance-tests`: Security regression suite (single choke point, attenuation, delegation depth, ledger integrity).
-- `@sint/bridge-mcp`: MCP tool call bridge with TAM enforcement.
-- `@sint/bridge-ros2`: ROS 2 topic/service bridge with physical context extraction.
+- `@pshkv/core`: Base types, Zod schemas, tier constants, compliance types.
+- `@pshkv/gate-capability-tokens`: Ed25519 token issuance, delegation (attenuation-only), revocation, cascade revocation.
+- `@pshkv/gate-policy-gateway`: `PolicyGateway.intercept()` implementation, tier assignment engine, forbidden combination detection, physical constraint enforcement.
+- `@pshkv/gate-evidence-ledger`: SHA-256 hash-chained append-only ledger, CSML metric computation.
+- `@pshkv/conformance-tests`: Security regression suite (single choke point, attenuation, delegation depth, ledger integrity).
+- `@pshkv/bridge-mcp`: MCP tool call bridge with TAM enforcement.
+- `@pshkv/bridge-ros2`: ROS 2 topic/service bridge with physical context extraction.
 - TypeScript and Python SDKs (v0.1).
 - SINT v0.1 Spec (informal).
 
@@ -626,12 +626,12 @@ Initial public release covering the security wedge core:
 
 Production hardening and expanded bridge coverage:
 
-- `@sint/bridge-a2a`: Agent-to-Agent protocol bridge with APS↔SINT identity mapping.
-- `@sint/bridge-swarm`: Multi-robot swarm coordinator with collective kinetic energy cap.
-- `@sint/bridge-economy`: Economy routing bridge with SLA bond slashing.
-- `@sint/bridge-mavlink`: MAVLink/drone command bridge.
-- `@sint/gateway-server`: Hono HTTP API server with full REST + WebSocket support.
-- `@sint/persistence`: Storage interface abstractions; in-memory implementations.
+- `@pshkv/bridge-a2a`: Agent-to-Agent protocol bridge with APS↔SINT identity mapping.
+- `@pshkv/bridge-swarm`: Multi-robot swarm coordinator with collective kinetic energy cap.
+- `@pshkv/bridge-economy`: Economy routing bridge with SLA bond slashing.
+- `@pshkv/bridge-mavlink`: MAVLink/drone command bridge.
+- `@pshkv/gateway-server`: Hono HTTP API server with full REST + WebSocket support.
+- `@pshkv/persistence`: Storage interface abstractions; in-memory implementations.
 - Approval flow: pending queue, K-of-N quorum, WebSocket real-time approval notifications.
 - CircuitBreakerPlugin: OPEN/HALF_OPEN/CLOSED state machine with manual trip (EU AI Act Article 14(4)(e) stop button).
 - GoalHijackPlugin (ASI01): 5-layer heuristic goal hijack detection.

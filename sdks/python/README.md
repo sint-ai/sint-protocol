@@ -122,7 +122,7 @@ Stale approval responses map to deny (`STALE_APPROVAL`).
 
 ### sint-scan CLI
 
-Classify MCP tools into SINT approval tiers (mirrors `@sint/bridge-mcp` logic):
+Classify MCP tools into SINT approval tiers (mirrors `@pshkv/bridge-mcp` logic):
 
 ```bash
 # Scan individual tools

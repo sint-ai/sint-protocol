@@ -1,7 +1,7 @@
 /**
  * Lightweight HTTP client for the SINT Policy Gateway.
  *
- * Uses native fetch — no external dependencies beyond @sint/client types.
+ * Uses native fetch — no external dependencies beyond @pshkv/client types.
  */
 
 import type { SintGovernanceConfig, SintInterceptResult } from "./types.js";

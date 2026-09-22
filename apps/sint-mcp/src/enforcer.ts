@@ -5,7 +5,7 @@
  * before reaching any downstream server. The enforcer maps tool calls
  * to SINT requests and routes them through the PolicyGateway.
  *
- * @module @sint/mcp/enforcer
+ * @module sint-mcp/enforcer
  */
 
 import { type SintRequest, type PolicyDecision, ApprovalTier } from "@pshkv/core";

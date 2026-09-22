@@ -13,7 +13,7 @@ SINT Gateway now serves a built-in API documentation surface from the live OpenA
 Start gateway:
 
 ```bash
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 ```
 
 Open docs:

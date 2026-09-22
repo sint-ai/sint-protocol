@@ -4,7 +4,7 @@
  * Environment-based configuration for storage backends,
  * authentication, and server settings.
  *
- * @module @sint/gateway-server/config
+ * @module @pshkv/gateway-server/config
  */
 
 export interface SintConfig {

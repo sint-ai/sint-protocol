@@ -13,7 +13,7 @@
  * - Cascade: one agent failure triggers chain of denied requests across swarm
  * - Byzantine: k compromised agents in a coordinated attack
  *
- * @module @sint/bridge-swarm/swarm-types
+ * @module @pshkv/bridge-swarm/swarm-types
  */
 
 import type { ApprovalTier, SintCapabilityToken } from "@pshkv/core";

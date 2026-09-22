@@ -25,7 +25,7 @@ This spec defines:
 
 ## 2. Motivation
 
-The base `RevocationStore` in `@sint/gate-capability-tokens` only tracks explicit single-token revocations. Without cascade semantics:
+The base `RevocationStore` in `@pshkv/gate-capability-tokens` only tracks explicit single-token revocations. Without cascade semantics:
 
 1. A root token can be revoked but delegated child tokens remain valid.
 2. An attacker with a stolen child token can continue acting after the root is cut.

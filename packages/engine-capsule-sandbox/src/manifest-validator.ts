@@ -1,10 +1,10 @@
 /**
  * SINT Protocol — Capsule manifest validation.
  *
- * Validates capsule manifests using the Zod schema from `@sint/core`.
+ * Validates capsule manifests using the Zod schema from `@pshkv/core`.
  * Returns a typed `Result` — never throws.
  *
- * @module @sint/engine-capsule-sandbox/manifest-validator
+ * @module @pshkv/engine-capsule-sandbox/manifest-validator
  */
 
 import type { Result, SintCapsuleManifest } from "@pshkv/core";
@@ -15,7 +15,7 @@ import type { CapsuleError } from "./types.js";
 /**
  * Validate a raw manifest object against the SCS-1 schema.
  *
- * Uses `capsuleManifestSchema` from `@sint/core` for Zod validation.
+ * Uses `capsuleManifestSchema` from `@pshkv/core` for Zod validation.
  * Pure function with no side effects.
  *
  * @param manifest - Unknown input to validate.

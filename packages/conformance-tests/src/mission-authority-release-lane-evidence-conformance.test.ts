@@ -18,13 +18,13 @@ interface ReleaseLaneEvidence {
     readonly pullRequest: string;
     readonly targetBase: string;
   };
-  readonly requiredCommands: readonly Array<{
+  readonly requiredCommands: ReadonlyArray<{
     readonly id: string;
     readonly command: string;
     readonly evidence: string;
   }>;
   readonly requiredArtifacts: readonly string[];
-  readonly invariants: readonly Array<{
+  readonly invariants: ReadonlyArray<{
     readonly id: string;
     readonly statement: string;
   }>;

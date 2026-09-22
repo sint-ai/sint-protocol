@@ -4,7 +4,7 @@
  * These types define the stable public protocol vocabulary for discovery,
  * bridge interoperability, and governance artifacts.
  *
- * @module @sint/core/types/protocol
+ * @module @pshkv/core/types/protocol
  */
 
 import type { GeoPolygon, ISO8601, UUIDv7 } from "./primitives.js";

@@ -1,4 +1,4 @@
-# @sint/integration-langchain
+# @pshkv/integration-langchain
 
 SINT Protocol governance middleware for LangChain — capability tokens, policy enforcement, and evidence logging on every tool call.
 
@@ -9,7 +9,7 @@ Wraps LangChain tool invocations with SINT Policy Gateway enforcement. Every too
 ## Install
 
 ```bash
-npm install @sint/integration-langchain
+npm install @pshkv/integration-langchain
 ```
 
 ## Usage

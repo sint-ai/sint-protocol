@@ -14,7 +14,7 @@
  * Ref: SINT Protocol formal specification (arXiv preprint, 2026)
  *      ROSClaw empirical study (arXiv:2603.26997, IROS 2026)
  *
- * @module @sint/gate-evidence-ledger/csml
+ * @module @pshkv/gate-evidence-ledger/csml
  */
 
 import type { CsmlCoefficients, SintLedgerEvent } from "@pshkv/core";

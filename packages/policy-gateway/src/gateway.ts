@@ -6,7 +6,7 @@
  *
  * No action ever bypasses the Policy Gateway.
  *
- * @module @sint/gate-policy-gateway/gateway
+ * @module @pshkv/gate-policy-gateway/gateway
  */
 
 import {
@@ -16,9 +16,11 @@ import {
   type SintCapabilityToken,
   type SintRequest,
   sintRequestSchema,
+  canonicalJsonStringify,
   DEFAULT_APPROVAL_TIMEOUT_MS,
 } from "@pshkv/core";
 import {
+  hashSha256,
   validateCapabilityToken,
   type RevocationStore,
 } from "@pshkv/gate-capability-tokens";
@@ -43,6 +45,66 @@ import {
 } from "./code-as-policy-guard.js";
 
 const INDUSTRIAL_DEPLOYMENT_PROFILES = new Set(["warehouse-amr", "industrial-cell"]);
+
+function minDefined(a: number | undefined, b: number | undefined): number | undefined {
+  if (a !== undefined && b !== undefined) return Math.min(a, b);
+  return a ?? b;
+}
+
+/** Tightening-only merge: min of each defined limit. */
+function mergeEnvelopeOverrides(
+  current: EnvelopeOverrides | undefined,
+  next: { maxVelocityMps?: number; maxForceNewtons?: number },
+): EnvelopeOverrides {
+  return {
+    maxVelocityMps: minDefined(current?.maxVelocityMps, next.maxVelocityMps),
+    maxForceNewtons: minDefined(current?.maxForceNewtons, next.maxForceNewtons),
+  };
+}
+
+function buildEnvelopeBinding(
+  token: SintCapabilityToken,
+  overrides: EnvelopeOverrides | undefined,
+  meta: {
+    source: EnvelopeBinding["source"];
+    envelopeId?: string;
+    evidenceDigest?: string;
+    evidenceRefs?: readonly string[];
+  },
+): EnvelopeBinding | undefined {
+  const effective = {
+    maxVelocityMps: minDefined(token.constraints.maxVelocityMps, overrides?.maxVelocityMps),
+    maxForceNewtons: minDefined(token.constraints.maxForceNewtons, overrides?.maxForceNewtons),
+  };
+  if (effective.maxVelocityMps === undefined && effective.maxForceNewtons === undefined) {
+    return undefined;
+  }
+  const body = {
+    envelopeId: meta.envelopeId ?? (meta.source === "token" ? "token" : meta.source),
+    source: meta.source,
+    effective,
+    evidenceDigest: meta.evidenceDigest,
+    evidenceRefs: meta.evidenceRefs ? [...meta.evidenceRefs] : undefined,
+  };
+  return { ...body, envelopeDigest: hashSha256(canonicalJsonStringify(body)) };
+}
+
+function attachEnvelopeBinding(
+  decision: PolicyDecision,
+  binding: EnvelopeBinding | undefined,
+): PolicyDecision {
+  if (!binding) return decision;
+  return {
+    ...decision,
+    transformations: {
+      ...decision.transformations,
+      additionalAuditFields: {
+        ...decision.transformations?.additionalAuditFields,
+        envelopeBinding: binding,
+      },
+    },
+  };
+}
 const MAX_HARDWARE_SAFETY_STALENESS_MS = 5_000;
 
 /** Token resolver — looks up a capability token by ID (sync or async). */
@@ -86,7 +148,7 @@ export interface AutonomySupervisorPlugin {
 /** Policy Gateway configuration. */
 /**
  * CSML escalation hook — called after tier assignment to optionally bump the tier.
- * Provided by @sint/avatar's CsmlEscalator. Decoupled via interface to avoid circular dep.
+ * Provided by @pshkv/avatar's CsmlEscalator. Decoupled via interface to avoid circular dep.
  */
 /**
  * Dynamic envelope plugin — environment-adaptive safety constraint tightening.
@@ -108,17 +170,64 @@ export interface AutonomySupervisorPlugin {
  *   }
  * };
  */
+export interface DynamicEnvelopeResult {
+  maxVelocityMps?: number;
+  maxForceNewtons?: number;
+  reason?: string;
+  /** Identifier of the envelope the plugin selected (e.g. "cell-a/fenced"). */
+  envelopeId?: string;
+  /** Digest over the condition evidence the selection relied on. */
+  evidenceDigest?: string;
+  /** Ids of the evidence items the selection relied on. */
+  evidenceRefs?: readonly string[];
+}
+
 export interface DynamicEnvelopePlugin {
   /**
    * Compute environment-aware constraint overrides for this request.
    * All returned limits MUST be ≤ the corresponding token constraint.
    * The gateway enforces min(token, override) — returning a looser value is a no-op.
    */
-  computeEnvelope(request: SintRequest): Promise<{
-    maxVelocityMps?: number;
-    maxForceNewtons?: number;
-    reason?: string;
-  }>;
+  computeEnvelope(request: SintRequest): Promise<DynamicEnvelopeResult>;
+}
+
+/**
+ * What the gateway does when the dynamic envelope plugin throws.
+ *
+ * - `fail-open` (default, legacy): discard the plugin and use token limits.
+ *   A lost tightening is an effective widening; do not use for T2/T3 physical
+ *   actions in production.
+ * - `fallback`: apply `fallback` as a tightening override (safe envelope) and
+ *   emit `policy.envelope.fallback`. A physical demotion, not an error.
+ * - `deny`: deny with `DYNAMIC_ENVELOPE_UNAVAILABLE`. `fallback` mode without
+ *   a `fallback` envelope behaves as `deny`.
+ */
+export interface DynamicEnvelopeFailurePolicy {
+  readonly mode: "fail-open" | "fallback" | "deny";
+  readonly fallback?: {
+    readonly maxVelocityMps?: number;
+    readonly maxForceNewtons?: number;
+  };
+}
+
+/**
+ * Binding between an execution authorization and the exact envelope (and
+ * evidence) it was evaluated under. Attached to decisions as
+ * `transformations.additionalAuditFields.envelopeBinding` and echoed on the
+ * `policy.evaluated` event as `envelopeDigest`.
+ */
+export interface EnvelopeBinding {
+  readonly envelopeId: string;
+  /** "token" | "dynamic" | "fallback" — which layer produced the tightest input. */
+  readonly source: "token" | "dynamic" | "fallback";
+  readonly effective: {
+    readonly maxVelocityMps?: number;
+    readonly maxForceNewtons?: number;
+  };
+  readonly evidenceDigest?: string;
+  readonly evidenceRefs?: readonly string[];
+  /** SHA-256 over canonical {envelopeId, source, effective, evidenceDigest, evidenceRefs}. */
+  readonly envelopeDigest: string;
 }
 
 /**
@@ -259,6 +368,14 @@ export interface PolicyGatewayConfig {
    * static constraints. Fail-open: plugin errors fall back to token limits.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
+  /**
+   * What to do when `dynamicEnvelope.computeEnvelope()` throws.
+   * Defaults to `fail-open` for backward compatibility. Deployments that rely
+   * on the plugin to tighten limits for physical actions should configure
+   * `fallback` or `deny` so that losing the envelope source demotes the
+   * physical envelope instead of silently widening it.
+   */
+  readonly dynamicEnvelopeFailurePolicy?: DynamicEnvelopeFailurePolicy;
   /**
    * Optional spatial corridor verifier for mission envelopes.
    * When a token requires spatial proof and declares deviation/heading limits,
@@ -1058,42 +1175,86 @@ export class PolicyGateway {
         : undefined;
 
     // 6d. Dynamic envelope can tighten the existing envelope further.
+    let envelopeSource: EnvelopeBinding["source"] = "token";
+    let envelopeId: string | undefined;
+    let envelopeEvidenceDigest: string | undefined;
+    let envelopeEvidenceRefs: readonly string[] | undefined;
     if (this.config.dynamicEnvelope) {
+      let envelope: DynamicEnvelopeResult | undefined;
+      let failure: string | undefined;
       try {
-        const envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
+        envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
+      } catch (cause) {
+        failure = cause instanceof Error ? cause.message : String(cause);
+      }
+      if (envelope) {
         if (envelope.maxVelocityMps !== undefined || envelope.maxForceNewtons !== undefined) {
-          envelopeOverrides = {
-            maxVelocityMps:
-              envelopeOverrides?.maxVelocityMps !== undefined && envelope.maxVelocityMps !== undefined
-                ? Math.min(envelopeOverrides.maxVelocityMps, envelope.maxVelocityMps)
-                : (envelope.maxVelocityMps ?? envelopeOverrides?.maxVelocityMps),
-            maxForceNewtons:
-              envelopeOverrides?.maxForceNewtons !== undefined && envelope.maxForceNewtons !== undefined
-                ? Math.min(envelopeOverrides.maxForceNewtons, envelope.maxForceNewtons)
-                : (envelope.maxForceNewtons ?? envelopeOverrides?.maxForceNewtons),
-          };
+          envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, envelope);
+          envelopeSource = "dynamic";
+          envelopeId = envelope.envelopeId;
+          envelopeEvidenceDigest = envelope.evidenceDigest;
+          envelopeEvidenceRefs = envelope.evidenceRefs;
           if (envelope.reason) {
             this.emitEvent("policy.envelope.applied", request.agentId, request.tokenId, {
               maxVelocityMps: envelope.maxVelocityMps,
               maxForceNewtons: envelope.maxForceNewtons,
               reason: envelope.reason,
+              envelopeId: envelope.envelopeId,
+              evidenceDigest: envelope.evidenceDigest,
+              evidenceRefs: envelope.evidenceRefs,
             });
           }
         }
-      } catch {
-        // Dynamic envelope error → fail-open, use token's original limits
+      } else {
+        const policy = this.config.dynamicEnvelopeFailurePolicy ?? { mode: "fail-open" };
+        if (policy.mode === "deny" || (policy.mode === "fallback" && !policy.fallback)) {
+          this.emitEvent("policy.envelope.fallback", request.agentId, request.tokenId, {
+            mode: "deny",
+            error: failure,
+          });
+          return this.deny(
+            requestId,
+            timestamp,
+            "DYNAMIC_ENVELOPE_UNAVAILABLE",
+            `Dynamic envelope unavailable (${failure ?? "unknown error"}); fail-closed`,
+          );
+        }
+        if (policy.mode === "fallback" && policy.fallback) {
+          envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, policy.fallback);
+          envelopeSource = "fallback";
+          envelopeId = "fallback";
+          this.emitEvent("policy.envelope.fallback", request.agentId, request.tokenId, {
+            mode: "fallback",
+            error: failure,
+            maxVelocityMps: policy.fallback.maxVelocityMps,
+            maxForceNewtons: policy.fallback.maxForceNewtons,
+          });
+        }
+        // fail-open: plugin discarded, token limits apply (legacy behaviour)
       }
     }
+
+    // 6e. Bind the effective envelope (min of token constraints and overrides)
+    // so the authorization names exactly what it was evaluated under.
+    const envelopeBinding = buildEnvelopeBinding(token, envelopeOverrides, {
+      source: envelopeSource,
+      envelopeId,
+      evidenceDigest: envelopeEvidenceDigest,
+      evidenceRefs: envelopeEvidenceRefs,
+    });
 
     // 7. Check physical constraints (with optional dynamic envelope overrides)
     const constraintResult = checkConstraints(token, request, envelopeOverrides);
     if (!constraintResult.ok) {
       const violations = constraintResult.error;
-      return this.deny(
-        requestId,
-        timestamp,
-        "CONSTRAINT_VIOLATION",
-        violations.map((v) => v.message).join("; "),
+      return attachEnvelopeBinding(
+        this.deny(
+          requestId,
+          timestamp,
+          "CONSTRAINT_VIOLATION",
+          violations.map((v) => v.message).join("; "),
+        ),
+        envelopeBinding,
       );
     }
 
@@ -1106,6 +1267,9 @@ export class PolicyGateway {
 
     // 8a. Attach token-defined approval quorum to escalations.
     decision = this.attachApprovalQuorum(decision, token);
+
+    // 8ab. Bind the authorization to the exact envelope it was evaluated under.
+    decision = attachEnvelopeBinding(decision, envelopeBinding);
 
     // 8aa. Edge mode: T2/T3 escalations fail-closed when central approval is unavailable.
     if (decision.action === "escalate" && this.config.edgeControlPlane) {
@@ -1161,6 +1325,7 @@ export class PolicyGateway {
       decision: decision.action,
       tier: decision.assignedTier,
       risk: decision.assignedRisk,
+      ...(envelopeBinding ? { envelopeDigest: envelopeBinding.envelopeDigest } : {}),
     });
 
     // 10. Economy post-intercept (billing on allow)

@@ -27,11 +27,6 @@ function futureISO(hoursFromNow: number): string {
   return d.toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
 }
 
-function pastISO(hoursAgo: number): string {
-  const d = new Date(Date.now() - hoursAgo * 3600_000);
-  return d.toISOString().replace(/\.(\d{3})Z$/, ".$1000Z");
-}
-
 function makeRequest(
   overrides: Partial<SintRequest> & { tokenId: string; agentId: string },
 ): SintRequest {

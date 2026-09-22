@@ -10,7 +10,7 @@
  * EU AI Act Article 14(4)(e): human supervisors must be able to interrupt
  * high-risk AI systems. SINT's CircuitBreakerPlugin fulfils this requirement.
  *
- * @module @sint/core/types/compliance
+ * @module @pshkv/core/types/compliance
  */
 
 import type { ApprovalTier } from "./policy.js";

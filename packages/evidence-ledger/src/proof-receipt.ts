@@ -6,7 +6,7 @@
  * (EU AI Act, IEC 62443) — they prove that a specific
  * event occurred and the hash chain is intact up to that point.
  *
- * @module @sint/gate-evidence-ledger/proof-receipt
+ * @module @pshkv/gate-evidence-ledger/proof-receipt
  */
 
 import type {

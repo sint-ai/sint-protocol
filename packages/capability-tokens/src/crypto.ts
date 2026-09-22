@@ -4,7 +4,7 @@
  * Wraps @noble/ed25519 for deterministic, side-effect-free
  * cryptographic operations on capability tokens.
  *
- * @module @sint/gate-capability-tokens/crypto
+ * @module @pshkv/gate-capability-tokens/crypto
  */
 
 import * as ed25519 from "@noble/ed25519";

@@ -10,7 +10,7 @@
  * and cached here.  This module provides the in-memory cache
  * plus a fetch helper for production use.
  *
- * @module @sint/bridge-a2a/agent-card-registry
+ * @module @pshkv/bridge-a2a/agent-card-registry
  */
 
 import type { A2AAgentCard, A2AExternalEvidenceReference } from "./types.js";

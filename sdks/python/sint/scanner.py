@@ -1,7 +1,7 @@
 """
 SINT Protocol — MCPScanner.
 
-Python port of the ``@sint/bridge-mcp`` MCP scanner CLI.
+Python port of the ``@pshkv/bridge-mcp`` MCP scanner CLI.
 
 Classifies MCP tool definitions into SINT approval tiers using the same
 keyword and annotation logic as the TypeScript ``mcp-resource-mapper.ts``.

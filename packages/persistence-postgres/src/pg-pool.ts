@@ -4,7 +4,7 @@
  * Loads `pg` at runtime so the package has zero hard dependencies at install
  * time. If `pg` is not installed, throws a helpful error message.
  *
- * @module @sint/persistence-postgres/pg-pool
+ * @module @pshkv/persistence-postgres/pg-pool
  */
 
 /**

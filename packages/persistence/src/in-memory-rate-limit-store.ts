@@ -8,7 +8,7 @@
  * Suitable for single-node deployments and tests.
  * For distributed deployments use RedisRateLimitStore (see redis-cache.ts).
  *
- * @module @sint/persistence/in-memory-rate-limit-store
+ * @module @pshkv/persistence/in-memory-rate-limit-store
  */
 
 import type { RateLimitStore } from "@pshkv/core";

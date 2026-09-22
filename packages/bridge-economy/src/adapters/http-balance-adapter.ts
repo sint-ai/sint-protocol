@@ -6,7 +6,7 @@
  * - POST /balance/withdraw     → withdraw
  * - POST /balance/deposit      → deposit
  *
- * @module @sint/bridge-economy/adapters/http-balance-adapter
+ * @module @pshkv/bridge-economy/adapters/http-balance-adapter
  */
 
 import { err, type Result } from "@pshkv/core";

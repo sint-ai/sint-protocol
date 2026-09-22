@@ -10,7 +10,7 @@
  *
  * These routes are only available when an economy plugin is configured.
  *
- * @module @sint/gateway-server/routes/economy
+ * @module @pshkv/gateway-server/routes/economy
  */
 
 import { Hono } from "hono";

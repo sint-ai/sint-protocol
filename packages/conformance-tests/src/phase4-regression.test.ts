@@ -10,7 +10,7 @@
  * These tests must never fail. Any regression here indicates a
  * security-critical bug in the protocol implementation.
  *
- * @module @sint/conformance-tests/phase4-regression
+ * @module @pshkv/conformance-tests/phase4-regression
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -19,7 +19,6 @@ import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
 import {
   generateKeypair,
   issueCapabilityToken,
-  RevocationStore,
   keyToDid,
   didToKey,
   isValidDid,
@@ -34,7 +33,6 @@ import {
   AgentCardRegistry,
   buildResourceUri,
   type A2AAgentCard,
-  type A2ASendTaskParams,
 } from "@pshkv/bridge-a2a";
 import { InMemoryRateLimitStore } from "@pshkv/persistence";
 

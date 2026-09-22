@@ -3,7 +3,7 @@
  *
  * Evaluates a predicate against the blackboard. Never returns "running".
  *
- * @module @sint/engine-system2/bt/nodes/condition
+ * @module @pshkv/engine-system2/bt/nodes/condition
  */
 
 import type { Blackboard } from "../blackboard.js";

@@ -19,7 +19,7 @@ export default defineConfig({
     logo: "/sint-logo.svg",
     nav: [
       { text: "Getting Started", link: "/getting-started" },
-      { text: "Spec", link: "/SINT_v0.2_SPEC" },
+      { text: "Spec", link: "/specs/SINT_v0.2_SPEC" },
       { text: "Roadmap", link: "/roadmap" },
       { text: "GitHub", link: "https://github.com/sint-ai/sint-protocol" },
     ],
@@ -30,7 +30,7 @@ export default defineConfig({
           { text: "Overview", link: "/" },
           { text: "Protocol", link: "/protocol" },
           { text: "Getting Started", link: "/getting-started" },
-          { text: "Protocol Spec v0.2", link: "/SINT_v0.2_SPEC" },
+          { text: "Protocol Spec v0.2", link: "/specs/SINT_v0.2_SPEC" },
           { text: "Roadmap", link: "/roadmap" },
         ],
       },

@@ -25,7 +25,7 @@ logical next step before a v1.0 stability commitment.
    - 1 seat reserved: community-elected (first election Q4 2026)
 
 2. Adopt the **SINT Improvement Proposal (SIP)** process, documented in
-   `docs/sip/SIP-0001-process.md`, as the required mechanism for all
+   `docs/sips/PROCESS.md`, as the required mechanism for all
    protocol-breaking changes.
 
 3. Record all TSC decisions as ADRs under `docs/tsc/`.

@@ -10,7 +10,7 @@
  *   POST /v1/a2a/agents          — Register an Agent Card
  *   GET  /v1/a2a/agents/:url     — Retrieve a specific Agent Card
  *
- * @module @sint/gateway-server/routes/a2a
+ * @module @pshkv/gateway-server/routes/a2a
  */
 
 import { Hono } from "hono";

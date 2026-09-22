@@ -4,7 +4,7 @@
  * Port/adapter integration between sint-protocol's PolicyGateway
  * and external economy services (balance, budget, trust, pricing).
  *
- * @module @sint/bridge-economy
+ * @module @pshkv/bridge-economy
  */
 
 // ─── Interfaces (Ports) ──────────────────────────────────────

@@ -5,7 +5,7 @@
  * tool poisoning attacks (ASI-class supply-chain threat) where a server
  * changes a tool's behavior after initial registration.
  *
- * @module @sint/bridge-mcp/tool-registry
+ * @module @pshkv/bridge-mcp/tool-registry
  */
 
 import { hashSha256, sign, verify } from "@pshkv/gate-capability-tokens";

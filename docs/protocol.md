@@ -137,7 +137,7 @@ on top of existing SINT receipts and policy events lives here:
 ## Where To Start
 
 - [Getting Started](./getting-started.md)
-- [Protocol Spec v0.2](./SINT_v0.2_SPEC.md)
+- [Protocol Spec v0.2](specs/SINT_v0.2_SPEC.md)
 - [Gateway Production Hardening](./guides/gateway-production-hardening.md)
 - [Production Slice Verification](./guides/production-slice-verification.md)
 - [Roadmap](./roadmap.md)

@@ -3,7 +3,7 @@
  *
  * Thin wrapper around pg.Pool with sensible defaults.
  *
- * @module @sint/persistence/pg-pool
+ * @module @pshkv/persistence/pg-pool
  */
 
 import pg from "pg";

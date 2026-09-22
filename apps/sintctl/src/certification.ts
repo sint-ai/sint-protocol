@@ -40,7 +40,7 @@ export function buildCertificationSummary(params: {
     success: params.exitCode === 0,
     command: params.command,
     outputPath: params.outputPath,
-    fixtureTestCommand: "pnpm --filter @sint/conformance-tests test:fixtures",
+    fixtureTestCommand: "pnpm --filter @pshkv/conformance-tests test:fixtures",
     gatewayUrl: params.gatewayUrl,
     evidence: {
       exitCode: params.exitCode,

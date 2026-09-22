@@ -1,11 +1,11 @@
-# @sint/core
+# @pshkv/core
 
 Core types, Zod schemas, and tier constants for the SINT Protocol.
 
 ## Install
 
 ```bash
-npm install @sint/core
+npm install @pshkv/core
 ```
 
 ## Usage

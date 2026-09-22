@@ -9,7 +9,7 @@
 ## Run package tests
 
 ```bash
-pnpm --filter @sint/bridge-opcua test
+pnpm --filter @pshkv/bridge-opcua test
 ```
 
 ## Threat model focus

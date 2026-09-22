@@ -85,7 +85,7 @@ describe("Humanoid multi-vendor fleet fixture v1", () => {
       expect(receipt[field], field).not.toBeUndefined();
     }
 
-    const withoutReceipt = { ...receipt, receiptId: undefined };
+    const withoutReceipt: Record<string, string | undefined> = { ...receipt, receiptId: undefined };
     const hasRequiredReceipt = fixture.handoffReceiptSchema.requiredFields.every(
       (field) => withoutReceipt[field] !== undefined,
     );
@@ -116,33 +116,35 @@ describe("Humanoid multi-vendor fleet fixture v1", () => {
   it("preserves equivalent high-consequence tiering across bridge replay paths", () => {
     for (const path of fixture.crossBridgeReplay.paths) {
       if (path.bridge === "ros2") {
-        expect(topicToResourceUri(path.mapperInput.topic)).toBe(path.resource);
+        expect(topicToResourceUri(path.mapperInput.topic ?? "")).toBe(path.resource);
         expect(path.action).toBe("publish");
         expect(fixture.crossBridgeReplay.expectedAssignedTier).toBe(ApprovalTier.T2_ACT);
       }
 
       if (path.bridge === "open-rmf") {
         const operation = path.mapperInput.operation as RmfOperation;
-        expect(rmfDispatchResourceUri(path.mapperInput.fleetName)).toBe(path.resource);
+        expect(rmfDispatchResourceUri(path.mapperInput.fleetName ?? "")).toBe(path.resource);
         expect(rmfOperationToAction(operation)).toBe(path.action);
         expect(defaultTierForRmfOperation(operation)).toBe(ApprovalTier.T2_ACT);
       }
 
       if (path.bridge === "opcua") {
         const operation = path.mapperInput.operation as OpcUaOperation;
-        expect(opcUaNodeToResourceUri(path.mapperInput.nodeId, path.mapperInput.endpoint)).toBe(
+        expect(
+          opcUaNodeToResourceUri(path.mapperInput.nodeId ?? "", path.mapperInput.endpoint ?? ""),
+        ).toBe(
           path.resource,
         );
         expect(opcUaOperationToAction(operation)).toBe(path.action);
-        expect(defaultTierForOpcUaOperation(operation, path.mapperInput.nodeId)).toBe(
+        expect(defaultTierForOpcUaOperation(operation, path.mapperInput.nodeId ?? "")).toBe(
           ApprovalTier.T2_ACT,
         );
       }
 
       if (path.bridge === "sparkplug") {
-        expect(sparkplugTopicToResourceUri(path.mapperInput.topic)).toBe(path.resource);
-        expect(sparkplugActionForMessageType(path.mapperInput.messageType)).toBe(path.action);
-        expect(defaultTierForSparkplug(path.mapperInput.messageType)).toBe(ApprovalTier.T2_ACT);
+        expect(sparkplugTopicToResourceUri(path.mapperInput.topic ?? "")).toBe(path.resource);
+        expect(sparkplugActionForMessageType(path.mapperInput.messageType ?? "")).toBe(path.action);
+        expect(defaultTierForSparkplug(path.mapperInput.messageType ?? "")).toBe(ApprovalTier.T2_ACT);
       }
     }
   });

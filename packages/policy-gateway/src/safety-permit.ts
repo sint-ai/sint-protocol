@@ -13,7 +13,7 @@
  * Fail-open: if resolvePermit() throws, the error is logged and the built-in
  * hardware safety check proceeds using request.executionContext only.
  *
- * @module @sint/gate-policy-gateway/safety-permit
+ * @module @pshkv/gate-policy-gateway/safety-permit
  */
 
 import type { SintRequest } from "@pshkv/core";

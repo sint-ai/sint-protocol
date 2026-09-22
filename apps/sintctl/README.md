@@ -1,4 +1,4 @@
-# @sint/sintctl
+# @pshkv/sintctl
 
 Operator CLI for SINT gateway workflows:
 
@@ -12,7 +12,7 @@ Operator CLI for SINT gateway workflows:
 ## Usage
 
 ```bash
-pnpm --filter @sint/sintctl build
+pnpm --filter @pshkv/sintctl build
 node apps/sintctl/dist/cli.js --help
 ```
 
@@ -58,7 +58,7 @@ sintctl shipyard evidence export \
 `sintctl certify run` executes the canonical conformance fixture suite:
 
 ```bash
-pnpm --filter @sint/sintctl build
+pnpm --filter @pshkv/sintctl build
 node apps/sintctl/dist/cli.js certify run
 ```
 
@@ -80,7 +80,7 @@ and safety-context fields, and links every output row with `previousHash` and
 `eventHash`.
 
 ```bash
-pnpm --filter @sint/sintctl build
+pnpm --filter @pshkv/sintctl build
 node apps/sintctl/dist/cli.js shipyard evidence export \
   --generated-at 2026-05-30T12:00:00.000Z \
   --output docs/reports/shipyard-humanoid-evidence-export.jsonl

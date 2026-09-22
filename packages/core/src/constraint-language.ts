@@ -4,7 +4,7 @@
  * Provides validation, effective-constraint resolution, tighten-only merge,
  * and widening-violation detection for {@link ConstraintEnvelope}.
  *
- * @module @sint/core/constraint-language
+ * @module @pshkv/core/constraint-language
  */
 
 import type { ConstraintEnvelope, ConstraintEnvelopeMode } from "./types/protocol.js";

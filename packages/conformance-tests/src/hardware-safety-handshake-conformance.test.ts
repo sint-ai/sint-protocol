@@ -265,7 +265,7 @@ describe("Hardware Safety Phase A — Conformance", () => {
     it("MQTT payload with stale observedAt (6000ms ago) → HARDWARE_STATE_STALE from gateway", async () => {
       const token = issueAndStore();
       const deviceProfile = createDeviceProfile("plc", "factory/plc1", broker);
-      const interceptor = new IotInterceptor({
+      new IotInterceptor({
         gateway,
         agentId: agent.publicKey,
         tokenId: token.tokenId,

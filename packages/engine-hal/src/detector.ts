@@ -6,7 +6,7 @@
  * Returns a fully populated {@link SintHardwareProfile} with an
  * auto-selected deployment profile.
  *
- * @module @sint/engine-hal/detector
+ * @module @pshkv/engine-hal/detector
  */
 
 import { execSync } from "node:child_process";

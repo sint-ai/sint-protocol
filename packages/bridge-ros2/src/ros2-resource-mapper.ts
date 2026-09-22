@@ -6,7 +6,7 @@
  *
  * URI scheme: ros2:///{topicName} (triple-slash for absolute topic names)
  *
- * @module @sint/bridge-ros2/ros2-resource-mapper
+ * @module @pshkv/bridge-ros2/ros2-resource-mapper
  */
 
 import type { ROS2TopicMessage } from "./types.js";

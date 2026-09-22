@@ -4,7 +4,7 @@
  * Isolates the ioredis import to handle CJS/ESM interop.
  * Only called when SINT_CACHE=redis is configured.
  *
- * @module @sint/gateway-server/redis-factory
+ * @module @pshkv/gateway-server/redis-factory
  */
 
 import { createRequire } from "node:module";

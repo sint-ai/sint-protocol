@@ -66,7 +66,7 @@ Key settings:
 The gateway server evaluates policy decisions. Start it first:
 
 ```bash
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 ```
 
 Verify it's running:
@@ -92,7 +92,7 @@ In a second terminal, start the SINT proxy with SSE transport so we can interact
 
 ```bash
 SINT_MCP_CONFIG=./examples/notes-server/sint-mcp.config.json \
-  pnpm --filter @sint/mcp dev -- --sse --port 3200
+  pnpm --filter sint-mcp dev -- --sse --port 3200
 ```
 
 You should see:
@@ -244,7 +244,7 @@ Every tool call follows this path. There's no way to bypass the gateway — the 
 
 ## Next Steps
 
-- **Add the dashboard**: Run `pnpm --filter @sint/dashboard dev` to get a real-time web UI for managing approvals
+- **Add the dashboard**: Run `pnpm --filter @pshkv/dashboard dev` to get a real-time web UI for managing approvals
 - **Try forbidden combos**: Add a tool that reads credentials and another that makes HTTP requests — SINT will detect the dangerous sequence
 - **Add capability tokens**: Issue scoped tokens that restrict which tools an agent can call (see the [Hello World tutorial](./hello-world-agent.md))
 - **Try strict mode**: Set `defaultPolicy: "strict"` to see how SINT behaves when it defaults to deny

@@ -20,7 +20,7 @@ An adversary impersonates a legitimate agent, runtime, or delegated principal to
 
 SINT mitigations:
 
-- `@sint/gate-capability-tokens`: Ed25519 capability tokens bind `issuer`, `subject`, resource, action, constraints, expiry, and delegation chain.
+- `@pshkv/gate-capability-tokens`: Ed25519 capability tokens bind `issuer`, `subject`, resource, action, constraints, expiry, and delegation chain.
 - `PolicyGateway.intercept()`: validates token signature and verifies `token.subject === request.agentId` before allowing a request to reach a tool or actuator boundary.
 - Memory / credential-funnel detection: flags identity claims and credential-access behavior inconsistent with the established session.
 - APS/SINT interop fixtures: preserve explicit delegated authority and revocation semantics across identity systems.

@@ -10,7 +10,7 @@
  * - Secrets never appear in error messages or logs
  * - Timestamps use ISO 8601 with microsecond precision in UTC
  *
- * @module @sint/gate-capability-tokens/issuer
+ * @module @pshkv/gate-capability-tokens/issuer
  */
 
 import {

@@ -4,7 +4,7 @@
  * Quality of Service presets for different communication patterns.
  * Maps to ROS 2 DDS QoS policies.
  *
- * @module @sint/bridge-ros2/ros2-qos
+ * @module @pshkv/bridge-ros2/ros2-qos
  */
 
 export type ReliabilityPolicy = "reliable" | "best_effort";

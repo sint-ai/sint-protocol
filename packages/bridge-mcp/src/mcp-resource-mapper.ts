@@ -6,7 +6,7 @@
  *
  * The URI scheme is: mcp://{serverName}/{toolName}
  *
- * @module @sint/bridge-mcp/mcp-resource-mapper
+ * @module @pshkv/bridge-mcp/mcp-resource-mapper
  */
 
 import { ApprovalTier } from "@pshkv/core";

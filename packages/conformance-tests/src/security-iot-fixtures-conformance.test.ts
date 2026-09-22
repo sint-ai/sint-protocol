@@ -11,6 +11,7 @@ import type {
   SintCapabilityToken,
   SintCapabilityTokenRequest,
   SintRequest,
+  SintVerifiableComputeRequirements,
 } from "@pshkv/core";
 import {
   generateKeypair,
@@ -194,7 +195,8 @@ describe("Security and IoT Fixture Conformance", () => {
     const token = issueAndStore({
       resource: fixture.token.resource,
       actions: [...fixture.token.actions],
-      verifiableComputeRequirements: fixture.token.verifiableComputeRequirements,
+      verifiableComputeRequirements: fixture.token
+        .verifiableComputeRequirements as SintVerifiableComputeRequirements | undefined,
     });
 
     for (const scenario of fixture.cases) {

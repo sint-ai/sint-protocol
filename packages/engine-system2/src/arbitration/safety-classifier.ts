@@ -4,7 +4,7 @@
  * Pure function that classifies whether an action recommendation
  * is safety-relevant based on resource patterns, flags, and confidence.
  *
- * @module @sint/engine-system2/arbitration/safety-classifier
+ * @module @pshkv/engine-system2/arbitration/safety-classifier
  */
 
 import type { SintActionRecommendation } from "@pshkv/core";

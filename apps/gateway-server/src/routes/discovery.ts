@@ -9,7 +9,7 @@
  * - GET /v1/schemas/:name
  * - GET /v1/openapi.json
  *
- * @module @sint/gateway-server/routes/discovery
+ * @module @pshkv/gateway-server/routes/discovery
  */
 
 import { Hono } from "hono";

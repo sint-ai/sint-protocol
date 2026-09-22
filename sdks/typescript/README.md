@@ -1,4 +1,4 @@
-# @sint/sdk — TypeScript/Node.js SDK for SINT Protocol
+# @pshkv/sdk — TypeScript/Node.js SDK for SINT Protocol
 
 Zero-dependency TypeScript SDK for the [SINT Protocol](../../README.md) gateway.
 Works in **Node.js 18+** (native `fetch`) and modern **browsers**.
@@ -6,9 +6,9 @@ Works in **Node.js 18+** (native `fetch`) and modern **browsers**.
 ## Install
 
 ```bash
-npm install @sint/sdk
+npm install @pshkv/sdk
 # or
-pnpm add @sint/sdk
+pnpm add @pshkv/sdk
 ```
 
 > No runtime dependencies. `pg`, `ioredis`, etc. are not required.

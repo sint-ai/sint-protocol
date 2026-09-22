@@ -5,7 +5,7 @@
  * All 9 new economic event types have dedicated emit methods with
  * structured payloads.
  *
- * @module @sint/bridge-economy/ledger-emitter
+ * @module @pshkv/bridge-economy/ledger-emitter
  */
 
 import type { SintEventType } from "@pshkv/core";

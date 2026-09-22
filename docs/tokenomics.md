@@ -121,7 +121,7 @@ unreachable, the request proceeds through normal gateway logic.
 
 ### Cost-aware route selection (Economic Layer v1)
 
-`@sint/bridge-economy` now includes route scoring helpers for multi-bridge
+`@pshkv/bridge-economy` now includes route scoring helpers for multi-bridge
 execution choices:
 
 - `selectCostAwareRoute(input)` scores candidates using cost + latency + reliability.
@@ -188,4 +188,4 @@ not by `sint-protocol` itself.
 
 ---
 
-*Last updated: 2026-04-04. Tied to `@sint/bridge-economy` v0.2.*
+*Last updated: 2026-04-04. Tied to `@pshkv/bridge-economy` v0.2.*
