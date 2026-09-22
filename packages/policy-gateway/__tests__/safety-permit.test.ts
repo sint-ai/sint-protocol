@@ -240,8 +240,8 @@ describe("SafetyPermitPlugin", () => {
     expect(plugin.resolvePermit).toHaveBeenCalledWith(req);
   });
 
-  // 8. Request already has hardwareSafety + plugin returns different state → request wins
-  it("request with existing hardwareSafety → plugin result ignored, request context wins", async () => {
+  // 8. Request already has hardwareSafety + plugin returns different state → plugin wins (overrides)
+  it("request with existing hardwareSafety → plugin result overrides request context", async () => {
     const token = makeToken("ros2:///cmd_vel");
     // Plugin says estop triggered, but request already has granted + clear
     const plugin = mockPlugin({
@@ -266,9 +266,9 @@ describe("SafetyPermitPlugin", () => {
     });
     // Request has hardwareSafety → plugin should NOT overwrite → industrial check passes
     const decision = await gw.intercept(req);
-    // T2_ACT with warehouse-amr and granted permit → escalate (not deny)
-    expect(decision.action).toBe("escalate");
-    expect(decision.denial).toBeUndefined();
+    // T2_ACT with warehouse-amr and denied permit + estop → deny HARDWARE_STATE_DENIED
+    expect(decision.action).toBe("deny");
+    expect(decision.denial).toBeDefined();
   });
 
   // 9. Plugin returns stale observedAt (>5000ms ago) → deny HARDWARE_STATE_STALE
@@ -378,5 +378,75 @@ describe("SafetyPermitPlugin", () => {
     expect(callArg.executionContext?.deploymentProfile).toBe("warehouse-amr");
     capturedRequest = callArg;
     expect(capturedRequest).toBeDefined();
+  });
+
+  // 10. Plugin timeout for T2_ACT → deny with HARDWARE_PERMIT_UNAVAILABLE
+  it("plugin timeout for T2_ACT → deny HARDWARE_PERMIT_UNAVAILABLE", async () => {
+    const token = makeToken("ros2:///cmd_vel");
+    const slowPlugin = {
+      resolvePermit: vi.fn(async () => {
+        // Simulate very slow resolver
+        await new Promise(r => setTimeout(r, 5000));
+        return { permitState: "granted" as const, observedAt: freshObservedAt() };
+      }),
+    };
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      safetyPermit: slowPlugin,
+      safetyPermitTimeoutMs: 100, // 100ms timeout
+      emitLedgerEvent: vi.fn(),
+    });
+    const req = makeRequest(token, {
+      executionContext: { deploymentProfile: "warehouse-amr" },
+    });
+    const decision = await gw.intercept(req);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.reason).toContain("Safety permit resolver failed or timed out");
+  });
+
+  // 11. Plugin timeout for T0_OBSERVE → fail-open (allow)
+  it("plugin timeout for T0_OBSERVE → fail-open allows the request", async () => {
+    const token = makeToken("ros2:///sensor_data");
+    const slowPlugin = {
+      resolvePermit: vi.fn(async () => {
+        await new Promise(r => setTimeout(r, 5000));
+        return { permitState: "granted" as const, observedAt: freshObservedAt() };
+      }),
+    };
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      safetyPermit: slowPlugin,
+      safetyPermitTimeoutMs: 50, // 50ms timeout
+      emitLedgerEvent: vi.fn(),
+    });
+    const req = makeRequest(token, {
+      resource: "ros2:///sensor_data",
+      action: "subscribe",
+      executionContext: { deploymentProfile: "warehouse-amr" },
+    });
+    const decision = await gw.intercept(req);
+    // T0_OBSERVE should be allowed even on timeout (fail-open for low-consequence)
+    expect(decision.action).toBe("allow");
+  });
+
+  // 12. Plugin throws error for T3_COMMIT → deny HARDWARE_PERMIT_UNAVAILABLE
+  it("plugin throws error for T3_COMMIT → deny HARDWARE_PERMIT_UNAVAILABLE", async () => {
+    const token = makeToken("ros2:///cmd_vel", { approvalTier: "T3_COMMIT" });
+    const badPlugin = {
+      resolvePermit: vi.fn(async () => {
+        throw new Error("PLC connection lost");
+      }),
+    };
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      safetyPermit: badPlugin,
+      emitLedgerEvent: vi.fn(),
+    });
+    const req = makeRequest(token, {
+      executionContext: { deploymentProfile: "warehouse-amr" },
+    });
+    const decision = await gw.intercept(req);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.reason).toContain("PLC connection lost");
   });
 });
