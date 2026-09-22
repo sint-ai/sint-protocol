@@ -48,3 +48,21 @@ The first working-group review should answer four questions:
 2. Can another transport express the same non-bypass outcome?
 3. Can another safety controller express rollback/e-stop evidence?
 4. Can another evidence format bind `action_ref` and `delegation_ref` without leaking private authority metadata?
+
+## Envelope Attestation Adversarial Fixture (v0.1)
+
+`envelope-attestation-adversarial.v0.1.json` (schema:
+`envelope-attestation-fixture.schema.json`) is a protocol-neutral fixture for
+the path *condition evidence → envelope selection → execution authorization*.
+It was co-designed with DriftCore OS / LifeCore-16 around five requirements:
+valid evidence activates a pre-authorized envelope; false, expired, conflicting
+or unverifiable evidence does not; losing verification demotes the physical
+envelope; replay across restart is explicit; and the authorization is bound to
+the exact evidence it relied on.
+
+The profile text and SINT mapping live in
+`docs/specs/physical-envelope-attestation-profile-v0.1.md`.
+
+```bash
+pnpm --filter @pshkv/conformance-tests test:envelope-attestation
+```

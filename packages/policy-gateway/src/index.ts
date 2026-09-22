@@ -14,11 +14,39 @@ export type {
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
   DynamicEnvelopeFailureMode,
+  DynamicEnvelopeResult,
+  DynamicEnvelopeFailurePolicy,
+  EnvelopeBinding,
   SpatialCorridorVerifierPlugin,
   EdgeControlPlanePlugin,
   VerifiableComputePlugin,
   SimulationPreflightError,
 } from "./gateway.js";
+export {
+  EvidenceGatedEnvelopePlugin,
+  Ed25519ConditionEvidenceVerifier,
+  InMemoryEvidenceSequenceStore,
+  conditionEvidenceSigningPayload,
+  conditionEvidenceDigest,
+  signConditionEvidence,
+} from "./evidence-gated-envelope.js";
+export type {
+  ActiveEnvelopeSnapshot,
+  BaselineEnvelopeSpec,
+  ConditionEvidence,
+  ConditionEvidenceBody,
+  ConditionEvidenceProof,
+  ConditionEvidenceVerifier,
+  ConditionRequirement,
+  EnvelopeLimits,
+  EvidenceAcceptance,
+  EvidenceGatedEnvelopeConfig,
+  EvidenceRejection,
+  EvidenceRejectionCode,
+  EvidenceSequenceRecord,
+  EvidenceSequenceStore,
+  PermissiveEnvelopeSpec,
+} from "./evidence-gated-envelope.js";
 export { StaticSpatialCorridorVerifier } from "./spatial-corridor.js";
 export type {
   CorridorPoint,

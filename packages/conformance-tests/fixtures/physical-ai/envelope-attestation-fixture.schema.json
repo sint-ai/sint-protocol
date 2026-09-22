@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sint.ai/conformance/envelope-attestation-fixture.v0.1.schema.json",
+  "title": "Physical Envelope Attestation adversarial fixture (v0.1)",
+  "type": "object",
+  "required": ["fixtureId", "schemaVersion", "profile", "clock", "signers", "deployment", "probe", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "fixtureId": { "type": "string" },
+    "schemaVersion": { "type": "string", "pattern": "^0\\.1\\.\\d+$" },
+    "profile": { "type": "string" },
+    "license": { "type": "string" },
+    "description": { "type": "string" },
+    "provenance": { "type": "object" },
+    "clock": {
+      "type": "object",
+      "required": ["epoch"],
+      "properties": { "epoch": { "type": "string", "format": "date-time" } }
+    },
+    "signers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["trusted"],
+        "properties": { "trusted": { "type": "boolean" } }
+      }
+    },
+    "deployment": { "$ref": "#/$defs/deployment" },
+    "probe": {
+      "type": "object",
+      "required": ["resource", "action", "commandedVelocityMps"],
+      "properties": {
+        "resource": { "type": "string" },
+        "action": { "type": "string" },
+        "commandedVelocityMps": { "type": "number" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["caseId", "requirement", "name", "steps"],
+        "properties": {
+          "caseId": { "type": "string" },
+          "requirement": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "name": { "type": "string" },
+          "deploymentOverride": { "$ref": "#/$defs/deploymentOverride" },
+          "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "properties": {
+        "maxVelocityMps": { "type": "number", "minimum": 0 },
+        "maxForceNewtons": { "type": "number", "minimum": 0 }
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "required": ["condition", "value"],
+      "properties": {
+        "condition": { "type": "string" },
+        "value": { "type": "boolean" },
+        "minSources": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "permissive": {
+      "type": "object",
+      "required": ["envelopeId", "limits", "requires"],
+      "properties": {
+        "envelopeId": { "type": "string" },
+        "limits": { "$ref": "#/$defs/limits" },
+        "requires": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/requirement" } }
+      }
+    },
+    "selectorFailurePolicy": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["fail-open", "fallback", "deny"] },
+        "fallback": { "$ref": "#/$defs/limits" }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "required": ["authorizedLimits", "baseline", "permissive", "maxTtlMs", "selectorFailurePolicy"],
+      "properties": {
+        "authorizedLimits": { "$ref": "#/$defs/limits" },
+        "baseline": {
+          "type": "object",
+          "required": ["envelopeId", "limits"],
+          "properties": { "envelopeId": { "type": "string" }, "limits": { "$ref": "#/$defs/limits" } }
+        },
+        "permissive": { "$ref": "#/$defs/permissive" },
+        "maxTtlMs": { "type": "number", "exclusiveMinimum": 0 },
+        "maxClockSkewMs": { "type": "number", "minimum": 0 },
+        "selectorFailurePolicy": { "$ref": "#/$defs/selectorFailurePolicy" }
+      }
+    },
+    "deploymentOverride": {
+      "type": "object",
+      "properties": {
+        "authorizedLimits": { "$ref": "#/$defs/limits" },
+        "permissive": { "$ref": "#/$defs/permissive" },
+        "selectorFailurePolicy": { "$ref": "#/$defs/selectorFailurePolicy" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["evidenceId", "sourceId", "condition", "value", "sequence", "issuedAt", "ttlMs"],
+      "properties": {
+        "evidenceId": { "type": "string" },
+        "sourceId": { "type": "string" },
+        "condition": { "type": "string" },
+        "value": { "type": "boolean" },
+        "sequence": { "type": "integer" },
+        "issuedAt": { "type": "number", "description": "ms offset from clock.epoch" },
+        "ttlMs": { "oneOf": [{ "type": "number" }, { "const": "unbounded" }] }
+      }
+    },
+    "rejectionCode": {
+      "enum": [
+        "EVIDENCE_MALFORMED", "SOURCE_UNTRUSTED", "PROOF_INVALID", "VERIFIER_UNAVAILABLE",
+        "TTL_INVALID", "EVIDENCE_EXPIRED", "EVIDENCE_FROM_FUTURE", "EVIDENCE_PREDATES_BOOT",
+        "SEQUENCE_REPLAYED", "SEQUENCE_CONFLICT", "STORE_UNAVAILABLE"
+      ]
+    },
+    "step": {
+      "type": "object",
+      "required": ["op", "at"],
+      "properties": { "op": { "enum": ["ingest", "probe", "restart", "verifier", "fault", "store"] }, "at": { "type": "number" } },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "const": "ingest" } } },
+          "then": {
+            "required": ["signer", "evidence", "expect"],
+            "properties": {
+              "signer": { "type": "string" },
+              "evidence": { "$ref": "#/$defs/evidence" },
+              "proofOverride": { "enum": ["opaque-string", "none"] },
+              "tamperAfterSigning": { "type": "object" },
+              "expect": {
+                "type": "object",
+                "required": ["accepted"],
+                "properties": {
+                  "accepted": { "type": "boolean" },
+                  "code": {
+                    "oneOf": [
+                      { "$ref": "#/$defs/rejectionCode" },
+                      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rejectionCode" } }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "op": { "const": "probe" } } },
+          "then": {
+            "required": ["expect"],
+            "properties": {
+              "commandedVelocityMps": { "type": "number" },
+              "expect": {
+                "type": "object",
+                "required": ["outcome"],
+                "properties": {
+                  "activeEnvelope": { "type": "string" },
+                  "outcome": { "enum": ["pass", "violation", "refused"] },
+                  "events": { "type": "array", "items": { "enum": ["envelope.applied", "envelope.fallback"] } },
+                  "binding": {
+                    "type": "object",
+                    "properties": {
+                      "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+                      "effectiveLimits": { "$ref": "#/$defs/limits" },
+                      "captureAs": { "type": "string" },
+                      "evidenceDigestEquals": { "type": "string" },
+                      "evidenceDigestDiffersFrom": { "type": "string" },
+                      "envelopeDigestEquals": { "type": "string" },
+                      "envelopeDigestDiffersFrom": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "op": { "const": "restart" } } },
+          "then": { "required": ["preserveSequenceStore"], "properties": { "preserveSequenceStore": { "type": "boolean" } } }
+        },
+        {
+          "if": { "properties": { "op": { "enum": ["verifier", "store"] } } },
+          "then": { "required": ["state"], "properties": { "state": { "enum": ["available", "unavailable"] } } }
+        },
+        {
+          "if": { "properties": { "op": { "const": "fault" } } },
+          "then": {
+            "required": ["component", "state"],
+            "properties": { "component": { "const": "envelope-selector" }, "state": { "enum": ["throwing", "healthy"] } }
+          }
+        }
+      ]
+    }
+  }
+}
