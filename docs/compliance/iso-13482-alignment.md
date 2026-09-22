@@ -29,8 +29,8 @@ This guide aligns SINT controls with safety expectations for personal care and s
 
 ```bash
 pnpm run test
-pnpm --filter @sint/conformance-tests test -- src/industrial-benchmark-scenarios.test.ts
-pnpm --filter @sint/conformance-tests test -- src/industrial-interoperability.test.ts
+pnpm --filter @pshkv/conformance-tests test -- src/industrial-benchmark-scenarios.test.ts
+pnpm --filter @pshkv/conformance-tests test -- src/industrial-interoperability.test.ts
 ```
 
 ## Caveat

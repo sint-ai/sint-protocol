@@ -1,11 +1,11 @@
-# @sint/bridge-economy
+# @pshkv/bridge-economy
 
 Economic enforcement layer for SINT Protocol. Metered billing, trust-tier pricing, and balance management for agent actions.
 
 ## Install
 
 ```bash
-npm install @sint/bridge-economy
+npm install @pshkv/bridge-economy
 ```
 
 ## Usage

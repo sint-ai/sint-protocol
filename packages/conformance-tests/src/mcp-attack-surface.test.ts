@@ -3,8 +3,8 @@
  *
  * Covers 10 canonical MCP attack scenarios and verifies that SINT
  * correctly mitigates each. These tests must pass on every PR that
- * touches @sint/bridge-mcp, @sint/gate-policy-gateway, or
- * @sint/gate-capability-tokens.
+ * touches @pshkv/bridge-mcp, @pshkv/gate-policy-gateway, or
+ * @pshkv/gate-capability-tokens.
  *
  * Attack categories addressed:
  *   ASI01 — Tool name spoofing
@@ -18,7 +18,7 @@
  *   ASI09 — Forbidden operation sequence (writeFile → execute)
  *   ASI10 — Supply-chain model fingerprint mismatch
  *
- * @module @sint/conformance-tests/mcp-attack-surface
+ * @module @pshkv/conformance-tests/mcp-attack-surface
  */
 
 import { describe, it, expect, beforeEach } from "vitest";

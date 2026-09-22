@@ -5,7 +5,7 @@
  * by the Hardware Abstraction Layer to track system resource
  * utilization and trigger alerts.
  *
- * @module @sint/engine-hal/types
+ * @module @pshkv/engine-hal/types
  */
 
 import type { ISO8601, SintHardwareDeploymentProfile } from "@pshkv/core";

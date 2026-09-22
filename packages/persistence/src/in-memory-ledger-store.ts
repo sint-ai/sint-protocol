@@ -4,7 +4,7 @@
  * Reference implementation of LedgerStore for testing and development.
  * Uses the same contract that PG/Redis adapters must satisfy.
  *
- * @module @sint/persistence/in-memory-ledger-store
+ * @module @pshkv/persistence/in-memory-ledger-store
  */
 
 import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@pshkv/core";

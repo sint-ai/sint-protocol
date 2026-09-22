@@ -120,7 +120,11 @@ function computeReferenceEnvelope(vector: KineticVector): KineticEnvelopeResult 
   const margin =
     environmentalCapacity > 0 ? 1 - autonomyDemand / environmentalCapacity : Number.NEGATIVE_INFINITY;
   const supervision = supervisionForMargin(margin, capacityKnown);
-  const tightenedConstraints: KineticTightenedConstraints = {};
+  const tightenedConstraints: {
+    maxVelocityMps?: number;
+    maxForceNewtons?: number;
+    maxTorqueNm?: number;
+  } = {};
 
   if (ctx.currentVelocityMps !== undefined && margin > 0) {
     tightenedConstraints.maxVelocityMps = round3(PROFILE.vMaxMps * clamp(margin, 0, 1));

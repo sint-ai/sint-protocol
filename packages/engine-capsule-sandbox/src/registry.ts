@@ -6,7 +6,7 @@
  *
  * All methods return `Result<T, CapsuleError>` — never throw.
  *
- * @module @sint/engine-capsule-sandbox/registry
+ * @module @pshkv/engine-capsule-sandbox/registry
  */
 
 import type {

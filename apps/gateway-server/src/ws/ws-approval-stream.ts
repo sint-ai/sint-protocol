@@ -9,7 +9,7 @@
  *  - APPROVAL_REQUIRED: a request has been escalated and needs human review.
  *  - DECISION: a T2+ PolicyGateway decision (allow, deny, or escalate).
  *
- * @module @sint/gateway-server/ws/ws-approval-stream
+ * @module @pshkv/gateway-server/ws/ws-approval-stream
  */
 
 /** An escalation event requiring human review. */

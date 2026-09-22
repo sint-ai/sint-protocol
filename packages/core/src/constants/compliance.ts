@@ -4,7 +4,7 @@
  * Formal declaration of which OWASP ASI categories SINT addresses,
  * at what coverage level, and via which components.
  *
- * @module @sint/core/constants/compliance
+ * @module @pshkv/core/constants/compliance
  */
 
 import { ApprovalTier } from "../types/policy.js";

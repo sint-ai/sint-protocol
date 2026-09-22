@@ -4,7 +4,7 @@
  * Exports ledger events in RFC 5424 syslog format for SIEM ingestion.
  * Supports: syslog (RFC 5424), JSON Lines, CEF (Common Event Format).
  *
- * @module @sint/gate-evidence-ledger/siem-exporter
+ * @module @pshkv/gate-evidence-ledger/siem-exporter
  */
 
 import type { SintLedgerEvent } from "@pshkv/core";

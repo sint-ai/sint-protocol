@@ -1,7 +1,7 @@
 /**
  * SINT Persistence Postgres — PostgreSQL Rate Limit Store.
  *
- * Implements the RateLimitStore interface from @sint/core using PostgreSQL.
+ * Implements the RateLimitStore interface from @pshkv/core using PostgreSQL.
  * Uses UPSERT (INSERT … ON CONFLICT DO UPDATE) for atomic counter increments.
  *
  * Suitable for multi-node deployments where in-memory counters would diverge.
@@ -11,7 +11,7 @@
  *   count        BIGINT NOT NULL DEFAULT 1
  *   expires_at   TIMESTAMPTZ NOT NULL
  *
- * @module @sint/persistence-postgres/pg-rate-limit-store
+ * @module @pshkv/persistence-postgres/pg-rate-limit-store
  */
 
 import type { RateLimitStore } from "@pshkv/core";

@@ -14,7 +14,7 @@ the SINT Improvement Proposal (SIP) process.
 
 ## TSC
 
-[Link to SIP-0001 for TSC composition](../sip/SIP-0001-process.md)
+[Link to SIP-0001 for TSC composition](../sips/PROCESS.md)
 
 ## Maintainers
 
@@ -37,6 +37,6 @@ See CONTRIBUTING.md and the "good first issue" label on GitHub Issues.
 ## Transparency
 
 - All TSC decisions recorded in `docs/tsc/`
-- All SIPs in `docs/sip/`
+- All SIPs in `docs/sips/`
 - Public security advisories via GitHub Security Advisories
 - Private vulnerability intake via the path documented in `SECURITY.md`

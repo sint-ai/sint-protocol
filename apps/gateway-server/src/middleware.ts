@@ -3,7 +3,7 @@
  *
  * Request ID generation, error handling, CORS, and logging.
  *
- * @module @sint/gateway-server/middleware
+ * @module @pshkv/gateway-server/middleware
  */
 
 import { Hono } from "hono";

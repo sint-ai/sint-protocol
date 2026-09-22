@@ -74,7 +74,7 @@ Color coding:
 
 ### Context Panel (right)
 - **Token scope**: tools and resources the current agent is authorized for
-- **Recent memory**: last 3 items recalled from `@sint/memory`
+- **Recent memory**: last 3 items recalled from `@pshkv/memory`
 - **Call rate**: tool calls per minute vs `maxCallsPerMinute` limit
 
 ### Voice Bar (bottom)

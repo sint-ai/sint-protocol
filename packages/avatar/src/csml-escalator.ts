@@ -13,7 +13,7 @@
  * Integration: set as `csmlEscalation` on PolicyGatewayConfig. Called after
  * tier assignment (step 5), before forbidden combo check (step 6).
  *
- * @module @sint/avatar/csml-escalator
+ * @module @pshkv/avatar/csml-escalator
  */
 
 import { ApprovalTier } from "@pshkv/core";

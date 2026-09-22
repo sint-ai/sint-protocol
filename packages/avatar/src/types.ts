@@ -14,7 +14,7 @@
  * Invariant: avatar tier adjustment is ADDITIVE — it can only increase the
  * assigned tier, never decrease it.
  *
- * @module @sint/avatar/types
+ * @module @pshkv/avatar/types
  */
 
 import type { ApprovalTier } from "@pshkv/core";

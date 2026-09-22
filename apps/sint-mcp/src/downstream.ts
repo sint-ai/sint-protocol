@@ -5,7 +5,7 @@
  * Each downstream is connected via the MCP SDK Client and can
  * be queried for tools and called for tool execution.
  *
- * @module @sint/mcp/downstream
+ * @module sint-mcp/downstream
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";

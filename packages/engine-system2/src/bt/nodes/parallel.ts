@@ -4,7 +4,7 @@
  * Ticks ALL children on each tick. Uses a success threshold to determine
  * the aggregate result.
  *
- * @module @sint/engine-system2/bt/nodes/parallel
+ * @module @pshkv/engine-system2/bt/nodes/parallel
  */
 
 import type { Blackboard } from "../blackboard.js";

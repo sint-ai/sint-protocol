@@ -20,7 +20,7 @@
  * BVLOS context: when `humanPresent=false`, the tier assignment factors
  * in that no human operator is nearby — autonomous flight at T2_ACT minimum.
  *
- * @module @sint/bridge-mavlink/mavlink-interceptor
+ * @module @pshkv/bridge-mavlink/mavlink-interceptor
  */
 
 import type { PolicyGateway } from "@pshkv/gate-policy-gateway";

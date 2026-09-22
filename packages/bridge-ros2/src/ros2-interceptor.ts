@@ -4,7 +4,7 @@
  * Intercepts ROS 2 topic publishes, subscriptions, service calls,
  * and action goals through the SINT Policy Gateway.
  *
- * @module @sint/bridge-ros2/ros2-interceptor
+ * @module @pshkv/bridge-ros2/ros2-interceptor
  */
 
 import type { SintRequest } from "@pshkv/core";

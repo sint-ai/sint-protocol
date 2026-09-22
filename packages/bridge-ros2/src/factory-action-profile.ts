@@ -4,7 +4,7 @@
  * Converts the vendor-neutral RobotActionProfile into a ROS 2 command envelope
  * that can still flow through the normal PolicyGateway interception path.
  *
- * @module @sint/bridge-ros2/factory-action-profile
+ * @module @pshkv/bridge-ros2/factory-action-profile
  */
 
 import { z } from "zod";

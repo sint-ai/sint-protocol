@@ -17,7 +17,7 @@
  * Ref: https://github.com/a2aproject/A2A/issues/1713#issuecomment-4186524108
  *      SINT ↔ APS cross-verification: packages/capability-tokens/__tests__/aps-crossverify.test.ts
  *
- * @module @sint/bridge-a2a/aps-mapping
+ * @module @pshkv/bridge-a2a/aps-mapping
  */
 
 import type {

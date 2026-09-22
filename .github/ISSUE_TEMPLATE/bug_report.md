@@ -29,7 +29,7 @@ What actually happened.
 - **Node.js version:** 
 - **pnpm version:** 
 - **OS:** 
-- **SINT package(s) affected:** (e.g., `@sint/gate-policy-gateway`)
+- **SINT package(s) affected:** (e.g., `@pshkv/gate-policy-gateway`)
 - **SINT version/commit:** 
 
 ## Relevant Logs

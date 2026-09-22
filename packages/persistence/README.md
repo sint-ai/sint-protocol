@@ -1,11 +1,11 @@
-# @sint/persistence
+# @pshkv/persistence
 
 Storage interfaces and adapters for SINT Protocol. Provides in-memory implementations for development and interfaces for production adapters (PostgreSQL, Redis).
 
 ## Install
 
 ```bash
-npm install @sint/persistence
+npm install @pshkv/persistence
 ```
 
 ## Usage
@@ -30,8 +30,8 @@ const entries = await ledgerStore.query({ sessionId: "agent-001" });
 
 | Adapter | Package | Status |
 |---------|---------|--------|
-| In-Memory | `@sint/persistence` | ✅ Stable |
-| PostgreSQL | `@sint/persistence-postgres` | 🔧 Internal |
+| In-Memory | `@pshkv/persistence` | ✅ Stable |
+| PostgreSQL | `@pshkv/persistence-postgres` | 🔧 Internal |
 | Redis | Planned | — |
 
 ## Part of SINT Protocol

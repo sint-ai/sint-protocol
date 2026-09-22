@@ -3,7 +3,7 @@
  *
  * Loads config from JSON file, environment variables, and CLI args.
  *
- * @module @sint/mcp/config
+ * @module sint-mcp/config
  */
 
 import { readFileSync, existsSync } from "node:fs";

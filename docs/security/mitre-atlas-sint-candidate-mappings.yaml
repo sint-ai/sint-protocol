@@ -18,16 +18,16 @@ techniques:
     sint_enforcement_tier: strong_proxy
     mitigations:
       - id: sint.capability_tokens.subject_binding
-        package: "@sint/gate-capability-tokens"
+        package: "@pshkv/gate-capability-tokens"
         summary: Ed25519 capability tokens bind issuer, subject, resource, action, constraints, expiry, and delegation chain.
       - id: sint.policy_gateway.subject_match
-        package: "@sint/gate-policy-gateway"
+        package: "@pshkv/gate-policy-gateway"
         summary: PolicyGateway validates signatures and verifies token.subject equals request.agentId before execution.
       - id: sint.memory_integrity.credential_funnel
-        package: "@sint/gate-policy-gateway"
+        package: "@pshkv/gate-policy-gateway"
         summary: Detects credential-funnel and inconsistent identity claim patterns in agent sessions.
       - id: sint.aps_interop.cross_verify
-        package: "@sint/gate-capability-tokens"
+        package: "@pshkv/gate-capability-tokens"
         summary: APS/SINT cross-verification preserves delegated authority and revocation semantics.
     evidence:
       fixtures:
@@ -48,16 +48,16 @@ techniques:
     sint_enforcement_tier: strong_proxy
     mitigations:
       - id: sint.economy_plugin.budget_enforcement
-        package: "@sint/bridge-economy"
+        package: "@pshkv/bridge-economy"
         summary: Enforces per-agent budgets, route/cost policy, and budget exhaustion behavior.
       - id: sint.approval_tiers.payment_gate
-        package: "@sint/gate-policy-gateway"
+        package: "@pshkv/gate-policy-gateway"
         summary: Promotes high-risk or irreversible payment actions to T2/T3 approval gates.
       - id: sint.receipt_binding.payment_context
-        package: "@sint/gate-evidence-ledger"
+        package: "@pshkv/gate-evidence-ledger"
         summary: Binds payment and route decisions to agent identity, token scope, action intent, and evidence events.
       - id: sint.payment_governance.fixtures
-        package: "@sint/conformance-tests"
+        package: "@pshkv/conformance-tests"
         summary: Covers unauthorized payee redirection, stale receipts, budget exhaustion, and approval bypass attempts.
     evidence:
       fixtures:

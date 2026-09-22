@@ -295,7 +295,7 @@ When a system prompt scores 0/100 on static analysis, these fixture attacks shou
 - All 10 ASI controls are addressed. All 10 of 10 are fully covered.
 - The fixture pack (`owasp-asi-conformance.v1.json`) provides 30 machine-readable test vectors (attack + safe cases per control).
 - Tests in `owasp-asi-conformance.test.ts` run against a live `PolicyGateway` instance with real plugins instantiated.
-- These tests are part of the `@sint/conformance-tests` suite and must pass on every PR touching `@sint/gate-policy-gateway`, `@sint/gate-capability-tokens`, or any bridge adapter.
+- These tests are part of the `@pshkv/conformance-tests` suite and must pass on every PR touching `@pshkv/gate-policy-gateway`, `@pshkv/gate-capability-tokens`, or any bridge adapter.
 
 ---
 

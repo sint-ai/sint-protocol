@@ -4,7 +4,7 @@
  * Exposes the Policy Gateway as an HTTP API using Hono.
  * This is the entry point for deploying SINT Gate as a service.
  *
- * @module @sint/gateway-server
+ * @module @pshkv/gateway-server
  */
 
 import { serve } from "@hono/node-server";

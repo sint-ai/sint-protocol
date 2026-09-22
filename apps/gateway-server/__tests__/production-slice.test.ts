@@ -1,7 +1,7 @@
 /**
  * Production-slice verification path.
  *
- * This is the smallest supported runtime story from NEXT_PRIORITIES.md:
+ * This is the smallest supported runtime story from docs/archive/planning/NEXT_PRIORITIES.md:
  * issue a capability token, enforce through the gateway HTTP API, persist
  * the decision trail, prove the ledger chain, then revoke and fail closed.
  */

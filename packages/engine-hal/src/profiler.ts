@@ -4,7 +4,7 @@
  * Pure functions that map hardware specifications to the appropriate
  * SINT deployment profile. No side effects, no I/O.
  *
- * @module @sint/engine-hal/profiler
+ * @module @pshkv/engine-hal/profiler
  */
 
 import type { SintHardwareDeploymentProfile } from "@pshkv/core";

@@ -23,7 +23,7 @@
  * Error handling: fail-open. If any economy service is unreachable,
  * the request proceeds through normal PolicyGateway logic.
  *
- * @module @sint/bridge-economy/economy-plugin
+ * @module @pshkv/bridge-economy/economy-plugin
  */
 
 import type { PolicyDecision, SintRequest, ApprovalTier, RiskTier } from "@pshkv/core";

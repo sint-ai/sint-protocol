@@ -10,7 +10,7 @@
  *   revoked_by  TEXT NOT NULL
  *   revoked_at  TIMESTAMPTZ NOT NULL DEFAULT now()
  *
- * @module @sint/persistence-postgres/pg-revocation-store
+ * @module @pshkv/persistence-postgres/pg-revocation-store
  */
 
 import type { UUIDv7 } from "@pshkv/core";

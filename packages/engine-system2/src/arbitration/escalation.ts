@@ -4,7 +4,7 @@
  * Tracks persistent disagreements between System 1 and System 2
  * and escalates to human oversight when a threshold is exceeded.
  *
- * @module @sint/engine-system2/arbitration/escalation
+ * @module @pshkv/engine-system2/arbitration/escalation
  */
 
 import type { SintArbitrationDecision } from "@pshkv/core";

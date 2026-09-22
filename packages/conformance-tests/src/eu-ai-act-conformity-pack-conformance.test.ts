@@ -112,7 +112,7 @@ describe("EU AI Act conformity pack fixture v1", () => {
       expect(generated[field], field).not.toBeUndefined();
     }
 
-    const reviewRows = generated["t2T3ReviewEvidence"] as readonly Array<Record<string, unknown>>;
+    const reviewRows = generated["t2T3ReviewEvidence"] as ReadonlyArray<Record<string, unknown>>;
     expect(reviewRows.length).toBeGreaterThan(0);
     for (const row of reviewRows) {
       const hasReviewEvidence =

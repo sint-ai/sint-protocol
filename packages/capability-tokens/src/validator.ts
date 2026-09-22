@@ -8,7 +8,7 @@
  * No side effects, no I/O, deterministic output for same inputs.
  * This ensures the security boundary is testable and auditable.
  *
- * @module @sint/gate-capability-tokens/validator
+ * @module @pshkv/gate-capability-tokens/validator
  */
 
 import {

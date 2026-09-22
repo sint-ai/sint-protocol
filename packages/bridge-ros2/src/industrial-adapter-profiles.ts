@@ -4,7 +4,7 @@
  * These helpers turn the neutral RobotActionProfile into partner-facing
  * command shapes while preserving the normal ROS 2 PolicyGateway choke point.
  *
- * @module @sint/bridge-ros2/industrial-adapter-profiles
+ * @module @pshkv/bridge-ros2/industrial-adapter-profiles
  */
 
 import { createHash } from "node:crypto";

@@ -5,8 +5,8 @@ labels: conformance
 ---
 
 **System under test**: (e.g. ROS 2 Humble, MAVLink 2.0)
-**Bridge package**: (e.g. @sint/bridge-ros2)
-**Conformance suite**: (e.g. @sint/conformance-tests v0.2)
+**Bridge package**: (e.g. @pshkv/bridge-ros2)
+**Conformance suite**: (e.g. @pshkv/conformance-tests v0.2)
 
 **Test results**:
 - [ ] All tests pass

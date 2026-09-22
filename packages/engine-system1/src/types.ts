@@ -5,7 +5,7 @@
  * These types are used internally by the sensor bus, perception pipeline,
  * anomaly detector, and ONNX executor.
  *
- * @module @sint/engine-system1/types
+ * @module @pshkv/engine-system1/types
  */
 
 import type { Result, SintSensorModality } from "@pshkv/core";

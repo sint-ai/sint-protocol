@@ -7,7 +7,7 @@
  * safety-relevant action, System 2's decision is final. This
  * invariant is the foundation of SINT's physical AI safety model.
  *
- * @module @sint/engine-system2/arbitration/arbitrator
+ * @module @pshkv/engine-system2/arbitration/arbitrator
  */
 
 import type {

@@ -74,5 +74,8 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      - name: Markdown link check
+        run: pnpm run check:links
+
       - name: Test
         run: pnpm run test

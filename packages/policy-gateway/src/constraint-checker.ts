@@ -7,7 +7,7 @@
  * This is called BEFORE every physical action. Skipping
  * this check is a safety hazard.
  *
- * @module @sint/gate-policy-gateway/constraint-checker
+ * @module @pshkv/gate-policy-gateway/constraint-checker
  */
 
 import type {

@@ -9,7 +9,7 @@
  * If the gateway denies → the task is rejected with a SINT error code.
  * If the gateway escalates → the task is held pending human approval.
  *
- * @module @sint/bridge-a2a/interceptor
+ * @module @pshkv/bridge-a2a/interceptor
  */
 
 import type { PolicyDecision, SintRequest, UUIDv7 } from "@pshkv/core";

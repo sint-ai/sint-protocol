@@ -1,5 +1,5 @@
 /**
- * @sint/avatar — SINT Protocol Avatar Layer (L5)
+ * @pshkv/avatar — SINT Protocol Avatar Layer (L5)
  *
  * Behavioral identity profiles and CSML-driven tier escalation.
  *

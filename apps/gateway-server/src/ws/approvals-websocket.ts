@@ -4,7 +4,7 @@
  * Provides low-latency approval queue updates as an alternative transport
  * to the existing SSE endpoint at /v1/approvals/events.
  *
- * @module @sint/gateway-server/ws/approvals-websocket
+ * @module @pshkv/gateway-server/ws/approvals-websocket
  */
 
 import type { Server as HttpServer, IncomingMessage } from "node:http";

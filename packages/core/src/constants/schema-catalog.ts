@@ -3,7 +3,7 @@
  *
  * Machine-readable JSON Schema documents for public artifacts.
  *
- * @module @sint/core/constants/schema-catalog
+ * @module @pshkv/core/constants/schema-catalog
  */
 
 /**

@@ -34,7 +34,7 @@
  * yields the baseline. Gateway-level demotion when a selector *does* throw is
  * covered by `PolicyGatewayConfig.dynamicEnvelopeFailurePolicy`.
  *
- * @module @sint/gate-policy-gateway/evidence-gated-envelope
+ * @module @pshkv/gate-policy-gateway/evidence-gated-envelope
  */
 
 import type { Result, SintRequest } from "@pshkv/core";

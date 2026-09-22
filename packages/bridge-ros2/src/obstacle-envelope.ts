@@ -30,7 +30,7 @@
  * });
  * ```
  *
- * @module @sint/bridge-ros2/obstacle-envelope
+ * @module @pshkv/bridge-ros2/obstacle-envelope
  */
 
 import type { DynamicEnvelopePlugin } from "@pshkv/gate-policy-gateway";

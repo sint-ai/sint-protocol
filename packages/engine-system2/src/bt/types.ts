@@ -4,7 +4,7 @@
  * Defines the core abstractions for building behavior trees:
  * node status, tree node interface, and blackboard value types.
  *
- * @module @sint/engine-system2/bt/types
+ * @module @pshkv/engine-system2/bt/types
  */
 
 import type { Blackboard } from "./blackboard.js";

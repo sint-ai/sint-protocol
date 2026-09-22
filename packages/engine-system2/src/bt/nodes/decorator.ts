@@ -6,7 +6,7 @@
  * - RepeatNode: repeats child N times
  * - RetryNode: retries child on failure
  *
- * @module @sint/engine-system2/bt/nodes/decorator
+ * @module @pshkv/engine-system2/bt/nodes/decorator
  */
 
 import type { Blackboard } from "../blackboard.js";

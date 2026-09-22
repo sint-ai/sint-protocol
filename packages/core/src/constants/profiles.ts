@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Public deployment and bridge profiles.
  *
- * @module @sint/core/constants/profiles
+ * @module @pshkv/core/constants/profiles
  */
 
 import { ApprovalTier } from "../types/policy.js";

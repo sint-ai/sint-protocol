@@ -1,7 +1,7 @@
 /**
  * SINT Persistence Postgres — PostgreSQL Ledger Writer.
  *
- * Implements the LedgerStore interface from @sint/persistence using a real
+ * Implements the LedgerStore interface from @pshkv/persistence using a real
  * PostgreSQL backend. Events are INSERT-only and hash-chained.
  *
  * Table: sint_ledger_events
@@ -15,7 +15,7 @@
  *   hash        TEXT NOT NULL
  *   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
  *
- * @module @sint/persistence-postgres/pg-ledger-writer
+ * @module @pshkv/persistence-postgres/pg-ledger-writer
  */
 
 import type { LedgerQuery, SintLedgerEvent, UUIDv7 } from "@pshkv/core";

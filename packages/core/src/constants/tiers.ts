@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Tier constants and mappings.
  *
- * @module @sint/core/constants/tiers
+ * @module @pshkv/core/constants/tiers
  */
 
 import { ApprovalTier, RiskTier } from "../types/policy.js";
@@ -234,7 +234,7 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     escalateOnHumanPresence: true,
   },
 
-  // Generic MQTT IoT bridge defaults (`mqtt://`) used by @sint/bridge-iot
+  // Generic MQTT IoT bridge defaults (`mqtt://`) used by @pshkv/bridge-iot
   // Safety-critical publish/call paths are irreversible.
   {
     resourcePattern: "mqtt://*/*estop*",
@@ -719,7 +719,7 @@ export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
     baseRisk: RiskTier.T2_STATEFUL,
   },
 
-  // ── Operator Interface tools (@sint/interface-bridge) ─────────────────────
+  // ── Operator Interface tools (@pshkv/interface-bridge) ─────────────────────
   //
   // Resource format: sint://interface/<path>
   // Read-only status and memory recall → T0_OBSERVE (auto-approved, logged)

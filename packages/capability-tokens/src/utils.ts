@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Utility functions for capability tokens.
  *
- * @module @sint/gate-capability-tokens/utils
+ * @module @pshkv/gate-capability-tokens/utils
  */
 
 import type { ISO8601, UUIDv7 } from "@pshkv/core";

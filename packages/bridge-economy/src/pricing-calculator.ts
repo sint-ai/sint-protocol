@@ -8,7 +8,7 @@
  *
  * Default MCP tool call: ceil(6 × 1.0 × 1.5) = 9 tokens.
  *
- * @module @sint/bridge-economy/pricing-calculator
+ * @module @pshkv/bridge-economy/pricing-calculator
  */
 
 import type { SintRequest } from "@pshkv/core";

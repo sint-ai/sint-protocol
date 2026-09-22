@@ -4,7 +4,7 @@
  * Every SINT agent has a cryptographic identity (Ed25519 passport)
  * and optional on-chain identity (ERC-8004).
  *
- * @module @sint/core/types/agent
+ * @module @pshkv/core/types/agent
  */
 
 import type {

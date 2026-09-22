@@ -1,5 +1,5 @@
 /**
- * @sint/integration-langchain — SINT Protocol governance for LangChain.
+ * @pshkv/integration-langchain — SINT Protocol governance for LangChain.
  *
  * Provides a callback handler and tool wrapper that enforce
  * capability tokens on every LangChain tool invocation.
@@ -19,7 +19,7 @@
  * Every tool call will be intercepted by SINT's Policy Gateway.
  * Denied actions throw SintDeniedError with the denial reason.
  *
- * @module @sint/integration-langchain
+ * @module @pshkv/integration-langchain
  */
 
 export { SintGovernanceHandler } from "./handler.js";

@@ -15,7 +15,7 @@
  * This allows SINT Ed25519 agent keys to be used as W3C DIDs, enabling
  * interoperability with the W3C DID/Verifiable Credential ecosystem.
  *
- * @module @sint/gate-capability-tokens/did
+ * @module @pshkv/gate-capability-tokens/did
  */
 
 import { hexToBytes } from "@noble/hashes/utils";

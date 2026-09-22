@@ -1,11 +1,11 @@
-# @sint/bridge-mcp
+# @pshkv/bridge-mcp
 
 MCP (Model Context Protocol) tool call interception and risk classification. Wraps any MCP server with SINT policy enforcement.
 
 ## Install
 
 ```bash
-npm install @sint/bridge-mcp
+npm install @pshkv/bridge-mcp
 ```
 
 ## Usage

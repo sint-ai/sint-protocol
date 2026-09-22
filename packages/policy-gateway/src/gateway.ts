@@ -6,7 +6,7 @@
  *
  * No action ever bypasses the Policy Gateway.
  *
- * @module @sint/gate-policy-gateway/gateway
+ * @module @pshkv/gate-policy-gateway/gateway
  */
 
 import {
@@ -148,7 +148,7 @@ export interface AutonomySupervisorPlugin {
 /** Policy Gateway configuration. */
 /**
  * CSML escalation hook — called after tier assignment to optionally bump the tier.
- * Provided by @sint/avatar's CsmlEscalator. Decoupled via interface to avoid circular dep.
+ * Provided by @pshkv/avatar's CsmlEscalator. Decoupled via interface to avoid circular dep.
  */
 /**
  * Dynamic envelope plugin — environment-adaptive safety constraint tightening.

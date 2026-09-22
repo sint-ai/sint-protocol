@@ -4,7 +4,7 @@
  * Interface-first design: define contracts, implement adapters separately.
  * All methods are async to support remote backends (PG, Redis).
  *
- * @module @sint/persistence/interfaces
+ * @module @pshkv/persistence/interfaces
  */
 
 import type {

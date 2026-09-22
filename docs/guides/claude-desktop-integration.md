@@ -209,7 +209,7 @@ Every tool call — approved, denied, or escalated — is recorded in the SINT E
 
 ```bash
 # Start the dashboard (runs at http://localhost:4000)
-pnpm --filter @sint/dashboard dev
+pnpm --filter @pshkv/dashboard dev
 ```
 
 The dashboard shows:
@@ -222,7 +222,7 @@ Alternatively, query the ledger directly from the gateway server:
 
 ```bash
 # Gateway server exposes a REST API at port 3000
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 
 # Fetch recent events
 curl http://localhost:3000/api/ledger/events?limit=50
@@ -309,7 +309,7 @@ If any tool comes back as T3_COMMIT CRITICAL and you are not expecting it, inves
 ## Resources
 
 - GitHub: [sint-ai/sint-protocol](https://github.com/sint-ai/sint-protocol)
-- [Full SINT v0.2 spec](../SINT_v0.2_SPEC.md)
+- [Full SINT v0.2 spec](../specs/SINT_v0.2_SPEC.md)
 - [Secure MCP Deployments guide](./secure-mcp-deployments.md) — programmatic integration (non-Claude Desktop)
-- [Conformance certification matrix](../CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
+- [Conformance certification matrix](../conformance/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
 - `npx sint-scan --help` — scan any MCP server for tier assignments

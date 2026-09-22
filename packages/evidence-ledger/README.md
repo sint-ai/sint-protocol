@@ -1,11 +1,11 @@
-# @sint/gate-evidence-ledger
+# @pshkv/gate-evidence-ledger
 
 SHA-256 hash-chained, tamper-evident audit log for AI agent actions. Every policy decision is recorded with cryptographic integrity guarantees.
 
 ## Install
 
 ```bash
-npm install @sint/gate-evidence-ledger
+npm install @pshkv/gate-evidence-ledger
 ```
 
 ## Usage

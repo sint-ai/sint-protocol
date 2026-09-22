@@ -30,4 +30,4 @@ Fixtures for policy bundles, capability tokens, and ledger events are generated 
 pnpm cert:fixtures
 ```
 
-See [`docs/rfc-001-policy-bundle.md`](../../docs/rfc-001-policy-bundle.md) for the normative specification.
+See [`docs/rfcs/RFC-001-policy-bundle.md`](../../docs/rfcs/RFC-001-policy-bundle.md) for the normative specification.

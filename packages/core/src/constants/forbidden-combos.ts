@@ -5,7 +5,7 @@
  * within a time window, indicate potential capability laundering or
  * attack escalation. They must be blocked or escalated to T3_COMMIT.
  *
- * @module @sint/core/constants/forbidden-combos
+ * @module @pshkv/core/constants/forbidden-combos
  */
 
 import { ApprovalTier } from "../types/policy.js";

@@ -8,7 +8,7 @@
  * - Timeout support
  * - JSON parsing
  *
- * @module @sint/bridge-economy/adapters/http-client
+ * @module @pshkv/bridge-economy/adapters/http-client
  */
 
 import { ok, err, type Result } from "@pshkv/core";

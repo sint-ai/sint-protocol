@@ -1,5 +1,5 @@
 /**
- * @sint/bridge-a2a — SINT security bridge for the Google A2A Protocol.
+ * @pshkv/bridge-a2a — SINT security bridge for the Google A2A Protocol.
  *
  * Makes SINT the security layer for agent-to-agent task delegation.
  * Every A2A `tasks/send` call flows through the PolicyGateway before

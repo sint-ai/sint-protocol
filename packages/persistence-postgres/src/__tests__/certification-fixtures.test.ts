@@ -1,5 +1,5 @@
 /**
- * @sint/persistence-postgres — Canonical certification fixture tests.
+ * @pshkv/persistence-postgres — Canonical certification fixture tests.
  *
  * Aligns adapter behavior with shared protocol fixture artifacts.
  */

@@ -4,7 +4,7 @@
  * Cross-node revocation propagation via Redis pub/sub.
  * Enables <1s revocation propagation across distributed nodes.
  *
- * @module @sint/persistence/redis-revocation-bus
+ * @module @pshkv/persistence/redis-revocation-bus
  */
 
 import type { Redis } from "ioredis";

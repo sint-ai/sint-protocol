@@ -16,25 +16,22 @@
  *   "escalate" — T2/T3 requires review (not a denial)
  *   "deny"     — explicitly blocked (constraint or resource violation)
  *
- * @module @sint/conformance-tests/ros2-agent-scenarios
+ * @module @pshkv/conformance-tests/ros2-agent-scenarios
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   generateKeypair,
-  generateUUIDv7,
-  nowISO8601,
   issueCapabilityToken,
   delegateCapabilityToken,
   RevocationStore,
 } from "@pshkv/gate-capability-tokens";
-import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import { ROS2Interceptor } from "@pshkv/bridge-ros2";
 import type {
   ROS2TopicMessage,
   ROS2ServiceCall,
-  ROS2ActionGoal,
 } from "@pshkv/bridge-ros2";
 import type { SintCapabilityToken, SintCapabilityTokenRequest } from "@pshkv/core";
 import { ApprovalTier } from "@pshkv/core";
@@ -62,13 +59,11 @@ describe("ROS2 + Agent Multi-Agent Scenarios", () => {
   let tokenStore: Map<string, SintCapabilityToken>;
   let gateway: PolicyGateway;
   let ledger: LedgerWriter;
-  let approvalQueue: ApprovalQueue;
 
   beforeEach(() => {
     tokenStore = new Map();
     revocationStore.clear();
     ledger = new LedgerWriter();
-    approvalQueue = new ApprovalQueue();
 
     gateway = new PolicyGateway({
       resolveToken: (id) => tokenStore.get(id),
@@ -250,7 +245,7 @@ describe("ROS2 + Agent Multi-Agent Scenarios", () => {
 
     const interceptor = createInterceptor(agentA.publicKey, token, 10);
 
-    const message: ROS2TopicMessage = {
+    const message = {
       topicName: "/cmd_vel",
       messageType: "geometry_msgs/Twist",
       data: { linear: { x: 0.2, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } },
@@ -258,7 +253,7 @@ describe("ROS2 + Agent Multi-Agent Scenarios", () => {
       physicalContext: {
         currentPosition: { x: -100, y: 10, z: 0 }, // Way outside geofence
       },
-    };
+    } as ROS2TopicMessage;
 
     const result = await interceptor.interceptPublish(message);
 

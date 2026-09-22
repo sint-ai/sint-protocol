@@ -4,7 +4,7 @@
  * In-process counters, gauges, and histograms exposed
  * via GET /v1/metrics in Prometheus text format.
  *
- * @module @sint/gateway-server/middleware/metrics
+ * @module @pshkv/gateway-server/middleware/metrics
  */
 
 import { Hono } from "hono";

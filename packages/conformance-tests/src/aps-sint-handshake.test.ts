@@ -12,7 +12,7 @@
  *   - Monotonic narrowing: child scope cannot exceed parent scope
  *   - APS did:key subject round-trips through keyToDid / didToKey
  *
- * @module @sint/conformance-tests/aps-sint-handshake
+ * @module @pshkv/conformance-tests/aps-sint-handshake
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -255,7 +255,7 @@ describe("APS-SINT-MCP Cross-Protocol Handshake — conformance", () => {
     // Delegate R0 → C1 (child token for childAgent)
     const c1Result = delegateCapabilityToken(
       r0,
-      { newSubject: childAgent.publicKey, newResource: "mcp://filesystem/readFile" },
+      { newSubject: childAgent.publicKey },
       rootAgent.privateKey,
     );
     if (!c1Result.ok) throw new Error(c1Result.error);
@@ -303,7 +303,7 @@ describe("APS-SINT-MCP Cross-Protocol Handshake — conformance", () => {
 
     const c1Result = delegateCapabilityToken(
       r0,
-      { newSubject: childAgent.publicKey, newResource: "mcp://filesystem/readFile" },
+      { newSubject: childAgent.publicKey },
       rootAgent.privateKey,
     );
     if (!c1Result.ok) throw new Error(c1Result.error);

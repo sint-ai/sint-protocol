@@ -48,7 +48,7 @@ Copy from `docs/social/linkedin-launch-post.md`.
 
 ## Step 4 — Community Distribution
 
-From `COMMUNITY-TARGETS.md`:
+From `docs/marketing/COMMUNITY-TARGETS.md`:
 
 - [ ] MCP Discord — #show-and-tell or #security channel
 - [ ] awesome-mcp-servers or equivalent listing with the quickstart guide

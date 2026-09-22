@@ -218,7 +218,7 @@ pnpm run test        # full workspace test suite
 ### Start the Gateway Server
 
 ```bash
-pnpm --filter @sint/gateway-server dev
+pnpm --filter @pshkv/gateway-server dev
 # → http://localhost:3100/v1/health
 # → http://localhost:3100/v1/ready
 # → http://localhost:3100/v1/docs
@@ -269,8 +269,8 @@ Community/adoption assets:
 ### Run a Single Package
 
 ```bash
-pnpm --filter @sint/gate-policy-gateway test
-pnpm --filter @sint/bridge-mcp test
+pnpm --filter @pshkv/gate-policy-gateway test
+pnpm --filter @pshkv/bridge-mcp test
 ```
 
 ## Consumer Domains: Smart Home & Health
@@ -282,7 +282,7 @@ SINT extends far beyond industrial robotics. Two major consumer domains now have
 AI agents accessing your smart home go through the Policy Gateway:
 
 ```typescript
-import { HAInterceptor } from "@sint/bridge-homeassistant";
+import { HAInterceptor } from "@pshkv/bridge-homeassistant";
 
 const interceptor = new HAInterceptor({
   policyGateway,
@@ -311,7 +311,7 @@ See [`packages/bridge-homeassistant`](packages/bridge-homeassistant) and [`packa
 Patient data accessed by AI agents goes through consent-based governance:
 
 ```typescript
-import { createFHIRConsentToken } from "@sint/bridge-health";
+import { createFHIRConsentToken } from "@pshkv/bridge-health";
 
 // Patient grants AI agent 7-day read access to health observations
 const consentToken = createFHIRConsentToken(
@@ -348,7 +348,7 @@ pnpm run stack:interface  # starts gateway + interface + postgres + redis
 Features:
 - **Voice input**: Web Speech API, zero external dependencies, real-time transcript
 - **Command HUD**: three-panel approvals, action stream, and context view
-- **Operator memory**: ledger-backed persistent context (`@sint/memory`)
+- **Operator memory**: ledger-backed persistent context (`@pshkv/memory`)
 - **Proactive notifications**: `sint__notify` runs as T2 and requires confirmation
 - **T2/T3 approvals**: one-click approve/deny with timeout countdown
 
@@ -417,10 +417,10 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/core`](packages/core) | Types, Zod schemas, tier constants, formal DFA states | — |
-| [`@sint/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 55 |
-| [`@sint/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 256 |
-| [`@sint/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with pluggable attestation | 45 |
+| [`@pshkv/core`](packages/core) | Types, Zod schemas, tier constants, formal DFA states | 68 |
+| [`@pshkv/gate-capability-tokens`](packages/capability-tokens) | Ed25519 tokens, delegation, W3C DID identity | 83 |
+| [`@pshkv/gate-policy-gateway`](packages/policy-gateway) | Authorization engine: tiers, constraints, rate limiting, M-of-N quorum | 362 |
+| [`@pshkv/gate-evidence-ledger`](packages/evidence-ledger) | SHA-256 hash-chained append-only audit log with pluggable attestation | 65 |
 
 ### Bridges (15 bridges)
 
@@ -428,75 +428,75 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 66 |
-| [`@sint/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 20 |
-| [`@sint/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 38 |
-| [`@sint/bridge-iot`](packages/bridge-iot) | Generic MQTT/CoAP edge IoT bridge with gateway session interception | 21 |
-| [`@sint/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
-| [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
-| [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
-| [`@sint/bridge-grpc`](packages/bridge-grpc) | gRPC service/method profile mapping with default tier assignment | 5 |
-| [`@sint/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 15 |
+| [`@pshkv/bridge-mcp`](packages/bridge-mcp) | MCP tool call interception and risk classification | 84 |
+| [`@pshkv/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 58 |
+| [`@pshkv/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 42 |
+| [`@pshkv/bridge-iot`](packages/bridge-iot) | Generic MQTT/CoAP edge IoT bridge with gateway session interception | 56 |
+| [`@pshkv/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
+| [`@pshkv/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 22 |
+| [`@pshkv/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 17 |
+| [`@pshkv/bridge-grpc`](packages/bridge-grpc) | gRPC service/method profile mapping with default tier assignment | 18 |
+| [`@pshkv/bridge-mavlink`](packages/bridge-mavlink) | MAVLink drone/UAV command bridge | 17 |
 
 **Coordination & Economics (2)**
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 47 |
-| [`@sint/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
+| [`@pshkv/bridge-economy`](packages/bridge-economy) | Economy bridge: balance, budget, trust, billing ports | 60 |
+| [`@pshkv/bridge-swarm`](packages/bridge-swarm) | Multi-robot swarm coordination bridge | 9 |
 
 **Consumer & Health (3) — Phase 1-5 Physical AI Governance**
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/bridge-homeassistant`](packages/bridge-homeassistant) | Consumer smart home MCP interceptor with device profiles (locks, cameras, alarms, climate, vacuums) — Phase 1 | 36 |
-| [`@sint/bridge-health`](packages/bridge-health) | FHIR R5 + HealthKit/Health Connect with differential privacy, consent tokens, and caregiver delegation — Phase 5 | — |
-| [`@sint/bridge-matter`](packages/bridge-matter) | Matter protocol bridge for unified smart home device governance — Phase 2 | — |
+| [`@pshkv/bridge-homeassistant`](packages/bridge-homeassistant) | Consumer smart home MCP interceptor with device profiles (locks, cameras, alarms, climate, vacuums) — Phase 1 | 36 |
+| [`@pshkv/bridge-health`](packages/bridge-health) | FHIR R5 + HealthKit/Health Connect with differential privacy, consent tokens, and caregiver delegation — Phase 5 | 7 |
+| [`@pshkv/bridge-matter`](packages/bridge-matter) | Matter protocol bridge for unified smart home device governance — Phase 2 | — |
 
-Note: some consumer/health bridges are currently in “prototype API” state. CI may temporarily skip their `build`/`typecheck`/`test` scripts until their public interfaces are aligned with the `@sint/core` request/decision model.
+Note: some consumer/health bridges are currently in “prototype API” state. CI may temporarily skip their `build`/`typecheck`/`test` scripts until their public interfaces are aligned with the `@pshkv/core` request/decision model.
 
 **Reference Implementation (1)**
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/sint-pdp-interceptor`](packages/sint-pdp-interceptor) | Reference SEP-1763 PDP adapter for MCP interceptor hosts backed by `PolicyGateway.intercept()` | 5 |
+| [`@pshkv/sint-pdp-interceptor`](packages/sint-pdp-interceptor) | Reference SEP-1763 PDP adapter for MCP interceptor hosts backed by `PolicyGateway.intercept()` | 7 |
 
 ### Engine (AI Execution Layer)
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/engine-system1`](packages/engine-system1) | Neural perception: sensor fusion, ONNX inference, anomaly detection | 42 |
-| [`@sint/engine-system2`](packages/engine-system2) | Symbolic reasoning: behavior trees, task planning, System 1/2 arbitration | 86 |
-| [`@sint/engine-hal`](packages/engine-hal) | Hardware Abstraction Layer: auto-detect hardware, select deployment profile | 26 |
-| [`@sint/engine-capsule-sandbox`](packages/engine-capsule-sandbox) | WASM/TS capsule loading, validation, and sandboxed execution | 36 |
-| [`@sint/avatar`](packages/avatar) | Avatar Layer (L5): behavioral identity profiles, CSML-driven tier escalation | 25 |
+| [`@pshkv/engine-system1`](packages/engine-system1) | Neural perception: sensor fusion, ONNX inference, anomaly detection | 42 |
+| [`@pshkv/engine-system2`](packages/engine-system2) | Symbolic reasoning: behavior trees, task planning, System 1/2 arbitration | 86 |
+| [`@pshkv/engine-hal`](packages/engine-hal) | Hardware Abstraction Layer: auto-detect hardware, select deployment profile | 26 |
+| [`@pshkv/engine-capsule-sandbox`](packages/engine-capsule-sandbox) | WASM/TS capsule loading, validation, and sandboxed execution | 36 |
+| [`@pshkv/avatar`](packages/avatar) | Avatar Layer (L5): behavioral identity profiles, CSML-driven tier escalation | 25 |
 
 ### Reference Capsules
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/capsule-navigation`](capsules/navigation) | Waypoint following navigation reference capsule | 11 |
-| [`@sint/capsule-inspection`](capsules/inspection) | Visual anomaly detection for manufacturing QA | 8 |
-| [`@sint/capsule-pick-and-place`](capsules/pick-and-place) | Gripper control for pick-and-place tasks | 12 |
+| [`@pshkv/capsule-navigation`](capsules/navigation) | Waypoint following navigation reference capsule | 11 |
+| [`@pshkv/capsule-inspection`](capsules/inspection) | Visual anomaly detection for manufacturing QA | 8 |
+| [`@pshkv/capsule-pick-and-place`](capsules/pick-and-place) | Gripper control for pick-and-place tasks | 12 |
 
 ### Persistence
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/persistence`](packages/persistence) | Storage interfaces + in-memory/PG/Redis implementations | 26 |
-| [`@sint/persistence-postgres`](packages/persistence-postgres) | Production PostgreSQL adapters for ledger, revocation, and rate-limit durability | 14 |
+| [`@pshkv/persistence`](packages/persistence) | Storage interfaces + in-memory/PG/Redis implementations | 44 |
+| [`@pshkv/persistence-postgres`](packages/persistence-postgres) | Production PostgreSQL adapters for ledger, revocation, and rate-limit durability | 14 |
 
 ### Apps & SDKs
 
 | Package | Description | Tests |
 |---------|-------------|-------|
-| [`@sint/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | — |
+| [`@pshkv/gateway-server`](apps/gateway-server) | Hono HTTP API with approvals, SSE streaming, A2A routes | 145 |
 | [`sint-mcp`](apps/sint-mcp) | Security-first multi-MCP proxy server | — |
-| [`@sint/interface`](apps/sint-interface) | Voice HUD and Conductor approvals for operator review | 25 |
-| [`@sint/dashboard`](apps/dashboard) | Archived real-time approval dashboard with operator auth | 29 |
-| [`@sint/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | — |
-| [`@sint/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
-| [`@sint/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | — |
+| [`@pshkv/interface`](apps/sint-interface) | Voice HUD and Conductor approvals for operator review | 25 |
+| [`@pshkv/dashboard`](apps/dashboard) | Archived real-time approval dashboard with operator auth | 29 |
+| [`@pshkv/client`](packages/client) | TypeScript SDK for the Gateway API (delegation, SSE) | 13 |
+| [`@pshkv/sdk`](sdks/typescript) | Zero-dependency public TypeScript SDK aligned to gateway v0.2 contracts | 9 |
+| [`@pshkv/conformance-tests`](packages/conformance-tests) | Security regression suite — all phases | 403 |
 
 **Total: 49 repo packages, apps, examples, and capsules · CI-backed full-suite and conformance coverage**
 
@@ -675,32 +675,13 @@ Machine-readable crosswalk endpoint: `GET /v1/compliance/tier-crosswalk`
 | `GET` | `/v1/compliance/tier-crosswalk` | SINT tier mapping to NIST AI RMF / ISO 42001 / EU AI Act controls |
 | `POST` | `/v1/economy/route` | Cost-aware route selection with optional x402 pay-per-call quotes |
 
-## Development Phases
+## Status and Roadmap
 
-### SINT Protocol Core (6 phases complete)
-
-| Phase | Description | Tests |
-|-------|-------------|-------|
-| **Phase 1** (complete) | Security Wedge — capability tokens, PolicyGateway, EvidenceLedger | 425 |
-| **Phase 2** (complete) | Engine Core — bridge-mcp, bridge-ros2, engine packages, persistence, gateway-server | +221 (646) |
-| **Phase 3** (complete) | Economy Bridge — @sint/bridge-economy with port/adapter pattern, EconomyPlugin | +91 (737) |
-| **Phase 4** (complete) | Standards Alignment — A2A bridge, rate limiting, M-of-N quorum, W3C DID identity | +78 |
-| **Phase 5** (complete) | Protocol Surface v0.2 — discovery/OpenAPI/schema endpoints, industrial profiles | shipped |
-| **Phase 6** (complete) | Engine layer — System1/2 engines, HAL, capsule sandbox, Avatar/CSML, reference capsules | shipped |
-
-### Physical AI Governance Roadmap 2026–2029 (Phases 1–5 in progress)
-
-Extending SINT to consumer, health, and critical infrastructure domains:
-
-| Phase | Focus | Status | Examples |
-|-------|-------|--------|----------|
-| **Phase 1** | Consumer Smart Home (Q2–Q3 2026) | ✅ Complete | [`bridge-homeassistant`](packages/bridge-homeassistant) — Home Assistant MCP interceptor with 12 device classes (locks, cameras, alarms, climate, robot vacuums). Tier-appropriate defaults: locks/alarms→T2, lights/climate→T1, cameras→T0. |
-| **Phase 2** | Matter Protocol Unification (Q3–Q4 2026) | ✅ Complete | [`bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices. Device discovery, service profiles, and tier assignment. |
-| **Phase 3** | Occupancy & Human Presence (2027) | 📋 Planned | `Δ_human` plugin: escalate robot vacuums to T2 when occupancy detected. Build on Phase 1 sensor fusion. |
-| **Phase 4** | Critical Infrastructure (2027–2028) | 📋 Planned | Power grids, water systems, industrial facilities. Formalized risk models and emergency-mode escalation. |
-| **Phase 5** | Health Fabric & Wellbeing (Q4 2026–Q1 2027) | ✅ Complete | [`bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect on-device processing, differential privacy ledger, and caregiver delegation tokens. HIPAA + GDPR alignment. |
-
-See [docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) for full roadmap.
+Every workspace package builds and passes its tests on `main`, and the
+conformance suite is a required CI gate. What is shipped, what is next, and
+what is deliberately deferred are tracked in one place:
+[docs/roadmap.md](docs/roadmap.md). Phase numbering from earlier plans has
+been retired; use the roadmap's Now / Next / Later horizons instead.
 
 ## Deployment
 
@@ -739,10 +720,10 @@ docker-compose up
 
 ## Docs & Artifacts
 
-- Protocol spec: [`docs/SINT_v0.2_SPEC.md`](docs/SINT_v0.2_SPEC.md)
-- SIP governance: [`docs/SIPS.md`](docs/SIPS.md)
-- Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
-- Conformance matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
+- Protocol spec: [`docs/specs/SINT_v0.2_SPEC.md`](docs/specs/SINT_v0.2_SPEC.md)
+- SIP governance: [`docs/sips/README.md`](docs/sips/README.md)
+- Release notes: [`docs/releases/RELEASE_NOTES_v0.2.md`](docs/releases/RELEASE_NOTES_v0.2.md)
+- Conformance matrix: [`docs/conformance/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/conformance/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
 - EU AI Act mapping: [`docs/compliance/eu-ai-act-mapping.md`](docs/compliance/eu-ai-act-mapping.md)
 - ISO 13482 alignment: [`docs/compliance/iso-13482-alignment.md`](docs/compliance/iso-13482-alignment.md)
 - Formal threat model: [`docs/security/formal-threat-model.md`](docs/security/formal-threat-model.md)
@@ -784,9 +765,9 @@ docker-compose up
 - Home Assistant bridge package: [`packages/bridge-homeassistant`](packages/bridge-homeassistant) — 12 device classes with tier-appropriate defaults and occupancy-aware escalation
 - Matter protocol bridge: [`packages/bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices
 - Health fabric bridge: [`packages/bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect mapping, differential privacy ledger, caregiver delegation
-- Implementation status: [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) — Session completion report and artifact inventory
-- Execution summary: [`EXECUTION_SUMMARY.md`](EXECUTION_SUMMARY.md) — Phase completion metrics and deliverables
-- Master index: [`INDEX.md`](INDEX.md) — Complete documentation navigation
+- Implementation status: [`docs/archive/sessions-2026-04/IMPLEMENTATION_STATUS.md`](docs/archive/sessions-2026-04/IMPLEMENTATION_STATUS.md) — Session completion report and artifact inventory
+- Execution summary: [`docs/archive/sessions-2026-04/EXECUTION_SUMMARY.md`](docs/archive/sessions-2026-04/EXECUTION_SUMMARY.md) — Phase completion metrics and deliverables
+- Master index: [`docs/archive/sessions-2026-04/INDEX.md`](docs/archive/sessions-2026-04/INDEX.md) — Complete documentation navigation
 
 ## Design Principles
 
@@ -810,20 +791,10 @@ docker-compose up
 
 ## Roadmap
 
-The active execution pages are:
-
+- [Canonical roadmap](docs/roadmap.md) with Now / Next / Later horizons
+- [Track documents](docs/roadmaps/) that feed it
 - [Protocol overview](docs/protocol.md)
-- [Active roadmap](docs/roadmap.md)
-- [End-of-year 2026 execution plan](docs/roadmaps/end-of-year-2026-execution-plan.md)
-- [AAIF resubmission 2026](docs/roadmaps/aaif-resubmission-2026.md)
-- [Physical AI Governance 2026–2029](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md)
-
-The current emphasis is straightforward:
-
-- production-ready gateway behavior
-- release and evidence discipline
-- collaborator-facing integration artifacts
-- stronger external adoption and maintainership signals
+- [Archive of superseded plans](docs/archive/README.md)
 
 ## License
 

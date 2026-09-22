@@ -1,11 +1,11 @@
-# @sint/gate-capability-tokens
+# @pshkv/gate-capability-tokens
 
 Ed25519-signed capability tokens with delegation chains for AI agent authorization.
 
 ## Install
 
 ```bash
-npm install @sint/gate-capability-tokens
+npm install @pshkv/gate-capability-tokens
 ```
 
 ## Usage

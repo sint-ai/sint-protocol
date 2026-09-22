@@ -17,8 +17,10 @@ function toIntercept(
 ): MavlinkIntercept {
   return {
     messageType: item.intercept.messageType,
-    command: "command" in item.intercept.payload ? item.intercept.payload.command : undefined,
-    payload: item.intercept.payload as MavCommandLong | MavSetPositionTargetLocalNed,
+    command: ("command" in item.intercept.payload
+      ? item.intercept.payload.command
+      : undefined) as MavlinkIntercept["command"],
+    payload: item.intercept.payload as unknown as MavCommandLong | MavSetPositionTargetLocalNed,
     timestamp: "2026-06-02T17:00:00.000Z",
     systemId: item.intercept.systemId,
     componentId: item.intercept.componentId,

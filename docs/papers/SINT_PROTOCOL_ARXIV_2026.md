@@ -641,7 +641,7 @@ Detects manipulation of agent memory, conversation history, or stored context:
 
 - **Model fingerprint check.** Each agent declares its `foundation_model_id` and `modelFingerprintHash`; the verifier checks the hash against an allowlist of attested models.
 - **Tool manifest integrity.** For MCP tool servers, the verifier maintains a hash of the announced tool manifest; a manifest change between sessions without operator acknowledgement raises a tampering alert.
-- **Bridge package integrity.** Bridges check their own package version against a signed manifest hosted in the `@sint/token-registry` package; an unsigned bridge fails closed.
+- **Bridge package integrity.** Bridges check their own package version against a signed manifest hosted in the `@pshkv/token-registry` package; an unsigned bridge fails closed.
 
 ### 5.7 `CircuitBreakerPlugin` — Emergency Stop (EU AI Act Art. 14(4)(e))
 
@@ -725,10 +725,10 @@ The reference implementation is organized into seven groups.
 
 | Package | Purpose | Tests |
 |---|---|:---:|
-| `@sint/core` | Types, Zod schemas, DFA states, tier constants | — |
-| `@sint/gate-capability-tokens` | Ed25519 tokens, delegation, W3C DID identity | 55 |
-| `@sint/gate-policy-gateway` | Authorization engine: tiers, constraints, rate limiting, M-of-N | 256 |
-| `@sint/gate-evidence-ledger` | SHA-256 hash-chained append-only log, ProofReceipt | 45 |
+| `@pshkv/core` | Types, Zod schemas, DFA states, tier constants | — |
+| `@pshkv/gate-capability-tokens` | Ed25519 tokens, delegation, W3C DID identity | 55 |
+| `@pshkv/gate-policy-gateway` | Authorization engine: tiers, constraints, rate limiting, M-of-N | 256 |
+| `@pshkv/gate-evidence-ledger` | SHA-256 hash-chained append-only log, ProofReceipt | 45 |
 
 **Bridges (15 packages).**
 
@@ -754,7 +754,7 @@ Reference implementation (1): `sint-pdp-interceptor` (5) — SEP-1763 PDP adapte
 
 **Persistence (2 packages).** `persistence` (26 tests; in-memory, PG, Redis adapters), `persistence-postgres` (14).
 
-**Apps and SDKs (5 apps, 4 SDKs).** `gateway-server` (Hono HTTP API, port 3100), `dashboard` (React 19, 29 tests), `sintctl` (CLI), `sint-mcp` (production proxy), `sint-mcp-scanner`. SDKs: `@sint/client` (TS, full Gateway HTTP API), `@sint/sdk` (zero-dep TS, 9 tests), Python (1,962 lines), Go, Rust.
+**Apps and SDKs (5 apps, 4 SDKs).** `gateway-server` (Hono HTTP API, port 3100), `dashboard` (React 19, 29 tests), `sintctl` (CLI), `sint-mcp` (production proxy), `sint-mcp-scanner`. SDKs: `@pshkv/client` (TS, full Gateway HTTP API), `@pshkv/sdk` (zero-dep TS, 9 tests), Python (1,962 lines), Go, Rust.
 
 **Conformance (1 package).** `conformance-tests` — security regression suite gating every PR.
 
@@ -878,7 +878,7 @@ Physical-domain bridges carry higher multipliers: MAVLink commands 2.0–5.0×, 
 Real-time approvals require a fast, ergonomic operator surface. SINT ships two:
 
 - **Dashboard (React 19)** — Real-time approval cards with timeout countdown, M-of-N quorum status, CSML trend charts, ledger viewer, evidence-chain visualization. WebSocket-backed with Ed25519 device identity.
-- **Voice-first HUD interface.** Web Speech API STT/TTS, three-panel grid (approvals | action stream | context), operator memory (`@sint/memory` ledger-backed persistent context), and `sint__notify` proactive notifications.
+- **Voice-first HUD interface.** Web Speech API STT/TTS, three-panel grid (approvals | action stream | context), operator memory (`@pshkv/memory` ledger-backed persistent context), and `sint__notify` proactive notifications.
 
 ### 6.6 Production Hardening
 
@@ -1120,7 +1120,7 @@ The roadmap is organized as: (i) six research thrusts, each with a threat, curre
 
 **Target standards.** NATO STANAG 4586 (UAS Control System interfaces), MIL-STD-1553B (avionics bus security), ASTM F3411-22a (UAS remote ID broadcast format).
 
-**Planned outputs.** Draft `@sint/bridge-swarm` v2 with swarm-token primitive (Q3 2026); IROS 2026 submission with collective-CSML empirical validation (August 2026 deadline); IEEE RA-L journal extension (Q4 2026); ICRA 2027 swarm Byzantine-resilience paper (Q1 2027 deadline).
+**Planned outputs.** Draft `@pshkv/bridge-swarm` v2 with swarm-token primitive (Q3 2026); IROS 2026 submission with collective-CSML empirical validation (August 2026 deadline); IEEE RA-L journal extension (Q4 2026); ICRA 2027 swarm Byzantine-resilience paper (Q1 2027 deadline).
 
 ### 8.2 Research Thrust 2 — Sub-Human-Reaction-Time Safety (2026 Q4 → 2028 Q2)
 
@@ -1216,7 +1216,7 @@ The roadmap is organized as: (i) six research thrusts, each with a threat, curre
 
 **Threat.** Drone fleets bid on delivery tasks in real-time auctions. A robot accepts a task, performs it, and expects payment — all autonomously, without human intermediation. The economic layer must be as secure as the physical layer. Today's SINT has metered billing and trust-tier pricing; it does not have on-chain economic settlement, ZK delivery proofs, or multi-party computation for fleet bidding.
 
-**Current SINT gap.** `@sint/bridge-economy` implements per-agent budget, trust-tier pricing, and cost-aware route selection. It does not yet do cryptographic stakes, zero-knowledge proofs of physical delivery, or MPC-based bid coordination.
+**Current SINT gap.** `@pshkv/bridge-economy` implements per-agent budget, trust-tier pricing, and cost-aware route selection. It does not yet do cryptographic stakes, zero-knowledge proofs of physical delivery, or MPC-based bid coordination.
 
 **Research directions.**
 
@@ -1256,7 +1256,7 @@ Q3 (✅): Phase 9 — token-registry, SafetyPermitPlugin, IotInterceptor (56 tes
         /v1/registry routes
 Q4:     ModelBoundToken Schema 1.0; cross-model quorum spec (RFC);
         IROS 2026 submission; IEEE RA-L empirical validation;
-        npm publish 8 @sint/ packages; Constraint Language CL-1.0
+        npm publish 8 @pshkv/ packages; Constraint Language CL-1.0
 
 === 2027 ===
 Q1:     SINT-nano lightweight tokens (140-byte format); offline T0/T1 verification;
@@ -1586,39 +1586,39 @@ Detailed in §9: L1 no formal verification yet; L2 no real-robot evaluation (Q3 
 ## Appendix C — Package Dependency Graph
 
 ```
-@sint/core
-  ├── @sint/gate-capability-tokens
-  │     └── @sint/gate-evidence-ledger
-  ├── @sint/gate-policy-gateway
-  │     ├── @sint/gate-capability-tokens
-  │     ├── @sint/gate-evidence-ledger
-  │     ├── @sint/bridge-economy
-  │     └── @sint/persistence
-  ├── @sint/gate-evidence-ledger
-  ├── @sint/persistence
-  │     └── @sint/persistence-postgres
-  ├── @sint/bridge-mcp      ← @sint/gate-policy-gateway
-  ├── @sint/bridge-ros2     ← @sint/gate-policy-gateway
-  ├── @sint/bridge-mavlink  ← @sint/gate-policy-gateway
-  ├── @sint/bridge-a2a      ← @sint/gate-policy-gateway
-  ├── @sint/bridge-grpc     ← @sint/gate-policy-gateway
-  ├── @sint/bridge-iot      ← @sint/gate-policy-gateway
-  ├── @sint/bridge-mqtt-sparkplug ← @sint/gate-policy-gateway
-  ├── @sint/bridge-opcua    ← @sint/gate-policy-gateway
-  ├── @sint/bridge-open-rmf ← @sint/gate-policy-gateway
-  ├── @sint/bridge-swarm    ← @sint/gate-policy-gateway
-  ├── @sint/bridge-homeassistant ← @sint/gate-policy-gateway
-  ├── @sint/bridge-matter   ← @sint/gate-policy-gateway
-  ├── @sint/bridge-health   ← @sint/gate-policy-gateway
-  ├── @sint/bridge-economy
-  ├── @sint/engine-system1
-  ├── @sint/engine-system2
-  ├── @sint/engine-hal
-  ├── @sint/engine-capsule-sandbox
-  ├── @sint/avatar
-  ├── @sint/client
-  ├── @sint/sdk
-  └── @sint/conformance-tests  ← all of the above
+@pshkv/core
+  ├── @pshkv/gate-capability-tokens
+  │     └── @pshkv/gate-evidence-ledger
+  ├── @pshkv/gate-policy-gateway
+  │     ├── @pshkv/gate-capability-tokens
+  │     ├── @pshkv/gate-evidence-ledger
+  │     ├── @pshkv/bridge-economy
+  │     └── @pshkv/persistence
+  ├── @pshkv/gate-evidence-ledger
+  ├── @pshkv/persistence
+  │     └── @pshkv/persistence-postgres
+  ├── @pshkv/bridge-mcp      ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-ros2     ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-mavlink  ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-a2a      ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-grpc     ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-iot      ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-mqtt-sparkplug ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-opcua    ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-open-rmf ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-swarm    ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-homeassistant ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-matter   ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-health   ← @pshkv/gate-policy-gateway
+  ├── @pshkv/bridge-economy
+  ├── @pshkv/engine-system1
+  ├── @pshkv/engine-system2
+  ├── @pshkv/engine-hal
+  ├── @pshkv/engine-capsule-sandbox
+  ├── @pshkv/avatar
+  ├── @pshkv/client
+  ├── @pshkv/sdk
+  └── @pshkv/conformance-tests  ← all of the above
 ```
 
 ---

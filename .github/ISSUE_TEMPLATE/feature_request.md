@@ -20,7 +20,7 @@ What other solutions have you considered? Why is this approach preferred?
 
 ## Impact
 
-Which SINT packages would be affected? (e.g., `@sint/core`, `@sint/gate-policy-gateway`)
+Which SINT packages would be affected? (e.g., `@pshkv/core`, `@pshkv/gate-policy-gateway`)
 
 ## Additional Context
 

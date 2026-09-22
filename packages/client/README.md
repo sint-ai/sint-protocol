@@ -1,11 +1,11 @@
-# @sint/client
+# @pshkv/client
 
 TypeScript SDK for the SINT Gateway API. Supports token delegation, policy queries, SSE streaming, and approval workflows.
 
 ## Install
 
 ```bash
-npm install @sint/client
+npm install @pshkv/client
 ```
 
 ## Usage

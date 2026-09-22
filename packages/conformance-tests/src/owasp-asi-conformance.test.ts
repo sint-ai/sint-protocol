@@ -20,7 +20,7 @@
  *   ASI09 — Human Oversight Bypass (T3 forced escalate, revoked token)
  *   ASI10 — Rogue/Autonomous Agent (auto-trip, manual stop button)
  *
- * @module @sint/conformance-tests/owasp-asi-conformance
+ * @module @pshkv/conformance-tests/owasp-asi-conformance
  */
 
 import { describe, it, expect, beforeEach } from "vitest";

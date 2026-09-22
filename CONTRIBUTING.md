@@ -33,7 +33,7 @@ pnpm run typecheck
 
 3. **Run tests** for the package you modified:
    ```bash
-   pnpm --filter @sint/gate-policy-gateway test
+   pnpm --filter @pshkv/gate-policy-gateway test
    ```
 
 4. **Run the full test suite** before submitting:
@@ -51,7 +51,7 @@ pnpm run typecheck
 - **Readonly by default** — interface fields are `readonly`
 
 ### Error Handling
-- **Result<T, E> — never throw** — All fallible operations return `{ ok: true, value: T } | { ok: false, error: E }`. Use `ok()` and `err()` helpers from `@sint/core`.
+- **Result<T, E> — never throw** — All fallible operations return `{ ok: true, value: T } | { ok: false, error: E }`. Use `ok()` and `err()` helpers from `@pshkv/core`.
 - Do not use try/catch for control flow.
 
 ### Validation
@@ -74,7 +74,7 @@ These are non-negotiable:
 1. **Every action flows through `PolicyGateway.intercept()`** — No bridge, route, or service makes independent authorization decisions.
 2. **Attenuation only** — Delegated capability tokens can only reduce permissions, never escalate.
 3. **Append-only ledger** — The Evidence Ledger is insert-only. No updates, no deletes.
-4. **Interface-first persistence** — Storage adapters implement interfaces from `@sint/persistence`.
+4. **Interface-first persistence** — Storage adapters implement interfaces from `@pshkv/persistence`.
 
 ## What We're Looking For
 
@@ -138,3 +138,10 @@ By contributing, you agree that your contributions will be licensed under the Ap
 ---
 
 Questions? Open a [Discussion](https://github.com/sint-ai/sint-protocol/discussions) or reach out at i@pshkv.com.
+
+## Documentation hygiene
+
+- `docs/roadmap.md` is the only maintained plan. Update it in the same PR when you finish or re-scope roadmap work; do not add new planning files at the repository root.
+- Run `pnpm run check:links` before opening a PR that touches Markdown. CI fails on broken relative links.
+- Superseded documents go to `docs/archive/` with a row in `docs/archive/README.md`, never deleted silently and never left beside the current version.
+- Use the published package names (`@pshkv/...`) in docs and examples.

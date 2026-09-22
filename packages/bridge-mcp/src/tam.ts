@@ -12,7 +12,7 @@
  *
  * Ref: https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2385
  *
- * @module @sint/bridge-mcp/tam
+ * @module @pshkv/bridge-mcp/tam
  */
 
 import { ApprovalTier } from "@pshkv/core";

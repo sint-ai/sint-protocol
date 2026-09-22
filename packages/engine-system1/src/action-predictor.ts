@@ -5,7 +5,7 @@
  * into action recommendations. Sets safety relevance flags based on
  * anomaly flags and human presence in the scene.
  *
- * @module @sint/engine-system1/action-predictor
+ * @module @pshkv/engine-system1/action-predictor
  */
 
 import type { SintActionRecommendation, SintWorldState } from "@pshkv/core";

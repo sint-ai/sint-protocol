@@ -7,7 +7,7 @@
  *   3. T3 decision emits riskScore ≈ 0.5 minimum (tier component)
  *   4. stream emits data within 100ms of intercept
  *
- * @module @sint/gateway-server/__tests__/risk-stream
+ * @module @pshkv/gateway-server/__tests__/risk-stream
  */
 
 import { describe, it, expect, beforeEach } from "vitest";

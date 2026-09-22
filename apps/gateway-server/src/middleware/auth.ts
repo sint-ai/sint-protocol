@@ -5,7 +5,7 @@
  * - API key authentication for admin endpoints
  * - Per-key rate limiting
  *
- * @module @sint/gateway-server/middleware/auth
+ * @module @pshkv/gateway-server/middleware/auth
  */
 
 import type { Context, Next } from "hono";

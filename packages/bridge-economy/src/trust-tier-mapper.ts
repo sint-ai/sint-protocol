@@ -12,7 +12,7 @@
  * The `mergedTier` function takes the higher (more restrictive)
  * of the security tier and the trust tier.
  *
- * @module @sint/bridge-economy/trust-tier-mapper
+ * @module @pshkv/bridge-economy/trust-tier-mapper
  */
 
 import { ApprovalTier } from "@pshkv/core";

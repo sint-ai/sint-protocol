@@ -26,7 +26,7 @@
  * concurrently. The coordinator uses optimistic locking — it reads state,
  * checks, then updates. Under high contention, add a mutex per swarm.
  *
- * @module @sint/bridge-swarm/swarm-coordinator
+ * @module @pshkv/bridge-swarm/swarm-coordinator
  */
 
 import { ApprovalTier } from "@pshkv/core";

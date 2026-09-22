@@ -1,6 +1,6 @@
 # SINT Memory System
 
-The `@sint/memory` package provides operator memory with a ledger-backed audit trail. Every persistent memory write becomes a `SintLedgerEvent` — tamper-evident, auditable, and subject to retention policy.
+The `@pshkv/memory` package provides operator memory with a ledger-backed audit trail. Every persistent memory write becomes a `SintLedgerEvent` — tamper-evident, auditable, and subject to retention policy.
 
 ## Architecture
 

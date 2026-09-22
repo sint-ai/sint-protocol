@@ -8,7 +8,7 @@
  * There is NO ambient authority — no admin roles, no superuser.
  * An agent can only do what its tokens explicitly permit.
  *
- * @module @sint/core/types/capability-token
+ * @module @pshkv/core/types/capability-token
  */
 
 import type {

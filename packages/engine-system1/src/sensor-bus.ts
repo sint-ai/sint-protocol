@@ -6,7 +6,7 @@
  * readings. The bus fuses the latest readings from all sensors into
  * a unified {@link SintWorldState}.
  *
- * @module @sint/engine-system1/sensor-bus
+ * @module @pshkv/engine-system1/sensor-bus
  */
 
 import type {

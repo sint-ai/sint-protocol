@@ -5,7 +5,7 @@
  * maps them to SINT requests, and routes them through the
  * Policy Gateway for authorization.
  *
- * @module @sint/bridge-mcp/mcp-interceptor
+ * @module @pshkv/bridge-mcp/mcp-interceptor
  */
 
 import type { SintRequest } from "@pshkv/core";

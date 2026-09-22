@@ -5,7 +5,7 @@
  * Manages pending approval requests with timeout handling and
  * configurable fallback actions (deny or safe-stop).
  *
- * @module @sint/gate-policy-gateway/approval-flow
+ * @module @pshkv/gate-policy-gateway/approval-flow
  */
 
 import type {

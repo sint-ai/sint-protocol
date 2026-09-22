@@ -1,7 +1,7 @@
 /**
  * SINT Persistence — In-Memory Token Store.
  *
- * @module @sint/persistence/in-memory-token-store
+ * @module @pshkv/persistence/in-memory-token-store
  */
 
 import type { SintCapabilityToken, UUIDv7 } from "@pshkv/core";

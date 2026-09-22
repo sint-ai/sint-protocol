@@ -3,7 +3,7 @@
  *
  * TTL-based caching using Redis for distributed cache.
  *
- * @module @sint/persistence/redis-cache
+ * @module @pshkv/persistence/redis-cache
  */
 
 import type { Redis } from "ioredis";

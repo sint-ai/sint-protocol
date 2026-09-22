@@ -4,7 +4,7 @@
  * Detects dangerous sequences of actions that indicate
  * capability laundering or attack escalation.
  *
- * @module @sint/gate-policy-gateway/forbidden-combos
+ * @module @pshkv/gate-policy-gateway/forbidden-combos
  */
 
 import {

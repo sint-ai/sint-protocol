@@ -15,9 +15,9 @@ mkdirSync(reportDir, { recursive: true });
 
 const requiredArtifacts = [
   "docs/specs/nist-ai-rmf-crosswalk.md",
-  "docs/SINT_v0.2_SPEC.md",
-  "docs/SPAI_2026_ABSTRACT.md",
-  "docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md",
+  "docs/specs/SINT_v0.2_SPEC.md",
+  "docs/papers/SPAI_2026_ABSTRACT.md",
+  "docs/conformance/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md",
   "docs/reports/certification-bundle-summary.json",
   "docs/reports/certification-bundle-summary.md",
   "docs/reports/industrial-benchmark-report.json",

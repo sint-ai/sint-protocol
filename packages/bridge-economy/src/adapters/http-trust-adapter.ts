@@ -4,7 +4,7 @@
  * Implements ITrustPort by calling the product API's trust endpoints:
  * - POST /trust/evaluate → evaluateTrust
  *
- * @module @sint/bridge-economy/adapters/http-trust-adapter
+ * @module @pshkv/bridge-economy/adapters/http-trust-adapter
  */
 
 import { err, type Result } from "@pshkv/core";

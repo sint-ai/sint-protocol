@@ -1,11 +1,11 @@
 /**
- * @sint/openclaw-adapter — SINT Protocol governance for OpenClaw.
+ * @pshkv/openclaw-adapter — SINT Protocol governance for OpenClaw.
  *
  * Injects capability token governance into every OpenClaw tool call,
  * MCP server call, and node action. Maps OpenClaw's tool system to
  * SINT's T0-T3 safety tiers with cross-system policy enforcement.
  *
- * @module @sint/openclaw-adapter
+ * @module @pshkv/openclaw-adapter
  */
 
 export { OpenClawAdapter } from "./adapter.js";

@@ -11,7 +11,7 @@ body:
     attributes:
       label: Package
       description: Which package is affected?
-      placeholder: "@pshkv/core, @sint/bridge-mcp, etc."
+      placeholder: "@pshkv/core, @pshkv/bridge-mcp, etc."
     validations:
       required: true
   - type: textarea
@@ -32,7 +32,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: SINT Protocol version (run `pnpm list @sint/core`)
+      description: SINT Protocol version (run `pnpm list @pshkv/core`)
     validations:
       required: false
   - type: dropdown

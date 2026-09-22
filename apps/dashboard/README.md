@@ -1,4 +1,4 @@
-# @sint/dashboard — ARCHIVED
+# @pshkv/dashboard — ARCHIVED
 
 This app has been superseded by the **SINT Console** Conductor module.
 

@@ -1,5 +1,5 @@
 /**
- * @sint/bridge-mavlink — SINT Protocol MAVLink bridge
+ * @pshkv/bridge-mavlink — SINT Protocol MAVLink bridge
  *
  * Intercepts MAVLink v2 commands before reaching the autopilot (ArduPilot, PX4).
  * Enforces capability token constraints, tier-based approval gates, and physical

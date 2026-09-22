@@ -2,7 +2,7 @@
 
 SINT now includes a baseline gRPC bridge package:
 
-- `@sint/bridge-grpc`
+- `@pshkv/bridge-grpc`
 
 ## Included in v0 skeleton
 

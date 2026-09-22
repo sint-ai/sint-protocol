@@ -8,7 +8,7 @@
  * - Collision risk: objects within 0.5m of robot pose
  * - Human presence: flags when humans are detected
  *
- * @module @sint/engine-system1/anomaly-detector
+ * @module @pshkv/engine-system1/anomaly-detector
  */
 
 import type { SintAnomalyFlag, SintWorldState, Point3D } from "@pshkv/core";

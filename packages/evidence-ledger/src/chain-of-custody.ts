@@ -6,7 +6,7 @@
  *
  * This is analogous to a Merkle proof but for a linear hash chain.
  *
- * @module @sint/gate-evidence-ledger/chain-of-custody
+ * @module @pshkv/gate-evidence-ledger/chain-of-custody
  */
 
 import { sha256 } from "@noble/hashes/sha2";

@@ -5,7 +5,7 @@
  * They may tighten executable constraints and raise supervision, but they never
  * widen capability-token authority.
  *
- * @module @sint/core/types/kinetic-envelope
+ * @module @pshkv/core/types/kinetic-envelope
  */
 
 import type { ApprovalTier, SintRequest } from "./policy.js";

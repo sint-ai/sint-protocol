@@ -4,7 +4,7 @@
  * These types represent the MCP protocol's tool call lifecycle
  * as it flows through the SINT security gate.
  *
- * @module @sint/bridge-mcp/types
+ * @module @pshkv/bridge-mcp/types
  */
 
 import type {

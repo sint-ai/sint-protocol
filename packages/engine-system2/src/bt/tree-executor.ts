@@ -4,7 +4,7 @@
  * Manages the lifecycle of a behavior tree, providing periodic ticking
  * and event emission for observability.
  *
- * @module @sint/engine-system2/bt/tree-executor
+ * @module @pshkv/engine-system2/bt/tree-executor
  */
 
 import type { Blackboard } from "./blackboard.js";

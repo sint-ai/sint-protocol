@@ -1,5 +1,5 @@
 /**
- * @sint/os-core — SINT OS Main Entrypoint.
+ * @pshkv/os-core — SINT OS Main Entrypoint.
  *
  * SINT OS = OpenClaw (agent runtime) + SINT Protocol (governance) + Avatar (face) + Multimodal (Jarvis bridge)
  *
@@ -10,7 +10,7 @@
  * 4. Multimodal bridge — voice (Qwen3.5-Omni / ElevenLabs), gesture, holographic HUD
  * 5. Evidence HUD — real-time ledger viewer
  *
- * @module @sint/os-core
+ * @module @pshkv/os-core
  */
 
 export { SintOS } from "./sint-os.js";

@@ -7,7 +7,7 @@
  *
  * All public methods return `Result<T, CapsuleError>` — never throw.
  *
- * @module @sint/engine-capsule-sandbox/sandbox
+ * @module @pshkv/engine-capsule-sandbox/sandbox
  */
 
 import type { Result, SintCapsuleManifest, UUIDv7 } from "@pshkv/core";

@@ -4,7 +4,7 @@
  * Decomposes high-level goals into executable plan steps and validates
  * them against the current world state.
  *
- * @module @sint/engine-system2/planner/task-planner
+ * @module @pshkv/engine-system2/planner/task-planner
  */
 
 import type {

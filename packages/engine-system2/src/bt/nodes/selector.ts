@@ -3,7 +3,7 @@
  *
  * Ticks children until one succeeds. Returns failure only when ALL children fail.
  *
- * @module @sint/engine-system2/bt/nodes/selector
+ * @module @pshkv/engine-system2/bt/nodes/selector
  */
 
 import type { Blackboard } from "../blackboard.js";

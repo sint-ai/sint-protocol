@@ -1,7 +1,7 @@
 /**
  * SINT Persistence — In-Memory Cache Store.
  *
- * @module @sint/persistence/in-memory-cache
+ * @module @pshkv/persistence/in-memory-cache
  */
 
 import type { CacheStore } from "./interfaces.js";

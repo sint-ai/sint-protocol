@@ -39,7 +39,17 @@ type FactoryDemoInputs = {
   readonly safetyZoneClear: boolean;
 };
 
-function evaluateFactoryAction(inputs: FactoryDemoInputs): PolicyDecision {
+type FactoryDemoDecision = {
+  readonly action: PolicyDecision["action"];
+  readonly assignedTier: ApprovalTier;
+  readonly denial?: PolicyDecision["denial"];
+  readonly escalation?: Pick<
+    NonNullable<PolicyDecision["escalation"]>,
+    "requiredTier" | "timeoutMs"
+  >;
+};
+
+function evaluateFactoryAction(inputs: FactoryDemoInputs): FactoryDemoDecision {
   if (!inputs.safetyZoneClear) {
     return {
       action: "deny",

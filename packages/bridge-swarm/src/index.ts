@@ -1,5 +1,5 @@
 /**
- * @sint/bridge-swarm — SINT Protocol Swarm Coordination Bridge
+ * @pshkv/bridge-swarm — SINT Protocol Swarm Coordination Bridge
  *
  * Collective constraint enforcement for multi-agent physical systems.
  * Addresses the emergent-behavior security gap that per-agent tokens cannot cover.

@@ -7,7 +7,7 @@
  * Namespace format: {serverName}__{toolName}
  * Example: filesystem__readFile, github__create_issue
  *
- * @module @sint/mcp/aggregator
+ * @module sint-mcp/aggregator
  */
 
 import type { DownstreamManager, DownstreamTool } from "./downstream.js";

@@ -4,7 +4,7 @@
  * Ensures required tables exist for production startup when
  * running with SINT_STORE=postgres and/or SINT_CACHE=redis.
  *
- * @module @sint/persistence/pg-schema
+ * @module @pshkv/persistence/pg-schema
  */
 
 import type pg from "pg";

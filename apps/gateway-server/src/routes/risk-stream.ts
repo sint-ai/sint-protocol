@@ -14,7 +14,7 @@
  * Event format (data line):
  *   {"agentId":"...","resource":"...","tier":"T2_act","riskScore":0.72,"csml":0.85,"timestamp":"..."}
  *
- * @module @sint/gateway-server/routes/risk-stream
+ * @module @pshkv/gateway-server/routes/risk-stream
  */
 
 import { Hono } from "hono";

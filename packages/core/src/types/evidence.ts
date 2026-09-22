@@ -5,7 +5,7 @@
  * decision, approval, and outcome. It is the "black box flight recorder"
  * for robots. NO UPDATE or DELETE operations are permitted.
  *
- * @module @sint/core/types/evidence
+ * @module @pshkv/core/types/evidence
  */
 
 import type {

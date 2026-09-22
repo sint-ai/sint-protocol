@@ -4,7 +4,7 @@
  * Implements IBudgetPort by calling the product API's budget endpoints:
  * - POST /budgets/check → checkBudget
  *
- * @module @sint/bridge-economy/adapters/http-budget-adapter
+ * @module @pshkv/bridge-economy/adapters/http-budget-adapter
  */
 
 import { err, type Result } from "@pshkv/core";

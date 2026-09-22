@@ -1,11 +1,11 @@
-# @sint/gate-policy-gateway
+# @pshkv/gate-policy-gateway
 
 Single enforcement choke point for AI agent actions. Every tool call, robot command, and actuator movement flows through the Policy Gateway.
 
 ## Install
 
 ```bash
-npm install @sint/gate-policy-gateway
+npm install @pshkv/gate-policy-gateway
 ```
 
 ## Usage

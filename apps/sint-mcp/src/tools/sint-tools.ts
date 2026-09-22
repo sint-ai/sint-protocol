@@ -5,7 +5,7 @@
  * functionality directly as MCP tools: status, approval workflow,
  * audit trail, server management.
  *
- * @module @sint/mcp/tools/sint-tools
+ * @module sint-mcp/tools/sint-tools
  */
 
 import type { SintCapabilityToken } from "@pshkv/core";

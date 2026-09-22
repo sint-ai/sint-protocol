@@ -3,7 +3,7 @@
  *
  * Typed HTTP client for the SINT Gateway Server API.
  *
- * @module @sint/client/sint-client
+ * @module @pshkv/client/sint-client
  */
 
 import type {

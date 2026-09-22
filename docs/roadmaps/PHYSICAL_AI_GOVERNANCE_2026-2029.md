@@ -98,7 +98,7 @@ This roadmap closes that gap with **seven execution phases** spanning Q2 2026 th
 
 **Deliverables:**
 
-#### 1.1 `@sint/bridge-homeassistant` (MCP Interceptor Proxy)
+#### 1.1 `@pshkv/bridge-homeassistant` (MCP Interceptor Proxy)
 **Package:** `packages/bridge-homeassistant/`  
 **Description:** Intercepts every MCP tool call from AI agent to Home Assistant MCP Server, routes through Policy Gateway, enforces tier-based approval.
 
@@ -113,7 +113,7 @@ This roadmap closes that gap with **seven execution phases** spanning Q2 2026 th
 - Deployment: HA add-on wrapping the official MCP Server with SINT governance
 - **Civil Liberties Guardrail:** No persistent monitoring; gate decisions logged but entity states not continuously recorded
 
-**Dependencies:** `@sint/bridge-mcp`, `@sint/policy-gateway`, Home Assistant 2024.11+ with MCP Server integration enabled
+**Dependencies:** `@pshkv/bridge-mcp`, `@pshkv/gate-policy-gateway`, Home Assistant 2024.11+ with MCP Server integration enabled
 
 **Success Metrics:** 
 - HA MCP tool calls routed through SINT: 100%
@@ -257,7 +257,7 @@ export const HOME_SAFE_PROFILE: DeploymentProfile = {
 
 ### Phase 2: Matter Protocol + Human-Aware Escalation (Q3–Q4 2026)
 
-#### 2.1 `@sint/bridge-matter`
+#### 2.1 `@pshkv/bridge-matter`
 **Package:** `packages/bridge-matter/`  
 **Description:** Maps Matter 1.3 device clusters to SINT resources using matter.js TypeScript SDK.
 
@@ -395,7 +395,7 @@ interface SceneToken extends SintCapabilityToken {
 
 ### Phase 4: Human-Robot Interaction Foundation (Q4 2026 - Q1 2027)
 
-#### 4.1 `@sint/bridge-hri` (Multimodal Intent Parsing)
+#### 4.1 `@pshkv/bridge-hri` (Multimodal Intent Parsing)
 **Package:** `packages/bridge-hri/`  
 **Description:** Parses natural language, gesture, gaze, proxemics, haptic inputs from humans; generates SINT requests with consent capture.
 
@@ -474,7 +474,7 @@ if (identity && identity.authorizedFor.includes(resource)) {
 
 ### Phase 5: Health & Wellbeing Fabric (Q1–Q2 2027)
 
-#### 5.1 `@sint/bridge-health` (FHIR + HealthKit/Health Connect)
+#### 5.1 `@pshkv/bridge-health` (FHIR + HealthKit/Health Connect)
 **Package:** `packages/bridge-health/`  
 **Description:** Maps FHIR resources and Apple HealthKit / Google Health Connect data types to SINT resources with consent primitives.
 
@@ -571,7 +571,7 @@ interface CaregiverDelegationToken extends SintCapabilityToken {
 
 ### Phase 6: Smart City Fabric (Q2–Q4 2027)
 
-#### 6.1 `@sint/bridge-city` (FIWARE/NGSI-LD + Urban Sensor Mesh)
+#### 6.1 `@pshkv/bridge-city` (FIWARE/NGSI-LD + Urban Sensor Mesh)
 **Package:** `packages/bridge-city/`  
 **Description:** Maps FIWARE Context Broker (NGSI-LD) entities to SINT resources; enforces citizen-consent layer on municipal AI actions.
 
@@ -635,7 +635,7 @@ interface CitizenConsentToken extends SintCapabilityToken {
 - **No facial recognition** (EU AI Act Article 5 prohibition enforced at bridge level)
 - **Prohibition on predictive policing** (SINT bridge refuses to route pre-crime inference requests)
 
-#### 6.3 `@sint/bridge-mobility` (Delivery Robots, EV Charging, Traffic)
+#### 6.3 `@pshkv/bridge-mobility` (Delivery Robots, EV Charging, Traffic)
 **Package:** `packages/bridge-mobility/`  
 **Description:** Governs autonomous delivery robots (Starship, Serve Robotics), EV charging coordination, traffic signal integration.
 
@@ -676,7 +676,7 @@ Actions:
 
 **WARNING:** This is the most ethically sensitive phase. Every feature must include hard civil-liberties protections.
 
-#### 7.1 `@sint/bridge-safety` (Acoustic Event Detection, On-Device Only)
+#### 7.1 `@pshkv/bridge-safety` (Acoustic Event Detection, On-Device Only)
 **Package:** `packages/bridge-safety/`  
 **Description:** Acoustic event detection (glass break, aggression classification) — **strictly on-device, user-owned, opt-in**.
 
@@ -982,7 +982,7 @@ These are **hard protocol commitments**, not aspirational guidelines. Violations
 | Token revocation | ✅ Real-time with proof | ⚠️ OAuth refresh only |
 | Multi-agent coordination | ✅ SwarmCoordinator | ❌ |
 
-**SINT as MCP Security Layer:** `@sint/bridge-mcp` wraps MCP tool calls with SINT governance. Claude Desktop → SINT MCP Bridge → Policy Gateway → Home Assistant. MCP handles *communication*, SINT handles *authorization*.
+**SINT as MCP Security Layer:** `@pshkv/bridge-mcp` wraps MCP tool calls with SINT governance. Claude Desktop → SINT MCP Bridge → Policy Gateway → Home Assistant. MCP handles *communication*, SINT handles *authorization*.
 
 ### 5.3 SINT vs. Enterprise IAM (Okta, Auth0)
 
@@ -1109,12 +1109,12 @@ Each Phase 1–7 deliverable scored on five dimensions (1–5 scale):
 | Deliverable | User Value | Tech Complexity | Civil Liberties Weight | Competitive Moat | Regulatory Alignment | **Total** | **Priority** |
 |---|---|---|---|---|---|---|---|
 | **Phase 1: Consumer Smart Home** | | | | | | | |
-| `@sint/bridge-homeassistant` | 5 | 3 | 4 | 5 | 4 | **21** | **1** |
+| `@pshkv/bridge-homeassistant` | 5 | 3 | 4 | 5 | 4 | **21** | **1** |
 | Consumer device profiles | 4 | 2 | 3 | 4 | 3 | **16** | 4 |
 | `home-safe` deployment profile | 4 | 2 | 4 | 3 | 4 | **17** | 3 |
 | Avatar push notifications | 5 | 2 | 3 | 4 | 3 | **17** | 3 |
 | **Phase 2: Matter + Human-Aware** | | | | | | | |
-| `@sint/bridge-matter` | 5 | 4 | 3 | 5 | 4 | **21** | **1** |
+| `@pshkv/bridge-matter` | 5 | 4 | 3 | 5 | 4 | **21** | **1** |
 | Δ_human occupancy plugin | 4 | 3 | 5 | 4 | 5 | **21** | **1** |
 | MQTT QoS → tier mapping | 3 | 2 | 2 | 3 | 3 | **13** | 7 |
 | **Phase 3: Edge / Nano** | | | | | | | |
@@ -1122,28 +1122,28 @@ Each Phase 1–7 deliverable scored on five dimensions (1–5 scale):
 | Hierarchical trust proxy | 3 | 4 | 2 | 3 | 3 | **15** | 5 |
 | SceneToken atomic multi-device | 4 | 3 | 3 | 3 | 3 | **16** | 4 |
 | **Phase 4: HRI Foundation** | | | | | | | |
-| `@sint/bridge-hri` | 4 | 5 | 5 | 5 | 4 | **23** | **HIGH** |
+| `@pshkv/bridge-hri` | 4 | 5 | 5 | 5 | 4 | **23** | **HIGH** |
 | SINT Voiceprint (on-device) | 4 | 4 | 5 | 4 | 3 | **20** | 2 |
 | Avatar v2 explainability | 5 | 3 | 4 | 4 | 4 | **20** | 2 |
 | **Phase 5: Health Fabric** | | | | | | | |
-| `@sint/bridge-health` | 5 | 4 | 5 | 5 | 5 | **24** | **CRITICAL** |
+| `@pshkv/bridge-health` | 5 | 4 | 5 | 5 | 5 | **24** | **CRITICAL** |
 | Differential privacy ledger | 3 | 5 | 5 | 4 | 4 | **21** | **1** |
 | Caregiver delegation tokens | 5 | 3 | 5 | 4 | 5 | **22** | **HIGH** |
 | **Phase 6: Smart City** | | | | | | | |
-| `@sint/bridge-city` | 4 | 4 | 5 | 5 | 5 | **23** | **HIGH** |
+| `@pshkv/bridge-city` | 4 | 4 | 5 | 5 | 5 | **23** | **HIGH** |
 | Civic Evidence Ledger | 4 | 3 | 5 | 5 | 5 | **22** | **HIGH** |
-| `@sint/bridge-mobility` | 3 | 3 | 3 | 4 | 4 | **17** | 3 |
+| `@pshkv/bridge-mobility` | 3 | 3 | 3 | 4 | 4 | **17** | 3 |
 | **Phase 7: Safety + Emergency** | | | | | | | |
-| `@sint/bridge-safety` | 4 | 4 | 5 | 3 | 4 | **20** | 2 |
+| `@pshkv/bridge-safety` | 4 | 4 | 5 | 3 | 4 | **20** | 2 |
 | Emergency bypass protocol | 5 | 3 | 5 | 3 | 5 | **21** | **1** |
 | Duress token (DV protection) | 5 | 4 | 5 | 4 | 4 | **22** | **HIGH** |
 
 **Priority Rank (Descending):**
-1. **CRITICAL (≥24):** `@sint/bridge-health`
-2. **HIGH (22–23):** `@sint/bridge-hri`, Caregiver delegation, `@sint/bridge-city`, Civic Evidence Ledger, Duress token
-3. **Top Tier 1 (21):** `@sint/bridge-homeassistant`, `@sint/bridge-matter`, Δ_human plugin, Differential privacy ledger, Emergency bypass
-4. **Tier 2 (20):** SINT Voiceprint, Avatar v2, `@sint/bridge-safety`
-5. **Tier 3 (17–19):** SINT-nano, `home-safe` profile, Avatar push notifications, `@sint/bridge-mobility`
+1. **CRITICAL (≥24):** `@pshkv/bridge-health`
+2. **HIGH (22–23):** `@pshkv/bridge-hri`, Caregiver delegation, `@pshkv/bridge-city`, Civic Evidence Ledger, Duress token
+3. **Top Tier 1 (21):** `@pshkv/bridge-homeassistant`, `@pshkv/bridge-matter`, Δ_human plugin, Differential privacy ledger, Emergency bypass
+4. **Tier 2 (20):** SINT Voiceprint, Avatar v2, `@pshkv/bridge-safety`
+5. **Tier 3 (17–19):** SINT-nano, `home-safe` profile, Avatar push notifications, `@pshkv/bridge-mobility`
 6. **Tier 4 (15–16):** Hierarchical trust proxy, SceneToken, Consumer device profiles
 7. **Tier 5 (<15):** MQTT QoS mapping
 
@@ -1562,7 +1562,7 @@ The timeline is aggressive because the governance gap is urgent. The civil-liber
 ---
 
 **Next Steps (Immediate):**
-1. Begin Phase 1 implementation: `@sint/bridge-homeassistant` skeleton
+1. Begin Phase 1 implementation: `@pshkv/bridge-homeassistant` skeleton
 2. Extend `packages/bridge-iot/src/device-profiles.ts` with consumer profiles
 3. Draft `home-safe` deployment profile
 4. Set up community feedback loop (GitHub Discussions, Discord)

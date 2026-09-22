@@ -4,7 +4,7 @@
  * Ticks children in order. Returns failure immediately on any child failure.
  * Returns success only when ALL children succeed.
  *
- * @module @sint/engine-system2/bt/nodes/sequence
+ * @module @pshkv/engine-system2/bt/nodes/sequence
  */
 
 import type { Blackboard } from "../blackboard.js";

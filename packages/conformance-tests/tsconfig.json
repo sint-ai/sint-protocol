@@ -14,6 +14,7 @@
     { "path": "../bridge-iot" },
     { "path": "../bridge-mcp" },
     { "path": "../bridge-ros2" },
+    { "path": "../bridge-grpc" },
     { "path": "../persistence" }
   ],
   "include": ["src/**/*.ts"],

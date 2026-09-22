@@ -43,7 +43,7 @@
     "nist_rmf": "GOVERN-1.1"
   },
   "links": {
-    "spec": "https://github.com/sint-ai/sint-protocol/blob/master/docs/SINT_v0.2_SPEC.md",
+    "spec": "https://github.com/sint-ai/sint-protocol/blob/main/docs/specs/SINT_v0.2_SPEC.md",
     "conformance": "https://github.com/sint-ai/sint-protocol/blob/master/docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md"
   }
 }

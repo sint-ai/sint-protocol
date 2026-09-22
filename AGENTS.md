@@ -6,14 +6,14 @@
 
 ## What This Repo Does
 
-SINT Protocol is a security enforcement layer that sits between AI agents and physical systems (robots, PLCs, drones, tool calls), ensuring every action is authorized via capability tokens, constrained to safe physical limits, and recorded in a tamper-evident audit log. It is a pnpm monorepo with 30 workspace members built on TypeScript 5.7 + Node.js 22.
+SINT Protocol is a security enforcement layer that sits between AI agents and physical systems (robots, PLCs, drones, tool calls), ensuring every action is authorized via capability tokens, constrained to safe physical limits, and recorded in a tamper-evident audit log. It is a pnpm monorepo with about 50 workspace members (packages, apps, SDKs, capsules, examples) built on TypeScript 5.7 + Node.js 22. Packages are published under the `@pshkv` npm scope.
 
 ## Key Invariants (Never Violate These)
 
 1. Every authorization decision flows through `PolicyGateway.intercept()` — no bridge or route handler makes authorization decisions directly
 2. Tokens are attenuation-only: `scope(child) ⊆ scope(parent)` — permissions only narrow, never expand (invariant I-T1)
 3. `EvidenceLedger` is append-only and SHA-256 hash-chained — never modify or delete emitted events (invariant I-G3)
-4. UUID v7 is required for `requestId` — `crypto.randomUUID()` gives v4 and WILL fail schema validation. Use `generateUUIDv7()` from `@sint/gate-capability-tokens`
+4. UUID v7 is required for `requestId` — `crypto.randomUUID()` gives v4 and WILL fail schema validation. Use `generateUUIDv7()` from `@pshkv/gate-capability-tokens`
 5. Physical constraints live in the token, not in config files — velocity, force, geofence are enforced cryptographically
 6. E-stop is unconditional — `estop` event transitions any non-terminal DFA state to ROLLEDBACK, bypassing all token checks (invariant I-G2)
 
@@ -22,19 +22,19 @@ SINT Protocol is a security enforcement layer that sits between AI agents and ph
 ### Package Dependency Graph
 
 ```
-@sint/core
+@pshkv/core
   ↓
-@sint/gate-capability-tokens   @sint/persistence
+@pshkv/gate-capability-tokens   @pshkv/persistence
   ↓                               ↓
-@sint/gate-evidence-ledger
+@pshkv/gate-evidence-ledger
   ↓
-@sint/gate-policy-gateway
+@pshkv/gate-policy-gateway
   ↓
-@sint/bridge-*   @sint/engine-*   @sint/avatar
+@pshkv/bridge-*   @pshkv/engine-*   @pshkv/avatar
   ↓
-@sint/gateway-server   @sint/mcp
+@pshkv/gateway-server   sint-mcp
   ↓
-@sint/conformance-tests   @sint/dashboard
+@pshkv/conformance-tests   @pshkv/dashboard
 ```
 
 ### Workspace Layout
@@ -63,9 +63,9 @@ capsules/pick-and-place/    → Reference capsule: gripper control
 ### How to Run Tests
 
 ```bash
-pnpm run test                                       # all 815 tests, whole workspace
-pnpm --filter @sint/gate-policy-gateway test        # single package
-pnpm --filter @sint/bridge-mcp test                 # single bridge
+pnpm run test                                       # whole workspace; every package must pass
+pnpm --filter @pshkv/gate-policy-gateway test        # single package
+pnpm --filter @pshkv/bridge-mcp test                 # single bridge
 pnpm run build && pnpm run test                     # full clean run
 ```
 
@@ -84,7 +84,7 @@ Several agents may work on this repo concurrently. Follow these rules:
 1. **Before starting**: `git pull --rebase && pnpm run build && pnpm run test` — must be 0 failures
 2. **Package ownership**: see CLAUDE.md for the package ownership table
 3. **Never amend published commits** — always create new commits
-4. **Test gate**: your PR/commit must maintain 0 failures on the full workspace suite (currently 1100+ tests)
+4. **Test gate**: your PR/commit must maintain 0 failures on the full workspace suite, and `pnpm run typecheck` and `pnpm run check:links` must pass
 5. **Base branch policy**: new PRs should target `main` unless an active release train explicitly says otherwise
 6. **Branch naming**: `feat/<topic>` or `fix/<topic>` — describe what changes, not who made it
 7. **No force-push to main/master** — create a PR instead
@@ -92,11 +92,16 @@ Several agents may work on this repo concurrently. Follow these rules:
 
 ## Common Mistakes
 
-- **UUID v4 vs v7**: `crypto.randomUUID()` produces v4. Use `generateUUIDv7()` from `@sint/gate-capability-tokens` — see CLAUDE.md "Common Name Collision Risks"
+- **UUID v4 vs v7**: `crypto.randomUUID()` produces v4. Use `generateUUIDv7()` from `@pshkv/gate-capability-tokens` — see CLAUDE.md "Common Name Collision Risks"
 - **CircuitBreaker**: `trip()` sets `manualTrip=true` permanently preventing auto-HALF_OPEN. Use `recordDenial()` to test auto-recovery — see CLAUDE.md
 - **`SintDeploymentProfile`** exists in both `policy.ts` (site profiles) and was renamed in `engine.ts` to `SintHardwareDeploymentProfile`. Do not re-add generic names in engine packages
-- **Throwing errors**: All fallible operations must return `Result<T, E>` using `ok()` / `err()` helpers from `@sint/core`. Never throw or use try/catch for control flow
+- **Throwing errors**: All fallible operations must return `Result<T, E>` using `ok()` / `err()` helpers from `@pshkv/core`. Never throw or use try/catch for control flow
 - **Modifying the ledger**: Evidence ledger events are immutable once written. If you need to correct a record, append a new correction event
+
+## Where the Plan Lives
+
+- [docs/roadmap.md](docs/roadmap.md) is the only maintained roadmap. Pick work from its **Now** section.
+- Track documents under `docs/roadmaps/` are inputs to it; `docs/archive/` is history only.
 
 ## Entry Points
 

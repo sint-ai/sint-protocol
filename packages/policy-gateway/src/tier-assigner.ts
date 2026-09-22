@@ -7,7 +7,7 @@
  * 3. Physical context (human presence, environment)
  * 4. Agent trust level
  *
- * @module @sint/gate-policy-gateway/tier-assigner
+ * @module @pshkv/gate-policy-gateway/tier-assigner
  */
 
 import {

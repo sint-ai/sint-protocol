@@ -7,7 +7,7 @@
  * Key invariant: A revoked token MUST fail validation within 1 second.
  * There is NO grace period for revoked tokens.
  *
- * @module @sint/gate-capability-tokens/revocation
+ * @module @pshkv/gate-capability-tokens/revocation
  */
 
 import {

@@ -6,7 +6,7 @@
  * configurable frequency (default 10 Hz) or can be invoked for a single
  * cycle via {@link PerceptionPipeline.runOnce}.
  *
- * @module @sint/engine-system1/perception-pipeline
+ * @module @pshkv/engine-system1/perception-pipeline
  */
 
 import type { Result, SintWorldState } from "@pshkv/core";

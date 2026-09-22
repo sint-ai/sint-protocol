@@ -9,7 +9,7 @@ node apps/sintctl/dist/cli.js certify run
 This command executes:
 
 ```bash
-pnpm --filter @sint/conformance-tests test:fixtures
+pnpm --filter @pshkv/conformance-tests test:fixtures
 ```
 
 and writes a machine-readable summary report to:

@@ -7,7 +7,7 @@
  * A2A defines a JSON-RPC 2.0 based protocol for agent-to-agent
  * task delegation with a standardised task lifecycle and streaming.
  *
- * @module @sint/bridge-a2a/types
+ * @module @pshkv/bridge-a2a/types
  */
 
 import type { ISO8601, UUIDv7 } from "@pshkv/core";

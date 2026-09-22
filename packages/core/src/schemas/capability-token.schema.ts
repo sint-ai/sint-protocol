@@ -4,7 +4,7 @@
  * All security-critical inputs MUST be validated through these schemas
  * before processing. These schemas are the enforcement boundary.
  *
- * @module @sint/core/schemas/capability-token
+ * @module @pshkv/core/schemas/capability-token
  */
 
 import { z } from "zod";

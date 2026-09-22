@@ -4,7 +4,7 @@
  * WASM/TS capsule loading, validation, and sandboxed execution
  * for the SINT Protocol Engine Layer (L3).
  *
- * @module @sint/engine-capsule-sandbox
+ * @module @pshkv/engine-capsule-sandbox
  */
 
 export * from "./types.js";

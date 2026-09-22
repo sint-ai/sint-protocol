@@ -8,7 +8,7 @@
  * Key invariant: A delegated token can NEVER have more permissions
  * than its parent. Delegation can only attenuate (reduce), never amplify.
  *
- * @module @sint/gate-capability-tokens/delegator
+ * @module @pshkv/gate-capability-tokens/delegator
  */
 
 import {

@@ -3,7 +3,7 @@
  *
  * INSERT-only ledger with SHA-256 hash chain verification.
  *
- * @module @sint/persistence/pg-ledger-store
+ * @module @pshkv/persistence/pg-ledger-store
  */
 
 import type pg from "pg";

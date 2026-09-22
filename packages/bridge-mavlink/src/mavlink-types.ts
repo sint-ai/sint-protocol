@@ -7,7 +7,7 @@
  *
  * Reference: https://mavlink.io/en/messages/common.html
  *
- * @module @sint/bridge-mavlink/mavlink-types
+ * @module @pshkv/bridge-mavlink/mavlink-types
  */
 
 // ─── MAV_CMD (COMMAND_LONG / COMMAND_INT) ───────────────��────────────────────

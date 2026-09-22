@@ -4,7 +4,7 @@
  * Scores candidate routes using estimated token cost, latency, and reliability.
  * Supports optional x402 pay-per-call quotes when available.
  *
- * @module @sint/bridge-economy/cost-aware-routing
+ * @module @pshkv/bridge-economy/cost-aware-routing
  */
 
 import type {

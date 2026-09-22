@@ -5,8 +5,8 @@
  * and action goals correctly flow through the SINT security gate
  * with physical safety constraints.
  *
- * These tests MUST pass on every PR that touches @sint/bridge-ros2
- * or @sint/gate-policy-gateway.
+ * These tests MUST pass on every PR that touches @pshkv/bridge-ros2
+ * or @pshkv/gate-policy-gateway.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
