@@ -1206,7 +1206,10 @@ export class PolicyGateway {
           }
         }
       } else {
-        const policy = this.config.dynamicEnvelopeFailurePolicy ?? { mode: "fail-open" };
+        const deploymentProfile = request.executionContext?.deploymentProfile;
+        const isIndustrialProfile = typeof deploymentProfile === "string" && INDUSTRIAL_DEPLOYMENT_PROFILES.has(deploymentProfile);
+        const defaultPolicy = isIndustrialProfile ? { mode: "deny" as const } : { mode: "fail-open" as const };
+        const policy = this.config.dynamicEnvelopeFailurePolicy ?? defaultPolicy;
         if (policy.mode === "deny" || (policy.mode === "fallback" && !policy.fallback)) {
           this.emitEvent("policy.envelope.fallback", request.agentId, request.tokenId, {
             mode: "deny",

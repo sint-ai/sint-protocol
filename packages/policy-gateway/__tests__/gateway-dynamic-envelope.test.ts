@@ -77,6 +77,7 @@ function makeRequest(
   token: SintCapabilityToken,
   velocityMps?: number,
   forceNewtons?: number,
+  deploymentProfile?: string,
 ): SintRequest {
   return {
     requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f000",
@@ -93,6 +94,7 @@ function makeRequest(
             currentForceNewtons: forceNewtons,
           }
         : undefined,
+    executionContext: deploymentProfile ? { deploymentProfile } : undefined,
   };
 }
 
@@ -349,6 +351,40 @@ describe("DynamicEnvelopeFailurePolicy", () => {
     const gw = new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: broken });
     const decision = await gw.intercept(makeRequest(token, 1.9));
     expect(decision.action).toBe("allow");
+  });
+
+  it("industrial profile without explicit policy defaults to deny on envelope unavailable", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    // No explicit dynamicEnvelopeFailurePolicy — should default based on deployment profile
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+    });
+    const decision = await gw.intercept(makeRequest(token, 1.5, undefined, "warehouse-amr"));
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
+  });
+
+  it("non-industrial profile without explicit policy defaults to fail-open", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    // No explicit dynamicEnvelopeFailurePolicy, non-industrial profile → fail-open
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+    });
+    const decision = await gw.intercept(makeRequest(token, 1.9, undefined, "research-lab"));
+    expect(decision.action).toBe("allow");
+  });
+
+  it("industrial-cell profile defaults to deny", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+    });
+    const decision = await gw.intercept(makeRequest(token, 0.5, undefined, "industrial-cell"));
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
   });
 });
 
