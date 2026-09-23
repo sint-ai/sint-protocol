@@ -23,14 +23,14 @@ import type { HumanApprovalResolution } from "./human-proof-verifier.js";
  * K-of-N: `required` approvals must be received from `authorized` operators.
  * The first denial from any operator immediately rejects the request.
  *
- * Note: `authorized` now holds Ed25519 public keys (hex strings) instead of
- * operator IDs. Approvals are validated cryptographically against these keys.
+ * `authorized` can hold either legacy operator IDs (strings) or Ed25519 public
+ * keys (hex strings). Cryptographic validation only applies to hex public keys.
  */
 export interface ApprovalQuorum {
   /** Number of approvals required (K). */
   readonly required: number;
-  /** Set of Ed25519 public keys (hex strings) authorized to vote (N). */
-  readonly authorized: readonly Ed25519PublicKey[];
+  /** Set of identifiers authorized to vote (N). Can be strings (legacy) or Ed25519 public keys. */
+  readonly authorized: readonly (string | Ed25519PublicKey)[];
 }
 
 /** Parameters for creating an approval request. */
@@ -179,6 +179,14 @@ export class ApprovalQueue {
     if ("by" in resolution && typeof resolution.by === "string") {
       const { request, approvals } = entry;
       const quorum = request.quorum;
+
+      // Quorum mode with an authorized list — validate voter
+      if (quorum && quorum.authorized.length > 0) {
+        if (!quorum.authorized.includes(resolution.by)) {
+          // Unauthorized voter — ignore silently (return undefined = still pending)
+          return undefined;
+        }
+      }
 
       // Any denial immediately resolves
       if (resolution.status === "denied") {
