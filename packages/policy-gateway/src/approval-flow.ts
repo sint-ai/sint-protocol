@@ -10,22 +10,27 @@
 
 import type {
   DurationMs,
+  Ed25519PublicKey,
   ISO8601,
   PolicyDecision,
   SintRequest,
   UUIDv7,
 } from "@pshkv/core";
+import type { HumanApprovalResolution } from "./human-proof-verifier.js";
 
 /**
  * Multi-party quorum requirement for an approval request.
  * K-of-N: `required` approvals must be received from `authorized` operators.
  * The first denial from any operator immediately rejects the request.
+ *
+ * Note: `authorized` now holds Ed25519 public keys (hex strings) instead of
+ * operator IDs. Approvals are validated cryptographically against these keys.
  */
 export interface ApprovalQuorum {
   /** Number of approvals required (K). */
   readonly required: number;
-  /** Set of operator IDs authorised to vote (N). */
-  readonly authorized: readonly string[];
+  /** Set of Ed25519 public keys (hex strings) authorized to vote (N). */
+  readonly authorized: readonly Ed25519PublicKey[];
 }
 
 /** Parameters for creating an approval request. */
@@ -50,7 +55,17 @@ export interface ApprovalRequest {
 export type ApprovalResolution =
   | { readonly status: "approved"; readonly by: string; readonly at: ISO8601; readonly approvers?: readonly string[] }
   | { readonly status: "denied"; readonly by: string; readonly reason: string }
-  | { readonly status: "timeout"; readonly fallbackAction: "deny" | "safe-stop" };
+  | { readonly status: "timeout"; readonly fallbackAction: "deny" | "safe-stop" }
+  | {
+      readonly status: "approved";
+      readonly approval: HumanApprovalResolution;
+      readonly approvals?: readonly HumanApprovalResolution[];
+    }
+  | {
+      readonly status: "denied";
+      readonly denial: HumanApprovalResolution;
+      readonly reason: string;
+    };
 
 /** Events emitted by the approval queue. */
 export type ApprovalEvent =
@@ -97,8 +112,8 @@ export class ApprovalQueue {
   private readonly pending = new Map<string, {
     request: ApprovalRequest;
     timer: ReturnType<typeof setTimeout>;
-    /** Collected approvals so far (quorum mode). */
-    approvals: string[];
+    /** Collected approvals so far (quorum mode). Can be strings (legacy) or HumanApprovalResolution objects (cryptographic). */
+    approvals: (string | HumanApprovalResolution)[];
   }>();
   private readonly handlers: ApprovalEventHandler[] = [];
   private readonly defaultTimeoutMs: DurationMs;
@@ -148,61 +163,111 @@ export class ApprovalQueue {
   /**
    * Resolve (or vote on) a pending approval request.
    *
-   * Single-approver mode (no quorum): resolves immediately.
-   *
-   * Quorum mode: a denial from any authorised operator resolves immediately as
-   * denied.  An approval is recorded; the request resolves only once `required`
-   * approvals have been collected.  Returns `undefined` (still pending) if the
-   * quorum threshold has not been reached yet.
-   *
-   * Returns `undefined` if the `requestId` is not in the queue.
+   * Supports both legacy string-based and new cryptographic formats for backwards compatibility.
    */
   resolve(
     requestId: string,
-    resolution: { status: "approved" | "denied"; by: string; reason?: string },
+    resolution:
+      | { status: "approved" | "denied"; by: string; reason?: string }
+      | { status: "approved"; approval: HumanApprovalResolution }
+      | { status: "denied"; denial: HumanApprovalResolution; reason: string },
   ): ApprovalResolution | undefined {
     const entry = this.pending.get(requestId);
     if (!entry) return undefined;
 
+    // Legacy format (backwards compatibility with sint-mcp)
+    if ("by" in resolution && typeof resolution.by === "string") {
+      const { request, approvals } = entry;
+      const quorum = request.quorum;
+
+      // Any denial immediately resolves
+      if (resolution.status === "denied") {
+        clearTimeout(entry.timer);
+        this.pending.delete(requestId);
+        const resolved: ApprovalResolution = {
+          status: "denied",
+          by: resolution.by,
+          reason: resolution.reason ?? "Denied by reviewer",
+        };
+        this.emit({ type: "resolved", requestId, resolution: resolved });
+        return resolved;
+      }
+
+      // Approval vote
+      if (!approvals.includes(resolution.by as any)) {
+        approvals.push(resolution.by as any);
+      }
+
+      const required = quorum?.required ?? 1;
+      if (approvals.length >= required) {
+        // Quorum reached — resolve as approved
+        clearTimeout(entry.timer);
+        this.pending.delete(requestId);
+        const resolved: ApprovalResolution = {
+          status: "approved",
+          by: approvals[approvals.length - 1] as string,
+          at: nowISO8601(),
+          approvers: approvals as string[],
+        };
+        this.emit({ type: "resolved", requestId, resolution: resolved });
+        return resolved;
+      }
+
+      // Not enough votes yet — still pending
+      return undefined;
+    }
+
+    // Cryptographic format
     const { request, approvals } = entry;
     const quorum = request.quorum;
 
-    // Quorum mode with an authorized list — validate voter
+    // Type-safe handling of cryptographic format
+    const cryptoResolution = resolution as
+      | { status: "approved"; approval: HumanApprovalResolution }
+      | { status: "denied"; denial: HumanApprovalResolution; reason: string };
+
+    // Extract signer public key from proof
+    const signerKey = cryptoResolution.status === "approved"
+      ? cryptoResolution.approval.proof.signerPublicKey
+      : cryptoResolution.denial.proof.signerPublicKey;
+
+    // Quorum mode with an authorized list — validate signer
     if (quorum && quorum.authorized.length > 0) {
-      if (!quorum.authorized.includes(resolution.by)) {
-        // Unauthorized voter — ignore silently (return undefined = still pending)
+      if (!quorum.authorized.includes(signerKey)) {
+        // Unauthorized signer — ignore silently (return undefined = still pending)
         return undefined;
       }
     }
 
     // Any denial immediately resolves
-    if (resolution.status === "denied") {
+    if (cryptoResolution.status === "denied") {
       clearTimeout(entry.timer);
       this.pending.delete(requestId);
       const resolved: ApprovalResolution = {
         status: "denied",
-        by: resolution.by,
-        reason: resolution.reason ?? "Denied by reviewer",
+        denial: cryptoResolution.denial,
+        reason: cryptoResolution.reason,
       };
       this.emit({ type: "resolved", requestId, resolution: resolved });
       return resolved;
     }
 
     // Approval vote
-    if (!approvals.includes(resolution.by)) {
-      approvals.push(resolution.by);
+    const cryptoApprovals = approvals.filter((a) => typeof a !== "string") as HumanApprovalResolution[];
+    if (!cryptoApprovals.some((a) => a.proof.signerPublicKey === signerKey)) {
+      approvals.push(cryptoResolution.approval);
+      cryptoApprovals.push(cryptoResolution.approval);
     }
 
     const required = quorum?.required ?? 1;
-    if (approvals.length >= required) {
+    if (cryptoApprovals.length >= required) {
       // Quorum reached — resolve as approved
       clearTimeout(entry.timer);
       this.pending.delete(requestId);
       const resolved: ApprovalResolution = {
         status: "approved",
-        by: approvals[approvals.length - 1]!,
-        at: nowISO8601(),
-        approvers: [...approvals],
+        approval: cryptoApprovals[cryptoApprovals.length - 1]!,
+        approvals: [...cryptoApprovals],
       };
       this.emit({ type: "resolved", requestId, resolution: resolved });
       return resolved;
