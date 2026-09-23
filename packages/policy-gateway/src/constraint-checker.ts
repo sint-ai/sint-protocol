@@ -33,18 +33,61 @@ export interface ConstraintViolation {
  * Extract physical action context from a SINT request.
  * Maps request params and physical context to the format
  * expected by the constraint validator.
+ *
+ * Velocity extraction fallbacks:
+ * - params.velocity (scalar)
+ * - params.linear_velocity (scalar)
+ * - params.linear.{x,y,z} (Twist shape — uses magnitude)
+ * - physicalContext.currentVelocityMps (scalar)
  */
 export function extractPhysicalContext(
   request: SintRequest,
 ): PhysicalActionContext {
+  // Extract velocity from params, with fallback to physicalContext
+  let commandedVelocityMps =
+    (request.params["velocity"] as number | undefined) ??
+    (request.params["linear_velocity"] as number | undefined) ??
+    request.physicalContext?.currentVelocityMps;
+
+  // If no velocity found, try Twist shape (geometry_msgs/Twist: linear.x/y/z, angular.x/y/z)
+  if (commandedVelocityMps === undefined) {
+    const linear = request.params["linear"] as
+      | { x?: number; y?: number; z?: number }
+      | undefined;
+    if (linear && (linear.x !== undefined || linear.y !== undefined || linear.z !== undefined)) {
+      const x = linear.x ?? 0;
+      const y = linear.y ?? 0;
+      const z = linear.z ?? 0;
+      commandedVelocityMps = Math.sqrt(x * x + y * y + z * z);
+    }
+  }
+
+  // Angular velocity extraction (rad/s)
+  let commandedAngularVelocityRps =
+    (request.params["angular_velocity"] as number | undefined) ??
+    request.physicalContext?.currentAngularVelocityRps;
+
+  // If no scalar angular velocity, try from Twist angular.z
+  if (commandedAngularVelocityRps === undefined) {
+    const angular = request.params["angular"] as
+      | { x?: number; y?: number; z?: number }
+      | undefined;
+    if (angular?.z !== undefined) {
+      commandedAngularVelocityRps = Math.abs(angular.z);
+    }
+  }
+
   return {
     commandedForceNewtons:
       (request.params["force"] as number | undefined) ??
       request.physicalContext?.currentForceNewtons,
-    commandedVelocityMps:
-      (request.params["velocity"] as number | undefined) ??
-      (request.params["linear_velocity"] as number | undefined) ??
-      request.physicalContext?.currentVelocityMps,
+    commandedVelocityMps,
+    commandedTorqueNm: (request.params["torque"] as number | undefined) ??
+      request.physicalContext?.currentTorqueNm,
+    commandedJerkMps3: (request.params["jerk"] as number | undefined) ??
+      request.physicalContext?.currentJerkMps3,
+    commandedAngularVelocityRps,
+    currentContactForceNewtons: request.physicalContext?.currentContactForceNewtons,
     position: request.physicalContext?.currentPosition
       ? {
           x: request.physicalContext.currentPosition.x,
@@ -124,6 +167,62 @@ export function checkConstraints(
       limit: effectiveMaxVelocity,
       actual: context.commandedVelocityMps,
       message: `Velocity ${context.commandedVelocityMps}m/s exceeds limit ${effectiveMaxVelocity}m/s${overrides?.maxVelocityMps !== undefined ? " (dynamic envelope)" : ""}`,
+    });
+  }
+
+  // Torque check
+  if (
+    token.constraints.maxTorqueNm !== undefined &&
+    context.commandedTorqueNm !== undefined &&
+    context.commandedTorqueNm > token.constraints.maxTorqueNm
+  ) {
+    violations.push({
+      constraint: "maxTorqueNm",
+      limit: token.constraints.maxTorqueNm,
+      actual: context.commandedTorqueNm,
+      message: `Torque ${context.commandedTorqueNm}Nm exceeds limit ${token.constraints.maxTorqueNm}Nm`,
+    });
+  }
+
+  // Jerk check
+  if (
+    token.constraints.maxJerkMps3 !== undefined &&
+    context.commandedJerkMps3 !== undefined &&
+    context.commandedJerkMps3 > token.constraints.maxJerkMps3
+  ) {
+    violations.push({
+      constraint: "maxJerkMps3",
+      limit: token.constraints.maxJerkMps3,
+      actual: context.commandedJerkMps3,
+      message: `Jerk ${context.commandedJerkMps3}m/s³ exceeds limit ${token.constraints.maxJerkMps3}m/s³`,
+    });
+  }
+
+  // Angular velocity check
+  if (
+    token.constraints.maxAngularVelocityRps !== undefined &&
+    context.commandedAngularVelocityRps !== undefined &&
+    context.commandedAngularVelocityRps > token.constraints.maxAngularVelocityRps
+  ) {
+    violations.push({
+      constraint: "maxAngularVelocityRps",
+      limit: token.constraints.maxAngularVelocityRps,
+      actual: context.commandedAngularVelocityRps,
+      message: `Angular velocity ${context.commandedAngularVelocityRps}rad/s exceeds limit ${token.constraints.maxAngularVelocityRps}rad/s`,
+    });
+  }
+
+  // Contact force threshold check
+  if (
+    token.constraints.contactForceThresholdN !== undefined &&
+    context.currentContactForceNewtons !== undefined &&
+    context.currentContactForceNewtons > token.constraints.contactForceThresholdN
+  ) {
+    violations.push({
+      constraint: "contactForceThresholdN",
+      limit: token.constraints.contactForceThresholdN,
+      actual: context.currentContactForceNewtons,
+      message: `Contact force ${context.currentContactForceNewtons}N exceeds threshold ${token.constraints.contactForceThresholdN}N`,
     });
   }
 

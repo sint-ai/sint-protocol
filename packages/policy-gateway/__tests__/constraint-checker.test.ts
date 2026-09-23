@@ -239,5 +239,140 @@ describe("checkConstraints — edge cases", () => {
       const ctx = extractPhysicalContext(req);
       expect(ctx.commandedVelocityMps).toBe(1.25);
     });
+
+    it("extracts Twist linear velocity magnitude from params.linear.{x,y,z}", () => {
+      // Twist with linear.x=3, linear.y=4, linear.z=0 → magnitude = 5
+      const req = makeRequest({ linear: { x: 3, y: 4, z: 0 } });
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.commandedVelocityMps).toBe(5);
+    });
+
+    it("falls back to Twist linear velocity only when scalar params absent", () => {
+      // Twist linear takes precedence only after scalar options exhausted
+      const req = makeRequest({
+        velocity: 1.0, // this should win
+        linear: { x: 3, y: 4, z: 0 }, // magnitude 5, ignored
+      });
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.commandedVelocityMps).toBe(1.0);
+    });
+
+    it("extracts angular velocity from params.angular.z (Twist angular)", () => {
+      const req = makeRequest({ angular: { z: 1.57 } }); // ~90 deg/s
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.commandedAngularVelocityRps).toBe(1.57);
+    });
+
+    it("extracts torque from params.torque", () => {
+      const req = makeRequest({ torque: 5.5 });
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.commandedTorqueNm).toBe(5.5);
+    });
+
+    it("extracts jerk from params.jerk", () => {
+      const req = makeRequest({ jerk: 2.1 });
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.commandedJerkMps3).toBe(2.1);
+    });
+
+    it("extracts contact force from physicalContext.currentContactForceNewtons", () => {
+      const req = {
+        ...makeRequest({}),
+        physicalContext: { currentContactForceNewtons: 15 },
+      } as SintRequest;
+      const ctx = extractPhysicalContext(req);
+      expect(ctx.currentContactForceNewtons).toBe(15);
+    });
+  });
+
+  describe("new constraint types", () => {
+    it("denies torque exceeding maxTorqueNm", () => {
+      const token = makeToken({ maxTorqueNm: 10 });
+      const req = makeRequest({ torque: 15 });
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error[0].constraint).toBe("maxTorqueNm");
+        expect(result.error[0].limit).toBe(10);
+        expect(result.error[0].actual).toBe(15);
+      }
+    });
+
+    it("allows torque within maxTorqueNm", () => {
+      const token = makeToken({ maxTorqueNm: 10 });
+      const req = makeRequest({ torque: 8 });
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(true);
+    });
+
+    it("denies jerk exceeding maxJerkMps3", () => {
+      const token = makeToken({ maxJerkMps3: 5 });
+      const req = makeRequest({ jerk: 6 });
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error[0].constraint).toBe("maxJerkMps3");
+      }
+    });
+
+    it("denies angular velocity exceeding maxAngularVelocityRps", () => {
+      const token = makeToken({ maxAngularVelocityRps: 1.0 });
+      const req = makeRequest({ angular: { z: 1.5 } });
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error[0].constraint).toBe("maxAngularVelocityRps");
+      }
+    });
+
+    it("denies contact force exceeding contactForceThresholdN", () => {
+      const token = makeToken({ contactForceThresholdN: 20 });
+      const req = {
+        ...makeRequest({}),
+        physicalContext: { currentContactForceNewtons: 25 },
+      } as SintRequest;
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error[0].constraint).toBe("contactForceThresholdN");
+      }
+    });
+
+    it("allows multiple new constraints when all within limits", () => {
+      const token = makeToken({
+        maxTorqueNm: 10,
+        maxJerkMps3: 5,
+        maxAngularVelocityRps: 1.5,
+        contactForceThresholdN: 20,
+      });
+      const req = {
+        ...makeRequest({ torque: 8, jerk: 4, angular: { z: 1.0 } }),
+        physicalContext: { currentContactForceNewtons: 15 },
+      } as SintRequest;
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(true);
+    });
+
+    it("reports all constraint violations including new ones", () => {
+      const token = makeToken({
+        maxVelocityMps: 1.0,
+        maxTorqueNm: 10,
+        maxAngularVelocityRps: 0.5,
+      });
+      const req = {
+        ...makeRequest({ velocity: 2.0, torque: 15, angular: { z: 1.0 } }),
+      } as SintRequest;
+      const result = checkConstraints(token, req);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toHaveLength(3);
+        const constraints = result.error.map((v) => v.constraint).sort();
+        expect(constraints).toEqual([
+          "maxAngularVelocityRps",
+          "maxTorqueNm",
+          "maxVelocityMps",
+        ]);
+      }
+    });
   });
 });

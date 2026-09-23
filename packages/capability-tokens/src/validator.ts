@@ -39,6 +39,10 @@ export interface PhysicalActionContext {
   readonly position?: { readonly x: number; readonly y: number };
   readonly humanPresenceDetected?: boolean;
   readonly repetitionCount?: number;
+  readonly commandedTorqueNm?: number;
+  readonly commandedJerkMps3?: number;
+  readonly commandedAngularVelocityRps?: number;
+  readonly currentContactForceNewtons?: number;
 }
 
 /**

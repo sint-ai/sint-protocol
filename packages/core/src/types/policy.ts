@@ -221,6 +221,7 @@ export interface SintRequest {
     readonly currentTorqueNm?: number;
     readonly currentJerkMps3?: number;
     readonly currentAngularVelocityRps?: number;
+    readonly currentContactForceNewtons?: number;
     readonly nearestObstacleMeters?: number;
     readonly trajectoryNovel?: boolean;
     readonly jointStates?: ReadonlyArray<{
