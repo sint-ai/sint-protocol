@@ -804,6 +804,14 @@ describe("PolicyGateway", () => {
   });
 
   it("allows normal T2 escalation when required verifiable compute proof metadata is present", async () => {
+    const verifier = vi.fn().mockResolvedValue({ verified: true as const });
+    const testGateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      verifiableCompute: { verify: verifier },
+    });
+
     const token = issueAndStore({
       resource: "ros2:///cmd_vel",
       actions: ["publish"],
@@ -815,7 +823,7 @@ describe("PolicyGateway", () => {
       },
     });
 
-    const decision = await gateway.intercept(
+    const decision = await testGateway.intercept(
       makeRequest({
         agentId: agent.publicKey,
         tokenId: token.tokenId,
@@ -879,6 +887,43 @@ describe("PolicyGateway", () => {
     expect(decision.action).toBe("deny");
     expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
     expect(verifier).not.toHaveBeenCalled();
+  });
+
+  it("denies with VERIFIABLE_COMPUTE_VERIFIER_REQUIRED when proof is present but no verifier plugin configured", async () => {
+    const testGateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      revocationStore,
+      emitLedgerEvent: emitSpy,
+      // Intentionally no verifiableCompute plugin
+    });
+
+    const token = issueAndStore({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+      verifiableComputeRequirements: {
+        requireForTiers: [ApprovalTier.T2_ACT],
+        allowedProofTypes: ["risc0-groth16"],
+      },
+    });
+
+    const decision = await testGateway.intercept(
+      makeRequest({
+        agentId: agent.publicKey,
+        tokenId: token.tokenId,
+        executionContext: {
+          verifiableCompute: {
+            proofType: "risc0-groth16",
+            proofRef: "proof://robotics/receipt-001",
+            proofHash: "a".repeat(64),
+            generatedAt: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+          },
+        },
+      }),
+    );
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("VERIFIABLE_COMPUTE_VERIFIER_REQUIRED");
+    expect(decision.denial?.reason).toContain("verifier plugin configured");
   });
 
   // ── Forbidden combo → escalate ──

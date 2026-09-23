@@ -189,8 +189,10 @@ describe("Security and IoT Fixture Conformance", () => {
 
   it("verifiable compute fixture enforces proof metadata on critical actions", async () => {
     const fixture = loadVerifiableComputeCriticalActionsFixture();
+    const verifier = vi.fn().mockResolvedValue({ verified: true as const });
     const gateway = new PolicyGateway({
       resolveToken: (tokenId) => tokenStore.get(tokenId),
+      verifiableCompute: { verify: verifier },
     });
     const token = issueAndStore({
       resource: fixture.token.resource,
