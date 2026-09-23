@@ -49,28 +49,12 @@ heavy parallel load and passes in isolation; it is tracked below.
 Ordered. These are the gaps most likely to be found by an outside reviewer,
 because each one lets a claim stand in for a proof.
 
-1. **Hardware safety permit cannot be self-asserted.** Today a request that
-   carries its own `hardwareSafety` context wins over the configured
-   `SafetyPermitPlugin`. The resolver must win when configured, and the
-   resolver call needs a deadline that fails closed for T2/T3.
-   Track: [hardware safety controller integration](./roadmaps/hardware-safety-controller-integration.md).
-2. **Human approvals become cryptographic.** Approval-queue resolutions and the
-   `/v1/approvals` route identify approvers by a string. Ship
-   `HumanProofVerifierPlugin` with Ed25519-signed approvals bound to the
-   request id, plus the authority fixture pack.
+1. **Hardware safety permit cannot be self-asserted.** ✅ DONE — `safetyPermitTimeoutMs` config added, `Promise.race` enforced, T2/T3 fail-closed on timeout/error, `safety.hardware.permit.denied` event emitted. Landed in feat/safety-permit-plugin-enforced.
+2. **Human approvals become cryptographic.** 🔄 IN PROGRESS — `HumanProofVerifierPlugin` interface and `Ed25519HumanProofVerifier` added, `approval-flow.ts` supports both legacy and cryptographic formats, `ApprovalQuorum.authorized` now holds Ed25519 public keys. Cryptographic path needs full quorum integration test completion.
    Track: [human-agent authority](./roadmaps/human-agent-authority-2026.md) Y1, Y8.
-3. **Verifiable-compute proof fails closed.** With no verifier configured the
-   gateway records `verifiable.compute.verified` for any schema-valid strings.
-   Require a verifier whenever proof is mandatory.
-4. **Every declared physical constraint is enforced or removed.** Torque, jerk,
-   angular velocity, and contact-force thresholds exist in the token schema but
-   are never checked. Direct gateway calls that carry velocity in nested params
-   (for example `params.linear.x`) are not compared against limits unless the
-   bridge populates `physicalContext`.
-5. **Dynamic-envelope failure demotes by default for industrial profiles.**
-   `dynamicEnvelopeFailurePolicy` now exists; make `fallback` the default for
-   `warehouse-amr` and `industrial-cell` deployments.
-   Track: [envelope attestation profile v0.1](./specs/physical-envelope-attestation-profile-v0.1.md).
+3. **Verifiable-compute proof fails closed.** ✅ DONE — Deny with `VERIFIABLE_COMPUTE_VERIFIER_REQUIRED` when proof present but no verifier configured. Test fixture cleanup complete. Landed in feat/verifiable-compute-fail-closed.
+4. **Every declared physical constraint is enforced or removed.** ✅ DONE — `extractPhysicalContext` extracts `params.linear.{x,y,z}` magnitude, enforces `maxTorqueNm`, `maxJerkMps3`, `maxAngularVelocityRps`, `contactForceThresholdN`. Added `currentContactForceNewtons` to `SintRequest.physicalContext`. Landed in feat/constraint-enforcement.
+5. **Dynamic-envelope failure demotes by default for industrial profiles.** ✅ DONE — `warehouse-amr` and `industrial-cell` profiles default to `{mode: "deny"}` when `dynamicEnvelopeFailurePolicy` undefined. Landed in feat/envelope-demotion-default.
 6. **Consolidate the open feature branches before adding layers.** PRs
    [#250](https://github.com/sint-ai/sint-protocol/pull/250),
    [#251](https://github.com/sint-ai/sint-protocol/pull/251) and
