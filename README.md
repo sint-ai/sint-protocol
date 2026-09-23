@@ -82,6 +82,10 @@ systems:
 - **External evidence packets:** OWASP Agentic AI landscape, MITRE ATLAS
   candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review, and
   production-slice validation artifacts are published under `docs/`.
+- **Open physical-envelope research:** the
+  [SINT × DriftCore collaboration roadmap](docs/community/driftcore-sint-collaboration-roadmap.md)
+  proposes protocol-neutral attestation schemas, adversarial fixtures, and
+  independent cross-review before any runtime integration.
 
 Academic and compliance grounding: SINT is designed with reference to IEC 62443
 FR1-FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework

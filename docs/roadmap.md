@@ -92,6 +92,8 @@ with another project, not just more internal fixture coverage.
 
 Best conversion targets:
 
+- the [SINT × DriftCore physical-envelope research roadmap](./community/driftcore-sint-collaboration-roadmap.md),
+  beginning with a protocol-neutral attestation profile and adversarial fixtures
 - Open-RMF handoff receipts
 - Sunnybotics ROS 2 integration questions
 - one industrial or factory-control design thread
