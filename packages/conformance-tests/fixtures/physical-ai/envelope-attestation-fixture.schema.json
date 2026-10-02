@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sint.ai/physical-ai/envelope-attestation-fixture.v0.1.schema.json",
+  "title": "Physical Envelope Attestation Fixture v0.1",
+  "type": "object",
+  "required": ["fixtureId", "schemaVersion", "description", "profile", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "fixtureId": { "const": "physical-envelope-attestation-v0.1" },
+    "schemaVersion": { "const": "0.1.0" },
+    "description": { "type": "string", "minLength": 1 },
+    "profile": {
+      "type": "object",
+      "required": ["condition", "requiredScope", "trustedSources", "maxTtlSeconds", "currentBootEpoch", "fallbackEnvelope", "authorizedEnvelope", "digestAlgorithm", "canonicalization"],
+      "additionalProperties": false,
+      "properties": {
+        "condition": { "type": "string", "minLength": 1 },
+        "requiredScope": { "type": "string", "minLength": 1 },
+        "trustedSources": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true },
+        "maxTtlSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "currentBootEpoch": { "type": "string", "minLength": 1 },
+        "fallbackEnvelope": { "type": "string", "minLength": 1 },
+        "authorizedEnvelope": { "type": "string", "minLength": 1 },
+        "digestAlgorithm": { "const": "sha256" },
+        "canonicalization": { "type": "string", "minLength": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "nowMs", "verifierState", "evidence", "authorizationEvidenceBinding", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "nowMs": { "type": "number", "minimum": 0 },
+          "verifierState": { "enum": ["available", "unavailable"] },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" }, "minItems": 1 },
+          "authorizationEvidenceBinding": { "type": "string", "minLength": 1 },
+          "expected": {
+            "type": "object",
+            "required": ["activeEnvelope", "execution", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "activeEnvelope": { "enum": ["transport", "working"] },
+              "execution": { "enum": ["allow_bound_execution", "deny_execution"] },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["source", "condition", "value", "sequence", "issuedAtMs", "ttlSeconds", "scope", "bootEpoch", "proofStatus"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "condition": { "type": "string", "minLength": 1 },
+        "value": { "type": "boolean" },
+        "sequence": { "type": "integer", "minimum": 0 },
+        "issuedAtMs": { "type": "number" },
+        "ttlSeconds": { "oneOf": [{ "type": "number" }, { "const": "Infinity" }] },
+        "scope": { "type": "string", "minLength": 1 },
+        "bootEpoch": { "type": "string", "minLength": 1 },
+        "proofStatus": { "enum": ["valid", "invalid"] }
+      }
+    }
+  }
+}

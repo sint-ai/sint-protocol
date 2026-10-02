@@ -97,7 +97,9 @@ export interface AutonomySupervisorPlugin {
  *
  * The plugin receives the request + any physical context and returns tighter limits.
  * Effective limit = min(token.constraint, envelope.limit).
- * Fail-open: if the plugin throws, the token's original limits are used.
+ * For T2/T3 actions, verifier failure denies execution because the gateway can
+ * no longer establish the environment-dependent limit. T0/T1 actions retain
+ * the token limit so loss of a physical sensor does not block observation.
  *
  * @example
  * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
@@ -298,8 +300,8 @@ export interface PolicyGatewayConfig {
    * Optional async hardware safety permit resolver (Phase 9.3).
    * Resolves hardware safety state from an external source (OPC-UA, PLC REST API,
    * MQTT) before the built-in hardware safety handshake check.
-   * Plugin wins only if no hardwareSafety context is already present in the request.
-   * Fail-open: plugin errors do not block requests.
+   * A returned plugin result is authoritative over caller-supplied
+   * hardwareSafety context. For T2/T3 actions, plugin failure denies execution.
    */
   readonly safetyPermit?: SafetyPermitPlugin | undefined;
   /**
@@ -867,7 +869,7 @@ export class PolicyGateway {
     if (this.config.safetyPermit) {
       try {
         const permitResult = await this.config.safetyPermit.resolvePermit(currentRequest);
-        if (permitResult && !currentRequest.executionContext?.hardwareSafety) {
+        if (permitResult) {
           currentRequest = {
             ...currentRequest,
             executionContext: {
@@ -883,8 +885,15 @@ export class PolicyGateway {
           };
         }
       } catch {
-        // Fail-open: plugin error doesn't block the request
-        // The built-in evaluateHardwareSafetyHandshake() runs with original request context
+        const tier = tierAssignment.approvalTier;
+        if (tier === "T2_act" || tier === "T3_commit") {
+          return this.deny(
+            requestId,
+            timestamp,
+            "HARDWARE_STATE_UNAVAILABLE",
+            "Hardware safety verifier failed; high-consequence execution is blocked",
+          );
+        }
       }
     }
 
@@ -1081,7 +1090,15 @@ export class PolicyGateway {
           }
         }
       } catch {
-        // Dynamic envelope error → fail-open, use token's original limits
+        const tier = tierAssignment.approvalTier;
+        if (tier === "T2_act" || tier === "T3_commit") {
+          return this.deny(
+            requestId,
+            timestamp,
+            "DYNAMIC_ENVELOPE_UNAVAILABLE",
+            "Dynamic envelope verifier failed; high-consequence execution is blocked",
+          );
+        }
       }
     }
 

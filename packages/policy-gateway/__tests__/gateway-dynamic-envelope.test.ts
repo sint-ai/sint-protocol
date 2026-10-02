@@ -13,7 +13,7 @@
  * - Obstacle nearby → envelope caps velocity below token limit → deny
  * - Velocity within token limit AND within envelope → allow
  * - Token limit tighter than envelope → token limit wins (envelope is a no-op)
- * - Plugin error → fail-open (token limit used, request proceeds)
+ * - Plugin error → T0/T1 retains token limit; T2/T3 execution is denied
  * - Envelope emits "policy.envelope.applied" event when reason provided
  * - Force envelope tightening → deny when force exceeds envelope but not token
  * - maxVelocityMps: 0 envelope → any nonzero velocity is denied
@@ -189,6 +189,30 @@ describe("DynamicEnvelopePlugin", () => {
     const req = makeRequest(token, 1.5);
     const decision = await gw.intercept(req);
     expect(decision.action).toBe("allow");
+  });
+
+  it("plugin error blocks T2 physical execution", async () => {
+    const token = makeToken({
+      maxVelocityMps: 2.0,
+      resource: "ros2:///cmd_vel",
+    });
+    const brokenEnvelope: DynamicEnvelopePlugin = {
+      computeEnvelope: vi.fn().mockRejectedValue(new Error("sensor timeout")),
+    };
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: brokenEnvelope,
+    });
+    const req: SintRequest = {
+      ...makeRequest(token, 1.5),
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    };
+
+    const decision = await gw.intercept(req);
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
   });
 
   it("envelope emits policy.envelope.applied event with reason", async () => {

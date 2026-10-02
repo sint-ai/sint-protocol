@@ -285,6 +285,18 @@ Profile v0.1** containing:
 This milestone is successful if both projects can reject the same unsafe cases.
 It does not require either project to adopt the other's architecture.
 
+Implementation progress:
+
+- v0.1 protocol-neutral evidence-transition fixtures and a SINT runner are
+  published in
+  [`docs/guides/physical-envelope-attestation-fixtures.md`](../guides/physical-envelope-attestation-fixtures.md);
+- the fixture includes a load-bearing positive control plus false retraction,
+  expiry, proof failure, verifier outage, non-finite TTL, equal-sequence
+  conflict, source disagreement, restart replay, and exact evidence-binding
+  cases;
+- a Python runner and independent DriftCore outcome report remain open for
+  cross-project review.
+
 ## Open Questions For Review
 
 1. Which enforcement points qualify as independent for each threat model:
