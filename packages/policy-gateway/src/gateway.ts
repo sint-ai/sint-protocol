@@ -159,7 +159,8 @@ export interface AutonomySupervisorPlugin {
  *
  * The plugin receives the request + any physical context and returns tighter limits.
  * Effective limit = min(token.constraint, envelope.limit).
- * Fail-open: if the plugin throws, the token's original limits are used.
+ * If the plugin throws, T2/T3 execution is denied unless a deployment fallback
+ * is configured. T0/T1 requests may retain the token's original limits.
  *
  * @example
  * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
@@ -194,9 +195,9 @@ export interface DynamicEnvelopePlugin {
 /**
  * What the gateway does when the dynamic envelope plugin throws.
  *
- * - `fail-open` (default, legacy): discard the plugin and use token limits.
- *   A lost tightening is an effective widening; do not use for T2/T3 physical
- *   actions in production.
+ * - `fail-open`: discard the plugin and use token limits for T0/T1 only.
+ *   T2/T3 remains fail-closed because losing a tightening is an effective
+ *   widening at the physical execution boundary.
  * - `fallback`: apply `fallback` as a tightening override (safe envelope) and
  *   emit `policy.envelope.fallback`. A physical demotion, not an error.
  * - `deny`: deny with `DYNAMIC_ENVELOPE_UNAVAILABLE`. `fallback` mode without
@@ -365,15 +366,15 @@ export interface PolicyGatewayConfig {
    * Optional dynamic envelope plugin (ROSClaw gap mitigation).
    * When provided, called just before physical constraint checking.
    * Returns environment-adaptive limits that tighten (never loosen) the token's
-   * static constraints. Fail-open: plugin errors fall back to token limits.
+   * static constraints. Plugin errors fail closed for T2/T3 unless a concrete
+   * fallback envelope is configured.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
   /**
    * What to do when `dynamicEnvelope.computeEnvelope()` throws.
-   * Defaults to `fail-open` for backward compatibility. Deployments that rely
-   * on the plugin to tighten limits for physical actions should configure
-   * `fallback` or `deny` so that losing the envelope source demotes the
-   * physical envelope instead of silently widening it.
+   * Defaults to `fail-open` for T0/T1 and `deny` for T2/T3. Deployments may
+   * configure a concrete fallback envelope to keep bounded physical operation
+   * available while the dynamic source is unavailable.
    */
   readonly dynamicEnvelopeFailurePolicy?: DynamicEnvelopeFailurePolicy;
   /**
@@ -415,8 +416,8 @@ export interface PolicyGatewayConfig {
    * Optional async hardware safety permit resolver (Phase 9.3).
    * Resolves hardware safety state from an external source (OPC-UA, PLC REST API,
    * MQTT) before the built-in hardware safety handshake check.
-   * Plugin wins only if no hardwareSafety context is already present in the request.
-   * Fail-open: plugin errors do not block requests.
+   * A returned plugin result is authoritative over caller-supplied
+   * hardwareSafety context. Plugin errors deny T2/T3 execution.
    */
   readonly safetyPermit?: SafetyPermitPlugin | undefined;
   /**
@@ -984,7 +985,7 @@ export class PolicyGateway {
     if (this.config.safetyPermit) {
       try {
         const permitResult = await this.config.safetyPermit.resolvePermit(currentRequest);
-        if (permitResult && !currentRequest.executionContext?.hardwareSafety) {
+        if (permitResult) {
           currentRequest = {
             ...currentRequest,
             executionContext: {
@@ -1000,8 +1001,15 @@ export class PolicyGateway {
           };
         }
       } catch {
-        // Fail-open: plugin error doesn't block the request
-        // The built-in evaluateHardwareSafetyHandshake() runs with original request context
+        const tier = tierAssignment.approvalTier;
+        if (tier === "T2_act" || tier === "T3_commit") {
+          return this.deny(
+            requestId,
+            timestamp,
+            "HARDWARE_STATE_UNAVAILABLE",
+            "Hardware safety verifier failed; high-consequence execution is blocked",
+          );
+        }
       }
     }
 
@@ -1206,8 +1214,14 @@ export class PolicyGateway {
           }
         }
       } else {
-        const policy = this.config.dynamicEnvelopeFailurePolicy ?? { mode: "fail-open" };
-        if (policy.mode === "deny" || (policy.mode === "fallback" && !policy.fallback)) {
+        const tier = tierAssignment.approvalTier;
+        const highConsequence = tier === "T2_act" || tier === "T3_commit";
+        const configuredPolicy = this.config.dynamicEnvelopeFailurePolicy;
+        const policy = configuredPolicy ?? { mode: highConsequence ? "deny" : "fail-open" };
+        const denyUnavailable = policy.mode === "deny"
+          || (policy.mode === "fallback" && !policy.fallback)
+          || (policy.mode === "fail-open" && highConsequence);
+        if (denyUnavailable) {
           this.emitEvent("policy.envelope.fallback", request.agentId, request.tokenId, {
             mode: "deny",
             error: failure,
@@ -1230,7 +1244,7 @@ export class PolicyGateway {
             maxForceNewtons: policy.fallback.maxForceNewtons,
           });
         }
-        // fail-open: plugin discarded, token limits apply (legacy behaviour)
+        // fail-open is limited to T0/T1: plugin discarded, token limits apply.
       }
     }
 

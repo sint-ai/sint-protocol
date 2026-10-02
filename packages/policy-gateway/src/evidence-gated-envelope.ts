@@ -187,6 +187,9 @@ export interface EvidenceSequenceRecord {
   readonly evidenceDigest: string;
 }
 
+/** Durable tombstone for a sequence at which authenticated payloads conflicted. */
+export const CONFLICTED_EVIDENCE_DIGEST = "conflicted";
+
 /**
  * Durable per-(source, condition) high-water mark.
  * Production deployments must back this with persistent storage so that a
@@ -194,7 +197,18 @@ export interface EvidenceSequenceRecord {
  */
 export interface EvidenceSequenceStore {
   get(sourceId: string, condition: string): Promise<EvidenceSequenceRecord | undefined>;
-  commit(sourceId: string, condition: string, record: EvidenceSequenceRecord): Promise<void>;
+  /**
+   * Atomically replace `expected` with `record`. Implementations MUST reject a
+   * lower sequence and MUST NOT replace a conflict tombstone at the same
+   * sequence. Returning false means the precondition or monotonicity rule did
+   * not hold.
+   */
+  compareAndSet(
+    sourceId: string,
+    condition: string,
+    expected: EvidenceSequenceRecord | undefined,
+    record: EvidenceSequenceRecord,
+  ): Promise<boolean>;
 }
 
 /** Non-durable store for tests and prototypes. State is lost on restart. */
@@ -205,8 +219,38 @@ export class InMemoryEvidenceSequenceStore implements EvidenceSequenceStore {
     return this.records.get(`${sourceId}\u0000${condition}`);
   }
 
-  async commit(sourceId: string, condition: string, record: EvidenceSequenceRecord): Promise<void> {
-    this.records.set(`${sourceId}\u0000${condition}`, record);
+  async compareAndSet(
+    sourceId: string,
+    condition: string,
+    expected: EvidenceSequenceRecord | undefined,
+    record: EvidenceSequenceRecord,
+  ): Promise<boolean> {
+    const key = `${sourceId}\u0000${condition}`;
+    const current = this.records.get(key);
+    if (
+      current?.sequence !== expected?.sequence
+      || current?.evidenceDigest !== expected?.evidenceDigest
+    ) {
+      return false;
+    }
+    if (current && record.sequence < current.sequence) return false;
+    if (
+      current
+      && record.sequence === current.sequence
+      && current.evidenceDigest !== record.evidenceDigest
+      && record.evidenceDigest !== CONFLICTED_EVIDENCE_DIGEST
+    ) {
+      return false;
+    }
+    if (
+      current?.evidenceDigest === CONFLICTED_EVIDENCE_DIGEST
+      && record.sequence === current.sequence
+      && record.evidenceDigest !== CONFLICTED_EVIDENCE_DIGEST
+    ) {
+      return false;
+    }
+    this.records.set(key, record);
+    return true;
   }
 }
 
@@ -278,6 +322,7 @@ interface Reading {
 const DEFAULT_MAX_TTL_MS = 30_000;
 const DEFAULT_MAX_CLOCK_SKEW_MS = 1_000;
 const DEFAULT_BASELINE_ID = "baseline";
+const MAX_CAS_ATTEMPTS = 8;
 
 function parseIsoMs(value: string): number | undefined {
   if (typeof value !== "string") return undefined;
@@ -290,13 +335,14 @@ function parseIsoMs(value: string): number | undefined {
 // ---------------------------------------------------------------------------
 
 export class EvidenceGatedEnvelopePlugin implements DynamicEnvelopePlugin {
+  private readonly config: EvidenceGatedEnvelopeConfig;
   private readonly readings = new Map<string, Map<string, Reading>>();
   private readonly maxTtlMs: number;
   private readonly maxClockSkewMs: number;
   private readonly now: () => number;
   private readonly bootedAtMs: number;
 
-  constructor(private readonly config: EvidenceGatedEnvelopeConfig) {
+  constructor(config: EvidenceGatedEnvelopeConfig) {
     if (!config.verifier) {
       throw new Error("EvidenceGatedEnvelopePlugin requires an injected verifier");
     }
@@ -306,6 +352,22 @@ export class EvidenceGatedEnvelopePlugin implements DynamicEnvelopePlugin {
     if (config.permissive.requires.length === 0) {
       throw new Error("permissive envelope must declare at least one condition requirement");
     }
+    // Verification is a boundary. Keep an immutable snapshot rather than live
+    // references that a caller could widen after construction.
+    this.config = Object.freeze({
+      ...config,
+      baseline: Object.freeze({
+        ...config.baseline,
+        limits: Object.freeze({ ...config.baseline.limits }),
+      }),
+      permissive: Object.freeze({
+        ...config.permissive,
+        limits: Object.freeze({ ...config.permissive.limits }),
+        requires: Object.freeze(config.permissive.requires.map((requirement) =>
+          Object.freeze({ ...requirement }))),
+      }),
+      trustedSources: Object.freeze({ ...config.trustedSources }),
+    });
     this.maxTtlMs = config.maxTtlMs ?? DEFAULT_MAX_TTL_MS;
     this.maxClockSkewMs = config.maxClockSkewMs ?? DEFAULT_MAX_CLOCK_SKEW_MS;
     this.now = config.now ?? (() => Date.now());
@@ -325,7 +387,7 @@ export class EvidenceGatedEnvelopePlugin implements DynamicEnvelopePlugin {
       typeof evidence.sourceId !== "string" || evidence.sourceId.length === 0 ||
       typeof evidence.condition !== "string" || evidence.condition.length === 0 ||
       typeof evidence.value !== "boolean" ||
-      typeof evidence.sequence !== "number" || !Number.isInteger(evidence.sequence) || evidence.sequence < 0 ||
+      typeof evidence.sequence !== "number" || !Number.isSafeInteger(evidence.sequence) || evidence.sequence < 0 ||
       typeof evidence.proof !== "object" || evidence.proof === null
     ) {
       return err({ code: "EVIDENCE_MALFORMED", detail: "evidence is missing required fields" });
@@ -357,7 +419,13 @@ export class EvidenceGatedEnvelopePlugin implements DynamicEnvelopePlugin {
         detail: cause instanceof Error ? cause.message : String(cause),
       });
     }
-    if (!verified.ok) {
+    if (!verified || verified.ok !== true || verified.value !== true) {
+      if (!verified || typeof verified !== "object" || verified.ok !== false) {
+        return err({
+          code: "VERIFIER_UNAVAILABLE",
+          detail: "verifier returned a result other than explicit success true",
+        });
+      }
       return err({ code: "PROOF_INVALID", detail: verified.error });
     }
 
@@ -371,64 +439,97 @@ export class EvidenceGatedEnvelopePlugin implements DynamicEnvelopePlugin {
       return err({ code: "EVIDENCE_EXPIRED", detail: "evidence expired before ingestion" });
     }
 
-    // 5. Ordering / replay / conflict against the durable high-water mark
+    // 5. Ordering / replay / conflict against the durable high-water mark.
+    // Every state transition is a compare-and-set so two authorities sharing
+    // a store cannot overwrite newer safety information with an older read.
     const evidenceDigest = conditionEvidenceDigest(evidence);
-    let record: EvidenceSequenceRecord | undefined;
-    try {
-      record = await this.config.sequenceStore.get(evidence.sourceId, evidence.condition);
-    } catch (cause) {
-      return err({
-        code: "STORE_UNAVAILABLE",
-        detail: cause instanceof Error ? cause.message : String(cause),
-      });
-    }
-    if (record) {
-      if (evidence.sequence < record.sequence) {
-        return err({ code: "SEQUENCE_REPLAYED", detail: `sequence ${evidence.sequence} < ${record.sequence}` });
-      }
-      if (evidence.sequence === record.sequence) {
-        if (evidenceDigest === record.evidenceDigest) {
-          return err({ code: "SEQUENCE_REPLAYED", detail: "duplicate of already-accepted evidence" });
-        }
-        this.readings.get(evidence.condition)?.delete(evidence.sourceId);
-        return err({
-          code: "SEQUENCE_CONFLICT",
-          detail: "different evidence at an already-committed sequence; current reading dropped",
-        });
-      }
-    }
-
-    // 6. Restart replay guard independent of store durability
+    // 6. Restart replay guard independent of store durability.
     if (issuedAtMs < this.bootedAtMs - this.maxClockSkewMs) {
       return err({ code: "EVIDENCE_PREDATES_BOOT", detail: "evidence was issued before this selector booted" });
     }
 
-    // 7. Commit to the store *before* updating in-memory state
-    try {
-      await this.config.sequenceStore.commit(evidence.sourceId, evidence.condition, {
-        sequence: evidence.sequence,
-        evidenceDigest,
-      });
-    } catch (cause) {
-      return err({
-        code: "STORE_UNAVAILABLE",
-        detail: cause instanceof Error ? cause.message : String(cause),
-      });
-    }
+    // 7. Commit to the store *before* updating in-memory state.
+    for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt += 1) {
+      let record: EvidenceSequenceRecord | undefined;
+      try {
+        record = await this.config.sequenceStore.get(evidence.sourceId, evidence.condition);
+      } catch (cause) {
+        return err({
+          code: "STORE_UNAVAILABLE",
+          detail: cause instanceof Error ? cause.message : String(cause),
+        });
+      }
 
-    let bySource = this.readings.get(evidence.condition);
-    if (!bySource) {
-      bySource = new Map();
-      this.readings.set(evidence.condition, bySource);
+      if (record) {
+        if (evidence.sequence < record.sequence) {
+          return err({ code: "SEQUENCE_REPLAYED", detail: `sequence ${evidence.sequence} < ${record.sequence}` });
+        }
+        if (evidence.sequence === record.sequence) {
+          if (record.evidenceDigest === CONFLICTED_EVIDENCE_DIGEST) {
+            this.readings.get(evidence.condition)?.delete(evidence.sourceId);
+            return err({
+              code: "SEQUENCE_CONFLICT",
+              detail: "sequence is durably conflicted; recovery requires a strictly newer reading",
+            });
+          }
+          if (evidenceDigest === record.evidenceDigest) {
+            return err({ code: "SEQUENCE_REPLAYED", detail: "duplicate of already-accepted evidence" });
+          }
+          try {
+            const poisoned = await this.config.sequenceStore.compareAndSet(
+              evidence.sourceId,
+              evidence.condition,
+              record,
+              { sequence: evidence.sequence, evidenceDigest: CONFLICTED_EVIDENCE_DIGEST },
+            );
+            if (!poisoned) continue;
+          } catch (cause) {
+            return err({
+              code: "STORE_UNAVAILABLE",
+              detail: cause instanceof Error ? cause.message : String(cause),
+            });
+          }
+          this.readings.get(evidence.condition)?.delete(evidence.sourceId);
+          return err({
+            code: "SEQUENCE_CONFLICT",
+            detail: "different authenticated evidence at one sequence; sequence durably poisoned",
+          });
+        }
+      }
+
+      try {
+        const committed = await this.config.sequenceStore.compareAndSet(
+          evidence.sourceId,
+          evidence.condition,
+          record,
+          { sequence: evidence.sequence, evidenceDigest },
+        );
+        if (!committed) continue;
+      } catch (cause) {
+        return err({
+          code: "STORE_UNAVAILABLE",
+          detail: cause instanceof Error ? cause.message : String(cause),
+        });
+      }
+
+      let bySource = this.readings.get(evidence.condition);
+      if (!bySource) {
+        bySource = new Map();
+        this.readings.set(evidence.condition, bySource);
+      }
+      bySource.set(evidence.sourceId, {
+        evidenceId: evidence.evidenceId,
+        evidenceDigest,
+        value: evidence.value,
+        sequence: evidence.sequence,
+        expiresAtMs,
+      });
+      return ok({ evidenceId: evidence.evidenceId, evidenceDigest });
     }
-    bySource.set(evidence.sourceId, {
-      evidenceId: evidence.evidenceId,
-      evidenceDigest,
-      value: evidence.value,
-      sequence: evidence.sequence,
-      expiresAtMs,
+    return err({
+      code: "STORE_UNAVAILABLE",
+      detail: "sequence store changed repeatedly while committing evidence",
     });
-    return ok({ evidenceId: evidence.evidenceId, evidenceDigest });
   }
 
   /** Evaluate which envelope is active right now. Pure with respect to the clock. */

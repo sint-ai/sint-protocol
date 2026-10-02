@@ -102,9 +102,14 @@ class Harness {
         if (!this.storeAvailable) throw new Error("store unreachable");
         return inner.get(s, c);
       },
-      commit: async (s, c, r: EvidenceSequenceRecord) => {
+      compareAndSet: async (
+        s,
+        c,
+        expected: EvidenceSequenceRecord | undefined,
+        r: EvidenceSequenceRecord,
+      ) => {
         if (!this.storeAvailable) throw new Error("store unreachable");
-        return inner.commit(s, c, r);
+        return inner.compareAndSet(s, c, expected, r);
       },
     };
     this.selector = new EvidenceGatedEnvelopePlugin({
