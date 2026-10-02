@@ -13,6 +13,8 @@ import {
   signConditionEvidence,
   type ConditionEvidenceBody,
   type EvidenceGatedEnvelopeConfig,
+  type EvidenceSequenceRecord,
+  type EvidenceSequenceStore,
 } from "../src/evidence-gated-envelope.js";
 
 const plc = generateKeypair();
@@ -142,6 +144,121 @@ describe("EvidenceGatedEnvelopePlugin", () => {
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe("VERIFIER_UNAVAILABLE");
     expect(plugin.activeEnvelope().envelopeId).toBe("slow");
+  });
+
+  it("accepts only an explicit verifier success true", async () => {
+    const plugin = makePlugin({
+      verifier: {
+        verify: async () => ({ ok: true, value: "truthy-but-not-verified" }) as never,
+      },
+    });
+    const res = await plugin.ingest(signConditionEvidence(body(), plc.privateKey, plc.publicKey));
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.error.code).toBe("VERIFIER_UNAVAILABLE");
+    expect(plugin.activeEnvelope().envelopeId).toBe("slow");
+  });
+
+  it("snapshots envelope configuration so verified limits cannot be edited later", () => {
+    const baselineLimits = { maxVelocityMps: 0.25 };
+    const permissiveLimits = { maxVelocityMps: 1.5 };
+    const plugin = makePlugin({
+      baseline: { envelopeId: "slow", limits: baselineLimits },
+      permissive: {
+        envelopeId: "fast",
+        limits: permissiveLimits,
+        requires: [{ condition: "fence_closed", value: true }],
+      },
+    });
+    baselineLimits.maxVelocityMps = 9;
+    permissiveLimits.maxVelocityMps = 12;
+    expect(plugin.activeEnvelope().limits.maxVelocityMps).toBe(0.25);
+  });
+
+  it("durably poisons a conflict at the maximum safe sequence", async () => {
+    const plugin = makePlugin();
+    const sequence = Number.MAX_SAFE_INTEGER;
+    const truth = signConditionEvidence(
+      body({ evidenceId: "max-true", sequence }),
+      plc.privateKey,
+      plc.publicKey,
+    );
+    const falsity = signConditionEvidence(
+      body({ evidenceId: "max-false", sequence, value: false }),
+      plc.privateKey,
+      plc.publicKey,
+    );
+    expect((await plugin.ingest(truth)).ok).toBe(true);
+    expect((await plugin.ingest(falsity)).ok).toBe(false);
+    const replay = await plugin.ingest(truth);
+    expect(replay.ok).toBe(false);
+    if (!replay.ok) expect(replay.error.code).toBe("SEQUENCE_CONFLICT");
+    expect(plugin.activeEnvelope().envelopeId).toBe("slow");
+  });
+
+  it("uses compare-and-set so a stale authority cannot overwrite a newer FALSE", async () => {
+    const shared = new InMemoryEvidenceSequenceStore();
+    let releaseStale!: () => void;
+    let staleReadStarted!: () => void;
+    const release = new Promise<void>((resolve) => { releaseStale = resolve; });
+    const started = new Promise<void>((resolve) => { staleReadStarted = resolve; });
+    let firstRead = true;
+    const staleView: EvidenceSequenceStore = {
+      get: async (sourceId, condition) => {
+        const snapshot = await shared.get(sourceId, condition);
+        if (firstRead) {
+          firstRead = false;
+          staleReadStarted();
+          await release;
+        }
+        return snapshot;
+      },
+      compareAndSet: (sourceId, condition, expected, record) =>
+        shared.compareAndSet(sourceId, condition, expected, record),
+    };
+    const older = makePlugin({ sequenceStore: staleView });
+    const newer = makePlugin({ sequenceStore: shared });
+    const olderTruth = signConditionEvidence(
+      body({ evidenceId: "older", sequence: 4 }),
+      plc.privateKey,
+      plc.publicKey,
+    );
+    const newerFalse = signConditionEvidence(
+      body({ evidenceId: "newer", sequence: 5, value: false }),
+      plc.privateKey,
+      plc.publicKey,
+    );
+
+    const staleAttempt = older.ingest(olderTruth);
+    await started;
+    expect((await newer.ingest(newerFalse)).ok).toBe(true);
+    releaseStale();
+    const staleResult = await staleAttempt;
+
+    expect(staleResult.ok).toBe(false);
+    if (!staleResult.ok) expect(staleResult.error.code).toBe("SEQUENCE_REPLAYED");
+    const mark = await shared.get("plc-a", "fence_closed");
+    expect(mark).toMatchObject<EvidenceSequenceRecord>({ sequence: 5 });
+    expect(older.activeEnvelope().envelopeId).toBe("slow");
+  });
+
+  it("the replay store itself refuses backward marks and conflict resurrection", async () => {
+    const store = new InMemoryEvidenceSequenceStore();
+    const first = { sequence: 7, evidenceDigest: "first" };
+    expect(await store.compareAndSet("plc-a", "fence_closed", undefined, first)).toBe(true);
+    expect(await store.compareAndSet(
+      "plc-a",
+      "fence_closed",
+      first,
+      { sequence: 6, evidenceDigest: "older" },
+    )).toBe(false);
+    const conflict = { sequence: 7, evidenceDigest: "conflicted" };
+    expect(await store.compareAndSet("plc-a", "fence_closed", first, conflict)).toBe(true);
+    expect(await store.compareAndSet(
+      "plc-a",
+      "fence_closed",
+      conflict,
+      { sequence: 7, evidenceDigest: "captured-true" },
+    )).toBe(false);
   });
 
   it("evidence issued before boot is rejected even with a fresh (non-durable) store", async () => {

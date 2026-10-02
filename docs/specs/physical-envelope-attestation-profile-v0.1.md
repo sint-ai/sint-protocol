@@ -49,12 +49,15 @@ An implementation MUST reject evidence, without changing state, when:
   allowance in the future;
 - `sequence` is lower than the committed high-water mark for
   `(sourceId, condition)`, or equal with identical content (replay);
+- `sequence` is not a non-negative, exactly representable safe integer;
 - the verifier or the replay store is unavailable.
 
 Two rules deliberately change state on rejection:
 
-- **Conflict:** equal `sequence`, different content. The source's current
-  reading for that condition is dropped until a strictly newer reading arrives.
+- **Conflict:** equal `sequence`, different authenticated content. The source's
+  current reading is dropped and that sequence is durably poisoned until a
+  strictly newer reading arrives. At the maximum sequence, recovery therefore
+  requires a new source epoch rather than arithmetic on `N + 1`.
 - **Restart:** in-memory readings are not carried across a restart. The
   selector boots in the baseline. Evidence issued before boot is rejected even
   when the replay store is not durable.
@@ -69,6 +72,13 @@ Activation rules:
 - expiry is evaluated at decision time with the same clock used for
   ingestion. No timers, so "evidence expired" and "envelope demoted" cannot
   race.
+- replay-state updates use compare-and-set. Two authorities sharing one store
+  cannot replace newer safety information with an older write based on a stale
+  read.
+- a verifier authenticates only by returning explicit success `true`; a truthy
+  string, number, or object is a verifier fault.
+- accepted envelope configuration is snapshotted immutably. Editing a caller's
+  limits object after construction cannot widen an active or fallback envelope.
 
 Failure of the selector itself (it throws, rather than returning the
 baseline) is handled by the authorization layer, which MUST either apply a
@@ -103,9 +113,9 @@ deployment configured deny).
 | Authorized limits | `SintCapabilityToken.constraints.maxVelocityMps / maxForceNewtons` (Ed25519-signed, attenuation-only) |
 | Selector | `EvidenceGatedEnvelopePlugin` (`@pshkv/gate-policy-gateway`), a `DynamicEnvelopePlugin` |
 | Verifier | `ConditionEvidenceVerifier`, injected; reference `Ed25519ConditionEvidenceVerifier`; no default |
-| Replay store | `EvidenceSequenceStore`, injected; `InMemoryEvidenceSequenceStore` is labelled non-durable |
+| Replay store | `EvidenceSequenceStore`, injected, with atomic compare-and-set; `InMemoryEvidenceSequenceStore` is labelled non-durable |
 | Effective limit | `PolicyGateway.intercept()` step 6, `min(token, executionEnvelope, dynamic)` |
-| Selector fault | `PolicyGatewayConfig.dynamicEnvelopeFailurePolicy` (`fallback` or `deny`); legacy default remains `fail-open` |
+| Selector fault | `PolicyGatewayConfig.dynamicEnvelopeFailurePolicy` (`fallback` or `deny`); T2/T3 defaults to deny and cannot opt into fail-open |
 | Binding | `PolicyDecision.transformations.additionalAuditFields.envelopeBinding`; `envelopeDigest` echoed on `policy.evaluated` |
 | Events | `policy.envelope.applied`, `policy.envelope.fallback` |
 
@@ -115,13 +125,29 @@ Run:
 pnpm --filter @pshkv/conformance-tests test:envelope-attestation
 ```
 
+## Follow-up review and v0.2 candidates
+
+The public DriftCore follow-up identified additional cases after reviewing the
+25 vectors. SINT now hardens four of them in the reference selector: atomic
+shared-store updates, explicit-`true` verifier success, durable conflict at the
+maximum safe sequence, and immutable envelope configuration.
+
+The v0.1 JSON stays at 25 cases so DriftCore's in-progress result report remains
+comparable. The following should become explicit protocol-neutral v0.2 vectors
+after both implementations agree on the wire representation:
+
+- same-sequence conflict split across batches and at the maximum sequence;
+- two authorities interleaving writes against one durable replay store;
+- verifier return-type confusion (truthy but not explicit success);
+- attempted mutation of a verified envelope;
+- a numerically tighter limit enforced at a weaker layer. SINT currently has no
+  runtime envelope-update API or enforcement-point rank, so this last case is a
+  declared deployment-policy gap rather than a claimed pass.
+
 ## Known gaps in SINT (as of this profile)
 
 Recorded rather than normalised away:
 
-- The gateway default for a throwing dynamic-envelope plugin is still
-  `fail-open`. Deployments that rely on the plugin for T2/T3 physical actions
-  must opt in to `fallback` or `deny`.
 - `physicalContext` values on a request (velocity, force, human presence)
   are self-reported and unsigned. The profile treats them as the commanded
   value, not as evidence.
@@ -137,7 +163,7 @@ Recorded rather than normalised away:
 1. Should a verifier outage demote immediately, or only prevent new
    activation until existing evidence expires (the fixture's current
    expectation, case 3a)?
-2. Is "drop the reading on same-sequence conflict" the right fail-safe, or
-   should a conflicting source be quarantined until an operator clears it?
+2. At a maximum-sequence conflict, should recovery require a new boot/source
+   epoch, operator clearance, or either under a declared policy?
 3. Which of the rejection codes should be normative versus informative when
    comparing runners across implementations?

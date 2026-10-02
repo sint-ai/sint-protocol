@@ -117,7 +117,7 @@
         "sourceId": { "type": "string" },
         "condition": { "type": "string" },
         "value": { "type": "boolean" },
-        "sequence": { "type": "integer" },
+        "sequence": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
         "issuedAt": { "type": "number", "description": "ms offset from clock.epoch" },
         "ttlMs": { "oneOf": [{ "type": "number" }, { "const": "unbounded" }] }
       }

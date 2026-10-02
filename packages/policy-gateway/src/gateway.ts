@@ -177,7 +177,9 @@ export interface AutonomySupervisorPlugin {
  *
  * The plugin receives the request + any physical context and returns tighter limits.
  * Effective limit = min(token.constraint, envelope.limit).
- * Failures, unavailable results, and async timeouts deny; static limits are not an implicit fallback.
+ * Plugin errors deny and are recorded. A configured fallback envelope can
+ * bound the action. Explicit fail-open does not widen T2/T3. Static token
+ * limits are not an outage fallback.
  *
  * @example
  * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
@@ -212,9 +214,9 @@ export interface DynamicEnvelopePlugin {
 /**
  * What the gateway does when the dynamic envelope plugin throws.
  *
- * - `fail-open` (default, legacy): discard the plugin and use token limits.
- *   A lost tightening is an effective widening; do not use for T2/T3 physical
- *   actions in production.
+ * - `fail-open`: discard the plugin and use token limits for T0/T1 only.
+ *   T2/T3 remains fail-closed because losing a tightening is an effective
+ *   widening at the physical execution boundary.
  * - `fallback`: apply `fallback` as a tightening override (safe envelope) and
  *   emit `policy.envelope.fallback`. A physical demotion, not an error.
  * - `deny`: deny with `DYNAMIC_ENVELOPE_UNAVAILABLE`. `fallback` mode without
@@ -394,12 +396,15 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    * Optional dynamic envelope plugin (ROSClaw gap mitigation).
    * When provided, called just before physical constraint checking.
    * Returns environment-adaptive limits that tighten (never loosen) the token's
-   * static constraints. Failure denies; static token limits are not an outage fallback.
+   * static constraints. Plugin errors deny. A configured fallback envelope is
+   * the only outage substitute, and fail-open cannot widen T2/T3.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
   /**
    * What to do when `dynamicEnvelope.computeEnvelope()` throws.
-   * Unset means fail-open for this profile; the harden commit denies T2/T3.
+   * Unset denies and records the plugin failure. `fallback` applies the
+   * configured limits. `deny`, a fallback without limits, and `fail-open`
+   * on T2/T3 deny with DYNAMIC_ENVELOPE_UNAVAILABLE.
    */
   readonly dynamicEnvelopeFailurePolicy?: DynamicEnvelopeFailurePolicy;
   /**
@@ -1432,8 +1437,25 @@ export class PolicyGateway {
           }
         }
       } else {
-        const policy = this.config.dynamicEnvelopeFailurePolicy ?? { mode: "fail-open" };
-        if (policy.mode === "deny" || (policy.mode === "fallback" && !policy.fallback)) {
+        const tier = tierAssignment.approvalTier;
+        const highConsequence = tier === "T2_act" || tier === "T3_commit";
+        const configuredPolicy = this.config.dynamicEnvelopeFailurePolicy;
+        if (configuredPolicy?.mode === "fallback" && configuredPolicy.fallback) {
+          envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, configuredPolicy.fallback);
+          envelopeSource = "fallback";
+          envelopeId = "fallback";
+          failures.emit("policy.envelope.fallback", request.agentId, request.tokenId, {
+            mode: "fallback",
+            error: failure,
+            maxVelocityMps: configuredPolicy.fallback.maxVelocityMps,
+            maxForceNewtons: configuredPolicy.fallback.maxForceNewtons,
+          });
+        } else if (
+          configuredPolicy?.mode === "deny"
+          || (configuredPolicy?.mode === "fallback" && !configuredPolicy.fallback)
+          || (configuredPolicy?.mode === "fail-open" && highConsequence)
+          || (configuredPolicy === undefined && highConsequence)
+        ) {
           failures.emit("policy.envelope.fallback", request.agentId, request.tokenId, {
             mode: "deny",
             error: failure,
@@ -1444,19 +1466,18 @@ export class PolicyGateway {
             "DYNAMIC_ENVELOPE_UNAVAILABLE",
             `Dynamic envelope unavailable (${failure ?? "unknown error"}); fail-closed`,
           );
+        } else if (configuredPolicy?.mode === "fail-open") {
+          // Explicit fail-open is limited to T0/T1.
+        } else {
+          const envelopeFailure = await failures.check(
+            "dynamicEnvelope.compute",
+            async () => {
+              throw new Error(failure ?? "dynamic envelope unavailable");
+            },
+            () => undefined,
+          );
+          if (envelopeFailure) return envelopeFailure;
         }
-        if (policy.mode === "fallback" && policy.fallback) {
-          envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, policy.fallback);
-          envelopeSource = "fallback";
-          envelopeId = "fallback";
-          failures.emit("policy.envelope.fallback", request.agentId, request.tokenId, {
-            mode: "fallback",
-            error: failure,
-            maxVelocityMps: policy.fallback.maxVelocityMps,
-            maxForceNewtons: policy.fallback.maxForceNewtons,
-          });
-        }
-        // fail-open: plugin discarded, token limits apply (legacy behaviour)
       }
 
     }

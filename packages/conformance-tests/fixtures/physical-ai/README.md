@@ -60,6 +60,11 @@ or unverifiable evidence does not; losing verification demotes the physical
 envelope; replay across restart is explicit; and the authorization is bound to
 the exact evidence it relied on.
 
+The 25 v0.1 vectors remain stable for the first independent outcome report.
+Additional findings from DriftCore's follow-up review are tracked as v0.2
+candidates in the profile rather than silently changing cases already under
+test.
+
 The profile text and SINT mapping live in
 `docs/specs/physical-envelope-attestation-profile-v0.1.md`.
 

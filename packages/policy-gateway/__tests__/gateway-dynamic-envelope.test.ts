@@ -13,8 +13,9 @@
  * - Obstacle nearby → envelope caps velocity below token limit → deny
  * - Velocity within token limit AND within envelope → allow
  * - Token limit tighter than envelope → token limit wins (envelope is a no-op)
- * - Plugin error → fail-open (token limit used, request proceeds)
- * - Plugin error + deny mode → fail-closed
+ * - Plugin error with no failure policy → deny and record pluginFailures
+ * - Configured fallback envelope bounds the action
+ * - T2/T3 stays denied when the policy is unset or fail-open
  * - Envelope emits "policy.envelope.applied" event when reason provided
  * - Force envelope tightening → deny when force exceeds envelope but not token
  * - maxVelocityMps: 0 envelope → any nonzero velocity is denied
@@ -365,11 +366,40 @@ describe("DynamicEnvelopeFailurePolicy", () => {
     expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
   });
 
-  it("default (fail-open) is unchanged", async () => {
+  it("default denies instead of falling open to the token limit", async () => {
     const token = makeToken({ maxVelocityMps: 2.0 });
     const gw = new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: broken });
     const decision = await gw.intercept(makeRequest(token, 1.9));
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "dynamicEnvelope.compute", policy: "deny" }));
+  });
+
+  it("T2 physical execution defaults to deny when the envelope is unavailable", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0, resource: "ros2:///cmd_vel" });
+    const gw = new PolicyGateway({ resolveToken: () => token, dynamicEnvelope: broken });
+    const decision = await gw.intercept({
+      ...makeRequest(token, 1.5),
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
+  });
+
+  it("explicit fail-open cannot widen T2 physical execution", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0, resource: "ros2:///cmd_vel" });
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: broken,
+      dynamicEnvelopeFailurePolicy: { mode: "fail-open" },
+    });
+    const decision = await gw.intercept({
+      ...makeRequest(token, 1.5),
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("DYNAMIC_ENVELOPE_UNAVAILABLE");
   });
 });
 
