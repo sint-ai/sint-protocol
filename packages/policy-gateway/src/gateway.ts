@@ -10,7 +10,7 @@
  */
 
 import {
-  type ApprovalTier,
+  ApprovalTier,
   type PolicyDecision,
   type RateLimitStore,
   type SintCapabilityToken,
@@ -298,10 +298,17 @@ export interface PolicyGatewayConfig {
    * Optional async hardware safety permit resolver (Phase 9.3).
    * Resolves hardware safety state from an external source (OPC-UA, PLC REST API,
    * MQTT) before the built-in hardware safety handshake check.
-   * Plugin wins only if no hardwareSafety context is already present in the request.
-   * Fail-open: plugin errors do not block requests.
+   * Plugin result overrides any request-supplied hardwareSafety when configured.
+   * On timeout or throw for T2/T3: deny with HARDWARE_PERMIT_UNAVAILABLE. Otherwise fail-open.
    */
   readonly safetyPermit?: SafetyPermitPlugin | undefined;
+  /**
+   * Timeout in milliseconds for safetyPermit plugin resolution.
+   * When exceeded, the request is denied with HARDWARE_PERMIT_UNAVAILABLE for T2/T3,
+   * and handled as plugin error (fail-open) for T0/T1.
+   * Default: 2000 ms.
+   */
+  readonly safetyPermitTimeoutMs?: number | undefined;
   /**
    * Optional argument injection detector (ASI05).
    * Recursively scans request.params for shell metacharacters, path traversal,
@@ -865,9 +872,14 @@ export class PolicyGateway {
     // 5f-pre. SafetyPermitPlugin — resolve external hardware safety state before built-in check
     let currentRequest = request; // mutable local for SafetyPermitPlugin merge
     if (this.config.safetyPermit) {
+      const timeoutMs = this.config.safetyPermitTimeoutMs ?? 2000;
       try {
-        const permitResult = await this.config.safetyPermit.resolvePermit(currentRequest);
-        if (permitResult && !currentRequest.executionContext?.hardwareSafety) {
+        const permitResult = await Promise.race([
+          this.config.safetyPermit.resolvePermit(currentRequest),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("safetyPermit timeout")), timeoutMs)),
+        ]);
+        if (permitResult) {
+          // Plugin result overrides any request-supplied hardwareSafety
           currentRequest = {
             ...currentRequest,
             executionContext: {
@@ -882,9 +894,17 @@ export class PolicyGateway {
             },
           };
         }
-      } catch {
-        // Fail-open: plugin error doesn't block the request
-        // The built-in evaluateHardwareSafetyHandshake() runs with original request context
+      } catch (err) {
+        // On timeout or plugin error for T2/T3: deny fail-closed
+        if (tierAssignment.approvalTier === ApprovalTier.T2_ACT || tierAssignment.approvalTier === ApprovalTier.T3_COMMIT) {
+          const msg = err instanceof Error ? err.message : "Hardware permit unavailable";
+          this.emitEvent("safety.hardware.permit.denied", request.agentId, request.tokenId, {
+            reason: msg,
+            deploymentProfile: request.executionContext?.deploymentProfile,
+          });
+          return this.deny(requestId, timestamp, "HARDWARE_PERMIT_UNAVAILABLE", `Safety permit resolver failed or timed out: ${msg}`);
+        }
+        // For T0/T1: fail-open, continue with original request context
       }
     }
 
