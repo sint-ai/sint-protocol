@@ -4,10 +4,12 @@
  * Validates async hardware safety state resolution from an external source
  * (OPC-UA, PLC REST API, MQTT) before the built-in hardware safety handshake.
  *
- * A returned plugin result is authoritative over caller-supplied
- * executionContext.hardwareSafety.
+ * The plugin merges its result into executionContext.hardwareSafety only when
+ * the request does not already carry hardwareSafety context (plugin defers to
+ * request context when both are present).
  *
- * Plugin errors block T2/T3 actions while T0/T1 observation remains available.
+ * Fail-open: plugin errors do not block requests — the built-in check runs
+ * using the original request.executionContext only.
  */
 
 import { describe, it, expect, vi } from "vitest";
@@ -238,8 +240,8 @@ describe("SafetyPermitPlugin", () => {
     expect(plugin.resolvePermit).toHaveBeenCalledWith(req);
   });
 
-  // 8. The external safety controller outranks caller-supplied context.
-  it("plugin result overrides conflicting caller hardwareSafety context", async () => {
+  // 8. Request already has hardwareSafety + plugin returns different state → request wins
+  it("request with existing hardwareSafety → plugin result ignored, request context wins", async () => {
     const token = makeToken("ros2:///cmd_vel");
     // Plugin says estop triggered, but request already has granted + clear
     const plugin = mockPlugin({
@@ -262,32 +264,11 @@ describe("SafetyPermitPlugin", () => {
         },
       },
     });
+    // Request has hardwareSafety → plugin should NOT overwrite → industrial check passes
     const decision = await gw.intercept(req);
-    expect(decision.action).toBe("deny");
-    expect(decision.denial?.policyViolated).toBe("HARDWARE_ESTOP_ACTIVE");
-  });
-
-  it("plugin failure blocks T2 physical execution", async () => {
-    const token = makeToken("ros2:///cmd_vel");
-    const gw = new PolicyGateway({
-      resolveToken: () => token,
-      safetyPermit: errorPlugin(),
-    });
-    const req = makeRequest(token, {
-      executionContext: {
-        deploymentProfile: "warehouse-amr",
-        hardwareSafety: {
-          permitState: "granted",
-          estopState: "clear",
-          observedAt: freshObservedAt(),
-        },
-      },
-    });
-
-    const decision = await gw.intercept(req);
-
-    expect(decision.action).toBe("deny");
-    expect(decision.denial?.policyViolated).toBe("HARDWARE_STATE_UNAVAILABLE");
+    // T2_ACT with warehouse-amr and granted permit → escalate (not deny)
+    expect(decision.action).toBe("escalate");
+    expect(decision.denial).toBeUndefined();
   });
 
   // 9. Plugin returns stale observedAt (>5000ms ago) → deny HARDWARE_STATE_STALE

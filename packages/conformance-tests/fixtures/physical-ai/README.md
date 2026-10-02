@@ -1,11 +1,5 @@
 # Physical AI Runtime Safety Fixtures
 
-The directory also contains the protocol-neutral
-`envelope-attestation-fixtures.v0.1.json` pack. It covers authenticated
-operating-condition evidence, safe fallback, restart replay, source conflict,
-and exact authorization binding. See
-[`docs/guides/physical-envelope-attestation-fixtures.md`](../../../../docs/guides/physical-envelope-attestation-fixtures.md).
-
 This fixture pack defines protocol-neutral checks for the boundary between AI
 agents and physical systems.
 

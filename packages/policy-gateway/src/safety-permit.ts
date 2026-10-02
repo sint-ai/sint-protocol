@@ -7,12 +7,11 @@
  *
  * When provided via PolicyGatewayConfig.safetyPermit, the gateway calls
  * resolvePermit() before evaluateHardwareSafetyHandshake(). The result is
- * merged into request.executionContext.hardwareSafety. A returned plugin result
- * is authoritative over caller-supplied state because the external safety
- * controller, not the action requester, owns the permit.
+ * merged into request.executionContext.hardwareSafety (plugin wins only if
+ * no hardwareSafety context already present in the request).
  *
- * A resolver failure blocks T2/T3 execution. T0/T1 requests retain their
- * existing behavior so a hardware-state outage does not suppress observation.
+ * Fail-open: if resolvePermit() throws, the error is logged and the built-in
+ * hardware safety check proceeds using request.executionContext only.
  *
  * @module @sint/gate-policy-gateway/safety-permit
  */
@@ -39,8 +38,7 @@ export interface SafetyPermitPlugin {
   /**
    * Resolve current hardware safety permit state for a request.
    * Return undefined to skip (fall through to request.executionContext.hardwareSafety).
-   * Throw when the external verifier is unavailable. The gateway blocks T2/T3
-   * execution and allows lower-tier observation to continue.
+   * Throw to trigger fail-open behavior.
    */
   resolvePermit(request: SintRequest): Promise<SafetyPermitResult | undefined>;
 }
