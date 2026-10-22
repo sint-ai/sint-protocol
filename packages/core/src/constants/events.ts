@@ -14,6 +14,7 @@ export const SINT_EVENTS = {
   // Request/Response
   REQUEST_RECEIVED: "request.received",
   POLICY_EVALUATED: "policy.evaluated",
+  POLICY_PLUGIN_FAILED: "policy.plugin.failed",
   APPROVAL_REQUESTED: "approval.requested",
   APPROVAL_GRANTED: "approval.granted",
   APPROVAL_DENIED: "approval.denied",

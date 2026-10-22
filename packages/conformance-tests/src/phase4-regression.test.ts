@@ -151,14 +151,15 @@ describe("Phase 4 Invariant: Rate limiting", () => {
     expect(allowedB.action).not.toBe("deny");
   });
 
-  it("INVARIANT: absent rateLimitStore means no rate limiting (fail-open)", async () => {
+  it("INVARIANT: absent rateLimitStore cannot bypass a signed rate limit", async () => {
     const noRlGateway = new PolicyGateway({ resolveToken: (id) => tokenStore.get(id) });
     const token = issueToken(1, 60_000);
     tokenStore.set(token.tokenId, token);
     for (let i = 0; i < 10; i++) {
       const d = await noRlGateway.intercept(makeRequest({ tokenId: token.tokenId, agentId: agent.publicKey,
         requestId: `01905f7c-4e8a-7b3d-9a1e-${String(i).padStart(12,"0")}` as any }));
-      expect(d.action).not.toBe("deny");
+      expect(d.action).toBe("deny");
+      expect(d.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "rateLimit.increment", kind: "missing_dependency" }));
     }
   });
 });

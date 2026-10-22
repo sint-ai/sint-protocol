@@ -6,7 +6,8 @@
  * PolicyGateway constructs before calling increment().
  *
  * Suitable for single-node deployments and tests.
- * For distributed deployments use RedisRateLimitStore (see redis-cache.ts).
+ * Distributed deployments need an injected atomic shared-counter implementation;
+ * this package does not export a RedisRateLimitStore.
  *
  * @module @sint/persistence/in-memory-rate-limit-store
  */

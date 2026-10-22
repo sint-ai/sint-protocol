@@ -27,8 +27,8 @@ export type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
  * Implementations can use in-memory state, Redis, or a database.
  * Called by PolicyGateway at the start and end of every intercept().
  *
- * Fail-open: if the plugin throws, PolicyGateway treats the circuit as CLOSED
- * and proceeds normally.
+ * Failures deny the current gateway request and produce correlated diagnostics.
+ * CLOSED requires a successful state read; errors never reset a manual stop.
  */
 export interface CircuitBreakerPlugin {
   /** Get the current circuit state for an agent. */

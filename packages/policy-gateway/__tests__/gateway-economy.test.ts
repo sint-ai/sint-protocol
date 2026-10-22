@@ -233,7 +233,7 @@ describe("PolicyGateway — Economy Plugin", () => {
 
   // ── Fail-open ──
 
-  it("preIntercept error → fail-open, normal gateway flow continues", async () => {
+  it("preIntercept error → fail-closed before authorization", async () => {
     const gateway = makeGateway({
       preIntercept: async () => {
         throw new Error("Economy service unreachable");
@@ -246,12 +246,12 @@ describe("PolicyGateway — Economy Plugin", () => {
       makeRequest({ agentId: agent.publicKey, tokenId: token.tokenId }),
     );
 
-    // Should still allow — fail-open
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "economy.preIntercept", policy: "deny" }));
     expect(decision.assignedTier).toBe(ApprovalTier.T0_OBSERVE);
   });
 
-  it("postIntercept error → fail-open, decision still returned", async () => {
+  it("postIntercept error → fail-closed before dispatch", async () => {
     const gateway = makeGateway({
       preIntercept: async () => undefined,
       postIntercept: async () => {
@@ -264,8 +264,8 @@ describe("PolicyGateway — Economy Plugin", () => {
       makeRequest({ agentId: agent.publicKey, tokenId: token.tokenId }),
     );
 
-    // Decision should still be allow despite billing failure
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "economy.postIntercept", policy: "deny" }));
   });
 
   // ── Economy deny emits ledger event ──

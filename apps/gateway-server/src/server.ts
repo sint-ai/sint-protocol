@@ -1,3 +1,4 @@
+import { createPersistedLedgerEmitter } from "./ledger-emitter.js";
 /**
  * SINT Gateway Server — Server factory.
  *
@@ -34,7 +35,7 @@ import {
   RedisCache,
   RedisRevocationBus,
 } from "@pshkv/persistence";
-import type { SintCapabilityToken, SintEventType } from "@pshkv/core";
+import type { SintCapabilityToken } from "@pshkv/core";
 import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
@@ -107,18 +108,7 @@ export function createContext(): ServerContext {
     resolveToken: async (id) => tokenStore.get(id),
     revocationStore,
     csmlEscalation: createDefaultCsmlEscalator(ledger),
-    emitLedgerEvent: (event) => {
-      const written = ledger.append({
-        eventType: event.eventType as SintEventType,
-        agentId: event.agentId,
-        tokenId: event.tokenId,
-        payload: event.payload,
-      });
-      // Also persist to backing store
-      ledgerStore.append(written).catch((err) => {
-        console.error("[SINT] Failed to persist ledger event:", err);
-      });
-    },
+    emitLedgerEvent: createPersistedLedgerEmitter(ledger, ledgerStore),
   });
 
   // Wire revocation bus → local store sync
@@ -240,18 +230,7 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     },
     revocationStore,
     csmlEscalation: createDefaultCsmlEscalator(ledger),
-    emitLedgerEvent: (event) => {
-      const written = ledger.append({
-        eventType: event.eventType as SintEventType,
-        agentId: event.agentId,
-        tokenId: event.tokenId,
-        payload: event.payload,
-      });
-      // Persist to backing store (fire-and-forget for non-blocking operation)
-      ledgerStore.append(written).catch((err) => {
-        console.error("[SINT] Failed to persist ledger event:", err);
-      });
-    },
+    emitLedgerEvent: createPersistedLedgerEmitter(ledger, ledgerStore),
   });
 
   // Wire revocation bus: when any node revokes a token, all nodes update their local store

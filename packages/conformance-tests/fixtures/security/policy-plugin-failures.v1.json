@@ -1,0 +1,235 @@
+{
+  "fixtureId": "policy-plugin-failure-v1",
+  "description": "Faults are injected into real gateway seats. All configured enforcement failures deny; denial causes remain intact.",
+  "faults": [
+    "throw",
+    "reject",
+    "timeout",
+    "error_result",
+    "malformed"
+  ],
+  "seats": [
+    {
+      "seat": "goalHijack.analyze",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "memoryIntegrity.check",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "circuitBreaker.getState",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "rateLimit.increment",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "economy.preIntercept",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "supplyChain.verify",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "csml.evaluateAgent",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "circuitBreaker.trip",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "faults": [
+        "throw",
+        "reject",
+        "timeout",
+        "error_result"
+      ]
+    },
+    {
+      "seat": "safetyPermit.resolve",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "argInjection.analyze",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "dynamicEnvelope.compute",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "circuitBreaker.recordSuccess",
+      "tiers": [
+        0,
+        1
+      ]
+    },
+    {
+      "seat": "circuitBreaker.recordDenial",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "economy.postIntercept",
+      "tiers": [
+        0,
+        1
+      ],
+      "faults": [
+        "throw",
+        "reject",
+        "timeout",
+        "error_result"
+      ]
+    },
+    {
+      "seat": "humanAuthority.evaluate",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "spatialIntegrity.evaluate",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "codeAsPolicy.verify",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "regulatedData.evaluate",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "autonomy.preIntercept",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "spatialCorridor.verify",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "edge.checkCentralEscalation",
+      "tiers": [
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "token.resolve",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "agentTrust.get",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "seat": "verifiableCompute.verify",
+      "tiers": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ]
+}
