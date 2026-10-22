@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { closePool, getPool } from "@pshkv/persistence";
-import { generateKeypair, generateUUIDv7, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
+import { generateKeypair, generateUUIDv7, issueCapabilityToken, validateTokenSignature } from "@pshkv/gate-capability-tokens";
 import { createPersistentContext } from "../src/server.js";
 
 // Separate schema: this integration test never touches another test's ledger.
@@ -29,6 +29,9 @@ describe.skipIf(!databaseUrl)("PostgreSQL gateway restart", () => {
     expect(token.ok).toBe(true);
     if (!token.ok) return;
     await first.tokenStore.store(token.value);
+    const roundTrip = await first.tokenStore.get(token.value.tokenId);
+    expect(roundTrip).toEqual(token.value);
+    expect(validateTokenSignature(roundTrip!)).toEqual({ ok: true, value: true });
     const request = { requestId: generateUUIDv7(), timestamp: new Date().toISOString(), agentId: key.publicKey, tokenId: token.value.tokenId, resource: "mcp://filesystem/readFile", action: "call", params: {} };
     expect((await first.gateway.intercept(request)).action).toBe("allow");
     const head = await first.ledgerStore.getHead();
