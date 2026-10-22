@@ -76,3 +76,9 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+      # Run outside Turbo's filtered environment so DATABASE_URL reaches Vitest.
+      - name: PostgreSQL Ledger Restart Gate
+        run: |
+          test -n "$DATABASE_URL"
+          pnpm --filter @pshkv/gateway-server exec vitest run __tests__/ledger-restart-postgres.test.ts
