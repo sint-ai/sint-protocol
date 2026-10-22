@@ -63,6 +63,25 @@ Before tagging a production release:
 
 ## Migration And Rollback Notes
 
+- Token policies `autonomyPolicy`, `humanAuthorityRequirements`, and
+  `regulatedDataPolicy` are signed data. The PostgreSQL adapter preserves them
+  as JSONB in both insert/update and read-by-ID/read-by-subject paths.
+  `ensurePgSchema` adds these columns for existing installations; deployments
+  applying SQL migrations directly should run
+  `packages/persistence/migrations/007_token_policy_fields.sql` before the new
+  adapter serves requests. Both upgrade paths are additive and idempotent.
+- Missing policy columns on an older stored token cannot be reconstructed from
+  its signature. Recover the original signed token from a trusted source or
+  reissue through the authorized issuer; do not infer or backfill policy values.
+- Keep the new columns and their data during an application rollback. Older
+  adapters that omit these signed fields can reject affected tokens with
+  `INVALID_SIGNATURE`. Test the target version against the actual token shapes
+  before shifting traffic; a plain token round trip is insufficient.
+- CI's required PostgreSQL persistence gate checks legacy-schema upgrades,
+  repeated migration/bootstrap, all three policy combinations, all optional
+  signed metadata, SQL tampering, signed replacements, and restart continuity.
+  It runs outside Turbo's filtered environment so a missing database connection
+  cannot silently turn this release gate into skipped tests.
 - Database schema bootstrap is idempotent through `ensurePgSchema`.
 - Apply migrations before shifting traffic to a new gateway image.
 - Do not roll back to an image that cannot read the current signed token shape.

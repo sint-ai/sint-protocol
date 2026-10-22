@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "policyFields": {
+    "autonomyPolicy": {
+      "requiredState": "stable",
+      "guardProfileId": "guard://persistence-test",
+      "maxMetacognitiveRecoveryMs": 250,
+      "maxAssistedRecoveryMs": 1000,
+      "assistanceQuorum": { "required": 2, "verifierTypes": ["human", "policy"] },
+      "regulatedController": "human_operator",
+      "failClosed": true
+    },
+    "humanAuthorityRequirements": {
+      "requiredAssuranceLevel": "delegation",
+      "allowedProofProviders": ["verifier://persistence-test"],
+      "maxProofAgeMs": 60000,
+      "requiredBinding": { "applicationId": "persistence-test", "siteId": "site-1", "resource": "mcp://filesystem/readFile", "action": "call" },
+      "allowedDelegationDepth": 0,
+      "requireUniquePrincipal": true
+    },
+    "regulatedDataPolicy": {
+      "allowedDataClasses": ["PHI"],
+      "allowedPurposes": ["TREAT"],
+      "approvedProcessors": ["processor-1"],
+      "approvedRegions": ["region-1"],
+      "approvedModels": ["model-1"],
+      "allowedContextFields": ["symptoms"],
+      "allowFallback": false
+    }
+  },
+  "otherOptionalFields": {
+    "modelConstraints": { "allowedModelIds": ["model-1"], "maxModelVersion": "1", "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "attestationRequirements": { "minAttestationGrade": 0, "allowedTeeBackends": ["none"], "requireForTiers": ["T3_commit"] },
+    "verifiableComputeRequirements": { "requireForTiers": ["T3_commit"], "allowedProofTypes": ["snark"], "verifierRefs": ["verifier://compute"], "maxProofAgeMs": 5000, "requirePublicInputsHash": false },
+    "executionEnvelope": { "corridorId": "corridor-1", "missionType": "inspection", "maxDeviationMeters": 0, "maxHeadingDeviationDeg": 0, "maxVelocityMps": 0.5, "maxForceNewtons": 2, "requiresSpatialProof": false, "frameId": "map" },
+    "behavioralConstraints": { "allowedPatterns": ["^read$"], "deniedPatterns": ["delete"], "maxPayloadBytes": 1024 },
+    "passportId": "aps:persistence-test",
+    "delegationDepth": 0,
+    "revocationEndpoint": "https://example.invalid/revoke",
+    "cryptoProfile": "classic-ed25519",
+    "postQuantumSignatures": [{ "algorithm": "ML-DSA-65", "publicKeyRef": "pq://metadata-only", "signature": "metadata-only-not-pq-verification" }]
+  },
+  "combinations": [
+    [],
+    ["autonomyPolicy"],
+    ["humanAuthorityRequirements"],
+    ["regulatedDataPolicy"],
+    ["autonomyPolicy", "humanAuthorityRequirements"],
+    ["autonomyPolicy", "regulatedDataPolicy"],
+    ["humanAuthorityRequirements", "regulatedDataPolicy"],
+    ["autonomyPolicy", "humanAuthorityRequirements", "regulatedDataPolicy"]
+  ]
+}

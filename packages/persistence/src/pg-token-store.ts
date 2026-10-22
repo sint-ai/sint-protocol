@@ -31,6 +31,9 @@ function rowToToken(row: any): SintCapabilityToken {
     revocationEndpoint: row.revocation_endpoint ?? undefined,
     cryptoProfile: row.crypto_profile ?? undefined,
     postQuantumSignatures: row.post_quantum_signatures ?? undefined,
+    autonomyPolicy: row.autonomy_policy ?? undefined,
+    humanAuthorityRequirements: row.human_authority_requirements ?? undefined,
+    regulatedDataPolicy: row.regulated_data_policy ?? undefined,
     signature: row.signature,
   };
 }
@@ -45,8 +48,9 @@ export class PgTokenStore implements TokenStore {
          model_constraints, attestation_requirements, verifiable_compute_requirements,
          execution_envelope, behavioral_constraints, passport_id, delegation_depth,
          delegation_chain, issued_at, expires_at, revocable, revocation_endpoint,
-         crypto_profile, post_quantum_signatures, signature)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+         crypto_profile, post_quantum_signatures, autonomy_policy,
+         human_authority_requirements, regulated_data_policy, signature)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
        ON CONFLICT (token_id) DO UPDATE SET
          issuer = EXCLUDED.issuer,
          subject = EXCLUDED.subject,
@@ -67,6 +71,9 @@ export class PgTokenStore implements TokenStore {
          revocation_endpoint = EXCLUDED.revocation_endpoint,
          crypto_profile = EXCLUDED.crypto_profile,
          post_quantum_signatures = EXCLUDED.post_quantum_signatures,
+         autonomy_policy = EXCLUDED.autonomy_policy,
+         human_authority_requirements = EXCLUDED.human_authority_requirements,
+         regulated_data_policy = EXCLUDED.regulated_data_policy,
          signature = EXCLUDED.signature`,
       [
         token.tokenId,
@@ -89,6 +96,9 @@ export class PgTokenStore implements TokenStore {
         token.revocationEndpoint,
         token.cryptoProfile,
         JSON.stringify(token.postQuantumSignatures),
+        JSON.stringify(token.autonomyPolicy),
+        JSON.stringify(token.humanAuthorityRequirements),
+        JSON.stringify(token.regulatedDataPolicy),
         token.signature,
       ],
     );

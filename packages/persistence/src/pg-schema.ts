@@ -61,6 +61,9 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
       revocation_endpoint TEXT,
       crypto_profile TEXT,
       post_quantum_signatures JSONB,
+      autonomy_policy JSONB,
+      human_authority_requirements JSONB,
+      regulated_data_policy JSONB,
       signature TEXT NOT NULL
     );
   `);
@@ -76,7 +79,10 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
       ADD COLUMN IF NOT EXISTS delegation_depth INTEGER,
       ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT,
       ADD COLUMN IF NOT EXISTS crypto_profile TEXT,
-      ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB;
+      ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB,
+      ADD COLUMN IF NOT EXISTS autonomy_policy JSONB,
+      ADD COLUMN IF NOT EXISTS human_authority_requirements JSONB,
+      ADD COLUMN IF NOT EXISTS regulated_data_policy JSONB;
   `);
 
   await pool.query(`
