@@ -10,11 +10,16 @@
       "request": {
         "resource": "mcp://filesystem/writeFile",
         "action": "call",
-        "params": { "path": "/etc/passwd", "content": "evil" }
+        "params": {
+          "path": "/etc/passwd",
+          "content": "evil"
+        }
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"]
+        "actions": [
+          "call"
+        ]
       },
       "expected": {
         "decisionAction": "deny",
@@ -35,7 +40,9 @@
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"]
+        "actions": [
+          "call"
+        ]
       },
       "expected": {
         "decisionAction": "allow",
@@ -50,11 +57,15 @@
       "request": {
         "resource": "mcp://shell/bash",
         "action": "call",
-        "params": { "cmd": "ls /tmp" }
+        "params": {
+          "cmd": "ls /tmp"
+        }
       },
       "token": {
         "resource": "mcp://shell/*",
-        "actions": ["call"]
+        "actions": [
+          "call"
+        ]
       },
       "expected": {
         "decisionAction": "escalate",
@@ -68,11 +79,15 @@
       "request": {
         "resource": "mcp://exec/run",
         "action": "call",
-        "params": { "command": "id" }
+        "params": {
+          "command": "id"
+        }
       },
       "token": {
         "resource": "mcp://filesystem/*",
-        "actions": ["call"]
+        "actions": [
+          "call"
+        ]
       },
       "expected": {
         "decisionAction": "deny",
@@ -86,12 +101,21 @@
       "request": {
         "resource": "mcp://filesystem/readFile",
         "action": "call",
-        "params": { "path": "/tmp/data.csv" }
+        "params": {
+          "path": "/tmp/data.csv"
+        }
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"],
-        "constraints": { "rateLimit": { "maxCalls": 10, "windowMs": 60000 } }
+        "actions": [
+          "call"
+        ],
+        "constraints": {
+          "rateLimit": {
+            "maxCalls": 10,
+            "windowMs": 60000
+          }
+        }
       },
       "scenario": "call_11_times",
       "expected": {
@@ -107,8 +131,14 @@
       "delegationDepth": 4,
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"],
-        "delegationChain": { "parentTokenId": "prev", "depth": 3, "attenuated": true }
+        "actions": [
+          "call"
+        ],
+        "delegationChain": {
+          "parentTokenId": "prev",
+          "depth": 3,
+          "attenuated": true
+        }
       },
       "expected": {
         "delegationAllowed": false,
@@ -126,7 +156,9 @@
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"],
+        "actions": [
+          "call"
+        ],
         "expiresAt": "2025-01-01T00:00:00.000000Z"
       },
       "expected": {
@@ -145,7 +177,9 @@
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"],
+        "actions": [
+          "call"
+        ],
         "revoked": true
       },
       "expected": {
@@ -158,8 +192,16 @@
       "attack": "ASI09",
       "description": "Sequential writeFile then shell/execute detected as privilege escalation combo",
       "eventSequence": [
-        { "resource": "mcp://filesystem/writeFile", "action": "call", "decision": "allow" },
-        { "resource": "mcp://shell/execute", "action": "call", "decision": "allow" }
+        {
+          "resource": "mcp://filesystem/writeFile",
+          "action": "call",
+          "decision": "allow"
+        },
+        {
+          "resource": "mcp://shell/execute",
+          "action": "call",
+          "decision": "escalate"
+        }
       ],
       "expected": {
         "forbiddenComboDetected": true,
@@ -173,7 +215,9 @@
       "request": {
         "resource": "mcp://filesystem/readFile",
         "action": "call",
-        "params": { "path": "/data/report.csv" },
+        "params": {
+          "path": "/data/report.csv"
+        },
         "executionContext": {
           "model": {
             "modelId": "safe-model-v1",
@@ -183,10 +227,14 @@
       },
       "token": {
         "resource": "mcp://filesystem/readFile",
-        "actions": ["call"],
+        "actions": [
+          "call"
+        ],
         "constraints": {
           "modelConstraints": {
-            "allowedModelIds": ["safe-model-v1"],
+            "allowedModelIds": [
+              "safe-model-v1"
+            ],
             "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
           }
         }
@@ -195,6 +243,203 @@
         "decisionAction": "deny",
         "policyViolated": "CONSTRAINT_VIOLATION",
         "severity": "high"
+      }
+    },
+    {
+      "name": "delete-tool-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://filesystem/deleteFile",
+        "action": "call",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T2_act"
+      }
+    },
+    {
+      "name": "database-delete-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://database/delete",
+        "action": "call",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T2_act"
+      }
+    },
+    {
+      "name": "shell-server-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://terminal/run_command",
+        "action": "call",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "shell-keyword-tool-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://github/execute_workflow",
+        "action": "call",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "irreversible-financial-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://conway/domain_register",
+        "action": "call",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "mapped-exec-run-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://conway/sandbox_exec",
+        "action": "exec.run",
+        "params": {}
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "destructive-annotation-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://files/purge",
+        "action": "call",
+        "params": {},
+        "mcpAnnotations": {
+          "destructiveHint": true,
+          "readOnlyHint": true
+        }
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "credential-annotation-classification",
+      "attack": "ASI03",
+      "description": "MCP consequences must be enforced by the gateway independently of bridge hints.",
+      "request": {
+        "resource": "mcp://credential/read",
+        "action": "call",
+        "params": {},
+        "mcpAnnotations": {
+          "destructiveHint": true,
+          "readOnlyHint": true
+        }
+      },
+      "token": {
+        "resource": "mcp://*",
+        "actions": [
+          "call",
+          "exec.run"
+        ]
+      },
+      "expected": {
+        "decisionAction": "escalate",
+        "minTier": "T3_commit"
+      }
+    },
+    {
+      "name": "forbidden-combo-write-exec-run",
+      "attack": "ASI09",
+      "description": "Real MCP tool identities complete a write-execute sequence.",
+      "eventSequence": [
+        {
+          "resource": "mcp://filesystem/writeFile",
+          "action": "call",
+          "decision": "allow"
+        },
+        {
+          "resource": "mcp://conway/sandbox_exec",
+          "action": "exec.run",
+          "decision": "escalate"
+        }
+      ],
+      "expected": {
+        "forbiddenComboDetected": true,
+        "escalationRequired": true
       }
     }
   ]

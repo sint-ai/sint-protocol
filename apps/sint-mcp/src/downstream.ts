@@ -10,12 +10,14 @@
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { MCPToolAnnotations } from "@pshkv/bridge-mcp";
 import type { DownstreamServerConfig } from "./config.js";
 
 /** Tool schema from a downstream MCP server. */
 export interface DownstreamTool {
   /** Original tool name on the downstream server. */
   readonly name: string;
+  readonly annotations?: MCPToolAnnotations;
   /** Tool description. */
   readonly description?: string;
   /** JSON Schema for the tool's input. */
@@ -112,6 +114,7 @@ export class DownstreamManager {
       const toolsResult = await client.listTools();
       entry.tools = (toolsResult.tools ?? []).map((t) => ({
         name: t.name,
+        annotations: t.annotations,
         description: t.description,
         inputSchema: t.inputSchema as Record<string, unknown>,
       }));

@@ -9,6 +9,7 @@
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "verify": "pnpm run build && pnpm run typecheck && pnpm run test",
     "clean": "turbo run clean",
     "demo": "pnpm --filter @pshkv/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",
     "demo:mission-authority-reference": "node ./examples/mission-authority-reference-slice.mjs",

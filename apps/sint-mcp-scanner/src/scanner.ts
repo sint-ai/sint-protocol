@@ -7,9 +7,8 @@
  * @module @pshkv/mcp-scanner/scanner
  */
 
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier, classifyMcpPolicy } from "@pshkv/core";
 import {
-  getRiskHint,
   isShellExecTool,
   tierFromAnnotations,
 } from "@pshkv/bridge-mcp";
@@ -97,14 +96,14 @@ export function scanTool(
   };
 
   const shellExec = isShellExecTool(syntheticCall);
-  const hint = getRiskHint(syntheticCall);
+  const hint = classifyMcpPolicy(syntheticCall);
   const assignedTier = hint.suggestedTier;
 
   // Build reasoning
   if (annotations) {
     const annotationTier = tierFromAnnotations(annotations);
     if (annotationTier !== undefined) {
-      if (annotations.readOnlyHint) reasons.push("MCP annotation: readOnlyHint=true → read-only tool");
+      if (annotations.readOnlyHint) reasons.push("MCP annotation: readOnlyHint=true (cannot lower policy risk)");
       if (annotations.destructiveHint) reasons.push("MCP annotation: destructiveHint=true → destructive operations");
       if (annotations.openWorldHint) reasons.push("MCP annotation: openWorldHint=true → external system interaction");
     }

@@ -118,7 +118,7 @@ export class MCPInterceptor {
       resource: toResourceUri(toolCall),
       action: toSintAction(toolCall),
       params: toolCall.arguments,
-      recentActions: [...session.recentActions],
+      mcpAnnotations: toolCall.annotations,
     };
 
     // Route through Policy Gateway

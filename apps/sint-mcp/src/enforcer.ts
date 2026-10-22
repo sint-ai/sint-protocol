@@ -18,17 +18,6 @@ import type { ParsedNamespace } from "./aggregator.js";
 import type { DownstreamManager } from "./downstream.js";
 import type { TrajectoryRecorder } from "./trajectory.js";
 
-/**
- * Ordered tier values for comparison.
- * Lower index = lower risk.
- */
-const TIER_ORDER: readonly ApprovalTier[] = [
-  ApprovalTier.T0_OBSERVE,
-  ApprovalTier.T1_PREPARE,
-  ApprovalTier.T2_ACT,
-  ApprovalTier.T3_COMMIT,
-];
-
 /** Map config tier strings to ApprovalTier enum. */
 const TIER_FROM_CONFIG: Record<string, ApprovalTier> = {
   T0_observe: ApprovalTier.T0_OBSERVE,
@@ -36,10 +25,6 @@ const TIER_FROM_CONFIG: Record<string, ApprovalTier> = {
   T2_act: ApprovalTier.T2_ACT,
   T3_commit: ApprovalTier.T3_COMMIT,
 };
-
-function tierIndex(tier: ApprovalTier): number {
-  return TIER_ORDER.indexOf(tier);
-}
 
 /** Result of enforcing policy on a tool call. */
 export interface EnforcementResult {
@@ -71,7 +56,6 @@ export interface EnforcementResult {
  * ```
  */
 export class PolicyEnforcer {
-  private readonly recentActions: string[] = [];
 
   constructor(
     private readonly gateway: PolicyGateway,
@@ -108,6 +92,11 @@ export class PolicyEnforcer {
       parentEventId,
     });
 
+    // Use discovered downstream metadata, never annotations supplied in arguments.
+    const definition = this.downstream.getAllTools().find(
+      ([server, candidate]) => server === parsed.serverName && candidate.name === parsed.toolName,
+    )?.[1];
+
     // Build MCP tool call
     const toolCall: MCPToolCall = {
       callId: generateUUIDv7(),
@@ -115,7 +104,11 @@ export class PolicyEnforcer {
       toolName: parsed.toolName,
       arguments: args,
       timestamp: nowISO8601(),
+      annotations: definition?.annotations,
     };
+
+    // Additional server restrictions are evaluated at the gateway choke point.
+    const serverPolicy = this.downstream.getServerConfig(parsed.serverName)?.policy;
 
     // Map to SintRequest
     const sintRequest: SintRequest = {
@@ -126,7 +119,11 @@ export class PolicyEnforcer {
       resource: toResourceUri(toolCall),
       action: toSintAction(toolCall),
       params: args,
-      recentActions: [...this.recentActions],
+      mcpAnnotations: toolCall.annotations,
+      mcpPolicy: serverPolicy ? {
+        requireApproval: serverPolicy.requireApproval,
+        maxTier: serverPolicy.maxTier ? TIER_FROM_CONFIG[serverPolicy.maxTier] : undefined,
+      } : undefined,
     };
 
     // Route through PolicyGateway
@@ -136,51 +133,6 @@ export class PolicyEnforcer {
       tool,
       toolCallEventId,
     );
-
-    // Record action for combo detection
-    this.recentActions.push(`${parsed.serverName}.${parsed.toolName}`);
-    if (this.recentActions.length > 20) {
-      this.recentActions.shift();
-    }
-
-    // ── Per-server policy enforcement ──
-    // Apply maxTier ceiling and requireApproval override from server config.
-    const serverConfig = this.downstream.getServerConfig(parsed.serverName);
-    const serverPolicy = serverConfig?.policy;
-
-    // If server has requireApproval=true, force escalation for non-T0 actions
-    if (serverPolicy?.requireApproval && decision.action === "allow") {
-      if (decision.assignedTier !== ApprovalTier.T0_OBSERVE) {
-        return this.handleEscalation(
-          sintRequest,
-          decision,
-          parsed,
-          args,
-          `Server "${parsed.serverName}" requires human approval for all non-observe actions`,
-          toolCallEventId,
-          startedAtMs,
-        );
-      }
-    }
-
-    // If server has maxTier, deny or escalate if the decision's tier exceeds it
-    if (serverPolicy?.maxTier && decision.action === "allow") {
-      const maxTier = TIER_FROM_CONFIG[serverPolicy.maxTier];
-      if (maxTier !== undefined) {
-        const assignedIdx = tierIndex(decision.assignedTier);
-        const maxIdx = tierIndex(maxTier);
-
-        if (assignedIdx > maxIdx) {
-          // Tool's tier exceeds the server's allowed maximum → deny
-          return {
-            allowed: false,
-            decision,
-            denyReason: `Server "${parsed.serverName}" policy restricts to ${serverPolicy.maxTier}. ` +
-              `Tool "${parsed.toolName}" requires ${decision.assignedTier}.`,
-          };
-        }
-      }
-    }
 
     switch (decision.action) {
       case "allow": {
@@ -265,7 +217,7 @@ export class PolicyEnforcer {
   ): Promise<EnforcementResult> {
     const tool = `${parsed.serverName}.${parsed.toolName}`;
     this.trajectory?.recordEscalation(reason, tool, toolCallEventId);
-    const approvalReq = this.approvalQueue.enqueue(sintRequest, decision);
+    const approvalReq = this.approvalQueue.enqueue(sintRequest, decision, decision.escalation?.approvalQuorum);
 
     // Wait for resolution with timeout
     const resolution = await this.waitForResolution(approvalReq.requestId);
