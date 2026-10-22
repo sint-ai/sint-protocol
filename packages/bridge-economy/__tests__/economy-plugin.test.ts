@@ -69,6 +69,15 @@ function makeEscalateDecision(requestId = "req-001"): PolicyDecision {
 
 describe("EconomyPlugin", () => {
   describe("preIntercept", () => {
+    it.each(["budget", "balance", "trust", "pricing"])("denies explicit %s port errors without leaking details", async port => {
+      const fail = vi.fn(async () => ({ ok: false as const, error: new Error("SECRET_PORT_ERROR") }));
+      const overrides = port === "budget" ? { budgetPort: { checkBudget: fail } }
+        : port === "balance" ? { balancePort: { getBalance: fail } }
+        : port === "trust" ? { trustPort: { evaluateTrust: fail } } : { pricingPort: { getPrice: fail } };
+      const result = await makePlugin(overrides as any).preIntercept(makeRequest());
+      expect(result).toMatchObject({ action: "deny", denial: { policyViolated: "ECONOMY_UNAVAILABLE" } });
+      expect(JSON.stringify(result)).not.toContain("SECRET_PORT_ERROR");
+    });
     it("returns undefined (proceed) for a valid request", async () => {
       const plugin = makePlugin();
       const req = makeRequest();
@@ -118,18 +127,17 @@ describe("EconomyPlugin", () => {
       expect(escalation).toBe(ApprovalTier.T3_COMMIT);
     });
 
-    it("fails open on budget port error", async () => {
+    it("denies on budget port error", async () => {
       const badBudget = {
         checkBudget: vi.fn().mockRejectedValue(new Error("connection refused")),
       };
       const plugin = makePlugin({ budgetPort: badBudget as any });
       const req = makeRequest();
       const decision = await plugin.preIntercept(req);
-      // fail-open: returns undefined so gateway proceeds
-      expect(decision).toBeUndefined();
+      expect(decision).toMatchObject({ action: "deny", denial: { policyViolated: "ECONOMY_UNAVAILABLE" } });
     });
 
-    it("fails open on balance port error", async () => {
+    it("denies on balance port error", async () => {
       const badBalance = {
         getBalance: vi.fn().mockRejectedValue(new Error("timeout")),
         withdraw: vi.fn().mockRejectedValue(new Error("timeout")),
@@ -138,17 +146,17 @@ describe("EconomyPlugin", () => {
       const plugin = makePlugin({ balancePort: badBalance as any });
       const req = makeRequest();
       const decision = await plugin.preIntercept(req);
-      expect(decision).toBeUndefined();
+      expect(decision).toMatchObject({ action: "deny", denial: { policyViolated: "ECONOMY_UNAVAILABLE" } });
     });
 
-    it("fails open on trust port error", async () => {
+    it("denies on trust port error", async () => {
       const badTrust = {
         evaluateTrust: vi.fn().mockRejectedValue(new Error("service down")),
       };
       const plugin = makePlugin({ trustPort: badTrust as any });
       const req = makeRequest();
       const decision = await plugin.preIntercept(req);
-      expect(decision).toBeUndefined();
+      expect(decision).toMatchObject({ action: "deny", denial: { policyViolated: "ECONOMY_UNAVAILABLE" } });
     });
   });
 
@@ -199,7 +207,7 @@ describe("EconomyPlugin", () => {
       }
     });
 
-    it("fails open on withdraw error during billing", async () => {
+    it("reports withdraw error during billing", async () => {
       const balance = new InMemoryBalanceAdapter(250);
       const plugin = makePlugin({ balancePort: balance });
       const req = makeRequest();
@@ -209,10 +217,9 @@ describe("EconomyPlugin", () => {
       // Sabotage the withdraw method after preIntercept cached the result
       balance.withdraw = vi.fn().mockRejectedValue(new Error("write timeout"));
 
-      // Should not throw -- fail-open
       await expect(
         plugin.postIntercept(req, makeAllowDecision()),
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual({ ok: false, error: "ECONOMY_BILLING_UNAVAILABLE" });
     });
   });
 

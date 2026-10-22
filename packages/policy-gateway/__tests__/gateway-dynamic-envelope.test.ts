@@ -161,7 +161,7 @@ describe("DynamicEnvelopePlugin", () => {
     expect(decision.denial?.reason).not.toContain("dynamic envelope");
   });
 
-  it("plugin error → fail-open (token limit used, request proceeds)", async () => {
+  it("plugin error → fail-closed without static-limit fallback", async () => {
     const token = makeToken({ maxVelocityMps: 2.0 });
     const brokenEnvelope: DynamicEnvelopePlugin = {
       computeEnvelope: vi.fn().mockRejectedValue(new Error("lidar offline")),
@@ -170,13 +170,13 @@ describe("DynamicEnvelopePlugin", () => {
       resolveToken: () => token,
       dynamicEnvelope: brokenEnvelope,
     });
-    // 1.9 m/s is within token limit — plugin error should not block
     const req = makeRequest(token, 1.9);
     const decision = await gw.intercept(req);
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "dynamicEnvelope.compute", policy: "deny" }));
   });
 
-  it("plugin error → fail-open even when velocity would violate envelope", async () => {
+  it("plugin error → fail-closed even when velocity would violate envelope", async () => {
     const token = makeToken({ maxVelocityMps: 2.0 });
     const brokenEnvelope: DynamicEnvelopePlugin = {
       computeEnvelope: vi.fn().mockRejectedValue(new Error("sensor timeout")),
@@ -185,10 +185,10 @@ describe("DynamicEnvelopePlugin", () => {
       resolveToken: () => token,
       dynamicEnvelope: brokenEnvelope,
     });
-    // 1.5 m/s is within token limit — plugin offline should not block
     const req = makeRequest(token, 1.5);
     const decision = await gw.intercept(req);
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "dynamicEnvelope.compute", policy: "deny" }));
   });
 
   it("envelope emits policy.envelope.applied event with reason", async () => {

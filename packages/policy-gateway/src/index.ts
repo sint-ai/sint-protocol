@@ -95,3 +95,4 @@ export type {
 // commonly imports them from the gateway package.
 export type { SintRequest as PolicyContext, PolicyDecision } from "@pshkv/core";
 export type { TimedComboAction } from "./forbidden-combos.js";
+export type { AdvisoryPluginSeat, PluginFailurePolicy, PluginFailureKind, PluginFailure, PluginFailureOptions } from "./plugin-failures.js";

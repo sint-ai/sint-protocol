@@ -172,7 +172,7 @@ describe("Hardware Safety Phase A — Conformance", () => {
       expect(decision.denial?.policyViolated).toBe("HARDWARE_PERMIT_REQUIRED");
     });
 
-    it("plugin throws → fail-open, T1 action still passes (no hardware context needed)", async () => {
+    it("plugin throws → fail-closed, configured resolver is required at every tier", async () => {
       const safetyPermit: SafetyPermitPlugin = {
         resolvePermit: async (): Promise<SafetyPermitResult> => {
           throw new Error("PLC unreachable");
@@ -195,11 +195,12 @@ describe("Hardware Safety Phase A — Conformance", () => {
         params: { waypoint: "A-01" },
       });
 
-      // T1 action — no hardware safety required, plugin error is fail-open
-      expect(decision.action).not.toBe("deny");
+      // A configured enforcement resolver must answer even for a low tier.
+      expect(decision.action).toBe("deny");
+      expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "safetyPermit.resolve" }));
     });
 
-    it("plugin returns undefined → falls through to request executionContext hardwareSafety", async () => {
+    it("plugin returns undefined → is unavailable rather than trusting caller assertions", async () => {
       const safetyPermit: SafetyPermitPlugin = {
         resolvePermit: async (): Promise<undefined> => undefined,
       };
@@ -230,9 +231,9 @@ describe("Hardware Safety Phase A — Conformance", () => {
         },
       });
 
-      // Plugin is undefined → request context drives decision → permit denied → deny
+      // An unavailable configured resolver cannot fall back to caller assertions. → deny
       expect(decision.action).toBe("deny");
-      expect(decision.denial?.policyViolated).toBe("HARDWARE_PERMIT_REQUIRED");
+      expect(decision.denial?.policyViolated).toBe("POLICY_PLUGIN_UNAVAILABLE");
     });
   });
 

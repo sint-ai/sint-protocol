@@ -250,9 +250,9 @@ describe("SINT Economy Regression Tests", () => {
     expect(decision.denial?.policyViolated).toBe("INSUFFICIENT_BALANCE");
   });
 
-  // ── 7. postIntercept failure → action still allowed (fail-open) ──
+  // ── 7. Real economy adapter billing failures deny dispatch ──
 
-  it("postIntercept billing failure does not revoke the allow decision", async () => {
+  it("postIntercept billing failure revokes the candidate allow decision", async () => {
     // Create a balance adapter that fails on withdraw
     const failingBalance: InMemoryBalanceAdapter = new InMemoryBalanceAdapter(250);
     const originalWithdraw = failingBalance.withdraw.bind(failingBalance);
@@ -283,8 +283,8 @@ describe("SINT Economy Regression Tests", () => {
       makeRequest({ agentId: agent.publicKey, tokenId: token.tokenId }),
     );
 
-    // Should still be "allow" even though billing failed
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "economy.postIntercept", kind: "error_result" }));
   });
 
   // ── 8. Economy plugin absent → Phase 1/2 behavior unchanged ──

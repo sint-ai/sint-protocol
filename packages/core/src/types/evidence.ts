@@ -28,6 +28,8 @@ export type SintEventType =
   // Request/response
   | "request.received"
   | "policy.evaluated"
+  | "policy.plugin.failed"
+  | "policy.decision.corrected"
   | "approval.requested"
   | "approval.granted"
   | "approval.denied"

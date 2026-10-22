@@ -159,7 +159,7 @@ describe("PolicyGateway CSML escalation", () => {
     }
   });
 
-  it("CSML plugin error → fail-open, base tier used", async () => {
+  it("CSML plugin error → fail-closed, failure is recorded", async () => {
     const errorPlugin: CsmlEscalationPlugin = {
       evaluateAgent: vi.fn().mockRejectedValue(new Error("CSML service offline")),
     };
@@ -169,7 +169,8 @@ describe("PolicyGateway CSML escalation", () => {
     });
     // Should not throw, base T0 tier used
     const decision = await gateway.intercept(makeRequest());
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "csml.evaluateAgent", policy: "deny" }));
     expect(decision.assignedTier).toBe(ApprovalTier.T0_OBSERVE);
   });
 

@@ -209,7 +209,7 @@ describe("SafetyPermitPlugin", () => {
   });
 
   // 6. Plugin throws → fail-open, T1 action still allowed
-  it("plugin throws → fail-open, T1 action still allowed", async () => {
+  it("plugin throws → fail-closed even for low-consequence actions", async () => {
     const token = makeT1Token();
     const gw = new PolicyGateway({
       resolveToken: () => token,
@@ -220,11 +220,12 @@ describe("SafetyPermitPlugin", () => {
       action: "subscribe",
     });
     const decision = await gw.intercept(req);
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "safetyPermit.resolve", policy: "deny" }));
   });
 
   // 7. Plugin returns undefined → fall through, T1 action allowed
-  it("plugin returns undefined → fall through, T1 action allowed", async () => {
+  it("plugin returns undefined → configured resolver is unavailable", async () => {
     const token = makeT1Token();
     const plugin = mockPlugin(undefined);
     const gw = new PolicyGateway({
@@ -236,12 +237,13 @@ describe("SafetyPermitPlugin", () => {
       action: "subscribe",
     });
     const decision = await gw.intercept(req);
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "safetyPermit.resolve", policy: "deny" }));
     expect(plugin.resolvePermit).toHaveBeenCalledWith(req);
   });
 
   // 8. Request already has hardwareSafety + plugin returns different state → request wins
-  it("request with existing hardwareSafety → plugin result ignored, request context wins", async () => {
+  it("configured resolver overrides caller-supplied hardwareSafety", async () => {
     const token = makeToken("ros2:///cmd_vel");
     // Plugin says estop triggered, but request already has granted + clear
     const plugin = mockPlugin({
@@ -264,11 +266,11 @@ describe("SafetyPermitPlugin", () => {
         },
       },
     });
-    // Request has hardwareSafety → plugin should NOT overwrite → industrial check passes
+    // A caller cannot override the controller's emergency stop.
     const decision = await gw.intercept(req);
-    // T2_ACT with warehouse-amr and granted permit → escalate (not deny)
-    expect(decision.action).toBe("escalate");
-    expect(decision.denial).toBeUndefined();
+    // The controller reports an active stop, regardless of the caller's grant.
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("HARDWARE_ESTOP_ACTIVE");
   });
 
   // 9. Plugin returns stale observedAt (>5000ms ago) → deny HARDWARE_STATE_STALE
