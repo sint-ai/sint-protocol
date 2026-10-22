@@ -149,3 +149,11 @@ If you want the honest current protocol story in one sentence:
 SINT is moving from a broad reference architecture into a production protocol
 surface with stronger release gates, stronger evidence, and sharper integration
 boundaries for physical AI.
+
+## MCP authorization semantics
+
+`PolicyGateway.intercept()` enforces MCP risk classification for both direct API requests and bridged calls. Shell and execution tools require T3 approval; known destructive mutations require at least T2. Resource rules and tool semantics combine by taking the higher tier. MCP annotations can raise risk but cannot lower known policy or change capability-token actions. Server approval requirements and tier ceilings are evaluated at the same gateway boundary, and token-defined approval quorums carry through to the MCP proxy queue.
+
+The scanner uses the same default resource rules and tool classifier. Runtime trust, custom rules, context, server restrictions, or action history may impose additional approval requirements. Shell keywords match word boundaries, including snake_case and camelCase, to avoid classifying names such as `publish_page` as shell tools.
+
+Forbidden combinations normalize actual MCP tool identities and use gateway timestamps. Per-agent history spans sessions and tokens on a single gateway instance, is retained for at most 120 seconds, and fails closed at 1,024 relevant events rather than evicting live history. History is in memory: restart clears it, and separate gateway replicas do not share it. Deployments relying on sequence detection must route an agent to the same gateway instance.

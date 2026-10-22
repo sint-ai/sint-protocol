@@ -25,6 +25,8 @@ Maps every MCP tool to a SINT approval tier:
 
 Shell/exec tool names are **always T3 CRITICAL** regardless of server, addressing [OWASP ASI05](https://github.com/sint-ai/sint-protocol).
 
+The reported tier uses the gateway's default resource rules and shared MCP classifier. Runtime trust, physical context, custom rules, server restrictions, and recent action sequences may require approval or raise the enforced tier further. Destructive annotations raise risk; read-only or idempotent annotations cannot reduce a known policy floor.
+
 ## Usage
 
 ### Pipe from JSON

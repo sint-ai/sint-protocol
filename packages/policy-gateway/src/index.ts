@@ -94,3 +94,4 @@ export type {
 // The source of truth for these types lives in @pshkv/core, but downstream code
 // commonly imports them from the gateway package.
 export type { SintRequest as PolicyContext, PolicyDecision } from "@pshkv/core";
+export type { TimedComboAction } from "./forbidden-combos.js";

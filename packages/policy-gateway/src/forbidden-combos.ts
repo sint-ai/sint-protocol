@@ -11,7 +11,14 @@ import {
   type ApprovalTier,
   DEFAULT_FORBIDDEN_COMBOS,
   type ForbiddenCombination,
+  normalizeComboAction,
 } from "@pshkv/core";
+
+/** Timestamp supplied by the gateway clock, not the request timestamp. */
+export interface TimedComboAction {
+  readonly action: string;
+  readonly timestampMs: number;
+}
 
 /** Result of a forbidden combo check. */
 export interface ComboCheckResult {
@@ -23,8 +30,8 @@ export interface ComboCheckResult {
 /**
  * Check if the recent action sequence matches any forbidden combination.
  *
- * Uses a sliding window approach — checks if any forbidden sequence
- * appears in the recent actions within the specified time window.
+ * Timestamped events honor each combination window. Legacy strings have unknown
+ * age and are conservatively treated as current; they can only raise risk.
  *
  * @param recentActions - The agent's recent actions (most recent last)
  * @param currentAction - The action being requested now
@@ -43,15 +50,21 @@ export interface ComboCheckResult {
  * ```
  */
 export function checkForbiddenCombos(
-  recentActions: readonly string[],
+  recentActions: readonly (string | TimedComboAction)[],
   currentAction: string,
   combos: readonly ForbiddenCombination[] = DEFAULT_FORBIDDEN_COMBOS,
+  nowMs: number = Date.now(),
 ): ComboCheckResult {
-  // Build the full action sequence including the current action
-  const fullSequence = [...recentActions, currentAction];
-
+  const current = normalizeComboAction(currentAction);
   for (const combo of combos) {
-    if (isSubsequenceMatch(fullSequence, combo.sequence)) {
+    const sequence = combo.sequence.map(action => normalizeComboAction(action));
+    const last = sequence.at(-1);
+    // Only a sequence completed by this request can trigger a new escalation.
+    if (!last || !matchesAction(current, last)) continue;
+    const history = recentActions.filter(event => typeof event === "string"
+      || (event.timestampMs <= nowMs && nowMs - event.timestampMs <= combo.windowMs))
+      .map(event => normalizeComboAction(typeof event === "string" ? event : event.action));
+    if (isSubsequenceMatch(history, sequence.slice(0, -1))) {
       return {
         triggered: true,
         matchedCombo: combo,

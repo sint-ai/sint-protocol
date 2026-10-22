@@ -238,6 +238,14 @@ export interface SintRequest {
 
   /** Sequence of recent actions by this agent (for combo detection). */
   readonly recentActions?: readonly string[];
+  /** Additional MCP server restrictions; can only narrow authorization. */
+  readonly mcpPolicy?: {
+    readonly requireApproval?: boolean;
+    readonly maxTier?: ApprovalTier;
+  };
+  /** MCP annotations may raise the gateway's resource-based tier, never lower it. */
+  readonly mcpAnnotations?: import("../constants/mcp-risk.js").McpAnnotations;
+
 
   /** Optional execution/deployment metadata for policy and audit correlation. */
   readonly executionContext?: SintExecutionContext;

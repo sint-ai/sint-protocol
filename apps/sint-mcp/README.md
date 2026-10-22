@@ -369,8 +369,12 @@ Every tool call, policy decision, escalation, and result is recorded to a struct
 - **Capability tokens** — Ed25519-signed, scope-limited tokens gate every call. Delegation can only narrow scope (attenuation invariant).
 - **Hash-chained ledger** — Every event is SHA-256 chained. The chain is verified by the CSML metric. Tampering is detectable.
 - **Tier enforcement** — T2/T3 actions require explicit operator or human approval. Timeouts fail closed (deny, not allow).
-- **Forbidden combo detection** — Sequences of calls matching dangerous patterns (e.g. file-read → exec) are blocked at the policy layer.
+- **Forbidden combo detection** — The gateway normalizes real tool names (e.g. `filesystem.writeFile` → `shell.execute`) and escalates dangerous sequences within their configured time windows. History spans tokens and sessions for the same agent on one gateway instance.
 - **Per-server ceilings** — `maxTier` hard-caps what any tool on a given server can reach, independent of the agent's token scope.
+
+MCP tool classification is enforced inside `PolicyGateway.intercept()` for direct API calls and bridge traffic. Annotations can raise risk, but cannot lower known-tool policy or change capability actions. Shell keywords match word boundaries, including snake_case and camelCase names.
+
+Sequence history uses gateway time and is held in memory for up to 120 seconds. Restarting a gateway clears this history; multiple gateway replicas do not share it. Route each agent to one gateway instance when relying on sequence detection. At 1,024 relevant events per agent, requests fail closed until history expires rather than evicting live evidence. Legacy caller-supplied action strings have unknown ages and are treated conservatively; MCP callers do not need to supply them.
 
 ## Environment variables
 

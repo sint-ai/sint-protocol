@@ -5,3 +5,5 @@ export * from "./compliance.js";
 export * from "./profiles.js";
 export * from "./schema-catalog.js";
 export * from "./geofence-templates.js";
+export * from "./mcp-risk.js";
+export * from "./tier-rule-matcher.js";

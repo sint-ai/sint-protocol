@@ -123,6 +123,16 @@ export const sintRequestSchema = z.object({
   params: z.record(z.unknown()),
   physicalContext: physicalContextSchema.optional(),
   recentActions: z.array(z.string()).optional(),
+  mcpPolicy: z.object({
+    requireApproval: z.boolean().optional(),
+    maxTier: z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]).optional(),
+  }).strict().optional(),
+  mcpAnnotations: z.object({
+    readOnlyHint: z.boolean().optional(),
+    destructiveHint: z.boolean().optional(),
+    openWorldHint: z.boolean().optional(),
+    idempotentHint: z.boolean().optional(),
+  }).strict().optional(),
   executionContext: executionContextSchema.optional(),
 }).strict();
 

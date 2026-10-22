@@ -10,13 +10,18 @@
  */
 
 import {
-  type ApprovalTier,
+  ApprovalTier,
+  RiskTier,
   type PolicyDecision,
   type RateLimitStore,
   type SintCapabilityToken,
   type SintRequest,
+  type TierAssignmentRule,
   sintRequestSchema,
   DEFAULT_APPROVAL_TIMEOUT_MS,
+  DEFAULT_FORBIDDEN_COMBOS,
+  normalizeComboAction,
+  parseMcpResource,
 } from "@pshkv/core";
 import {
   validateCapabilityToken,
@@ -25,7 +30,7 @@ import {
 import { nowISO8601 } from "@pshkv/gate-capability-tokens";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
 import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
-import { checkForbiddenCombos } from "./forbidden-combos.js";
+import { checkForbiddenCombos, type TimedComboAction } from "./forbidden-combos.js";
 import type { CircuitBreakerPlugin, CircuitState } from "./circuit-breaker.js";
 import type { AgentTrustLevel } from "@pshkv/core";
 import type { GoalHijackPlugin } from "./goal-hijack.js";
@@ -221,6 +226,8 @@ export interface PolicyGatewayConfig {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
   readonly emitLedgerEvent?: LedgerEmitter;
+  /** Custom resource rules cannot lower the built-in MCP consequence floor. */
+  readonly tierRules?: readonly TierAssignmentRule[];
   readonly getAgentTrustLevel?: (agentId: string) => AgentTrustLevel;
   /** Optional economy plugin for budget/balance/trust enforcement. */
   readonly economyPlugin?: EconomyPluginHooks;
@@ -363,6 +370,9 @@ export interface PolicyGatewayConfig {
  */
 export class PolicyGateway {
   private readonly config: PolicyGatewayConfig;
+  /** Per-agent history spans MCP sessions and tokens, using the gateway clock. */
+  private readonly mcpComboHistory = new Map<string, TimedComboAction[]>();
+  private readonly comboRetentionMs = Math.max(...DEFAULT_FORBIDDEN_COMBOS.map(combo => combo.windowMs));
 
   constructor(config: PolicyGatewayConfig) {
     this.config = config;
@@ -810,7 +820,7 @@ export class PolicyGateway {
 
     // 5. Assign approval tier
     const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
-    let tierAssignment = assignTier(request, { agentTrustLevel });
+    let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
 
     // 5b. CSML escalation (Avatar Layer 5) — bump tier if agent's safety score exceeds θ
     if (this.config.csmlEscalation) {
@@ -1015,21 +1025,6 @@ export class PolicyGateway {
       }
     }
 
-    // 6. Check forbidden tool combinations
-    if (request.recentActions && request.recentActions.length > 0) {
-      const comboCheck = checkForbiddenCombos(request.recentActions, request.action);
-      if (comboCheck.triggered && comboCheck.requiredTier) {
-        // Escalate to the required tier for this forbidden combo
-        return this.escalate(
-          requestId,
-          timestamp,
-          comboCheck.requiredTier,
-          `Forbidden combination detected: ${comboCheck.matchedCombo?.reason}`,
-          tierAssignment,
-        );
-      }
-    }
-
     // 6b. Argument injection detection (ASI05: code execution via parameter injection)
     if (this.config.argInjectionDetector) {
       try {
@@ -1097,12 +1092,81 @@ export class PolicyGateway {
       );
     }
 
+    // 7b. Canonical tool semantics and gateway-owned history prevent MCP naming
+    // mismatches and client omission of recentActions from bypassing combinations.
+    const comboNow = Date.now();
+    const isMcp = parseMcpResource(request.resource) !== undefined;
+    const comboAction = normalizeComboAction(request.action, isMcp ? request.resource : undefined);
+    const recordedHistory = isMcp
+      ? (this.mcpComboHistory.get(request.agentId) ?? []).filter(event => comboNow - event.timestampMs <= this.comboRetentionMs)
+      : [];
+    if (isMcp) {
+      // Sweep expired agents as well as the active agent to bound idle retention.
+      for (const [agentId, events] of this.mcpComboHistory) {
+        if (!events.length || comboNow - events[events.length - 1]!.timestampMs > this.comboRetentionMs) {
+          this.mcpComboHistory.delete(agentId);
+        }
+      }
+      this.mcpComboHistory.set(request.agentId, recordedHistory);
+      if (recordedHistory.length >= 1024) {
+        return this.deny(requestId, timestamp, "COMBO_HISTORY_CAPACITY", "MCP action history capacity reached; wait for the sequence window to expire");
+      }
+    }
+    const comboCheck = checkForbiddenCombos(
+      [...recordedHistory, ...(request.recentActions ?? [])], comboAction, DEFAULT_FORBIDDEN_COMBOS, comboNow,
+    );
+    const recordComboAction = () => {
+      if (isMcp && DEFAULT_FORBIDDEN_COMBOS.some(combo => combo.sequence.includes(comboAction))) {
+        recordedHistory.push({ action: comboAction, timestampMs: comboNow });
+        this.mcpComboHistory.set(request.agentId, recordedHistory);
+      }
+    };
+    if (comboCheck.triggered && comboCheck.requiredTier) {
+      const tiers = [ApprovalTier.T0_OBSERVE, ApprovalTier.T1_PREPARE, ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT];
+      const risks = [RiskTier.T0_READ, RiskTier.T1_WRITE_LOW, RiskTier.T2_STATEFUL, RiskTier.T3_IRREVERSIBLE];
+      const index = Math.max(tiers.indexOf(comboCheck.requiredTier), tiers.indexOf(tierAssignment.approvalTier));
+      tierAssignment = {
+        approvalTier: tiers[index]!,
+        riskTier: risks[index]!,
+        escalationReasons: [...tierAssignment.escalationReasons, `Forbidden combination detected: ${comboCheck.matchedCombo?.reason}`],
+      };
+    }
+
+    // Server restrictions can only narrow gateway authorization. Check the
+    // consequence ceiling even when a call would otherwise require approval.
+    if (isMcp && request.mcpPolicy) {
+      const tiers = [ApprovalTier.T0_OBSERVE, ApprovalTier.T1_PREPARE, ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT];
+      const maxTier = request.mcpPolicy.maxTier;
+      if (maxTier && tiers.indexOf(tierAssignment.approvalTier) > tiers.indexOf(maxTier)) {
+        return this.deny(requestId, timestamp, "MCP_SERVER_TIER_CEILING", `MCP server policy restricts to ${maxTier}; tool requires ${tierAssignment.approvalTier}`);
+      }
+    }
+
     // 8. Determine action based on tier
     let decision = this.decideBytier(
       requestId,
       timestamp,
       tierAssignment,
     );
+
+    // Approval policy changes the decision, not the operation's consequence tier.
+    if (isMcp && request.mcpPolicy?.requireApproval && decision.action === "allow"
+      && decision.assignedTier !== ApprovalTier.T0_OBSERVE) {
+      decision = {
+        ...decision,
+        action: "escalate",
+        escalation: {
+          requiredTier: decision.assignedTier,
+          reason: "MCP server requires human approval for non-observe actions",
+          timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+          fallbackAction: "deny",
+        },
+      };
+    }
+
+    // Include escalated attempts: they may execute after human approval outside
+    // this call. Requests rejected before tier evaluation never enter history.
+    if (decision.action === "allow" || decision.action === "escalate") recordComboAction();
 
     // 8a. Attach token-defined approval quorum to escalations.
     decision = this.attachApprovalQuorum(decision, token);
@@ -1259,28 +1323,6 @@ export class PolicyGateway {
       denial: { reason, policyViolated },
       assignedTier: "T3_commit" as ApprovalTier,
       assignedRisk: "T3_irreversible" as any,
-    };
-  }
-
-  private escalate(
-    requestId: string,
-    timestamp: string,
-    requiredTier: ApprovalTier,
-    reason: string,
-    tierAssignment: TierAssignment,
-  ): PolicyDecision {
-    return {
-      requestId,
-      timestamp,
-      action: "escalate",
-      escalation: {
-        requiredTier,
-        reason,
-        timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
-        fallbackAction: "deny",
-      },
-      assignedTier: tierAssignment.approvalTier,
-      assignedRisk: tierAssignment.riskTier,
     };
   }
 
