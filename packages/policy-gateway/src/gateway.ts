@@ -72,7 +72,7 @@ export interface EconomyPluginHooks {
   /** Called before tier assignment. Return PolicyDecision to short-circuit, undefined to proceed. */
   preIntercept(request: SintRequest): Promise<PolicyDecision | undefined>;
   /** Called after final decision. Used for billing on allow. */
-  postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void>;
+  postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void | import("@pshkv/core").Result<void, string>>;
 }
 
 /**
@@ -397,6 +397,11 @@ export class PolicyGateway {
       this.config.emitLedgerEvent ? event => this.config.emitLedgerEvent!(event) : undefined,
       this.config.edgeControlPlane?.replicateEvidenceEvent
         ? event => this.config.edgeControlPlane!.replicateEvidenceEvent!(event) : undefined,
+      this.config.economyPlugin ? async audited => {
+        if (audited.action !== "allow") return undefined;
+        return failures.check("economy.postIntercept",
+          () => this.config.economyPlugin!.postIntercept(request, audited), () => {});
+      } : undefined,
     );
   }
 
@@ -1181,12 +1186,7 @@ export class PolicyGateway {
       risk: decision.assignedRisk,
     });
 
-    // 10. Economy post-intercept (billing on allow)
-    if (this.config.economyPlugin && decision.action === "allow") {
-      const billingFailure = await failures.check("economy.postIntercept", () => this.config.economyPlugin!.postIntercept(request, decision), () => {
-      });
-      if (billingFailure) return billingFailure;
-    }
+    // Billing runs only after primary audit acknowledgement in finalize().
 
     return decision;
   }

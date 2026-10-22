@@ -90,7 +90,12 @@ describe("configured enforcement fails closed with correlated evidence", () => {
           expect(events.filter(event => event.eventType === "policy.plugin.failed")).toContainEqual(expect.objectContaining({ payload: expect.objectContaining({ requestId: request.requestId, seat, decision: "deny" }) }));
           const evaluations = events.filter(event => event.eventType === "policy.evaluated");
           expect(evaluations).toHaveLength(1);
-          expect(evaluations[0].payload).toMatchObject({ requestId: request.requestId, decision: "deny", pluginFailures: failures });
+          if (seat === "economy.postIntercept") {
+            expect(evaluations[0].payload).toMatchObject({ requestId: request.requestId, decision: "allow", authorizationPendingPostChecks: true });
+            expect(events.filter(event => event.eventType === "policy.decision.corrected")).toEqual([
+              expect.objectContaining({ payload: expect.objectContaining({ requestId: request.requestId, previousDecision: "allow", decision: "deny", pluginFailures: failures }) }),
+            ]);
+          } else expect(evaluations[0].payload).toMatchObject({ requestId: request.requestId, decision: "deny", pluginFailures: failures });
           expect(JSON.stringify({ decision, events })).not.toContain("SECRET_ACCESS_TOKEN");
           if (seat === "circuitBreaker.recordDenial") expect(decision.denial?.policyViolated).toBe("RATE_LIMIT_EXCEEDED");
         });
@@ -246,6 +251,60 @@ describe("external dispatch and late completion", () => {
 
 
 describe("acknowledgement semantics", () => {
+  it.each(["throw", "reject", "timeout", "error_result"])("ledger %s prevents billing", async kind => {
+    const charge = vi.fn(async () => {});
+    const { gateway, request } = setup(0, {
+      emitLedgerEvent: fault(kind),
+      economyPlugin: { preIntercept: async () => undefined, postIntercept: charge },
+    });
+    expect((await gateway.intercept(request)).denial?.policyViolated).toBe("AUDIT_UNAVAILABLE");
+    expect(charge).not.toHaveBeenCalled();
+  });
+  it("waits for actual audit acknowledgement before charging", async () => {
+    let acknowledge!: () => void;
+    const pending = new Promise<void>(resolve => { acknowledge = resolve; });
+    const charge = vi.fn(async () => {});
+    const append = vi.fn(() => pending);
+    const { gateway, request } = setup(0, { pluginTimeoutMs: 1000, emitLedgerEvent: append,
+      economyPlugin: { preIntercept: async () => undefined, postIntercept: charge } });
+    const decision = gateway.intercept(request);
+    await vi.waitFor(() => expect(append).toHaveBeenCalledTimes(1));
+    expect(charge).not.toHaveBeenCalled();
+    acknowledge();
+    expect((await decision).action).toBe("allow");
+    expect(charge).toHaveBeenCalledTimes(1);
+  });
+  it("preserves a billing denial if recording its correction fails", async () => {
+    const ledger = new LedgerWriter();
+    const { gateway, request } = setup(0, {
+      emitLedgerEvent: event => {
+        if (event.eventType !== "policy.evaluated") return { ok: false, error: "storage down" };
+        return ledger.append({ ...event, eventType: "policy.evaluated" });
+      },
+      economyPlugin: { preIntercept: async () => undefined, postIntercept: fault("reject") },
+    });
+    const decision = await gateway.intercept(request);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("POLICY_PLUGIN_UNAVAILABLE");
+    expect(decision.transformations?.additionalAuditFields?.["auditStatus"]).toBe("unavailable");
+    expect(ledger.getAll()[0]!.payload["authorizationPendingPostChecks"]).toBe(true);
+    expect(ledger.verifyChain().ok).toBe(true);
+  });
+  it("appends a registered billing correction and preserves existing decision audit fields", async () => {
+    const ledger = new LedgerWriter();
+    const { gateway, request } = setup(0, {
+      emitLedgerEvent: event => ledger.append({ ...event, eventType: event.eventType as "policy.evaluated" }),
+      economyPlugin: {
+        preIntercept: async request => ({ requestId: request.requestId, timestamp: request.timestamp, action: "allow", assignedTier: ApprovalTier.T1_PREPARE, assignedRisk: RiskTier.T1_WRITE_LOW, transformations: { additionalAuditFields: { existing: "preserved" } } }),
+        postIntercept: fault("error_result"),
+      },
+    });
+    const decision = await gateway.intercept(request);
+    expect(decision).toMatchObject({ action: "deny", assignedTier: ApprovalTier.T1_PREPARE, transformations: { additionalAuditFields: { existing: "preserved" } } });
+    expect(ledger.getAll().map(event => event.eventType)).toEqual([SINT_EVENTS.POLICY_EVALUATED, SINT_EVENTS.POLICY_PLUGIN_FAILED, SINT_EVENTS.POLICY_DECISION_CORRECTED]);
+    expect(ledger.getAll().at(-1)!.payload).toMatchObject({ requestId: request.requestId, previousDecision: "allow", decision: "deny" });
+    expect(ledger.verifyChain()).toEqual({ ok: true, value: true });
+  });
   it("does not invent an error when a void audit callback returns its appended value", async () => {
     const { gateway, request } = setup(0, { emitLedgerEvent: event => ({ ...event }) });
     expect((await gateway.intercept(request)).action).toBe("allow");

@@ -29,6 +29,7 @@ export type SintEventType =
   | "request.received"
   | "policy.evaluated"
   | "policy.plugin.failed"
+  | "policy.decision.corrected"
   | "approval.requested"
   | "approval.granted"
   | "approval.denied"

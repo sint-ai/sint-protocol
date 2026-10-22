@@ -97,6 +97,18 @@ export class LedgerWriter {
   private sequenceCounter = 0n;
   private lastHash: SHA256 = GENESIS_HASH;
 
+  /** Resume only a complete, verified persisted chain; never rewrite its events. */
+  static restore(events: readonly SintLedgerEvent[]): Result<LedgerWriter, number> {
+    const writer = new LedgerWriter();
+    writer.events = structuredClone([...events]);
+    const verified = writer.verifyChain();
+    if (!verified.ok) return err(verified.error);
+    const head = writer.events.at(-1);
+    writer.sequenceCounter = head?.sequenceNumber ?? 0n;
+    writer.lastHash = head?.hash ?? GENESIS_HASH;
+    return ok(writer);
+  }
+
   /**
    * Append an event to the ledger.
    * This is the ONLY write operation. There is no update or delete.

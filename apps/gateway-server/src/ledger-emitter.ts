@@ -1,8 +1,16 @@
 /** Acknowledge primary persistence before authorization; latch on uncertain delivery. */
 import { ok, err, type SintEventType, type Result } from "@pshkv/core";
-import type { LedgerWriter } from "@pshkv/gate-evidence-ledger";
+import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type { LedgerStore } from "@pshkv/persistence";
 import type { LedgerEmitter } from "@pshkv/gate-policy-gateway";
+
+/** Full replay checks hashes and contiguous sequence numbers before resuming. */
+export async function restorePersistedLedger(store: LedgerStore): Promise<Result<LedgerWriter, string>> {
+  return Promise.resolve().then(() => store.query({})).then(events => {
+    const restored = LedgerWriter.restore(events);
+    return restored.ok ? restored : err("LEDGER_CHAIN_INVALID");
+  }).catch(() => err("LEDGER_RESTORE_UNAVAILABLE"));
+}
 
 export function createPersistedLedgerEmitter(ledger: LedgerWriter, store: LedgerStore): LedgerEmitter {
   let unavailable = false;

@@ -175,6 +175,7 @@ export class PluginFailureScope {
     original: PolicyDecision,
     append?: (event: AuditEvent) => unknown,
     replicate?: (event: AuditEvent) => void | Promise<void>,
+    afterAudit?: (decision: PolicyDecision) => Promise<PolicyDecision | undefined>,
   ): Promise<PolicyDecision> {
     let decision = original;
     // Advisory continuation never applies to an eventual high-consequence decision.
@@ -204,7 +205,7 @@ export class PluginFailureScope {
     }));
     const evaluated: AuditEvent = {
       eventType: "policy.evaluated", agentId: this.request.agentId, tokenId: this.request.tokenId,
-      payload: { ...this.evaluationDetails, authorizationPendingAudit: Boolean(append), requestId: this.request.requestId, decision: decision.action, tier: decision.assignedTier,
+      payload: { ...this.evaluationDetails, authorizationPendingAudit: Boolean(append), authorizationPendingPostChecks: Boolean(afterAudit && decision.action === "allow"), requestId: this.request.requestId, decision: decision.action, tier: decision.assignedTier,
         risk: decision.assignedRisk, policyViolated: decision.denial?.policyViolated,
         pluginFailures: decision.transformations?.additionalAuditFields?.["pluginFailures"] ?? [],
         pluginChecks: this.checks.map(value => ({ ...value })), auditStatus },
@@ -215,6 +216,28 @@ export class PluginFailureScope {
         if (!result.ok) {
           const denied = this.deny(result.error, decision);
           return this.decorate({ ...denied, denial: decision.action === "deny" ? decision.denial : { policyViolated: "AUDIT_UNAVAILABLE", reason: "Required evidence ledger append did not complete" } }, "unavailable");
+        }
+      }
+    }
+    // Do not charge a candidate authorization whose audit write failed. A later
+    // billing failure is an append-only correction to the audited candidate.
+    if (afterAudit && decision.action === "allow") {
+      const priorFailures = this.failures.length;
+      const corrected = await afterAudit(decision);
+      if (corrected) {
+        decision = this.decorate({ ...decision, action: corrected.action, denial: corrected.denial }, auditStatus);
+        const corrections: AuditEvent[] = this.failures.slice(priorFailures).map(failure => ({
+          eventType: "policy.plugin.failed", agentId: this.request.agentId, tokenId: this.request.tokenId,
+          payload: { ...failure, decision: decision.action, assignedTier: decision.assignedTier },
+        }));
+        corrections.push({
+          eventType: "policy.decision.corrected", agentId: this.request.agentId, tokenId: this.request.tokenId,
+          payload: { requestId: this.request.requestId, previousDecision: "allow", decision: decision.action,
+            policyViolated: decision.denial?.policyViolated, pluginFailures: this.failures.map(failure => ({ ...failure })) },
+        });
+        if (append) for (const event of corrections) {
+          const result = await this.run("audit.append", () => append(event));
+          if (!result.ok) return this.decorate(decision, "unavailable");
         }
       }
     }
