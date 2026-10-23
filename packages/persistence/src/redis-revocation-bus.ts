@@ -16,15 +16,18 @@ const CHANNEL = "sint:revocations";
 export class RedisRevocationBus implements RevocationBus {
   private readonly handlers: Array<(event: RevocationEvent) => void> = [];
   private subscriber: Redis | null = null;
+  private readonly channel: string;
 
   constructor(
     private readonly publisher: Redis,
     subscriberFactory?: () => Redis,
+    namespace?: string,
   ) {
+    this.channel = namespace ? `${CHANNEL}:${namespace}` : CHANNEL;
     // Create a dedicated subscriber connection (Redis requires separate connections for pub/sub)
     if (subscriberFactory) {
       this.subscriber = subscriberFactory();
-      this.subscriber.subscribe(CHANNEL);
+      this.subscriber.subscribe(this.channel);
       this.subscriber.on("message", (_channel: string, message: string) => {
         try {
           const event: RevocationEvent = JSON.parse(message);
@@ -45,7 +48,7 @@ export class RedisRevocationBus implements RevocationBus {
       revokedBy,
       timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z") as any,
     };
-    await this.publisher.publish(CHANNEL, JSON.stringify(event));
+    await this.publisher.publish(this.channel, JSON.stringify(event));
   }
 
   subscribe(handler: (event: RevocationEvent) => void): () => void {
@@ -59,7 +62,7 @@ export class RedisRevocationBus implements RevocationBus {
   /** Shut down the subscriber connection. */
   async dispose(): Promise<void> {
     if (this.subscriber) {
-      await this.subscriber.unsubscribe(CHANNEL);
+      await this.subscriber.unsubscribe(this.channel);
       this.subscriber.disconnect();
       this.subscriber = null;
     }

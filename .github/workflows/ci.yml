@@ -77,8 +77,14 @@ jobs:
       - name: Test
         run: pnpm run test
 
-      # Run outside Turbo's filtered environment so DATABASE_URL reaches Vitest.
-      - name: PostgreSQL Persistence Gate
-        run: |
-          test -n "$DATABASE_URL"
-          pnpm --filter @pshkv/gateway-server exec vitest run __tests__/ledger-restart-postgres.test.ts __tests__/token-persistence-postgres.test.ts
+      # Run outside Turbo's filtered environment; the runner rejects all skips.
+      - name: PostgreSQL and Redis Integration Gate
+        run: pnpm run test:integration
+
+      - name: Upload integration evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: service-integration-results-node-${{ matrix.node-version }}
+          path: coverage/integrations/
+          if-no-files-found: warn

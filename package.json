@@ -5,7 +5,9 @@
   "description": "SINT Protocol - runtime security and governance for AI agents, MCP tools, robotics, industrial automation, and physical AI",
   "scripts": {
     "build": "turbo run build",
-    "test": "turbo run test",
+    "test": "turbo run test && pnpm run test:integration-gate",
+    "test:integration-gate": "node --test scripts/__tests__/integration-gate.test.mjs",
+    "test:integration": "node scripts/run-service-integrations.mjs",
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

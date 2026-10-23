@@ -12,10 +12,16 @@ import type { CacheStore } from "./interfaces.js";
 const KEY_PREFIX = "sint:cache:";
 
 export class RedisCache implements CacheStore {
-  constructor(private readonly redis: Redis) {}
+  private readonly keyPrefix: string;
+
+  /** Optional namespace isolates cache operations, including clear(). */
+  constructor(private readonly redis: Redis, namespace?: string) {
+    // Length framing keeps "a" separate from "a:child" during prefix clears.
+    this.keyPrefix = namespace ? `${KEY_PREFIX}${namespace.length}:${namespace}:` : KEY_PREFIX;
+  }
 
   async get<T>(key: string): Promise<T | undefined> {
-    const raw = await this.redis.get(KEY_PREFIX + key);
+    const raw = await this.redis.get(this.keyPrefix + key);
     if (raw === null) return undefined;
     try {
       return JSON.parse(raw) as T;
@@ -26,7 +32,7 @@ export class RedisCache implements CacheStore {
 
   async set<T>(key: string, value: T, ttlMs: number): Promise<void> {
     await this.redis.set(
-      KEY_PREFIX + key,
+      this.keyPrefix + key,
       JSON.stringify(value),
       "PX",
       ttlMs,
@@ -34,17 +40,19 @@ export class RedisCache implements CacheStore {
   }
 
   async delete(key: string): Promise<boolean> {
-    const count = await this.redis.del(KEY_PREFIX + key);
+    const count = await this.redis.del(this.keyPrefix + key);
     return count > 0;
   }
 
   async has(key: string): Promise<boolean> {
-    const exists = await this.redis.exists(KEY_PREFIX + key);
+    const exists = await this.redis.exists(this.keyPrefix + key);
     return exists > 0;
   }
 
   async clear(): Promise<void> {
-    const keys = await this.redis.keys(KEY_PREFIX + "*");
+    // Redis KEYS accepts a glob; configured namespaces must be literal.
+    const literalPrefix = this.keyPrefix.replace(/[\\*?\[\]]/g, "\\$&");
+    const keys = await this.redis.keys(literalPrefix + "*");
     if (keys.length > 0) {
       await this.redis.del(...keys);
     }

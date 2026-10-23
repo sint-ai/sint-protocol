@@ -48,6 +48,37 @@ deployment can safely enforce policy.
 
 ## Release Checklist
 
+### Required service integration gate
+
+After building the workspace, run `pnpm run test:integration` with both
+`DATABASE_URL` and `REDIS_URL` exported. CI provisions PostgreSQL 16 and Redis 7
+and runs this command directly, outside Turbo's filtered environment.
+Missing/invalid connection URLs, service failures, failed processes, empty
+files, missing files, or any skipped/pending/todo case fail the gate. Unit-only
+developer runs can still omit services; their optional skips do not count as
+integration validation.
+
+The explicit inventory in `scripts/lib/integration-gate.mjs` includes the
+PostgreSQL stores, Redis cache/revocation bus, gateway restart, and signed-token
+SQL matrix. Add new service integration files to this inventory. Each run writes
+fresh JSON reports and a success summary under `coverage/integrations/run-*`;
+CI uploads the reports as evidence, including available reports after a failure.
+
+PostgreSQL fixtures require permission to create schemas and use random schemas
+for every store case; cleanup only drops schemas owned by that case. Redis
+fixtures use random namespaces for cache keys and revocation channels, with
+subscription acknowledgement before delivery assertions. They do not clear
+the default cache namespace or flush the database.
+
+`RedisCache(redis, namespace?)` and
+`RedisRevocationBus(publisher, subscriberFactory?, namespace?)` support these
+isolated namespaces. Existing callers use `sint:cache:` and `sint:revocations`;
+namespaced participants must select the same namespace to communicate. These
+options partition keys/channels, not credentials or access control. The cache
+clear pattern escapes glob characters in namespaces.
+
+### Production release checks
+
 Before tagging a production release:
 
 - `pnpm run build`
