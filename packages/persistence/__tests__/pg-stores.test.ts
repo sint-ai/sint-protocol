@@ -3,11 +3,10 @@
  *
  * These tests require a running PostgreSQL instance.
  * Set DATABASE_URL env var to run them.
- * They are automatically skipped in CI without a database.
+ * Local unit-only runs skip them without a database; the required integration gate rejects skips.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import pg from "pg";
+import { describe, it, expect, beforeEach } from "vitest";
 import { PgLedgerStore } from "../src/pg-ledger-store.js";
 import { PgTokenStore } from "../src/pg-token-store.js";
 import { PgMissionManifestStore } from "../src/pg-mission-manifest-store.js";
@@ -16,11 +15,8 @@ import type {
   SintLedgerEvent,
   SintCapabilityToken,
 } from "@pshkv/core";
-import { readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { isolatedPostgres } from "./helpers/postgres.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATABASE_URL = process.env.DATABASE_URL;
 
 const describeWithPg = DATABASE_URL ? describe : describe.skip;
@@ -56,27 +52,10 @@ function makeToken(id: string): SintCapabilityToken {
 }
 
 describeWithPg("PgLedgerStore", () => {
-  let pool: pg.Pool;
+  const database = isolatedPostgres(["001_create_ledger.sql"]);
   let store: PgLedgerStore;
 
-  beforeAll(async () => {
-    pool = new pg.Pool({ connectionString: DATABASE_URL });
-    const migrationSql = readFileSync(
-      join(__dirname, "../migrations/001_create_ledger.sql"),
-      "utf-8",
-    );
-    await pool.query(migrationSql);
-    store = new PgLedgerStore(pool);
-  });
-
-  afterAll(async () => {
-    await pool.query("DROP TABLE IF EXISTS sint_ledger_events");
-    await pool.end();
-  });
-
-  beforeEach(async () => {
-    await pool.query("DELETE FROM sint_ledger_events");
-  });
+  beforeEach(() => { store = new PgLedgerStore(database.pool()); });
 
   it("append and getById", async () => {
     const event = makeLedgerEvent(0);
@@ -153,27 +132,10 @@ describeWithPg("PgLedgerStore", () => {
 });
 
 describeWithPg("PgTokenStore", () => {
-  let pool: pg.Pool;
+  const database = isolatedPostgres(["002_create_tokens.sql"]);
   let store: PgTokenStore;
 
-  beforeAll(async () => {
-    pool = new pg.Pool({ connectionString: DATABASE_URL });
-    const migrationSql = readFileSync(
-      join(__dirname, "../migrations/002_create_tokens.sql"),
-      "utf-8",
-    );
-    await pool.query(migrationSql);
-    store = new PgTokenStore(pool);
-  });
-
-  afterAll(async () => {
-    await pool.query("DROP TABLE IF EXISTS sint_tokens");
-    await pool.end();
-  });
-
-  beforeEach(async () => {
-    await pool.query("DELETE FROM sint_tokens");
-  });
+  beforeEach(() => { store = new PgTokenStore(database.pool()); });
 
   it("store and get", async () => {
     const token = makeToken("tok-1");
@@ -239,7 +201,7 @@ describeWithPg("PgTokenStore", () => {
 });
 
 describeWithPg("PgMissionManifestStore", () => {
-  let pool: pg.Pool;
+  const database = isolatedPostgres(["003_create_mission_authority.sql", "006_create_mission_authority_heads.sql"]);
   let store: PgMissionManifestStore;
 
   const manifest: MissionManifest = {
@@ -269,33 +231,7 @@ describeWithPg("PgMissionManifestStore", () => {
     signature: "d".repeat(128),
   };
 
-  beforeAll(async () => {
-    pool = new pg.Pool({ connectionString: DATABASE_URL });
-    const migrationSql = readFileSync(
-      join(__dirname, "../migrations/003_create_mission_authority.sql"),
-      "utf-8",
-    );
-    await pool.query(migrationSql);
-    const authorityHeadSql = readFileSync(
-      join(__dirname, "../migrations/006_create_mission_authority_heads.sql"),
-      "utf-8",
-    );
-    await pool.query(authorityHeadSql);
-    store = new PgMissionManifestStore(pool);
-  });
-
-  afterAll(async () => {
-    await pool.query("DROP TABLE IF EXISTS sint_mission_manifest_revocations");
-    await pool.query("DROP TABLE IF EXISTS sint_mission_authority_heads");
-    await pool.query("DROP TABLE IF EXISTS sint_mission_manifests");
-    await pool.end();
-  });
-
-  beforeEach(async () => {
-    await pool.query("DELETE FROM sint_mission_manifest_revocations");
-    await pool.query("DELETE FROM sint_mission_authority_heads");
-    await pool.query("DELETE FROM sint_mission_manifests");
-  });
+  beforeEach(() => { store = new PgMissionManifestStore(database.pool()); });
 
   it("persists immutable manifests and append-only revocations", async () => {
     expect((await store.store(manifest)).status).toBe("stored");
