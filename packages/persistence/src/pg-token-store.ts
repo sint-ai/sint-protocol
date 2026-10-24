@@ -34,6 +34,10 @@ function rowToToken(row: any): SintCapabilityToken {
     autonomyPolicy: row.autonomy_policy ?? undefined,
     humanAuthorityRequirements: row.human_authority_requirements ?? undefined,
     regulatedDataPolicy: row.regulated_data_policy ?? undefined,
+    deploymentEnvelope: row.deployment_envelope ?? undefined,
+    manufacturingEnvelope: row.manufacturing_envelope ?? undefined,
+    hazardousEnergyEnvelope: row.hazardous_energy_envelope ?? undefined,
+    adaptationPermit: row.adaptation_permit ?? undefined,
     signature: row.signature,
   };
 }
@@ -49,8 +53,9 @@ export class PgTokenStore implements TokenStore {
          execution_envelope, behavioral_constraints, passport_id, delegation_depth,
          delegation_chain, issued_at, expires_at, revocable, revocation_endpoint,
          crypto_profile, post_quantum_signatures, autonomy_policy,
-         human_authority_requirements, regulated_data_policy, signature)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+         human_authority_requirements, regulated_data_policy,
+         deployment_envelope, manufacturing_envelope, hazardous_energy_envelope, adaptation_permit, signature)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
        ON CONFLICT (token_id) DO UPDATE SET
          issuer = EXCLUDED.issuer,
          subject = EXCLUDED.subject,
@@ -74,6 +79,10 @@ export class PgTokenStore implements TokenStore {
          autonomy_policy = EXCLUDED.autonomy_policy,
          human_authority_requirements = EXCLUDED.human_authority_requirements,
          regulated_data_policy = EXCLUDED.regulated_data_policy,
+         deployment_envelope = EXCLUDED.deployment_envelope,
+         manufacturing_envelope = EXCLUDED.manufacturing_envelope,
+         hazardous_energy_envelope = EXCLUDED.hazardous_energy_envelope,
+         adaptation_permit = EXCLUDED.adaptation_permit,
          signature = EXCLUDED.signature`,
       [
         token.tokenId,
@@ -99,6 +108,10 @@ export class PgTokenStore implements TokenStore {
         JSON.stringify(token.autonomyPolicy),
         JSON.stringify(token.humanAuthorityRequirements),
         JSON.stringify(token.regulatedDataPolicy),
+        JSON.stringify(token.deploymentEnvelope),
+        JSON.stringify(token.manufacturingEnvelope),
+        JSON.stringify(token.hazardousEnergyEnvelope),
+        JSON.stringify(token.adaptationPermit),
         token.signature,
       ],
     );

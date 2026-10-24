@@ -22,7 +22,7 @@ function issue(fields: Record<string, unknown> = {}): SintCapabilityToken {
 // The required CI database gate exercises the actual PostgreSQL driver/schema.
 function transport() {
   const rows = new Map<string, Record<string, unknown>>();
-  const jsonColumns = new Set(["actions", "constraints", "delegation_chain", "model_constraints", "attestation_requirements", "verifiable_compute_requirements", "execution_envelope", "behavioral_constraints", "post_quantum_signatures", "autonomy_policy", "human_authority_requirements", "regulated_data_policy"]);
+  const jsonColumns = new Set(["actions", "constraints", "delegation_chain", "model_constraints", "attestation_requirements", "verifiable_compute_requirements", "execution_envelope", "behavioral_constraints", "post_quantum_signatures", "autonomy_policy", "human_authority_requirements", "regulated_data_policy", "deployment_envelope", "manufacturing_envelope", "hazardous_energy_envelope", "adaptation_permit"]);
   const reorder = (value: any): any => Array.isArray(value) ? value.map(reorder) : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().reverse().map(key => [key, reorder(value[key])])) : value;
   const query = async (sql: string, values: unknown[]) => {
     const insert = /INSERT INTO sint_tokens\s*\(([^)]+)\)/.exec(sql);

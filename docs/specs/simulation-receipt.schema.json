@@ -1,82 +1,131 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://docs.sint.gg/specs/simulation-receipt.schema.json",
-  "title": "SimulationReceipt",
-  "description": "Simulation proof artifact required before selected factory actions may execute.",
+  "title": "SimulationEvidenceReceiptV2",
+  "description": "Signed predictive-safety evidence bound to one SINT request, token, effect plan, and world snapshot. A receipt is evidence, never authorization.",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "simulation_receipt_id",
-    "cell_id",
+    "schemaVersion",
+    "receiptId",
+    "evidenceGrade",
+    "requestDigest",
+    "effectPlanDigest",
+    "tokenDigest",
+    "resource",
+    "action",
+    "worldSnapshot",
     "simulator",
-    "vendor_program_hash",
-    "collision_free",
-    "cycle_time_seconds",
-    "safety_zone_violations",
-    "max_force_newtons",
-    "approved_for_execution",
-    "signed_by"
+    "scenarios",
+    "result",
+    "generatedAt",
+    "expiresAt",
+    "nonce",
+    "artifactDigest",
+    "signerPublicKey",
+    "signature"
   ],
   "properties": {
-    "simulation_receipt_id": {
-      "type": "string",
-      "pattern": "^simr_[A-Za-z0-9._-]+$"
+    "schemaVersion": { "const": "2.0.0" },
+    "receiptId": { "$ref": "#/$defs/uuidV7" },
+    "evidenceGrade": { "enum": ["deterministic", "physics", "digital-twin"] },
+    "requestDigest": { "$ref": "#/$defs/sha256" },
+    "effectPlanDigest": { "$ref": "#/$defs/sha256" },
+    "tokenDigest": { "$ref": "#/$defs/sha256" },
+    "resource": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "action": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "robotId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "toolId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "payloadDigest": { "$ref": "#/$defs/sha256" },
+        "controllerId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "cellId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "policyDigest": { "$ref": "#/$defs/sha256" }
+      }
     },
-    "cell_id": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9._-]+$"
+    "worldSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "observedAt", "validUntil"],
+      "properties": {
+        "digest": { "$ref": "#/$defs/sha256" },
+        "observedAt": { "$ref": "#/$defs/iso8601" },
+        "validUntil": { "$ref": "#/$defs/iso8601" },
+        "stateEpoch": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "uncertainty": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
     },
     "simulator": {
-      "type": "string",
-      "enum": [
-        "RobotStudio",
-        "KUKA.Sim",
-        "ROBOGUIDE",
-        "Emulate3D",
-        "TIA_Simulation",
-        "TwinCAT_Simulation",
-        "Isaac_Sim",
-        "RoboDK",
-        "Visual_Components",
-        "Custom"
-      ]
-    },
-    "vendor_program_hash": {
-      "type": "string",
-      "pattern": "^sha256:[A-Fa-f0-9]{64}$"
-    },
-    "collision_free": {
-      "type": "boolean"
-    },
-    "cycle_time_seconds": {
-      "type": "number",
-      "exclusiveMinimum": 0
-    },
-    "safety_zone_violations": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "max_force_newtons": {
-      "type": "number",
-      "minimum": 0
-    },
-    "approved_for_execution": {
-      "type": "boolean"
-    },
-    "signed_by": {
-      "type": "string"
-    },
-    "metadata": {
       "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
+      "required": ["backend", "version", "modelDigest"],
       "properties": {
-        "decision_digest": {
-          "type": "string"
-        },
-        "artifact_uri": {
-          "type": "string"
+        "backend": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "modelDigest": { "$ref": "#/$defs/sha256" },
+        "imageDigest": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "scenarios": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarioSetDigest", "runCount"],
+      "properties": {
+        "scenarioSetDigest": { "$ref": "#/$defs/sha256" },
+        "runCount": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "seeds": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": { "type": "integer", "minimum": 0 }
         }
       }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "collisions", "safetyZoneViolations"],
+      "properties": {
+        "outcome": { "enum": ["pass", "fail", "indeterminate"] },
+        "collisions": { "type": "integer", "minimum": 0 },
+        "safetyZoneViolations": { "type": "integer", "minimum": 0 },
+        "maxForceNewtons": { "type": "number", "minimum": 0 },
+        "maxVelocityMps": { "type": "number", "minimum": 0 },
+        "maxTorqueNm": { "type": "number", "minimum": 0 },
+        "maxJerkMps3": { "type": "number", "minimum": 0 },
+        "maxAngularVelocityRps": { "type": "number", "minimum": 0 },
+        "minClearanceMeters": { "type": "number", "minimum": 0 },
+        "assumptions": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        },
+        "unsupportedPhenomena": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "type": "string", "minLength": 1, "maxLength": 512 }
+        }
+      }
+    },
+    "generatedAt": { "$ref": "#/$defs/iso8601" },
+    "expiresAt": { "$ref": "#/$defs/iso8601" },
+    "nonce": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "artifactDigest": { "$ref": "#/$defs/sha256" },
+    "signerPublicKey": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+    "signature": { "type": "string", "pattern": "^[A-Fa-f0-9]{128}$" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+    "uuidV7": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "iso8601": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?Z$"
     }
   }
 }

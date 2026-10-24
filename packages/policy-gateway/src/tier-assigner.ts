@@ -131,5 +131,25 @@ export function assignTier(
     }
   }
 
+  // Consequence declarations are independent of resource naming. An irreversible
+  // effect is always T3; any declared propagation or affected scope is at least T2.
+  const consequence = request.consequenceContext;
+  if (consequence?.reversibility === "irreversible") {
+    if (TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T3_COMMIT]) {
+      tier = ApprovalTier.T3_COMMIT;
+      escalationReasons.push("Declared consequence is irreversible");
+    }
+  } else if (
+    consequence?.reversibility === "compensatable" ||
+    (consequence?.affectedEntities ?? 0) > 1 ||
+    (consequence?.propagationDepth ?? 0) > 0 ||
+    (consequence?.monetaryValue?.amount ?? 0) > 0
+  ) {
+    if (TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T2_ACT]) {
+      tier = ApprovalTier.T2_ACT;
+      escalationReasons.push("Declared action has non-trivial blast radius");
+    }
+  }
+
   return { approvalTier: tier, riskTier, escalationReasons };
 }

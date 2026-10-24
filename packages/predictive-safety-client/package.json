@@ -1,0 +1,31 @@
+{
+  "name": "@pshkv/predictive-safety-client",
+  "version": "0.1.0",
+  "description": "Fail-closed HTTP EffectSimulator client for remote predictive-safety workers",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "private": true
+}

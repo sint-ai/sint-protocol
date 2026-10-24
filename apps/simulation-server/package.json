@@ -1,0 +1,38 @@
+{
+  "name": "@pshkv/simulation-server",
+  "version": "0.1.0",
+  "description": "HTTP transport for isolated SINT EffectSimulator workers",
+  "type": "module",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.0.5",
+    "@pshkv/core": "workspace:*",
+    "@pshkv/engine-effect-simulator": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*",
+    "hono": "^4.12.27"
+  },
+  "devDependencies": {
+    "@pshkv/predictive-safety-client": "workspace:*",
+    "@types/node": "^22.13.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "private": true
+}

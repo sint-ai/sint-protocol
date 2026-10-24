@@ -23,6 +23,25 @@ function makeRequest(overrides: Partial<SintRequest>): SintRequest {
 }
 
 describe("assignTier", () => {
+  it("promotes an otherwise low-risk irreversible action to T3", () => {
+    const result = assignTier(makeRequest({
+      resource: "mcp://server/draft",
+      action: "call",
+      consequenceContext: { reversibility: "irreversible", affectedEntities: 1 },
+    }));
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.escalationReasons).toContain("Declared consequence is irreversible");
+  });
+
+  it("promotes a multi-entity reversible action to T2", () => {
+    const result = assignTier(makeRequest({
+      resource: "mcp://server/draft",
+      action: "call",
+      consequenceContext: { reversibility: "reversible", affectedEntities: 20 },
+    }));
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+  });
+
   it("maps camera subscribe to T0_OBSERVE", () => {
     const result = assignTier(makeRequest({
       resource: "ros2:///camera/front",

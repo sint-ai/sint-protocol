@@ -12,6 +12,10 @@ import {
   humanAuthorityRequirementsSchema,
   humanAuthorityProofSchema,
 } from "./authority.schema.js";
+import { deploymentEnvelopeSchema } from "./deployment-envelope.schema.js";
+import { manufacturingExecutionEnvelopeSchema } from "./manufacturing-execution.schema.js";
+import { vlaAdaptationPermitSchema } from "./vla.schema.js";
+import { hazardousEnergyEnvelopeSchema } from "./hazardous-energy.schema.js";
 
 const ISO8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?Z$/;
 const HEX_REGEX = /^[a-f0-9]+$/i;
@@ -74,6 +78,16 @@ export const physicalConstraintsSchema = z.object({
   maxAngularVelocityRps: z.number().positive().optional(),
   /** Contact force detection threshold in Newtons. */
   contactForceThresholdN: z.number().positive().optional(),
+  consequenceConstraints: z.object({
+    maxReversibility: z.enum(["reversible", "compensatable", "irreversible"]).optional(),
+    maxAffectedEntities: z.number().int().positive().optional(),
+    maxMonetaryValue: z.object({
+      amount: z.number().nonnegative(),
+      currency: z.string().regex(/^[A-Z]{3}$/),
+    }).strict().optional(),
+    maxOperationalDurationMs: z.number().int().positive().optional(),
+    maxPropagationDepth: z.number().int().min(0).optional(),
+  }).strict().optional(),
 }).strict();
 
 /** Behavioral constraints schema — runtime input validation and rate limiting. */
@@ -105,6 +119,18 @@ export const modelConstraintsSchema = z.object({
   allowedModelIds: z.array(z.string().min(1).max(128)).min(1).max(32).optional(),
   maxModelVersion: z.string().min(1).max(64).optional(),
   modelFingerprintHash: sha256Schema.optional(),
+  checkpointDigest: sha256Schema.optional(),
+  policyConfigDigest: sha256Schema.optional(),
+  normalizationDigest: sha256Schema.optional(),
+  actionTransformDigest: sha256Schema.optional(),
+  actionSpaceDigest: sha256Schema.optional(),
+  embodimentId: z.string().min(1).max(128).optional(),
+  calibrationDigest: sha256Schema.optional(),
+  sensorLayoutDigest: sha256Schema.optional(),
+  datasetDigest: sha256Schema.optional(),
+  trainingRecipeDigest: sha256Schema.optional(),
+  promotionEvidenceDigest: sha256Schema.optional(),
+  rollbackCheckpointDigest: sha256Schema.optional(),
 }).strict();
 
 export const regulatedDataPolicySchema = z.object({
@@ -158,6 +184,14 @@ export const executionEnvelopeSchema = z.object({
   maxLocalizationAgeMs: z.number().int().positive().optional(),
   minLocalizationConfidence: z.number().min(0).max(1).optional(),
   frameId: z.string().min(1).max(128).optional(),
+  maxChunkHorizonMs: z.number().int().positive().max(60_000).optional(),
+  maxControlHz: z.number().positive().max(2_000).optional(),
+  maxChunkVelocityMps: z.number().positive().optional(),
+  maxChunkAccelerationMps2: z.number().positive().optional(),
+  maxChunkJerkMps3: z.number().positive().optional(),
+  maxTransitionPositionDelta: z.number().nonnegative().optional(),
+  maxTransitionVelocityDelta: z.number().nonnegative().optional(),
+  requireSafeStopOnFailure: z.boolean().optional(),
 }).strict();
 
 export const humanAuthorityRequirementsOrProofSchema = z.object({
@@ -183,12 +217,18 @@ export const capabilityTokenSchema = z.object({
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
+  adaptationPermit: vlaAdaptationPermitSchema.optional(),
   /** Runtime behavioral constraints (input patterns, rate limits, payload size). */
   behavioralConstraints: behavioralConstraintsSchema.optional(),
   /** Managed-autonomy authority policy. */
   autonomyPolicy: autonomyPolicySchema.optional(),
   /** Optional human authority requirements. */
   humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
+  /** Optional shared deployment envelope requirements. */
+  deploymentEnvelope: deploymentEnvelopeSchema.optional(),
+  /** Optional manufacturing execution envelope requirements. */
+  manufacturingEnvelope: manufacturingExecutionEnvelopeSchema.optional(),
+  hazardousEnergyEnvelope: hazardousEnergyEnvelopeSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */
@@ -215,12 +255,18 @@ export const capabilityTokenRequestSchema = z.object({
   attestationRequirements: attestationRequirementsSchema.optional(),
   verifiableComputeRequirements: verifiableComputeRequirementsSchema.optional(),
   executionEnvelope: executionEnvelopeSchema.optional(),
+  adaptationPermit: vlaAdaptationPermitSchema.optional(),
   /** Runtime behavioral constraints for this token. */
   behavioralConstraints: behavioralConstraintsSchema.optional(),
   /** Managed-autonomy authority policy. */
   autonomyPolicy: autonomyPolicySchema.optional(),
   /** Optional human authority requirements. */
   humanAuthorityRequirements: humanAuthorityRequirementsSchema.optional(),
+  /** Optional shared deployment envelope requirements. */
+  deploymentEnvelope: deploymentEnvelopeSchema.optional(),
+  /** Optional manufacturing execution envelope requirements. */
+  manufacturingEnvelope: manufacturingExecutionEnvelopeSchema.optional(),
+  hazardousEnergyEnvelope: hazardousEnergyEnvelopeSchema.optional(),
   /** APS passport identifier for cross-protocol identity linkage. */
   passportId: z.string().min(1).max(256).optional(),
   /** Delegation depth in the APS chain (0 = root). */

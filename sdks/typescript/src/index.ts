@@ -41,6 +41,13 @@ export interface SintInterceptRequest {
     humanDetected?: boolean;
     currentPosition?: { x: number; y: number; z?: number };
   };
+  consequenceContext?: {
+    reversibility: "reversible" | "compensatable" | "irreversible";
+    affectedEntities?: number;
+    monetaryValue?: { amount: number; currency: string };
+    operationalDurationMs?: number;
+    propagationDepth?: number;
+  };
   recentActions?: string[];
   executionContext?: Record<string, unknown>;
 }
@@ -75,6 +82,12 @@ export interface SintPendingApproval {
   approvalCount: number;
   createdAt: string;
   expiresAt: string;
+  reviewerEvidence?: {
+    bundleHash: string;
+    requestedEffect: { paramsDigest: string };
+    authority: { tokenId: string; expiresAt: string; constraints: Record<string, unknown> };
+    evaluatedBy: string;
+  };
 }
 
 export interface SintDiscovery {

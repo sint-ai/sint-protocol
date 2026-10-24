@@ -80,8 +80,14 @@ systems:
   for managed autonomy: `stable -> metacognitive_recovery ->
   assisted_recovery -> regulated_control`.
 - **External evidence packets:** OWASP Agentic AI landscape, MITRE ATLAS
-  candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review, and
-  production-slice validation artifacts are published under `docs/`.
+  candidate mappings, AAIF RFC-001 packet, NIST bundle, dependency review,
+  OpenSSF profile, release-gate report, and production-slice validation
+  artifacts are published under `docs/`.
+
+- **OpenSSF readiness page:** the published
+  [`docs/community/openssf-best-practices-profile.md`](docs/community/openssf-best-practices-profile.md)
+  collects the current security, release, conformance, and gap-tracking
+  evidence in one place.
 - **Open physical-envelope research:** the
   [SINT × DriftCore collaboration roadmap](docs/community/driftcore-sint-collaboration-roadmap.md)
   proposes protocol-neutral attestation schemas, adversarial fixtures, and
@@ -92,6 +98,8 @@ FR1-FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework
 references the ROSClaw empirical safety study
 ([arXiv:2603.26997](https://arxiv.org/abs/2603.26997)) and MCP security
 analysis ([arXiv:2601.17549](https://arxiv.org/abs/2601.17549)).
+Current inventory claims and their reproduction commands are maintained in the
+canonical [`docs/project-facts.md`](docs/project-facts.md) page.
 
 ```
 Agent ──► SINT Bridge ──► Policy Gateway ──► Allow / Deny / Escalate
@@ -362,6 +370,8 @@ See [docs/guides/sint-interface.md](docs/guides/sint-interface.md) for full setu
 
 If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo, read **[AGENTS.md](AGENTS.md)** first. It covers key invariants, common mistakes, and entry points for the most common tasks. For deeper implementation details, see **[CLAUDE.md](CLAUDE.md)**.
 
+For a clone-to-validated-change workflow, use the **[Agent Onboarding Guide](docs/agent-onboarding.md)**. Run `pnpm run verify` before handing work back; it builds, type-checks, and tests the full workspace.
+
 ## Architecture
 
 ```
@@ -436,6 +446,7 @@ If you are an AI agent (Claude, GPT, Gemini, Cursor, etc.) working in this repo,
 | [`@sint/bridge-ros2`](packages/bridge-ros2) | ROS 2 topic/service/action interception with physics extraction | 20 |
 | [`@sint/bridge-a2a`](packages/bridge-a2a) | Google A2A Protocol bridge for multi-agent coordination | 38 |
 | [`@sint/bridge-iot`](packages/bridge-iot) | Generic MQTT/CoAP edge IoT bridge with gateway session interception | 21 |
+| [`@pshkv/bridge-openpi`](packages/bridge-openpi) | Authenticated OpenPI/VLA inference bridge with governed action chunks | 6 |
 | [`@sint/bridge-mqtt-sparkplug`](packages/bridge-mqtt-sparkplug) | MQTT Sparkplug profile mapping with industrial command tiering defaults | 8 |
 | [`@sint/bridge-opcua`](packages/bridge-opcua) | OPC UA node/method mapping with safety-critical write/call promotion | 6 |
 | [`@sint/bridge-open-rmf`](packages/bridge-open-rmf) | Open-RMF fleet/facility mapping for warehouse dispatch workflows | 5 |
@@ -748,6 +759,7 @@ docker-compose up
 - Release notes: [`docs/RELEASE_NOTES_v0.2.md`](docs/RELEASE_NOTES_v0.2.md)
 - Conformance matrix: [`docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md`](docs/CONFORMANCE_CERTIFICATION_MATRIX_v0.2.md)
 - EU AI Act mapping: [`docs/compliance/eu-ai-act-mapping.md`](docs/compliance/eu-ai-act-mapping.md)
+- EU Machinery Regulation mapping: [`docs/compliance/eu-machinery-regulation-mapping.md`](docs/compliance/eu-machinery-regulation-mapping.md)
 - ISO 13482 alignment: [`docs/compliance/iso-13482-alignment.md`](docs/compliance/iso-13482-alignment.md)
 - Formal threat model: [`docs/security/formal-threat-model.md`](docs/security/formal-threat-model.md)
 - MITRE ATLAS candidate mappings: [`docs/security/mitre-atlas-agent-technique-mappings.md`](docs/security/mitre-atlas-agent-technique-mappings.md)

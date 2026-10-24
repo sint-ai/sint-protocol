@@ -29,6 +29,12 @@ Generate the public signed artifact for external evaluators:
 pnpm run security:production-slice-artifact
 ```
 
+Run the packaged conformance report:
+
+```bash
+pnpm run conformance:report
+```
+
 Artifact outputs:
 
 - `docs/reports/production-slice-validation-artifact.json`

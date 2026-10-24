@@ -107,6 +107,7 @@ impl SintRequestBuilder {
             action,
             params: self.params,
             physical_context: self.physical_context,
+            consequence_context: None,
         })
     }
 }

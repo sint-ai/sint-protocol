@@ -14,6 +14,7 @@
  * - Velocity within token limit AND within envelope → allow
  * - Token limit tighter than envelope → token limit wins (envelope is a no-op)
  * - Plugin error → fail-open (token limit used, request proceeds)
+ * - Plugin error + deny mode → fail-closed
  * - Envelope emits "policy.envelope.applied" event when reason provided
  * - Force envelope tightening → deny when force exceeds envelope but not token
  * - maxVelocityMps: 0 envelope → any nonzero velocity is denied
@@ -189,6 +190,26 @@ describe("DynamicEnvelopePlugin", () => {
     const decision = await gw.intercept(req);
     expect(decision.action).toBe("deny");
     expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "dynamicEnvelope.compute", policy: "deny" }));
+  });
+
+  it("plugin error → deny when fail-closed mode is configured", async () => {
+    const token = makeToken({ maxVelocityMps: 2.0 });
+    const brokenEnvelope: DynamicEnvelopePlugin = {
+      computeEnvelope: vi.fn().mockRejectedValue(new Error("safety lidar offline")),
+    };
+    const emitted: string[] = [];
+    const gw = new PolicyGateway({
+      resolveToken: () => token,
+      dynamicEnvelope: brokenEnvelope,
+      dynamicEnvelopeFailureMode: "deny",
+      emitLedgerEvent: (event) => emitted.push(event.eventType),
+    });
+
+    const decision = await gw.intercept(makeRequest(token, 0.1));
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("POLICY_PLUGIN_UNAVAILABLE");
+    expect(emitted).toContain("policy.plugin.failed");
   });
 
   it("envelope emits policy.envelope.applied event with reason", async () => {

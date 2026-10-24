@@ -71,6 +71,8 @@ limits, and tamper-evident audit evidence before execution.
 - Shipyard humanoid evidence export sample: `docs/reports/shipyard-humanoid-evidence-export.jsonl`
 - OWASP Agentic Landscape submission packet: [Community/OWASP Packet](./community/owasp-agentic-landscape-submission.md)
 - EU AI Act mapping: [Compliance/EU AI Act](./compliance/eu-ai-act-mapping.md)
+- EU Machinery Regulation mapping: [Compliance/EU Machinery Regulation](./compliance/eu-machinery-regulation-mapping.md)
+- Reproducible repository inventory: [Project Facts](./project-facts.md)
 - ISO 13482 alignment: [Compliance/ISO 13482](./compliance/iso-13482-alignment.md)
 - Formal threat model: [Security/Formal Threat Model](./security/formal-threat-model.md)
 - MITRE ATLAS candidate mappings: [Security/MITRE ATLAS](./security/mitre-atlas-agent-technique-mappings.md)

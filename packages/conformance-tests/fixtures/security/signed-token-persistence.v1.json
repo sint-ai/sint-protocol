@@ -6,48 +6,209 @@
       "guardProfileId": "guard://persistence-test",
       "maxMetacognitiveRecoveryMs": 250,
       "maxAssistedRecoveryMs": 1000,
-      "assistanceQuorum": { "required": 2, "verifierTypes": ["human", "policy"] },
+      "assistanceQuorum": {
+        "required": 2,
+        "verifierTypes": [
+          "human",
+          "policy"
+        ]
+      },
       "regulatedController": "human_operator",
       "failClosed": true
     },
     "humanAuthorityRequirements": {
       "requiredAssuranceLevel": "delegation",
-      "allowedProofProviders": ["verifier://persistence-test"],
+      "allowedProofProviders": [
+        "verifier://persistence-test"
+      ],
       "maxProofAgeMs": 60000,
-      "requiredBinding": { "applicationId": "persistence-test", "siteId": "site-1", "resource": "mcp://filesystem/readFile", "action": "call" },
+      "requiredBinding": {
+        "applicationId": "persistence-test",
+        "siteId": "site-1",
+        "resource": "mcp://filesystem/readFile",
+        "action": "call"
+      },
       "allowedDelegationDepth": 0,
       "requireUniquePrincipal": true
     },
     "regulatedDataPolicy": {
-      "allowedDataClasses": ["PHI"],
-      "allowedPurposes": ["TREAT"],
-      "approvedProcessors": ["processor-1"],
-      "approvedRegions": ["region-1"],
-      "approvedModels": ["model-1"],
-      "allowedContextFields": ["symptoms"],
+      "allowedDataClasses": [
+        "PHI"
+      ],
+      "allowedPurposes": [
+        "TREAT"
+      ],
+      "approvedProcessors": [
+        "processor-1"
+      ],
+      "approvedRegions": [
+        "region-1"
+      ],
+      "approvedModels": [
+        "model-1"
+      ],
+      "allowedContextFields": [
+        "symptoms"
+      ],
       "allowFallback": false
+    },
+    "deploymentEnvelope": {
+      "requiredEvidenceRefs": [
+        {
+          "evidenceType": "site-permit",
+          "evidenceRef": "permit://site-1",
+          "proofHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "proofFreshness": {
+        "maxProofAgeMs": 5000
+      }
+    },
+    "manufacturingEnvelope": {
+      "partNumber": "PN-42",
+      "revision": "B",
+      "inspectionRequired": true
+    },
+    "hazardousEnergyEnvelope": {
+      "domain": "laser",
+      "actuatorIds": [
+        "laser-1"
+      ],
+      "allowedTargetClasses": [
+        "weed"
+      ],
+      "protectedTargetClasses": [
+        "human"
+      ],
+      "minTargetConfidence": 0.99,
+      "maxObservationAgeMs": 250,
+      "maxSpatialUncertaintyMm": 1,
+      "minProtectedObjectClearanceMm": 100,
+      "requireHardwarePermit": true
+    },
+    "adaptationPermit": {
+      "permitId": "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6b1",
+      "baseCheckpointDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "trainableComponents": [
+        "head"
+      ],
+      "rewardSpecDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "rollbackCheckpointDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "maxTrials": 1,
+      "maxDurationMs": 1000,
+      "requiresSimulationPass": true,
+      "expiresAt": "2099-01-01T00:00:00.000Z"
     }
   },
   "otherOptionalFields": {
-    "modelConstraints": { "allowedModelIds": ["model-1"], "maxModelVersion": "1", "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
-    "attestationRequirements": { "minAttestationGrade": 0, "allowedTeeBackends": ["none"], "requireForTiers": ["T3_commit"] },
-    "verifiableComputeRequirements": { "requireForTiers": ["T3_commit"], "allowedProofTypes": ["snark"], "verifierRefs": ["verifier://compute"], "maxProofAgeMs": 5000, "requirePublicInputsHash": false },
-    "executionEnvelope": { "corridorId": "corridor-1", "missionType": "inspection", "maxDeviationMeters": 0, "maxHeadingDeviationDeg": 0, "maxVelocityMps": 0.5, "maxForceNewtons": 2, "requiresSpatialProof": false, "frameId": "map" },
-    "behavioralConstraints": { "allowedPatterns": ["^read$"], "deniedPatterns": ["delete"], "maxPayloadBytes": 1024 },
+    "modelConstraints": {
+      "allowedModelIds": [
+        "model-1"
+      ],
+      "maxModelVersion": "1",
+      "modelFingerprintHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "attestationRequirements": {
+      "minAttestationGrade": 0,
+      "allowedTeeBackends": [
+        "none"
+      ],
+      "requireForTiers": [
+        "T3_commit"
+      ]
+    },
+    "verifiableComputeRequirements": {
+      "requireForTiers": [
+        "T3_commit"
+      ],
+      "allowedProofTypes": [
+        "snark"
+      ],
+      "verifierRefs": [
+        "verifier://compute"
+      ],
+      "maxProofAgeMs": 5000,
+      "requirePublicInputsHash": false
+    },
+    "executionEnvelope": {
+      "corridorId": "corridor-1",
+      "missionType": "inspection",
+      "maxDeviationMeters": 0,
+      "maxHeadingDeviationDeg": 0,
+      "maxVelocityMps": 0.5,
+      "maxForceNewtons": 2,
+      "requiresSpatialProof": false,
+      "frameId": "map"
+    },
+    "behavioralConstraints": {
+      "allowedPatterns": [
+        "^read$"
+      ],
+      "deniedPatterns": [
+        "delete"
+      ],
+      "maxPayloadBytes": 1024
+    },
     "passportId": "aps:persistence-test",
     "delegationDepth": 0,
     "revocationEndpoint": "https://example.invalid/revoke",
     "cryptoProfile": "classic-ed25519",
-    "postQuantumSignatures": [{ "algorithm": "ML-DSA-65", "publicKeyRef": "pq://metadata-only", "signature": "metadata-only-not-pq-verification" }]
+    "postQuantumSignatures": [
+      {
+        "algorithm": "ML-DSA-65",
+        "publicKeyRef": "pq://metadata-only",
+        "signature": "metadata-only-not-pq-verification"
+      }
+    ]
   },
   "combinations": [
     [],
-    ["autonomyPolicy"],
-    ["humanAuthorityRequirements"],
-    ["regulatedDataPolicy"],
-    ["autonomyPolicy", "humanAuthorityRequirements"],
-    ["autonomyPolicy", "regulatedDataPolicy"],
-    ["humanAuthorityRequirements", "regulatedDataPolicy"],
-    ["autonomyPolicy", "humanAuthorityRequirements", "regulatedDataPolicy"]
+    [
+      "autonomyPolicy"
+    ],
+    [
+      "humanAuthorityRequirements"
+    ],
+    [
+      "regulatedDataPolicy"
+    ],
+    [
+      "autonomyPolicy",
+      "humanAuthorityRequirements"
+    ],
+    [
+      "autonomyPolicy",
+      "regulatedDataPolicy"
+    ],
+    [
+      "humanAuthorityRequirements",
+      "regulatedDataPolicy"
+    ],
+    [
+      "autonomyPolicy",
+      "humanAuthorityRequirements",
+      "regulatedDataPolicy"
+    ],
+    [
+      "deploymentEnvelope"
+    ],
+    [
+      "manufacturingEnvelope"
+    ],
+    [
+      "hazardousEnergyEnvelope"
+    ],
+    [
+      "adaptationPermit"
+    ],
+    [
+      "autonomyPolicy",
+      "humanAuthorityRequirements",
+      "regulatedDataPolicy",
+      "deploymentEnvelope",
+      "manufacturingEnvelope",
+      "hazardousEnergyEnvelope",
+      "adaptationPermit"
+    ]
   ]
 }

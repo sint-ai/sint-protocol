@@ -14,6 +14,8 @@ import {
   RiskTier,
   type PolicyDecision,
   type RateLimitStore,
+  type Result,
+  type SimulationPreflight,
   type SintCapabilityToken,
   type SintRequest,
   type TierAssignmentRule,
@@ -22,6 +24,8 @@ import {
   DEFAULT_FORBIDDEN_COMBOS,
   normalizeComboAction,
   parseMcpResource,
+  err,
+  ok,
 } from "@pshkv/core";
 import {
   validateCapabilityToken,
@@ -41,8 +45,14 @@ import type { SafetyPermitPlugin } from "./safety-permit.js";
 import type { ArgInjectionDetector } from "./arg-injection-detector.js";
 import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
-import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+import type { HumanAuthorityPolicyPlugin, HumanAuthorityProofResolver } from "./human-authority-policy.js";
 import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
+import type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
+import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
+import type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } from "./manufacturing-execution-policy.js";
+import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
+import type { SimulationEvidencePolicyPlugin } from "./simulation-evidence-policy.js";
+import { createSimulationPreflight } from "./simulation-evidence-policy.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -126,6 +136,8 @@ export interface DynamicEnvelopePlugin {
     reason?: string;
   }>;
 }
+
+export type DynamicEnvelopeFailureMode = "fail-open" | "deny";
 
 /**
  * Corridor verifier hook for spatial mission envelopes.
@@ -268,6 +280,11 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
   /**
+   * Behavior when the dynamic envelope cannot produce a safety limit.
+   * @deprecated Dynamic envelope failures always deny; retained for source compatibility.
+   */
+  readonly dynamicEnvelopeFailureMode?: DynamicEnvelopeFailureMode;
+  /**
    * Optional spatial corridor verifier for mission envelopes.
    * When a token requires spatial proof and declares deviation/heading limits,
    * absence or failure of this verifier denies the request fail-closed.
@@ -330,6 +347,27 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    * When omitted, the gateway uses the built-in default policy evaluator.
    */
   readonly humanAuthorityPolicy?: HumanAuthorityPolicyPlugin;
+  /** Required by the default gate for tokens carrying human authority requirements. */
+  readonly resolveHumanAuthorityProof?: HumanAuthorityProofResolver;
+  /**
+   * Optional shared deployment-envelope policy hook.
+   * When omitted, the gateway uses the built-in default policy evaluator.
+   */
+  readonly deploymentEnvelopePolicy?: DeploymentEnvelopePolicyPlugin;
+  /** Authenticated deployment evidence lookup; required by the default evidence gate. */
+  readonly resolveDeploymentEvidence?: DeploymentEvidenceResolver;
+  /** Authenticated quality-system lookup; required when inspectionRequired is true. */
+  readonly resolveInspectionReceipt?: InspectionReceiptResolver;
+  /**
+   * Optional manufacturing execution-envelope policy hook.
+   * When omitted, the gateway uses the built-in default policy evaluator.
+   */
+  readonly manufacturingExecutionPolicy?: ManufacturingExecutionPolicyPlugin;
+  /**
+   * Optional signed predictive-simulation evidence gate.
+   * When configured, it runs after token/deployment checks and fails closed.
+   */
+  readonly simulationEvidencePolicy?: SimulationEvidencePolicyPlugin;
   /**
    * Optional deployment-profile spatial integrity policy.
    * Enforces fresh localization evidence for GPS-denied, underground, or other
@@ -344,6 +382,17 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    * write robot control programs. Fail-closed on plugin errors.
    */
   readonly codeAsPolicyGuard?: CodeAsPolicyGuardPlugin;
+}
+
+export interface SimulationPreflightError {
+  readonly code:
+    | "MALFORMED_REQUEST"
+    | "TOKEN_NOT_FOUND"
+    | "TOKEN_SUBJECT_MISMATCH"
+    | "TOKEN_REVOKED"
+    | "TOKEN_INVALID"
+    | "SIMULATION_PREFLIGHT_POLICY_ERROR";
+  readonly reason: string;
 }
 
 /**
@@ -377,6 +426,83 @@ export class PolicyGateway {
 
   constructor(config: PolicyGatewayConfig) {
     this.config = config;
+  }
+
+  /**
+   * Describe the exact effect plan and tier-selected simulation requirement.
+   *
+   * This method is advisory and can never authorize execution. Clients submit
+   * the returned effect plan to an EffectSimulator, attach the signed receipt,
+   * and call intercept() for the actual policy decision.
+   */
+  async preflightSimulation(
+    request: SintRequest,
+  ): Promise<Result<SimulationPreflight, SimulationPreflightError>> {
+    const parsed = sintRequestSchema.safeParse(request);
+    if (!parsed.success) {
+      return err({ code: "MALFORMED_REQUEST", reason: "Request failed schema validation" });
+    }
+
+    const token = await this.config.resolveToken(request.tokenId);
+    if (!token) {
+      return err({ code: "TOKEN_NOT_FOUND", reason: "Capability token not found" });
+    }
+    if (token.subject !== request.agentId) {
+      return err({
+        code: "TOKEN_SUBJECT_MISMATCH",
+        reason: "Capability token subject does not match requesting agent identity",
+      });
+    }
+    if (this.config.revocationStore && !this.config.revocationStore.checkRevocation(token.tokenId).ok) {
+      return err({ code: "TOKEN_REVOKED", reason: "Capability token has been revoked" });
+    }
+
+    const tokenValidation = this.validateTokenForRequest(token, request);
+    if (!tokenValidation.ok) {
+      return err({
+        code: "TOKEN_INVALID",
+        reason: `Token validation failed: ${tokenValidation.error}`,
+      });
+    }
+
+    const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
+    let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
+    if (this.config.csmlEscalation) {
+      try {
+        const csmlDecision = await this.config.csmlEscalation.evaluateAgent(
+          request.agentId,
+          tierAssignment.approvalTier,
+        );
+        if (csmlDecision.escalated) {
+          tierAssignment = {
+            ...tierAssignment,
+            approvalTier: csmlDecision.resultTier,
+            escalationReasons: [...tierAssignment.escalationReasons, csmlDecision.reason],
+          };
+        }
+      } catch {
+        // Match intercept(): CSML is an additive, fail-open escalation signal.
+      }
+    }
+
+    try {
+      const requirement = this.config.simulationEvidencePolicy?.getRequirement?.(
+        request,
+        token,
+        tierAssignment.approvalTier,
+      );
+      return ok(createSimulationPreflight(
+        request,
+        token,
+        tierAssignment.approvalTier,
+        requirement,
+      ));
+    } catch {
+      return err({
+        code: "SIMULATION_PREFLIGHT_POLICY_ERROR",
+        reason: "Simulation requirement policy failed during advisory preflight",
+      });
+    }
   }
 
   /**
@@ -530,36 +656,7 @@ export class PolicyGateway {
     }
 
     // 4. Validate the capability token (signature, expiry, permissions, constraints)
-    const tokenValidation = validateCapabilityToken(token, {
-      resource: request.resource,
-      action: request.action,
-      modelContext: {
-        modelId: request.executionContext?.model?.modelId,
-        modelVersion: request.executionContext?.model?.modelVersion,
-        modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
-        attestationGrade: request.executionContext?.attestation?.grade,
-        teeBackend: request.executionContext?.attestation?.teeBackend,
-        verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
-        verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
-        verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,
-        verifiableComputePublicInputsHash: request.executionContext?.verifiableCompute?.publicInputsHash,
-        verifiableComputeGeneratedAt: request.executionContext?.verifiableCompute?.generatedAt,
-        verifiableComputeVerifierRef: request.executionContext?.verifiableCompute?.verifierRef,
-      },
-      physicalContext: request.physicalContext
-        ? {
-            commandedForceNewtons: request.physicalContext.currentForceNewtons,
-            commandedVelocityMps: request.physicalContext.currentVelocityMps,
-            humanPresenceDetected: request.physicalContext.humanDetected,
-            position: request.physicalContext.currentPosition
-              ? {
-                  x: request.physicalContext.currentPosition.x,
-                  y: request.physicalContext.currentPosition.y,
-                }
-              : undefined,
-          }
-        : undefined,
-    });
+    const tokenValidation = this.validateTokenForRequest(token, request);
     if (!tokenValidation.ok) {
       const decision = this.deny(
         requestId,
@@ -576,10 +673,34 @@ export class PolicyGateway {
       return decision;
     }
 
+    // These signed contracts are schema foundations only in this release.
+    // Never silently ignore an authority restriction without an enforcement path.
+    if (token.hazardousEnergyEnvelope !== undefined) {
+      return this.deny(requestId, timestamp, "HAZARDOUS_ENERGY_ENFORCEMENT_UNAVAILABLE",
+        "Hazardous-energy execution requires an enforcement integration that is not supported in this release");
+    }
+    if (token.adaptationPermit !== undefined) {
+      return this.deny(requestId, timestamp, "VLA_ADAPTATION_ENFORCEMENT_UNAVAILABLE",
+        "Online adaptation requires an enforcement integration that is not supported in this release");
+    }
+
+    // A token may bind execution authority to an approved training lineage.
+    // Record only immutable digests; raw demonstrations and biometric data stay
+    // in the customer-controlled data plane.
+    if (token.modelConstraints?.datasetDigest !== undefined) {
+      failures.emit("vla.lineage.verified", request.agentId, request.tokenId, {
+        datasetDigest: token.modelConstraints.datasetDigest,
+        trainingRecipeDigest: token.modelConstraints.trainingRecipeDigest,
+        checkpointDigest: token.modelConstraints.checkpointDigest,
+        promotionEvidenceDigest: token.modelConstraints.promotionEvidenceDigest,
+        rollbackCheckpointDigest: token.modelConstraints.rollbackCheckpointDigest,
+      });
+    }
+
     // 4a-human. Human authority proof gate.
     // Tokens can require a bound human proof before any other policy logic runs.
     // This gate is fail-closed and uses the built-in policy evaluator by default.
-    const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy();
+    const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy(this.config.resolveHumanAuthorityProof);
     const humanAuthorityFailure = await failures.check("humanAuthority.evaluate", () => humanAuthorityPolicy.evaluate(
         request,
         token,
@@ -597,6 +718,22 @@ export class PolicyGateway {
       }
     });
     if (humanAuthorityFailure) return humanAuthorityFailure;
+
+    // 4a-deploy. Shared deployment envelope checks.
+    // This layer enforces freshness and context-binding for deployment packs
+    // before vertical-specific policies run.
+    const deploymentEnvelopePolicy =
+      this.config.deploymentEnvelopePolicy ?? new DefaultDeploymentEnvelopePolicy(this.config.resolveDeploymentEvidence);
+    const deploymentFailure = await failures.check("deploymentEnvelope.evaluate", () =>
+      deploymentEnvelopePolicy.evaluate(request, token, { requestId, timestamp }), decision => decision);
+    if (deploymentFailure) return deploymentFailure;
+
+    // Shared evidence requirements also apply to manufacturing envelopes.
+    const manufacturingExecutionPolicy = this.config.manufacturingExecutionPolicy
+      ?? new DefaultManufacturingExecutionPolicy(this.config.resolveDeploymentEvidence, this.config.resolveInspectionReceipt);
+    const manufacturingFailure = await failures.check("manufacturingExecution.evaluate", () =>
+      manufacturingExecutionPolicy.evaluate(request, token, { requestId, timestamp }), decision => decision);
+    if (manufacturingFailure) return manufacturingFailure;
 
     // 4a-spatial. Deployment-profile spatial integrity policy.
     // Token execution envelopes handle per-token spatial proof. This hook
@@ -731,6 +868,11 @@ export class PolicyGateway {
       return spatialMissionDecision;
     }
 
+    const vlaDecision = this.evaluateVlaEnvelope(request, token, requestId, timestamp);
+    if (vlaDecision) {
+      return vlaDecision;
+    }
+
     if (token.constraints.rateLimit && !this.config.rateLimitStore) {
       return failures.missing("rateLimit.increment");
     }
@@ -860,6 +1002,81 @@ export class PolicyGateway {
         }
       });
       if (csmlFailure) return csmlFailure;
+    }
+
+    // 5c-sim. Tier-aware signed predictive-simulation evidence gate.
+    // This runs after base assignment and CSML escalation so evidence depth is
+    // selected from the final consequence tier. A valid receipt is evidence
+    // only; normal gateway authorization and approval still continue.
+    if (this.config.simulationEvidencePolicy) {
+      let simulationEnforcementMode: "enforce" | "shadow" = "enforce";
+      try {
+        const requestedSimulationEnforcementMode = this.config.simulationEvidencePolicy.getEnforcementMode?.(
+          request,
+          token,
+          tierAssignment.approvalTier,
+        ) ?? "enforce";
+        // Shadow is a calibration state for T1 only. The gateway clamps this
+        // invariant even when a custom policy plugin is misconfigured.
+        simulationEnforcementMode = requestedSimulationEnforcementMode === "shadow"
+          && tierAssignment.approvalTier === ApprovalTier.T1_PREPARE
+          ? "shadow"
+          : "enforce";
+        const simulationDecision = await this.config.simulationEvidencePolicy.evaluate(
+          request,
+          token,
+          tierAssignment.approvalTier,
+          { requestId, timestamp },
+        );
+        if (simulationDecision) {
+          failures.emit("simulation.receipt.rejected", request.agentId, request.tokenId, {
+            receiptId: request.executionContext?.simulationEvidence?.receiptId,
+            evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
+            assignedTier: tierAssignment.approvalTier,
+            policyViolated: simulationDecision.denial?.policyViolated,
+            enforcementMode: simulationEnforcementMode,
+          });
+          if (simulationEnforcementMode === "enforce") {
+            failures.emit("policy.evaluated", request.agentId, request.tokenId, {
+              decision: simulationDecision.action,
+              tier: simulationDecision.assignedTier,
+              risk: simulationDecision.assignedRisk,
+              source: "simulation_evidence_policy",
+              assignedTier: tierAssignment.approvalTier,
+              policyViolated: simulationDecision.denial?.policyViolated,
+            });
+            return simulationDecision;
+          }
+        }
+        if (!simulationDecision && request.executionContext?.simulationEvidence) {
+          failures.emit("simulation.receipt.verified", request.agentId, request.tokenId, {
+            receiptId: request.executionContext.simulationEvidence.receiptId,
+            evidenceGrade: request.executionContext.simulationEvidence.evidenceGrade,
+            requestDigest: request.executionContext.simulationEvidence.requestDigest,
+            effectPlanDigest: request.executionContext.simulationEvidence.effectPlanDigest,
+            artifactDigest: request.executionContext.simulationEvidence.artifactDigest,
+            assignedTier: tierAssignment.approvalTier,
+            enforcementMode: simulationEnforcementMode,
+          });
+        }
+      } catch {
+        if (simulationEnforcementMode === "shadow") {
+          failures.emit("simulation.receipt.rejected", request.agentId, request.tokenId, {
+            receiptId: request.executionContext?.simulationEvidence?.receiptId,
+            evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
+            assignedTier: tierAssignment.approvalTier,
+            policyViolated: "SIMULATION_EVIDENCE_POLICY_ERROR",
+            enforcementMode: simulationEnforcementMode,
+          });
+        } else {
+          return this.deny(
+            requestId,
+            timestamp,
+            "SIMULATION_EVIDENCE_POLICY_ERROR",
+            "Simulation evidence policy failed closed after tier assignment",
+          );
+        }
+      }
     }
 
     // 5f-pre. SafetyPermitPlugin — resolve external hardware safety state before built-in check
@@ -1199,6 +1416,55 @@ export class PolicyGateway {
     return this.intercept(request);
   }
 
+  /** Shared capability validation used by advisory preflight and interception. */
+  private validateTokenForRequest(
+    token: SintCapabilityToken,
+    request: SintRequest,
+  ): ReturnType<typeof validateCapabilityToken> {
+    return validateCapabilityToken(token, {
+      resource: request.resource,
+      action: request.action,
+      modelContext: {
+        modelId: request.executionContext?.model?.modelId,
+        modelVersion: request.executionContext?.model?.modelVersion,
+        modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
+        checkpointDigest: request.executionContext?.model?.checkpointDigest,
+        policyConfigDigest: request.executionContext?.model?.policyConfigDigest,
+        normalizationDigest: request.executionContext?.model?.normalizationDigest,
+        actionTransformDigest: request.executionContext?.model?.actionTransformDigest,
+        actionSpaceDigest: request.executionContext?.model?.actionSpaceDigest,
+        embodimentId: request.executionContext?.model?.embodimentId,
+        calibrationDigest: request.executionContext?.model?.calibrationDigest,
+        sensorLayoutDigest: request.executionContext?.model?.sensorLayoutDigest,
+        datasetDigest: request.executionContext?.model?.datasetDigest,
+        trainingRecipeDigest: request.executionContext?.model?.trainingRecipeDigest,
+        promotionEvidenceDigest: request.executionContext?.model?.promotionEvidenceDigest,
+        rollbackCheckpointDigest: request.executionContext?.model?.rollbackCheckpointDigest,
+        attestationGrade: request.executionContext?.attestation?.grade,
+        teeBackend: request.executionContext?.attestation?.teeBackend,
+        verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
+        verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
+        verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,
+        verifiableComputePublicInputsHash: request.executionContext?.verifiableCompute?.publicInputsHash,
+        verifiableComputeGeneratedAt: request.executionContext?.verifiableCompute?.generatedAt,
+        verifiableComputeVerifierRef: request.executionContext?.verifiableCompute?.verifierRef,
+      },
+      physicalContext: request.physicalContext
+        ? {
+            commandedForceNewtons: request.physicalContext.currentForceNewtons,
+            commandedVelocityMps: request.physicalContext.currentVelocityMps,
+            humanPresenceDetected: request.physicalContext.humanDetected,
+            position: request.physicalContext.currentPosition
+              ? {
+                  x: request.physicalContext.currentPosition.x,
+                  y: request.physicalContext.currentPosition.y,
+                }
+              : undefined,
+          }
+        : undefined,
+    });
+  }
+
   /**
    * Make a decision based on the assigned tier.
    */
@@ -1462,6 +1728,65 @@ export class PolicyGateway {
       });
     }
 
+    return undefined;
+  }
+
+  /** Validate token-bound continuous-control, task-intent, and memory boundaries. */
+  private evaluateVlaEnvelope(
+    request: SintRequest,
+    token: SintCapabilityToken,
+    requestId: string,
+    timestamp: string,
+  ): PolicyDecision | undefined {
+    const context = request.executionContext;
+    const chunk = context?.vlaActionChunk;
+    const envelope = token.executionEnvelope;
+    const now = Date.now();
+
+    if (context?.vlaTaskIntent && Date.parse(context.vlaTaskIntent.expiresAt) <= now) {
+      return this.deny(requestId, timestamp, "VLA_INTENT_EXPIRED", "VLA task-intent envelope has expired");
+    }
+    for (const memory of context?.vlaMemoryEvidence ?? []) {
+      if (Date.parse(memory.expiresAt) <= now) {
+        return this.deny(requestId, timestamp, "VLA_MEMORY_EXPIRED", `Embodied memory ${memory.evidenceDigest} has expired`);
+      }
+    }
+    if (!chunk) return undefined;
+
+    if (envelope?.maxTransitionPositionDelta !== undefined || envelope?.maxTransitionVelocityDelta !== undefined) {
+      return this.deny(requestId, timestamp, "VLA_TRANSITION_ENFORCEMENT_UNAVAILABLE",
+        "Token-bound transition limits require a broker integration that is not supported in this release");
+    }
+
+    if (Date.parse(chunk.executeBy) <= now) {
+      return this.deny(requestId, timestamp, "VLA_CHUNK_STALE", "VLA action chunk missed its execution deadline");
+    }
+    if (context?.model?.actionSpaceDigest !== chunk.actionSpaceDigest) {
+      return this.deny(requestId, timestamp, "VLA_ACTION_SPACE_MISMATCH", "Chunk action space is not bound to the active model runtime");
+    }
+    if (context.model.embodimentId !== chunk.embodimentId) {
+      return this.deny(requestId, timestamp, "VLA_EMBODIMENT_MISMATCH", "Chunk embodiment is not bound to the active robot runtime");
+    }
+    if (context.simulationEvidence?.worldSnapshot.digest !== chunk.worldSnapshotDigest) {
+      return this.deny(requestId, timestamp, "VLA_WORLD_STATE_MISMATCH", "Chunk is not bound to the simulated world snapshot");
+    }
+    const violations = [
+      envelope?.maxChunkHorizonMs !== undefined && chunk.horizonMs > envelope.maxChunkHorizonMs
+        ? `horizon ${chunk.horizonMs}ms exceeds ${envelope.maxChunkHorizonMs}ms` : undefined,
+      envelope?.maxControlHz !== undefined && chunk.controlHz > envelope.maxControlHz
+        ? `control rate ${chunk.controlHz}Hz exceeds ${envelope.maxControlHz}Hz` : undefined,
+      envelope?.maxChunkVelocityMps !== undefined
+        && (chunk.maxVelocityMps === undefined || chunk.maxVelocityMps > envelope.maxChunkVelocityMps) ? "velocity is missing or exceeds chunk envelope" : undefined,
+      envelope?.maxChunkAccelerationMps2 !== undefined
+        && (chunk.maxAccelerationMps2 === undefined || chunk.maxAccelerationMps2 > envelope.maxChunkAccelerationMps2) ? "acceleration is missing or exceeds chunk envelope" : undefined,
+      envelope?.maxChunkJerkMps3 !== undefined
+        && (chunk.maxJerkMps3 === undefined || chunk.maxJerkMps3 > envelope.maxChunkJerkMps3) ? "jerk is missing or exceeds chunk envelope" : undefined,
+      envelope?.requireSafeStopOnFailure === true && !chunk.safeStopOnFailure
+        ? "safe-stop behavior is required" : undefined,
+    ].filter((value): value is string => value !== undefined);
+    if (violations.length > 0) {
+      return this.deny(requestId, timestamp, "VLA_CHUNK_CONSTRAINT_VIOLATION", violations.join("; "));
+    }
     return undefined;
   }
 

@@ -11,11 +11,12 @@ const fixture = JSON.parse(readFileSync(new URL("../../../packages/conformance-t
 const key = generateKeypair();
 const variants = fixture.combinations.map(fields => ({ name: fields.join("+") || "absent", fields: Object.fromEntries(fields.map(field => [field, fixture.policyFields[field]])) }));
 variants.push({ name: "all-signed-optional-fields", fields: { ...fixture.policyFields, ...fixture.otherOptionalFields } });
-const migration = readFileSync(new URL("../../../packages/persistence/migrations/007_token_policy_fields.sql", import.meta.url), "utf8");
+const migration = ["007_token_policy_fields.sql", "008_predictive_policy_fields.sql"]
+  .map(file => readFileSync(new URL(`../../../packages/persistence/migrations/${file}`, import.meta.url), "utf8")).join("\n");
 // Recreate the pre-007 table shape; bootstrap and the standalone migration must
 // both upgrade it without rewriting existing signed rows.
 const legacyDDL = readFileSync(new URL("../../../packages/persistence/migrations/002_create_tokens.sql", import.meta.url), "utf8")
-  .split("ALTER TABLE")[0]!.replace(/^.*(?:autonomy_policy|human_authority_requirements|regulated_data_policy).*\n/gm, "");
+  .split("ALTER TABLE")[0]!.replace(/^.*(?:autonomy_policy|human_authority_requirements|regulated_data_policy|deployment_envelope|manufacturing_envelope|hazardous_energy_envelope|adaptation_permit).*\n/gm, "");
 
 function issue(fields: Record<string, unknown> = {}): SintCapabilityToken {
   const token = issueCapabilityToken({ issuer: key.publicKey, subject: key.publicKey, resource: "mcp://*", actions: ["call"], constraints: {}, delegationChain: { parentTokenId: null, depth: 0, attenuated: false }, expiresAt: new Date(Date.now() + 3600000).toISOString(), revocable: true, ...fields } as SintCapabilityTokenRequest, key.privateKey);
@@ -76,6 +77,10 @@ describe.skipIf(!process.env.DATABASE_URL).each(["bootstrap", "migration"])("sig
     { field: "autonomyPolicy", column: "autonomy_policy", path: ["assistanceQuorum", "required"], value: 1 },
     { field: "humanAuthorityRequirements", column: "human_authority_requirements", path: ["requireUniquePrincipal"], value: false },
     { field: "regulatedDataPolicy", column: "regulated_data_policy", path: ["allowFallback"], value: true },
+    { field: "deploymentEnvelope", column: "deployment_envelope", path: ["proofFreshness", "maxProofAgeMs"], value: 600000 },
+    { field: "manufacturingEnvelope", column: "manufacturing_envelope", path: ["inspectionRequired"], value: false },
+    { field: "hazardousEnergyEnvelope", column: "hazardous_energy_envelope", path: ["maxObservationAgeMs"], value: 60000 },
+    { field: "adaptationPermit", column: "adaptation_permit", path: ["maxTrials"], value: 1000 },
   ].flatMap(entry => [
     { ...entry, mutation: "widen" },
     { ...entry, mutation: "remove", path: null, value: null },

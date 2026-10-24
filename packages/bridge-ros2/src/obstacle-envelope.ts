@@ -101,12 +101,22 @@ export class ObstacleAwareEnvelope implements DynamicEnvelopePlugin {
   }> {
     const obstacleM = await this.config.getNearestObstacleM(request);
 
-    // No obstacle in range — no tightening needed
-    if (!isFinite(obstacleM) || obstacleM <= 0) {
+    // Positive infinity explicitly means the healthy sensor found no obstacle
+    // within its measurement range. Other non-finite and negative readings are
+    // invalid and must fail safe.
+    if (obstacleM === Infinity) {
       return {};
     }
 
-    // Below minimum clearance → full stop
+    if (!Number.isFinite(obstacleM) || obstacleM < 0) {
+      return {
+        maxVelocityMps: 0,
+        maxForceNewtons: 0,
+        reason: "invalid obstacle measurement — stop",
+      };
+    }
+
+    // Contact or below minimum clearance → full stop
     if (obstacleM <= this.config.minClearanceM) {
       const result: { maxVelocityMps: number; maxForceNewtons?: number; reason: string } = {
         maxVelocityMps: 0,

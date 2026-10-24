@@ -37,6 +37,8 @@ const decisionSchema = z.object({
 }).refine(value => value.action !== "deny" || value.denial !== undefined)
   .refine(value => value.action !== "escalate" || value.escalation !== undefined);
 const schemas: Record<string, z.ZodTypeAny> = {
+  "deploymentEnvelope.evaluate": decisionSchema.optional(),
+  "manufacturingExecution.evaluate": decisionSchema.optional(),
   "goalHijack.analyze": z.object({ hijackDetected: z.boolean(), confidence: z.number().min(0).max(1), patterns: strings }),
   "memoryIntegrity.check": z.object({ poisoned: z.boolean(), anomalies: strings, severity }),
   "circuitBreaker.getState": state,
@@ -67,6 +69,8 @@ const schemas: Record<string, z.ZodTypeAny> = {
   "agentTrust.get": z.enum(["untrusted", "provisional", "trusted", "verified"]).optional(),
 };
 const failureCodes: Record<string, string> = {
+  "deploymentEnvelope.evaluate": "DEPLOYMENT_ENVELOPE_POLICY_ERROR",
+  "manufacturingExecution.evaluate": "FACTORY_ENVELOPE_POLICY_ERROR",
   "humanAuthority.evaluate": "HUMAN_AUTHORITY_POLICY_ERROR",
   "spatialIntegrity.evaluate": "SPATIAL_INTEGRITY_POLICY_ERROR",
   "regulatedData.evaluate": "REGULATED_DATA_POLICY_ERROR",

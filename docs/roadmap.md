@@ -13,7 +13,8 @@ The current repo already includes:
 - production hardening guides and release gates
 - approval streaming and durable deployment paths
 - AAIF evidence and maintainer workflows
-- OpenSSF gap tracking and dependency review artifacts
+- OpenSSF gap tracking, dependency review artifacts, and the published
+  project profile
 - collaborator-facing physical AI fixtures for Open-RMF, MoveIt, Nav2, PX4,
   LeRobot, and solar field operations
 - public onboarding and contribution docs for external collaborators
@@ -30,6 +31,9 @@ As of May 2026, the repo should optimize for this order:
    marketing promise
 4. convert one collaborator lane into a shared external artifact or adapter
 5. refresh public site copy only after the shipped story is sharper
+
+The authoritative cross-sprint execution order and evidence reconciliation are
+in the [Unified Delivery Roadmap](./roadmaps/unified-delivery-roadmap.md).
 
 ### Priority 1. Trust And Evidence
 
@@ -176,6 +180,7 @@ For the fuller execution plan, use:
 - [Roadway Edge Intelligence Roadmap](./roadmaps/roadway-edge-intelligence-2026.md)
 - [Humanoid Deployment Governance Roadmap](./roadmaps/humanoid-deployment-governance-2026.md)
 - [Human-Agent Authority Roadmap](./roadmaps/human-agent-authority-2026.md)
+- [Proof-Carrying Effects and Predictive Safety Roadmap](./roadmaps/predictive-safety-plane-2026.md)
 
 ## Detailed Tracks
 

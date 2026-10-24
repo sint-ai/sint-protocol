@@ -74,7 +74,7 @@ describe("PgTokenStore", () => {
     expect(sql).toContain("revocation_endpoint");
     expect(sql).toContain("crypto_profile");
     expect(sql).toContain("post_quantum_signatures");
-    expect(values).toHaveLength(24);
+    expect(values).toHaveLength(28);
     expect(values[6]).toBe(JSON.stringify(token.modelConstraints));
     expect(values[10]).toBe(JSON.stringify(token.behavioralConstraints));
     expect(values[11]).toBe(token.passportId);

@@ -29,6 +29,11 @@ describe("Capability Token Delegator", () => {
       constraints: {
         maxForceNewtons: 100,
         maxVelocityMps: 1.0,
+        consequenceConstraints: {
+          maxReversibility: "compensatable",
+          maxAffectedEntities: 100,
+          maxPropagationDepth: 3,
+        },
       },
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
       expiresAt: futureISO(24),
@@ -105,6 +110,26 @@ describe("Capability Token Delegator", () => {
     if (!result.ok) return;
 
     expect(result.value.actions).toEqual(["subscribe"]);
+  });
+
+  it("attenuates consequence constraints without widening parent authority", () => {
+    const result = delegateCapabilityToken(issueRootToken(), {
+      newSubject: agent2.publicKey,
+      tightenConstraints: {
+        consequenceConstraints: {
+          maxReversibility: "reversible",
+          maxAffectedEntities: 10,
+          maxPropagationDepth: 1,
+        },
+      },
+    }, agent1.privateKey);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.constraints.consequenceConstraints).toMatchObject({
+      maxReversibility: "reversible",
+      maxAffectedEntities: 10,
+      maxPropagationDepth: 1,
+    });
   });
 
   it("should reject delegation beyond max depth (4+ hops)", () => {
