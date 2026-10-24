@@ -47,13 +47,13 @@ export function createAgentIdentity(
     .toISOString()
     .replace(/\.(\d{3})Z$/, ".$1000Z");
 
-  // Issue a default capability token with broad permissions
+  // The proxy identity can call configured tools; it cannot grant exec.run.
   const result = issueCapabilityToken(
     {
       issuer: publicKey,
       subject: publicKey,
       resource: "mcp://*",
-      actions: ["call", "exec.run", "subscribe"],
+      actions: ["call"],
       constraints: {},
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
       expiresAt,

@@ -21,6 +21,8 @@ describe("Configuration", () => {
     delete process.env.SINT_REQUIRE_SIGNATURES;
     delete process.env.SINT_RATE_LIMIT;
     delete process.env.SINT_WS_ALLOW_QUERY_API_KEY;
+    delete process.env.SINT_TRUSTED_ISSUERS;
+    delete process.env.SINT_LEDGER_SIGNING_KEY;
   });
 
   afterEach(() => {
@@ -97,6 +99,13 @@ describe("Configuration", () => {
 
     process.env.SINT_REQUIRE_SIGNATURES = "true";
     expect(() => loadConfig()).toThrow("SINT_WS_ALLOW_QUERY_API_KEY=false is required");
+
+    process.env.SINT_WS_ALLOW_QUERY_API_KEY = "false";
+    expect(() => loadConfig()).toThrow("SINT_TRUSTED_ISSUERS is required");
+    process.env.SINT_TRUSTED_ISSUERS = "a".repeat(64);
+    expect(() => loadConfig()).toThrow("SINT_LEDGER_SIGNING_KEY is required");
+    process.env.SINT_LEDGER_SIGNING_KEY = "c".repeat(64);
+    expect(loadConfig().trustedIssuers).toEqual(["a".repeat(64)]);
   });
 
   it("accepts hardened production config", () => {
@@ -108,6 +117,8 @@ describe("Configuration", () => {
     process.env.SINT_API_KEY = "prod-key";
     process.env.SINT_REQUIRE_SIGNATURES = "true";
     process.env.SINT_WS_ALLOW_QUERY_API_KEY = "false";
+    process.env.SINT_TRUSTED_ISSUERS = "b".repeat(64);
+    process.env.SINT_LEDGER_SIGNING_KEY = "c".repeat(64);
 
     const config = loadConfig();
     expect(config.env).toBe("production");

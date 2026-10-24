@@ -11,7 +11,7 @@ SINT is a security enforcement layer for physical AI. It sits between AI agents 
 ```bash
 pnpm install          # Install dependencies
 pnpm run build        # Build all packages (required before test)
-pnpm run test         # Run all tests (currently 1,728 passing)
+pnpm run test         # Run all workspace tests; counts vary by checkout
 pnpm run typecheck    # Type-check without emitting
 pnpm run clean        # Remove build artifacts
 pnpm run bench        # Run PolicyGateway performance benchmarks (p50/p99 latency)
@@ -178,7 +178,7 @@ const result = interceptor.interceptPublish({
 
 ## Current Status
 
-**1,710+ tests passing across 42 packages** (as of 2026-04-11)
+**Run `pnpm run verify` for current package and test counts.**
 
 - **Phase 1** (complete): Security Wedge — tokens, gateway, ledger, conformance tests
 - **Phase 2** (complete): Bridge adapters (MCP, ROS2, MAVLink, Swarm, A2A, Economy), approval flow, persistence, server
@@ -188,7 +188,7 @@ const result = interceptor.interceptPublish({
 - **Phase 6** (complete): ASI06 cross-session/credential-funnel/velocity-loop checks, bridge test coverage (+42 tests), latency fast-path fix (steadyP99 5ms)
 - **Phase 7** (complete): `@sint/memory`, `@sint/interface-bridge`, voice-only HUD, sint__ operator tools
 - **Phase 8** (complete): `ProactiveEscalationEngine`, delegation tree, Console API routes (`/v1/memory`, `/v1/delegations`, `/v1/csml`)
-- **Phase 9** (complete): `@sint/token-registry` (public capability token registry, 18 tests), `SafetyPermitPlugin` (async external hardware safety resolver, fail-open), `IotInterceptor` (56 tests in bridge-iot), `/v1/registry` gateway routes, latency benchmark stabilised for parallel CI
+- **Phase 9** (complete): `@sint/token-registry` (public capability token registry), `SafetyPermitPlugin` (async external hardware safety resolver, fail-closed), `IotInterceptor`, `/v1/registry` gateway routes, latency benchmark stabilised for parallel CI
 - **Phase 10** (next): npm publish, Constraint Language CL-1.0, Rust SDK, sintctl registry CLI commands, Show HN
 
 ## Multi-Agent Coordination
@@ -218,4 +218,4 @@ Multiple agents and developers may work on this repo concurrently. Follow these 
 Check `git log --oneline -10` to see what landed recently. Key invariants to respect:
 - `PolicyGateway.intercept()` is the single choke point — every authorization decision must flow through it
 - Evidence ledger events are append-only and hash-chained — never modify emitted events
-- Circuit breaker fail-open: if plugin throws, treat circuit as CLOSED
+- Circuit breaker plugin failures deny the request and are recorded in evidence.

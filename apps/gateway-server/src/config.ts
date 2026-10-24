@@ -28,6 +28,10 @@ export interface SintConfig {
   rateLimitMax: number;
   /** Allow WebSocket API key auth via ?apiKey= query param. Default: true. */
   wsAllowQueryApiKey: boolean;
+  /** Ed25519 public keys permitted to issue root capability tokens. */
+  trustedIssuers?: readonly string[];
+  /** Stable Ed25519 authority key for signed ledger proofs. */
+  ledgerSigningKey?: string;
 }
 
 function parsePositiveInt(name: string, raw: string, fallback?: number): number {
@@ -73,6 +77,15 @@ export function loadConfig(): SintConfig {
   }
 
   const apiKey = process.env.SINT_API_KEY;
+  const trustedIssuers = (process.env.SINT_TRUSTED_ISSUERS ?? "")
+    .split(",").map(value => value.trim()).filter(Boolean);
+  if (trustedIssuers.some(value => !/^[0-9a-fA-F]{64}$/.test(value))) {
+    throw new Error("SINT_TRUSTED_ISSUERS must contain comma-separated Ed25519 public keys (64 hex characters each)");
+  }
+  const ledgerSigningKey = process.env.SINT_LEDGER_SIGNING_KEY;
+  if (ledgerSigningKey && !/^[0-9a-fA-F]{64}$/.test(ledgerSigningKey)) {
+    throw new Error("SINT_LEDGER_SIGNING_KEY must be a 64-character Ed25519 private key in hex");
+  }
   const requireSignatures = parseBoolean(
     "SINT_REQUIRE_SIGNATURES",
     process.env.SINT_REQUIRE_SIGNATURES,
@@ -100,6 +113,12 @@ export function loadConfig(): SintConfig {
     if (wsAllowQueryApiKey) {
       throw new Error("SINT_WS_ALLOW_QUERY_API_KEY=false is required when SINT_ENV/NODE_ENV=production");
     }
+    if (trustedIssuers.length === 0) {
+      throw new Error("SINT_TRUSTED_ISSUERS is required when SINT_ENV/NODE_ENV=production");
+    }
+    if (!ledgerSigningKey) {
+      throw new Error("SINT_LEDGER_SIGNING_KEY is required when SINT_ENV/NODE_ENV=production");
+    }
   }
 
   return {
@@ -113,5 +132,7 @@ export function loadConfig(): SintConfig {
     requireSignatures,
     rateLimitMax: parsePositiveInt("SINT_RATE_LIMIT", process.env.SINT_RATE_LIMIT ?? "100"),
     wsAllowQueryApiKey,
+    trustedIssuers,
+    ledgerSigningKey,
   };
 }

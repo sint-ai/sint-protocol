@@ -53,6 +53,7 @@ import type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } fr
 import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
 import type { SimulationEvidencePolicyPlugin } from "./simulation-evidence-policy.js";
 import { createSimulationPreflight } from "./simulation-evidence-policy.js";
+import { verifyTokenTrustChain } from "./token-trust.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -237,6 +238,8 @@ export interface VerifiableComputePlugin {
 
 export interface PolicyGatewayConfig extends PluginFailureOptions {
   readonly resolveToken: TokenResolver;
+  /** Trusted root issuer keys. Configure this at every deployable gateway boundary. */
+  readonly trustedIssuers?: readonly string[];
   readonly revocationStore?: RevocationStore;
   readonly emitLedgerEvent?: LedgerEmitter;
   /** Custom resource rules cannot lower the built-in MCP consequence floor. */
@@ -457,6 +460,12 @@ export class PolicyGateway {
       return err({ code: "TOKEN_REVOKED", reason: "Capability token has been revoked" });
     }
 
+    if (this.config.trustedIssuers) {
+      const trust = await verifyTokenTrustChain(token, this.config.resolveToken,
+        this.config.trustedIssuers, this.config.revocationStore);
+      if (!trust.ok) return err({ code: "TOKEN_INVALID", reason: `Token trust chain failed: ${trust.error}` });
+    }
+
     const tokenValidation = this.validateTokenForRequest(token, request);
     if (!tokenValidation.ok) {
       return err({
@@ -624,6 +633,17 @@ export class PolicyGateway {
         "TOKEN_SUBJECT_MISMATCH",
         "Capability token subject does not match requesting agent identity",
       );
+    }
+
+    if (this.config.trustedIssuers) {
+      const trustCheck = await failures.run("token.trustChain", async () => ({ trust:
+        await verifyTokenTrustChain(token, this.config.resolveToken,
+          this.config.trustedIssuers!, this.config.revocationStore) }));
+      if (!trustCheck.ok) return failures.deny(trustCheck.error);
+      if (!trustCheck.value.trust.ok) {
+        return this.deny(requestId, timestamp, trustCheck.value.trust.error,
+          `Token trust chain failed: ${trustCheck.value.trust.error}`);
+      }
     }
 
     // 3. Check revocation status

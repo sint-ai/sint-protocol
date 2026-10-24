@@ -528,11 +528,11 @@ function buildIndustrialSimulationReceiptStub(
   const measuredMaxForceNewtons =
     options.measuredMaxForceNewtons ?? parsed.motion.max_force_newtons;
   const safetyZoneViolations = options.safetyZoneViolations ?? 0;
-  const collisionFree = options.collisionFree ?? true;
-  const approvedForExecution =
-    collisionFree &&
-    safetyZoneViolations === 0 &&
-    measuredMaxForceNewtons <= parsed.motion.max_force_newtons;
+  // A fixture without simulator observations is never evidence of a safe run.
+  const collisionFree = options.collisionFree ?? false;
+  // This legacy adapter returns a fixture, never a verified simulator result.
+  // Authorization requires the signed V2 receipt path in PolicyGateway.
+  const approvedForExecution = false;
   const simulationArtifactUri =
     options.artifactUri ?? config.defaultArtifactUri(options.cellId, robotAssetId);
   const decisionPayload = {

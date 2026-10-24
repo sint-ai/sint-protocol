@@ -93,12 +93,14 @@ export class DownstreamManager {
         const transport = new StdioClientTransport({
           command: config.command,
           args: config.args ? [...config.args] : [],
-          env: config.env
-            ? Object.fromEntries(
-                Object.entries({ ...process.env, ...config.env })
-                  .filter((e): e is [string, string] => e[1] !== undefined),
-              )
-            : undefined,
+          // Pass only process-launch essentials and explicitly configured values.
+          // The proxy's own credentials must never leak to a downstream server.
+          env: {
+            ...(process.env["PATH"] ? { PATH: process.env["PATH"] } : {}),
+            ...(process.env["HOME"] ? { HOME: process.env["HOME"] } : {}),
+            ...(process.env["SystemRoot"] ? { SystemRoot: process.env["SystemRoot"] } : {}),
+            ...config.env,
+          },
         });
         entry.transport = transport;
         await client.connect(transport);

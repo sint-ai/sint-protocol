@@ -16,6 +16,8 @@ REDIS_URL=redis://redis:6379
 SINT_API_KEY=REDACTED
 SINT_REQUIRE_SIGNATURES=true
 SINT_WS_ALLOW_QUERY_API_KEY=false
+SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
+SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
 SINT_RATE_LIMIT=100
 ```
 
@@ -30,6 +32,9 @@ Production startup fails if any required value is missing or insecure.
 | `SINT_API_KEY` | non-empty | Admin routes such as token issuance and ledger reads must be authenticated. |
 | `SINT_REQUIRE_SIGNATURES` | `true` | Agent write requests must be signed with Ed25519 keys. |
 | `SINT_WS_ALLOW_QUERY_API_KEY` | `false` | API keys must not appear in URLs, logs, browser history, or proxy traces. |
+| `SINT_TRUSTED_ISSUERS` | comma-separated Ed25519 root public keys | Prevents self-issued capability tokens from becoming authority. |
+| `SINT_LEDGER_SIGNING_KEY` | stable Ed25519 private key from a secret manager | Signs ledger proof responses across process restarts. |
+| `SINT_ALLOWED_ORIGINS` | explicit browser origins, if needed | Production browser requests from other origins are refused. |
 
 Development and tests can still use in-memory backends by leaving
 `SINT_ENV`/`NODE_ENV` unset or setting `SINT_ENV=development`.

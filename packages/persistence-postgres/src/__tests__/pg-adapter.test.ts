@@ -235,6 +235,8 @@ describe("runMigrations()", () => {
     expect(createStatements.some((s) => s.includes("sint_ledger_events"))).toBe(true);
     expect(createStatements.some((s) => s.includes("sint_revocations"))).toBe(true);
     expect(createStatements.some((s) => s.includes("sint_rate_limit_counters"))).toBe(true);
+    expect(sqls.some((s) => s.includes("BEFORE UPDATE OR DELETE ON sint_ledger_events"))).toBe(true);
+    expect(sqls.some((s) => s.includes("BEFORE TRUNCATE ON sint_ledger_events"))).toBe(true);
   });
 });
 

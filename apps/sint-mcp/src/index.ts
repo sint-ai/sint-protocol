@@ -125,6 +125,19 @@ async function main(): Promise<void> {
 
     const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
       const url = req.url ?? "/";
+      // This transport is loopback-only. Reject browser DNS-rebinding attempts
+      // before they can reach MCP handlers, including health checks.
+      const host = req.headers.host;
+      const origin = req.headers.origin;
+      const expectedHosts = new Set([`127.0.0.1:${config.port}`, `localhost:${config.port}`]);
+      const originAllowed = !origin || (URL.canParse(origin)
+        && new URL(origin).protocol === "http:"
+        && expectedHosts.has(new URL(origin).host));
+      if (!host || !expectedHosts.has(host) || !originAllowed) {
+        res.writeHead(403);
+        res.end("Forbidden host or origin");
+        return;
+      }
 
       // Health check endpoint
       if (url === "/health" && req.method === "GET") {
@@ -143,7 +156,7 @@ async function main(): Promise<void> {
       res.end("Not found");
     });
 
-    httpServer.listen(config.port, () => {
+    httpServer.listen(config.port, "127.0.0.1", () => {
       console.error(`  ✓ Streamable HTTP on http://localhost:${config.port}/mcp`);
       console.error(`  ✓ Health check at  http://localhost:${config.port}/health`);
     });
