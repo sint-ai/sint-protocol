@@ -65,9 +65,9 @@ export type {
 export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
-export type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
+export type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
 export { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
-export type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
+export type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } from "./manufacturing-execution-policy.js";
 export {
   DefaultSimulationEvidencePolicy,
   InMemorySimulationReceiptReplayStore,
@@ -118,3 +118,4 @@ export type {
 // commonly imports them from the gateway package.
 export type { SintRequest as PolicyContext, PolicyDecision } from "@pshkv/core";
 export type { TimedComboAction } from "./forbidden-combos.js";
+export type { AdvisoryPluginSeat, PluginFailurePolicy, PluginFailureKind, PluginFailure, PluginFailureOptions } from "./plugin-failures.js";

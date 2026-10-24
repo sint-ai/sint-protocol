@@ -7,6 +7,7 @@ import {
   issueCapabilityToken,
   nowISO8601,
 } from "@pshkv/gate-capability-tokens";
+import { ok, type DeploymentEvidenceRef } from "@pshkv/core";
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -84,16 +85,17 @@ describe("Deployment envelope base conformance", () => {
     expect(tokenResult.ok).toBe(true);
     if (!tokenResult.ok) return;
 
-    const gateway = new PolicyGateway({
-      resolveToken: () => tokenResult.value,
-    });
-
     const positiveExecutionContext = {
       ...fixture.positiveRequest.executionContext,
       deploymentEvidence: (
         fixture.positiveRequest.executionContext.deploymentEvidence as readonly Record<string, unknown>[]
       ).map((entry) => ({ ...entry, observedAt: nowISO8601() })),
     };
+
+    const gateway = new PolicyGateway({
+      resolveToken: () => tokenResult.value,
+      resolveDeploymentEvidence: () => ok(positiveExecutionContext.deploymentEvidence[0] as unknown as DeploymentEvidenceRef),
+    });
 
     const allowDecision = await gateway.intercept({
       requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e70001" as any,

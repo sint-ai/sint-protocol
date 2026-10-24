@@ -74,4 +74,36 @@ describe("PartTraceBundle", () => {
     expect(redacted.reworkRefs).toHaveLength(0);
     expect(redacted.redactionProfile?.mode).toBe("redacted");
   });
+
+  it.each(["partial", "redacted"] as const)("removes all sensitive linked artifacts in %s exports without mutating the source", mode => {
+    const source = bundleInput();
+    const input = {
+      ...source,
+      nonconformanceRefs: ["internal://nonconformance"],
+      reworkRefs: ["internal://rework"],
+      routeSteps: [{ ...source.routeSteps[0]!, approvalRef: "internal://step-approval", inspectionReceiptRef: "internal://step-inspection" }],
+      evidenceArtifacts: [
+        ...source.evidenceArtifacts,
+        ...[...source.authorityTokenRefs, ...source.approvalRefs, "internal://nonconformance", "internal://rework", "internal://step-approval", "internal://step-inspection", "public://retained"]
+          .map(evidenceRef => ({ evidenceType: "artifact", evidenceRef, proofHash: HASH })),
+      ],
+    };
+    const snapshot = structuredClone(input);
+    const output = redactPartTraceBundle(input, mode);
+    const refs = output.evidenceArtifacts.map(artifact => artifact.evidenceRef);
+    expect(refs).not.toContain(source.authorityTokenRefs[0]);
+    expect(refs).not.toContain(source.approvalRefs[0]);
+    expect(refs).not.toContain("internal://step-approval");
+    expect(refs).toContain("public://retained");
+    expect(output.routeSteps[0]).not.toHaveProperty("approvalRef");
+    if (mode === "redacted") {
+      expect(refs).toEqual(["public://retained"]);
+      expect(output.routeSteps[0]).not.toHaveProperty("inspectionReceiptRef");
+    } else {
+      expect(refs).toContain("internal://nonconformance");
+      expect(refs).toContain("internal://rework");
+      expect(refs).toContain("internal://step-inspection");
+    }
+    expect(input).toEqual(snapshot);
+  });
 });

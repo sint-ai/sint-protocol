@@ -275,4 +275,93 @@ describe("ExecutionBroker", () => {
     expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_SEQUENCE_INVALID");
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
+
+  it("serializes concurrent same-stream chunks with distinct receipts before sequence validation", async () => {
+    let release!: () => void;
+    let started!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    const dispatchStarted = new Promise<void>(resolve => { started = resolve; });
+    const dispatch = vi.fn(async () => { started(); await pending; return ok("sent"); });
+    const nonceStore = new InMemorySimulationReceiptNonceStore();
+    const consume = vi.fn(nonceStore.consume.bind(nonceStore));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume },
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch }, now: () => now,
+    });
+    const input = vlaRequest(0, 0, 0.2);
+    const duplicate = { ...input, executionContext: { ...input.executionContext,
+      simulationEvidence: { ...input.executionContext!.simulationEvidence!, receiptId: "019fdd12-cc01-70d4-8174-208d070bbaff", nonce: "distinct-receipt" },
+    } };
+    const authorization = { decision: decision(input.requestId), approval: approval(input.requestId) };
+    const first = broker.execute(input, authorization);
+    await dispatchStarted;
+    const second = broker.execute(duplicate, authorization);
+    await new Promise<void>(resolve => setImmediate(resolve));
+    release();
+    const results = await Promise.all([first, second]);
+    expect(results[0]!.ok).toBe(true);
+    expect(results[1]!.ok ? undefined : results[1]!.error.code).toBe("VLA_CHUNK_SEQUENCE_INVALID");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(consume).toHaveBeenCalledTimes(1);
+  });
+
+  it("rechecks a queued chunk deadline after the preceding dispatch finishes", async () => {
+    let clock = now;
+    let release!: () => void;
+    let started!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    const dispatchStarted = new Promise<void>(resolve => { started = resolve; });
+    const dispatch = vi.fn(async () => { started(); await pending; return ok("sent"); });
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch }, now: () => clock,
+    });
+    const first = vlaRequest(0, 0, 0.2);
+    const next = vlaRequest(1, 0.2, 0.3);
+    const active = broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) });
+    await dispatchStarted;
+    const queued = broker.execute(next, { decision: decision(next.requestId), approval: approval(next.requestId) });
+    clock += 4_001;
+    release();
+    await active;
+    const rejected = await queued;
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_STALE");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects chunks that expire during nonce consumption", async () => {
+    let clock = now;
+    const dispatch = vi.fn(async () => ok("sent"));
+    const safeStop = vi.fn();
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume: async () => { clock += 4_001; return true; } },
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch }, now: () => clock,
+      vlaContinuity: { maxPositionDelta: 0.1, maxVelocityDelta: 0.1, safeStop },
+    });
+    const input = vlaRequest(0, 0, 0.2);
+    const rejected = await broker.execute(input, { decision: decision(input.requestId), approval: approval(input.requestId) });
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_STALE");
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(safeStop).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects receipt and world-state expiry during asynchronous nonce consumption", async () => {
+    let clock = now;
+    const dispatch = vi.fn(async () => ok("sent"));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume: async () => { clock += 5_001; return true; } },
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch }, now: () => clock,
+    });
+    const rejected = await broker.execute(request(), { decision: decision(), approval: approval() });
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("WORLD_STATE_EXPIRED");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
 });

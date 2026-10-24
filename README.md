@@ -88,6 +88,10 @@ systems:
   [`docs/community/openssf-best-practices-profile.md`](docs/community/openssf-best-practices-profile.md)
   collects the current security, release, conformance, and gap-tracking
   evidence in one place.
+- **Open physical-envelope research:** the
+  [SINT × DriftCore collaboration roadmap](docs/community/driftcore-sint-collaboration-roadmap.md)
+  proposes protocol-neutral attestation schemas, adversarial fixtures, and
+  independent cross-review before any runtime integration.
 
 Academic and compliance grounding: SINT is designed with reference to IEC 62443
 FR1-FR7, EU AI Act Article 13, and NIST AI RMF. The evaluation framework

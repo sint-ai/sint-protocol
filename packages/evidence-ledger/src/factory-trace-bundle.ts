@@ -59,15 +59,19 @@ export function redactPartTraceBundle(
   // The same identifiers removed from the top-level ref arrays also appear in
   // nested route steps and in evidence artifacts; a customer-safe export must
   // strip them everywhere, not just at the top level.
-  const redactedRefs = new Set<string>(bundle.approvalRefs);
+  const redactedRefs = new Set<string>([...bundle.authorityTokenRefs, ...bundle.approvalRefs]);
   if (redactInspection) {
     bundle.inspectionReceiptRefs.forEach((ref) => redactedRefs.add(ref));
+    bundle.nonconformanceRefs.forEach((ref) => redactedRefs.add(ref));
+    bundle.reworkRefs.forEach((ref) => redactedRefs.add(ref));
   }
 
   const routeSteps = bundle.routeSteps.map((step) => {
     // approvalRef is always redacted (mirrors the top-level approvalRefs);
     // inspectionReceiptRef is redacted only in the fully redacted mode.
     const { approvalRef: _approvalRef, inspectionReceiptRef, ...rest } = step;
+    if (_approvalRef !== undefined) redactedRefs.add(_approvalRef);
+    if (redactInspection && inspectionReceiptRef !== undefined) redactedRefs.add(inspectionReceiptRef);
     return redactInspection || inspectionReceiptRef === undefined
       ? rest
       : { ...rest, inspectionReceiptRef };

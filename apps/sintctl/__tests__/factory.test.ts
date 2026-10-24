@@ -7,7 +7,7 @@ import { runTraceVerify } from "../src/trace.js";
 import { runFactoryTraceExport } from "../src/factory.js";
 
 describe("runFactoryTraceExport", () => {
-  it("writes a signed factory part trace bundle and verifies it", async () => {
+  it.each([false, true])("writes a verifiable factory trace when the fixture signer is mismatched: %s", async mismatched => {
     const keypair = generateKeypair();
     const rootDir = await mkdtemp(join(tmpdir(), "sintctl-factory-trace-"));
     const inputPath = join(rootDir, "fixtures", "factory-trace.json");
@@ -17,7 +17,7 @@ describe("runFactoryTraceExport", () => {
     await writeFile(
       inputPath,
       JSON.stringify({
-        signerPublicKey: keypair.publicKey,
+        signerPublicKey: mismatched ? generateKeypair().publicKey : keypair.publicKey,
         bundle: {
           bundleId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6c1",
           traceKind: "factory-part",
@@ -86,6 +86,7 @@ describe("runFactoryTraceExport", () => {
       const exported = JSON.parse(await readFile(outputPath, "utf8")) as Record<string, unknown>;
       expect(exported.traceKind).toBe("factory-part");
       expect(exported.partNumber).toBe("PN-42");
+      expect(exported.signerPublicKey).toBe(keypair.publicKey);
 
       const verify = await runTraceVerify({ inputPath: outputPath });
       expect(verify.valid).toBe(true);

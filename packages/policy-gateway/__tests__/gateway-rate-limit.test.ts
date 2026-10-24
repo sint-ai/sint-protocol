@@ -137,7 +137,7 @@ describe("PolicyGateway — rate-limit enforcement", () => {
     }
   });
 
-  it("gateway without rateLimitStore ignores rateLimit in token", async () => {
+  it("gateway without rateLimitStore denies when a signed token requires rate limiting", async () => {
     // Gateway configured without rateLimitStore — should not block
     const gatewayNoRl = new PolicyGateway({
       resolveToken: (id) => tokenStore.get(id),
@@ -151,7 +151,8 @@ describe("PolicyGateway — rate-limit enforcement", () => {
       const r = makeRequest({ tokenId: token.tokenId, agentId: agent.publicKey,
         requestId: `01905f7c-4e8a-7b3d-9a1e-${String(i).padStart(12, "0")}` as any });
       const d = await gatewayNoRl.intercept(r);
-      expect(d.action).not.toBe("deny");
+      expect(d.action).toBe("deny");
+      expect(d.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "rateLimit.increment", kind: "missing_dependency" }));
     }
   });
 

@@ -139,12 +139,35 @@ function failure(code: ExecutionBrokerErrorCode, message: string, retryable = fa
 export class ExecutionBroker<T> {
   private readonly now: () => number;
   private readonly lastChunks = new Map<string, VlaActionChunkEnvelope>();
+  private readonly streamExecutions = new Map<string, Promise<void>>();
 
   constructor(private readonly options: ExecutionBrokerOptions<T>) {
     this.now = options.now ?? Date.now;
   }
 
   async execute(
+    request: SintRequest,
+    authorization: ExecutionAuthorization,
+  ): Promise<Result<T, ExecutionBrokerError>> {
+    const streamId = request.executionContext?.vlaActionChunk?.streamId;
+    if (streamId === undefined) return this.executeSerialized(request, authorization);
+
+    const previous = this.streamExecutions.get(streamId);
+    let release!: () => void;
+    const current = new Promise<void>(resolve => { release = resolve; });
+    this.streamExecutions.set(streamId, current);
+    await previous;
+    try {
+      return await this.executeSerialized(request, authorization);
+    } finally {
+      release();
+      if (this.streamExecutions.get(streamId) === current) {
+        this.streamExecutions.delete(streamId);
+      }
+    }
+  }
+
+  private async executeSerialized(
     request: SintRequest,
     authorization: ExecutionAuthorization,
   ): Promise<Result<T, ExecutionBrokerError>> {
@@ -245,6 +268,13 @@ export class ExecutionBroker<T> {
     const nowAfterConsume = this.now();
     if (Date.parse(receipt.expiresAt) <= nowAfterConsume || Date.parse(currentWorld.validUntil) <= nowAfterConsume) {
       return reject("WORLD_STATE_EXPIRED", "Simulation receipt or current world state expired before dispatch", true);
+    }
+
+    if (chunk && Date.parse(chunk.executeBy) <= nowAfterConsume) {
+      if (chunk.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "VLA action chunk expired before dispatch");
+      }
+      return reject("VLA_CHUNK_STALE", "VLA action chunk expired before dispatch", true);
     }
 
     const dispatched = await this.options.adapter.dispatch(request);

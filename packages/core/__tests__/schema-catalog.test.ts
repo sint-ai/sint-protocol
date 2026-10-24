@@ -12,6 +12,7 @@ describe("schema catalog request contract", () => {
     expect(executionContextProperties.verifiableCompute).toBeDefined();
     expect(executionContextProperties.hardwareSafety).toBeDefined();
     expect(executionContextProperties.preapprovedCorridor).toBeDefined();
+    expect(executionContextProperties.simulationEvidence).toBeDefined();
   });
 
   it("exposes constraint language v1 envelope groups with legacy aliases", () => {

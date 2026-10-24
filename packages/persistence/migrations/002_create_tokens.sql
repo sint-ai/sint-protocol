@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS sint_tokens (
   revocation_endpoint TEXT,
   crypto_profile   TEXT,
   post_quantum_signatures JSONB,
+  autonomy_policy JSONB,
+  human_authority_requirements JSONB,
+  regulated_data_policy JSONB,
+  deployment_envelope JSONB,
+  manufacturing_envelope JSONB,
+  hazardous_energy_envelope JSONB,
+  adaptation_permit JSONB,
   signature         TEXT NOT NULL
 );
 
@@ -34,7 +41,14 @@ ALTER TABLE sint_tokens
   ADD COLUMN IF NOT EXISTS delegation_depth INTEGER,
   ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT,
   ADD COLUMN IF NOT EXISTS crypto_profile TEXT,
-  ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB;
+  ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB,
+  ADD COLUMN IF NOT EXISTS autonomy_policy JSONB,
+  ADD COLUMN IF NOT EXISTS human_authority_requirements JSONB,
+  ADD COLUMN IF NOT EXISTS regulated_data_policy JSONB,
+  ADD COLUMN IF NOT EXISTS deployment_envelope JSONB,
+  ADD COLUMN IF NOT EXISTS manufacturing_envelope JSONB,
+  ADD COLUMN IF NOT EXISTS hazardous_energy_envelope JSONB,
+  ADD COLUMN IF NOT EXISTS adaptation_permit JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_tokens_subject ON sint_tokens (subject);
 CREATE INDEX IF NOT EXISTS idx_tokens_issuer ON sint_tokens (issuer);

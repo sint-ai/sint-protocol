@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ok } from "@pshkv/core";
+import { ok, type SintRequest } from "@pshkv/core";
 import {
   ExecutionBroker,
   InMemorySimulationReceiptNonceStore,
@@ -8,7 +8,7 @@ import {
 } from "@pshkv/execution-broker";
 
 describe("Proof-carrying execution broker conformance", () => {
-  it("dispatches at most once under concurrent receipt replay", async () => {
+  it.each(["same-receipt", "distinct-receipts"])("dispatches a VLA sequence at most once under concurrent %s", async mode => {
     let dispatches = 0;
     const digest = "a".repeat(64);
     const requestId = "019fdd12-cc01-70d4-8174-208d070bbacc";
@@ -18,6 +18,12 @@ describe("Proof-carrying execution broker conformance", () => {
       validUntil: "2026-08-07T16:00:05.000Z",
       stateEpoch: "epoch-1",
     };
+    const vlaActionChunk = {
+      chunkId: "019fdd12-cc01-70d4-8174-208d070bbacf", streamId: "robot-1", sequence: 0,
+      issuedAt: "2026-08-07T15:59:59.000Z", executeBy: "2026-08-07T16:00:04.000Z",
+      horizonMs: 1000, controlHz: 50, actionCount: 50,
+      actionSpaceDigest: digest, embodimentId: "robot-1", worldSnapshotDigest: digest, safeStopOnFailure: true as const,
+    };
     const requestWithoutEvidence = {
       requestId,
       timestamp: "2026-08-07T15:59:59.000000Z",
@@ -26,10 +32,12 @@ describe("Proof-carrying execution broker conformance", () => {
       resource: "ros2:///cmd_vel",
       action: "publish",
       params: {},
+      executionContext: { vlaActionChunk },
     } as never;
     const request = {
       ...(requestWithoutEvidence as object),
       executionContext: {
+        vlaActionChunk,
         simulationEvidence: {
           schemaVersion: "2.0.0",
           receiptId: "019fdd12-cc01-70d4-8174-208d070bbace",
@@ -51,7 +59,14 @@ describe("Proof-carrying execution broker conformance", () => {
           signature: "d".repeat(128),
         },
       },
-    } as never;
+    } as SintRequest;
+    const secondRequest: SintRequest = mode === "same-receipt" ? request : {
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: {
+        ...request.executionContext!.simulationEvidence!,
+        receiptId: "019fdd12-cc01-70d4-8174-208d070bbaff", nonce: "distinct-nonce",
+      } },
+    };
     const decision = {
       requestId,
       timestamp: "2026-08-07T15:59:59.000000Z",
@@ -79,7 +94,7 @@ describe("Proof-carrying execution broker conformance", () => {
     });
 
     const results = await Promise.all([
-      broker.execute(request, { decision, approval }),
+      broker.execute(secondRequest, { decision, approval }),
       broker.execute(request, { decision, approval }),
     ]);
 

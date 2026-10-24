@@ -7,13 +7,13 @@ corresponding command.
 
 ## Current inventory
 
-Verified at commit `60bad21` on 12 August 2026:
+Verified against the integrated predictive-execution branch on 24 October 2026:
 
 | Measure | Count | Reproduction command |
 |---|---:|---|
-| pnpm workspace projects (excluding the repository root) | 53 | `pnpm -r list --depth -1 --json` |
-| packages under `packages/` | 40 | filter the workspace result for `/packages/` |
-| protocol bridge packages under `packages/bridge-*` | 15 | filter the workspace result for `/packages/bridge-` |
+| pnpm workspace projects (excluding the repository root) | 56 | `pnpm -r list --depth -1 --json` |
+| packages under `packages/` | 43 | filter the workspace result for `/packages/` |
+| protocol bridge packages under `packages/bridge-*` | 17 | filter the workspace result for `/packages/bridge-` |
 
 The bridge count includes `bridge-mqtt`. The SEP-1763
 `sint-pdp-interceptor` reference implementation is not counted as a protocol

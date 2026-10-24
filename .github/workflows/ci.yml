@@ -82,3 +82,15 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+      # Run outside Turbo's filtered environment; the runner rejects all skips.
+      - name: PostgreSQL and Redis Integration Gate
+        run: pnpm run test:integration
+
+      - name: Upload integration evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: service-integration-results-node-${{ matrix.node-version }}
+          path: coverage/integrations/
+          if-no-files-found: warn

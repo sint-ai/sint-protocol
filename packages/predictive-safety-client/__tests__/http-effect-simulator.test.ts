@@ -69,4 +69,16 @@ describe("HttpEffectSimulator failures", () => {
       "Simulation worker timed out after 5ms",
     );
   });
+
+  it("keeps the deadline active while reading a stalled response body", async () => {
+    const stalledBody: typeof globalThis.fetch = async (_input, init) => new Response(new ReadableStream({
+      start(controller) {
+        init?.signal?.addEventListener("abort", () => controller.error(new Error("body aborted")), { once: true });
+      },
+    }));
+    const simulated = await client(stalledBody, 10).simulate(preflight, {
+      digest: digest("a"), observedAt: new Date().toISOString(), validUntil: new Date(Date.now() + 1_000).toISOString(),
+    });
+    expect(simulated.ok ? undefined : simulated.error.message).toBe("Simulation worker timed out after 10ms");
+  });
 });

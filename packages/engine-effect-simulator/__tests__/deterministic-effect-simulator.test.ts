@@ -67,7 +67,7 @@ function preflight(
   };
 }
 
-function simulator(artifactStore = new InMemorySimulationArtifactStore()) {
+function simulator(artifactStore = new InMemorySimulationArtifactStore(), maxClockSkewMs?: number) {
   return new DeterministicEffectSimulator({
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
@@ -77,6 +77,7 @@ function simulator(artifactStore = new InMemorySimulationArtifactStore()) {
     receiptTtlMs: 5_000,
     bindings: { robotId: "arm-7", controllerId: "ctrl-7" },
     now: () => now,
+    maxClockSkewMs,
     artifactStore,
     receiptRecorder: { recordIssued: async () => ok(undefined) },
     models: [new BoundedMotionEffectModel({
@@ -108,6 +109,12 @@ const safeParams = {
 };
 
 describe("DeterministicEffectSimulator", () => {
+  it("accepts bounded snapshot clock skew and rejects observations beyond the configured tolerance", async () => {
+    const snapshot = world({ observedAt: new Date(now + 200).toISOString() });
+    expect((await simulator().simulate(preflight(safeParams), snapshot)).ok).toBe(true);
+    const strict = await simulator(new InMemorySimulationArtifactStore(), 100).simulate(preflight(safeParams), snapshot);
+    expect(strict.ok ? undefined : strict.error.code).toBe("WORLD_SNAPSHOT_STALE");
+  });
   it("issues a signed, exactly bound V2 receipt for a safe bounded motion", async () => {
     const artifactStore = new InMemorySimulationArtifactStore();
     const simulated = await simulator(artifactStore).simulate(preflight(safeParams), world());

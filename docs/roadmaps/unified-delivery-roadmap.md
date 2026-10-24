@@ -83,8 +83,8 @@ backlog, not active sprint commitments.
 
 ## Source reconciliation
 
-- [Production Roadmap](../../PRODUCTION_ROADMAP.md) and
-  [Next Priorities](../../NEXT_PRIORITIES.md) define current ordering.
+- [Production Roadmap](https://github.com/sint-ai/sint-protocol/blob/main/PRODUCTION_ROADMAP.md) and
+  [Next Priorities](https://github.com/sint-ai/sint-protocol/blob/main/NEXT_PRIORITIES.md) define current ordering.
 - [Factory Action Pack](./factory-action-pack-upgrade-sprints.md),
   [VLA Governance](../vla-governance.md), and the
   [Dexterous Automation plan](./axonnic-dexterous-automation-roadmap.md)

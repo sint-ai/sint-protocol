@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type SintCapabilityToken, type SintRequest } from "@pshkv/core";
+import { ok, type SintCapabilityToken, type SintRequest } from "@pshkv/core";
 import {
   generateKeypair,
   issueCapabilityToken,
@@ -12,6 +12,7 @@ import { PolicyGateway } from "../src/gateway.js";
 
 const root = generateKeypair();
 const agent = generateKeypair();
+const observedAt = futureISO(0);
 
 function futureISO(hours = 1): string {
   return new Date(Date.now() + hours * 3_600_000)
@@ -112,7 +113,7 @@ function makeRequest(
           evidenceRef: "permit://site-9/robot-7",
           proofHash: "a".repeat(64),
           verifierRef: "verifier://deployment-attestor",
-          observedAt: futureISO(0),
+          observedAt,
           maxAgeMs: 5_000,
         },
       ],
@@ -126,6 +127,7 @@ describe("DeploymentEnvelopePolicy", () => {
     const token = makeToken();
     const gateway = new PolicyGateway({
       resolveToken: () => token,
+      resolveDeploymentEvidence: () => ok({ evidenceType: "site-permit", evidenceRef: "permit://site-9/robot-7", proofHash: "a".repeat(64), verifierRef: "verifier://deployment-attestor", observedAt }),
     });
 
     const decision = await gateway.intercept(makeRequest(token));
@@ -137,6 +139,7 @@ describe("DeploymentEnvelopePolicy", () => {
     const token = makeToken();
     const gateway = new PolicyGateway({
       resolveToken: () => token,
+      resolveDeploymentEvidence: () => ok({ evidenceType: "site-permit", evidenceRef: "permit://site-9/robot-7", proofHash: "a".repeat(64), verifierRef: "verifier://deployment-attestor", observedAt }),
     });
 
     const request = makeRequest(token, {
@@ -173,6 +176,7 @@ describe("DeploymentEnvelopePolicy", () => {
     const token = makeToken();
     const gateway = new PolicyGateway({
       resolveToken: () => token,
+      resolveDeploymentEvidence: () => ok({ evidenceType: "site-permit", evidenceRef: "permit://site-9/robot-7", proofHash: "a".repeat(64), verifierRef: "verifier://deployment-attestor", observedAt }),
     });
 
     const request = makeRequest(token, {

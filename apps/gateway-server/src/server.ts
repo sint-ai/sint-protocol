@@ -9,6 +9,7 @@
  */
 
 import { Hono } from "hono";
+import { createPersistedLedgerEmitter, restorePersistedLedger } from "./ledger-emitter.js";
 import { CsmlEscalator } from "@pshkv/avatar";
 import { RevocationStore } from "@pshkv/gate-capability-tokens";
 import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
@@ -34,7 +35,7 @@ import {
   RedisCache,
   RedisRevocationBus,
 } from "@pshkv/persistence";
-import type { SintCapabilityToken, SintEventType } from "@pshkv/core";
+import { err, type SintCapabilityToken } from "@pshkv/core";
 import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
@@ -107,18 +108,7 @@ export function createContext(): ServerContext {
     resolveToken: async (id) => tokenStore.get(id),
     revocationStore,
     csmlEscalation: createDefaultCsmlEscalator(ledger),
-    emitLedgerEvent: (event) => {
-      const written = ledger.append({
-        eventType: event.eventType as SintEventType,
-        agentId: event.agentId,
-        tokenId: event.tokenId,
-        payload: event.payload,
-      });
-      // Also persist to backing store
-      ledgerStore.append(written).catch((err) => {
-        console.error("[SINT] Failed to persist ledger event:", err);
-      });
-    },
+    emitLedgerEvent: createPersistedLedgerEmitter(ledger, ledgerStore),
   });
 
   // Wire revocation bus → local store sync
@@ -223,7 +213,8 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
   }
 
   const revocationStore = new RevocationStore();
-  const ledger = new LedgerWriter();
+  const restoredLedger = await restorePersistedLedger(ledgerStore);
+  const ledger = restoredLedger.ok ? restoredLedger.value : new LedgerWriter();
   const approvalQueue = new ApprovalQueue();
 
   const gateway = new PolicyGateway({
@@ -240,18 +231,9 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     },
     revocationStore,
     csmlEscalation: createDefaultCsmlEscalator(ledger),
-    emitLedgerEvent: (event) => {
-      const written = ledger.append({
-        eventType: event.eventType as SintEventType,
-        agentId: event.agentId,
-        tokenId: event.tokenId,
-        payload: event.payload,
-      });
-      // Persist to backing store (fire-and-forget for non-blocking operation)
-      ledgerStore.append(written).catch((err) => {
-        console.error("[SINT] Failed to persist ledger event:", err);
-      });
-    },
+    emitLedgerEvent: restoredLedger.ok
+      ? createPersistedLedgerEmitter(ledger, ledgerStore)
+      : () => err(restoredLedger.error),
   });
 
   // Wire revocation bus: when any node revokes a token, all nodes update their local store
@@ -277,9 +259,9 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     readinessProbe: async () => {
       const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);
       return {
-        ok: storeCheck.ok && cacheCheck.ok,
+        ok: restoredLedger.ok && storeCheck.ok && cacheCheck.ok,
         checks: {
-          store: storeCheck,
+          store: restoredLedger.ok ? storeCheck : { ok: false, detail: restoredLedger.error },
           cache: cacheCheck,
         },
       };

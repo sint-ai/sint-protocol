@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
+import { ok, type SintCapabilityTokenRequest, type SintRequest } from "@pshkv/core";
 import {
   generateKeypair,
   issueCapabilityToken,
@@ -69,12 +69,21 @@ describe("Manufacturing execution envelope conformance", () => {
     return issued.value;
   }
 
+  const observedAt = futureISO(0);
+  const trustedReceipt = {
+    ...fixture.token.executionContext.manufacturingExecution!.inspectionReceipt!,
+    inspectedAt: observedAt,
+    calibrationValidUntil: futureISO(1),
+  };
+
   function makeGateway(tokenRequest: Partial<SintCapabilityTokenRequest> = {}) {
     const token = issueToken(tokenRequest);
     return {
       token,
       gateway: new PolicyGateway({
         resolveToken: () => token,
+        resolveDeploymentEvidence: () => ok({ evidenceType: "inspection", evidenceRef: "inspection://part-42", proofHash: "a".repeat(64), verifierRef: "verifier://inspection-attestor", observedAt }),
+        resolveInspectionReceipt: () => ok(trustedReceipt),
       }),
     };
   }
@@ -99,7 +108,7 @@ describe("Manufacturing execution envelope conformance", () => {
     manufacturingExecutionOverrides: Partial<NonNullable<
       NonNullable<SintRequest["executionContext"]>["manufacturingExecution"]
     >> = {},
-    deploymentEvidenceObservedAt = futureISO(0),
+    deploymentEvidenceObservedAt = observedAt,
   ): NonNullable<SintRequest["executionContext"]> {
     return {
       ...fixture.token.executionContext,
@@ -118,7 +127,7 @@ describe("Manufacturing execution envelope conformance", () => {
         ...manufacturingExecutionOverrides,
         inspectionReceipt:
           manufacturingExecutionOverrides.inspectionReceipt ??
-          fixture.token.executionContext.manufacturingExecution.inspectionReceipt,
+          trustedReceipt,
       },
     };
   }
@@ -133,13 +142,13 @@ describe("Manufacturing execution envelope conformance", () => {
     const { token, gateway } = makeGateway();
     const request = makeRequest(token, freshExecutionContext({
       inspectionReceipt: {
-        ...fixture.token.executionContext.manufacturingExecution.inspectionReceipt,
+        ...trustedReceipt,
         calibrationState: "stale",
       },
     }));
     const decision = await gateway.intercept(request);
     expect(decision.action).toBe("deny");
-    expect(decision.denial?.policyViolated).toBe("FACTORY_PROOF_MISSING");
+    expect(decision.denial?.policyViolated).toBe("FACTORY_CONTEXT_MISMATCH");
   });
 
   it("denies a program digest mismatch", async () => {

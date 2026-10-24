@@ -32,6 +32,7 @@ import {
   type RevocationStore,
 } from "@pshkv/gate-capability-tokens";
 import { nowISO8601 } from "@pshkv/gate-capability-tokens";
+import { PluginFailureScope, type PluginFailureOptions } from "./plugin-failures.js";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
 import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
 import { checkForbiddenCombos, type TimedComboAction } from "./forbidden-combos.js";
@@ -46,9 +47,9 @@ import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
 import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
 import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
-import type { DeploymentEnvelopePolicyPlugin } from "./deployment-envelope-policy.js";
+import type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
 import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
-import type { ManufacturingExecutionPolicyPlugin } from "./manufacturing-execution-policy.js";
+import type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } from "./manufacturing-execution-policy.js";
 import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
 import type { SimulationEvidencePolicyPlugin } from "./simulation-evidence-policy.js";
 import { createSimulationPreflight } from "./simulation-evidence-policy.js";
@@ -69,7 +70,7 @@ export type LedgerEmitter = (event: {
   agentId: string;
   tokenId?: string;
   payload: Record<string, unknown>;
-}) => void;
+}) => unknown;
 
 /**
  * Economy plugin hooks for PolicyGateway integration.
@@ -81,7 +82,7 @@ export interface EconomyPluginHooks {
   /** Called before tier assignment. Return PolicyDecision to short-circuit, undefined to proceed. */
   preIntercept(request: SintRequest): Promise<PolicyDecision | undefined>;
   /** Called after final decision. Used for billing on allow. */
-  postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void>;
+  postIntercept(request: SintRequest, decision: PolicyDecision): Promise<void | import("@pshkv/core").Result<void, string>>;
 }
 
 /**
@@ -112,9 +113,7 @@ export interface AutonomySupervisorPlugin {
  *
  * The plugin receives the request + any physical context and returns tighter limits.
  * Effective limit = min(token.constraint, envelope.limit).
- * Failure handling is selected by `dynamicEnvelopeFailureMode`. The default is
- * `fail-open` for backwards compatibility; safety-critical deployments should
- * select `deny`.
+ * Failures, unavailable results, and async timeouts deny; static limits are not an implicit fallback.
  *
  * @example
  * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
@@ -236,7 +235,7 @@ export interface VerifiableComputePlugin {
   }>;
 }
 
-export interface PolicyGatewayConfig {
+export interface PolicyGatewayConfig extends PluginFailureOptions {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
   readonly emitLedgerEvent?: LedgerEmitter;
@@ -253,7 +252,7 @@ export interface PolicyGatewayConfig {
   /**
    * Optional CSML escalation plugin (Avatar Layer 5).
    * When provided, called after tier assignment. If the agent's CSML score
-   * exceeds θ, the tier is bumped up by 1. Fail-open: errors do not block.
+   * exceeds θ, the tier is bumped up by 1. Failures deny unless explicitly advisory at T0/T1.
    */
   readonly csmlEscalation?: CsmlEscalationPlugin;
   /**
@@ -270,20 +269,19 @@ export interface PolicyGatewayConfig {
    * State machine: CLOSED → OPEN (N denials) → HALF_OPEN (after timeout) → CLOSED
    * Operators can force OPEN via trip() or force CLOSED via reset().
    * CSML anomalous persona auto-trips the circuit.
-   * Fail-open: plugin errors do not block requests.
+   * Failures deny and are recorded on the decision and evidence ledger.
    */
   readonly circuitBreaker?: CircuitBreakerPlugin;
   /**
    * Optional dynamic envelope plugin (ROSClaw gap mitigation).
    * When provided, called just before physical constraint checking.
    * Returns environment-adaptive limits that tighten (never loosen) the token's
-   * static constraints. Fail-open: plugin errors fall back to token limits.
+   * static constraints. Failure denies; static token limits are not an outage fallback.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
   /**
    * Behavior when the dynamic envelope cannot produce a safety limit.
-   * Defaults to `fail-open` for backwards compatibility. Physical deployments
-   * whose safety case depends on live sensor state should use `deny`.
+   * @deprecated Dynamic envelope failures always deny; retained for source compatibility.
    */
   readonly dynamicEnvelopeFailureMode?: DynamicEnvelopeFailureMode;
   /**
@@ -295,21 +293,21 @@ export interface PolicyGatewayConfig {
   /**
    * Optional goal hijack detector (ASI01).
    * Scans request params for prompt injection, role override, escalation
-   * attempts, exfil probes, and cross-agent injection. Fail-open on errors.
+   * attempts, exfil probes, and cross-agent injection. Failures deny by default.
    */
   readonly goalHijackDetector?: GoalHijackPlugin;
   /**
    * Optional memory integrity checker (ASI06).
    * Checks recentActions history for repetition, privilege claims, and
    * history overflow anomalies. High severity → deny; others → warn.
-   * Fail-open on errors.
+   * Failures deny by default.
    */
   readonly memoryIntegrity?: MemoryIntegrityPlugin;
   /**
    * Optional supply chain verifier (ASI04).
    * Checks model fingerprint, model ID allowlist, and bridge protocol
    * consistency at runtime. High severity → deny. Medium → warn and continue.
-   * Fail-open: plugin errors do not block requests.
+   * Failures deny and are recorded on the decision and evidence ledger.
    */
   readonly supplyChainVerifier?: SupplyChainVerifierPlugin;
   /**
@@ -325,8 +323,8 @@ export interface PolicyGatewayConfig {
    * Optional async hardware safety permit resolver (Phase 9.3).
    * Resolves hardware safety state from an external source (OPC-UA, PLC REST API,
    * MQTT) before the built-in hardware safety handshake check.
-   * Plugin wins only if no hardwareSafety context is already present in the request.
-   * Fail-open: plugin errors do not block requests.
+   * Configured plugin state is authoritative; a caller cannot override it.
+   * Failures deny and are recorded on the decision and evidence ledger.
    */
   readonly safetyPermit?: SafetyPermitPlugin | undefined;
   /**
@@ -334,7 +332,7 @@ export interface PolicyGatewayConfig {
    * Recursively scans request.params for shell metacharacters, path traversal,
    * environment variable injection, and code execution patterns.
    * High severity + confidence > 0.5 → deny with ARG_INJECTION_DETECTED.
-   * Fail-open: plugin errors do not block requests.
+   * Failures deny and are recorded on the decision and evidence ledger.
    */
   readonly argInjectionDetector?: ArgInjectionDetector;
   /**
@@ -354,6 +352,10 @@ export interface PolicyGatewayConfig {
    * When omitted, the gateway uses the built-in default policy evaluator.
    */
   readonly deploymentEnvelopePolicy?: DeploymentEnvelopePolicyPlugin;
+  /** Authenticated deployment evidence lookup; required by the default evidence gate. */
+  readonly resolveDeploymentEvidence?: DeploymentEvidenceResolver;
+  /** Authenticated quality-system lookup; required when inspectionRequired is true. */
+  readonly resolveInspectionReceipt?: InspectionReceiptResolver;
   /**
    * Optional manufacturing execution-envelope policy hook.
    * When omitted, the gateway uses the built-in default policy evaluator.
@@ -508,6 +510,26 @@ export class PolicyGateway {
    * NOTHING bypasses this method.
    */
   async intercept(request: SintRequest): Promise<PolicyDecision> {
+    const parsed = sintRequestSchema.safeParse(request);
+    const baseline = parsed.success ? assignTier(parsed.data as SintRequest).approvalTier : ApprovalTier.T3_COMMIT;
+    const failures = new PluginFailureScope(request, this.config, baseline);
+    const decision = await Promise.resolve().then(() => this.evaluateRequest(request, failures)).then(
+      value => value,
+      () => failures.unexpected(),
+    );
+    return failures.finalize(decision,
+      this.config.emitLedgerEvent ? event => this.config.emitLedgerEvent!(event) : undefined,
+      this.config.edgeControlPlane?.replicateEvidenceEvent
+        ? event => this.config.edgeControlPlane!.replicateEvidenceEvent!(event) : undefined,
+      this.config.economyPlugin ? async audited => {
+        if (audited.action !== "allow") return undefined;
+        return failures.check("economy.postIntercept",
+          () => this.config.economyPlugin!.postIntercept(request, audited), () => {});
+      } : undefined,
+    );
+  }
+
+  private async evaluateRequest(request: SintRequest, failures: PluginFailureScope): Promise<PolicyDecision> {
     const timestamp = nowISO8601();
     const requestId = request.requestId;
 
@@ -517,16 +539,20 @@ export class PolicyGateway {
       return this.deny(requestId, timestamp, "MALFORMED_REQUEST", "Request failed schema validation");
     }
 
+    if (request.executionContext?.hardwareSafety?.estopState === "triggered") {
+      return this.evaluateHardwareSafetyHandshake(request, ApprovalTier.T3_COMMIT,
+        requestId, timestamp, request.agentId, request.tokenId, failures)!;
+    }
+
     // 1a. ASI01 Goal Hijack detection — scan params for prompt injection / semantic override
     if (this.config.goalHijackDetector) {
-      try {
-        const hijackResult = this.config.goalHijackDetector.analyze(
+      const goalHijackFailure = await failures.check("goalHijack.analyze", () => this.config.goalHijackDetector!.analyze(
           request.params,
           request.resource,
           request.action,
-        );
+        ), hijackResult => {
         if (hijackResult.hijackDetected && hijackResult.confidence >= 0.6) {
-          this.emitEvent("agent.goal.hijack_detected", request.agentId, request.tokenId, {
+          failures.emit("agent.goal.hijack_detected", request.agentId, request.tokenId, {
             confidence: hijackResult.confidence,
             patterns: hijackResult.patterns,
             reason: hijackResult.reason,
@@ -534,18 +560,16 @@ export class PolicyGateway {
           return this.deny(requestId, timestamp, "GOAL_HIJACK",
             hijackResult.reason ?? "Goal hijack attempt detected in request params");
         }
-      } catch {
-        // Goal hijack detector error → fail-open, continue
-      }
+      });
+      if (goalHijackFailure) return goalHijackFailure;
     }
 
     // 1b-pre. ASI06 Memory Integrity check — detect poisoned history
     if (this.config.memoryIntegrity) {
-      try {
-        const memResult = this.config.memoryIntegrity.check(request);
+      const memoryFailure = await failures.check("memoryIntegrity.check", () => this.config.memoryIntegrity!.check(request), memResult => {
         if (memResult.poisoned) {
           if (memResult.severity === "high") {
-            this.emitEvent("agent.memory.integrity_violation", request.agentId, request.tokenId, {
+            failures.emit("agent.memory.integrity_violation", request.agentId, request.tokenId, {
               anomalies: memResult.anomalies,
               severity: memResult.severity,
             });
@@ -553,15 +577,14 @@ export class PolicyGateway {
               `Memory integrity violation (high severity): ${memResult.anomalies.join("; ")}`);
           } else {
             // Medium / low: warn but allow
-            this.emitEvent("agent.memory.integrity_warning", request.agentId, request.tokenId, {
+            failures.emit("agent.memory.integrity_warning", request.agentId, request.tokenId, {
               anomalies: memResult.anomalies,
               severity: memResult.severity,
             });
           }
         }
-      } catch {
-        // Memory integrity error → fail-open, continue
-      }
+      });
+      if (memoryFailure) return memoryFailure;
     }
 
     // 1b. Circuit breaker check (ASI10 / EU AI Act Art. 14(4)(e) stop button)
@@ -569,23 +592,23 @@ export class PolicyGateway {
     // OPEN → instant deny. HALF_OPEN → allow probe through, record result.
     let circuitState: CircuitState = "CLOSED";
     if (this.config.circuitBreaker) {
-      try {
-        circuitState = await this.config.circuitBreaker.getState(request.agentId);
+      const circuitStateFailure = await failures.check("circuitBreaker.getState", () => this.config.circuitBreaker!.getState(request.agentId), value => {
+        circuitState = value;
         if (circuitState === "OPEN") {
-          this.emitEvent("agent.circuit.blocked", request.agentId, request.tokenId, {
+          failures.emit("agent.circuit.blocked", request.agentId, request.tokenId, {
             circuitState,
           });
           return this.deny(requestId, timestamp, "CIRCUIT_OPEN",
             "Agent circuit is OPEN — all actions blocked. Operator reset required.");
         }
-      } catch {
-        // Circuit breaker error → fail-open, proceed as CLOSED
-        circuitState = "CLOSED";
-      }
+      });
+      if (circuitStateFailure) return circuitStateFailure;
     }
 
     // 2. Resolve the capability token
-    const token = await this.config.resolveToken(request.tokenId);
+    const resolvedToken = await failures.run("token.resolve", () => this.config.resolveToken(request.tokenId));
+    if (!resolvedToken.ok) return failures.deny(resolvedToken.error);
+    const token = resolvedToken.value;
     if (!token) {
       return this.deny(requestId, timestamp, "TOKEN_NOT_FOUND", "Capability token not found");
     }
@@ -603,19 +626,18 @@ export class PolicyGateway {
 
     // 3. Check revocation status
     if (this.config.revocationStore) {
-      const revocationResult = this.config.revocationStore.checkRevocation(token.tokenId);
+      const revocationCheck = await failures.run("revocation.check", () => this.config.revocationStore!.checkRevocation(token.tokenId));
+      if (!revocationCheck.ok) return failures.deny(revocationCheck.error);
+      const revocationResult = revocationCheck.value;
       if (!revocationResult.ok) {
-        const revocationRecord = this.config.revocationStore.getRevocationRecord(token.tokenId);
+        const record = await failures.run("revocation.record", () => this.config.revocationStore!.getRevocationRecord(token.tokenId));
+        // Revocation remains authoritative even if optional explanatory metadata is unavailable.
+        const revocationRecord = record.ok ? record.value : undefined;
         if (this.config.edgeControlPlane?.relayRevocation) {
-          this.runBestEffort(
-            this.config.edgeControlPlane.relayRevocation({
-              requestId,
-              agentId: request.agentId,
-              tokenId: token.tokenId,
-              reason: revocationRecord?.reason,
-              revokedBy: revocationRecord?.revokedBy,
-            }),
-          );
+          await failures.run("edge.relayRevocation", () => this.config.edgeControlPlane!.relayRevocation!({
+            requestId, agentId: request.agentId, tokenId: token.tokenId,
+            reason: revocationRecord?.reason, revokedBy: revocationRecord?.revokedBy,
+          }));
         }
         return this.deny(requestId, timestamp, "TOKEN_REVOKED", "Capability token has been revoked");
       }
@@ -640,7 +662,7 @@ export class PolicyGateway {
         tokenValidation.error,
         `Token validation failed: ${tokenValidation.error}`,
       );
-      this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+      failures.emit("policy.evaluated", request.agentId, request.tokenId, {
         decision: decision.action,
         tier: decision.assignedTier,
         risk: decision.assignedRisk,
@@ -653,7 +675,7 @@ export class PolicyGateway {
     // Record only immutable digests; raw demonstrations and biometric data stay
     // in the customer-controlled data plane.
     if (token.modelConstraints?.datasetDigest !== undefined) {
-      this.emitEvent("vla.lineage.verified", request.agentId, request.tokenId, {
+      failures.emit("vla.lineage.verified", request.agentId, request.tokenId, {
         datasetDigest: token.modelConstraints.datasetDigest,
         trainingRecipeDigest: token.modelConstraints.trainingRecipeDigest,
         checkpointDigest: token.modelConstraints.checkpointDigest,
@@ -666,14 +688,13 @@ export class PolicyGateway {
     // Tokens can require a bound human proof before any other policy logic runs.
     // This gate is fail-closed and uses the built-in policy evaluator by default.
     const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy();
-    try {
-      const humanDecision = await humanAuthorityPolicy.evaluate(
+    const humanAuthorityFailure = await failures.check("humanAuthority.evaluate", () => humanAuthorityPolicy.evaluate(
         request,
         token,
         { requestId, timestamp },
-      );
+      ), humanDecision => {
       if (humanDecision) {
-        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+        failures.emit("policy.evaluated", request.agentId, request.tokenId, {
           decision: humanDecision.action,
           tier: humanDecision.assignedTier,
           risk: humanDecision.assignedRisk,
@@ -682,87 +703,36 @@ export class PolicyGateway {
         });
         return humanDecision;
       }
-    } catch {
-      return this.deny(
-        requestId,
-        timestamp,
-        "HUMAN_AUTHORITY_POLICY_ERROR",
-        "Human authority policy failed closed before permission evaluation",
-      );
-    }
+    });
+    if (humanAuthorityFailure) return humanAuthorityFailure;
 
     // 4a-deploy. Shared deployment envelope checks.
     // This layer enforces freshness and context-binding for deployment packs
     // before vertical-specific policies run.
     const deploymentEnvelopePolicy =
-      this.config.deploymentEnvelopePolicy ?? new DefaultDeploymentEnvelopePolicy();
-    try {
-      const deploymentDecision = await deploymentEnvelopePolicy.evaluate(
-        request,
-        token,
-        { requestId, timestamp },
-      );
-      if (deploymentDecision) {
-        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
-          decision: deploymentDecision.action,
-          tier: deploymentDecision.assignedTier,
-          risk: deploymentDecision.assignedRisk,
-          source: "deployment_envelope_policy",
-          policyViolated: deploymentDecision.denial?.policyViolated,
-        });
-        return deploymentDecision;
-      }
-    } catch {
-      return this.deny(
-        requestId,
-        timestamp,
-        "DEPLOYMENT_ENVELOPE_POLICY_ERROR",
-        "Deployment envelope policy failed closed before permission evaluation",
-      );
-    }
+      this.config.deploymentEnvelopePolicy ?? new DefaultDeploymentEnvelopePolicy(this.config.resolveDeploymentEvidence);
+    const deploymentFailure = await failures.check("deploymentEnvelope.evaluate", () =>
+      deploymentEnvelopePolicy.evaluate(request, token, { requestId, timestamp }), decision => decision);
+    if (deploymentFailure) return deploymentFailure;
 
-    // 4a-factory. Manufacturing execution envelope checks.
-    // These bind shop-floor requests to part, program, cell, tooling, and
-    // inspection facts before any further factory-specific policy can proceed.
-    const manufacturingExecutionPolicy =
-      this.config.manufacturingExecutionPolicy ?? new DefaultManufacturingExecutionPolicy();
-    try {
-      const manufacturingDecision = await manufacturingExecutionPolicy.evaluate(
-        request,
-        token,
-        { requestId, timestamp },
-      );
-      if (manufacturingDecision) {
-        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
-          decision: manufacturingDecision.action,
-          tier: manufacturingDecision.assignedTier,
-          risk: manufacturingDecision.assignedRisk,
-          source: "manufacturing_execution_policy",
-          policyViolated: manufacturingDecision.denial?.policyViolated,
-        });
-        return manufacturingDecision;
-      }
-    } catch {
-      return this.deny(
-        requestId,
-        timestamp,
-        "FACTORY_ENVELOPE_POLICY_ERROR",
-        "Manufacturing execution policy failed closed before permission evaluation",
-      );
-    }
+    // Shared evidence requirements also apply to manufacturing envelopes.
+    const manufacturingExecutionPolicy = this.config.manufacturingExecutionPolicy
+      ?? new DefaultManufacturingExecutionPolicy(this.config.resolveDeploymentEvidence, this.config.resolveInspectionReceipt);
+    const manufacturingFailure = await failures.check("manufacturingExecution.evaluate", () =>
+      manufacturingExecutionPolicy.evaluate(request, token, { requestId, timestamp }), decision => decision);
+    if (manufacturingFailure) return manufacturingFailure;
 
     // 4a-spatial. Deployment-profile spatial integrity policy.
     // Token execution envelopes handle per-token spatial proof. This hook
     // handles deployment-wide GPS-denied/degraded-perception requirements.
     if (this.config.spatialIntegrityPolicy) {
-      try {
-        const spatialDecision = await this.config.spatialIntegrityPolicy.evaluate(
+      const spatialIntegrityFailure = await failures.check("spatialIntegrity.evaluate", () => this.config.spatialIntegrityPolicy!.evaluate(
           request,
           token,
           { requestId, timestamp },
-        );
+        ), spatialDecision => {
         if (spatialDecision) {
-          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          failures.emit("policy.evaluated", request.agentId, request.tokenId, {
             decision: spatialDecision.action,
             tier: spatialDecision.assignedTier,
             risk: spatialDecision.assignedRisk,
@@ -772,24 +742,17 @@ export class PolicyGateway {
           });
           return spatialDecision;
         }
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "SPATIAL_INTEGRITY_POLICY_ERROR",
-          "Spatial integrity policy failed closed before permission evaluation",
-        );
-      }
+      });
+      if (spatialIntegrityFailure) return spatialIntegrityFailure;
     }
 
     // 4a-code. Code-as-policy robot-agent guard.
     // Generated robot programs and learned skill-library updates must be bound
     // to stable digests and fixed primitive contracts before actuation.
     if (this.config.codeAsPolicyGuard) {
-      try {
-        const guardResult = this.config.codeAsPolicyGuard.verify(request, token);
+      const codeGuardFailure = await failures.check("codeAsPolicy.verify", () => this.config.codeAsPolicyGuard!.verify(request, token), guardResult => {
         if (!guardResult.verified) {
-          this.emitEvent("robot.code_policy.guard_violation", request.agentId, request.tokenId, {
+          failures.emit("robot.code_policy.guard_violation", request.agentId, request.tokenId, {
             violations: guardResult.violations,
             severity: guardResult.severity,
             programRef: guardResult.metadata?.programRef,
@@ -798,28 +761,21 @@ export class PolicyGateway {
           });
           return decisionForCodeAsPolicyViolation(request, guardResult);
         }
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "CODE_AS_POLICY_GUARD_ERROR",
-          "Code-as-policy guard failed closed before permission evaluation",
-        );
-      }
+      });
+      if (codeGuardFailure) return codeGuardFailure;
     }
 
     // 4a-pre. Regulated-data runtime policy.
     // Evaluates processor/model/region/context metadata after token validation
     // but before tier assignment so unsafe data paths never execute.
     if (this.config.regulatedDataPolicy) {
-      try {
-        const regulatedDecision = await this.config.regulatedDataPolicy.evaluate(
+      const regulatedDataFailure = await failures.check("regulatedData.evaluate", () => this.config.regulatedDataPolicy!.evaluate(
           request,
           token,
           { requestId, timestamp },
-        );
+        ), regulatedDecision => {
         if (regulatedDecision) {
-          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          failures.emit("policy.evaluated", request.agentId, request.tokenId, {
             decision: regulatedDecision.action,
             tier: regulatedDecision.assignedTier,
             risk: regulatedDecision.assignedRisk,
@@ -829,14 +785,8 @@ export class PolicyGateway {
           });
           return regulatedDecision;
         }
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "REGULATED_DATA_POLICY_ERROR",
-          "Regulated-data policy failed closed before permission evaluation",
-        );
-      }
+      });
+      if (regulatedDataFailure) return regulatedDataFailure;
     }
 
     // 4a. Managed-autonomy authority pre-gate.
@@ -844,13 +794,12 @@ export class PolicyGateway {
     // authority to emit external output, then let the normal tier/token pipeline
     // decide whether the specific action is permitted.
     if (this.config.autonomySupervisor) {
-      try {
-        const autonomyDecision = await this.config.autonomySupervisor.preIntercept(
+      const autonomyFailure = await failures.check("autonomy.preIntercept", () => this.config.autonomySupervisor!.preIntercept(
           request,
           token,
-        );
+        ), autonomyDecision => {
         if (autonomyDecision) {
-          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          failures.emit("policy.evaluated", request.agentId, request.tokenId, {
             decision: autonomyDecision.action,
             tier: autonomyDecision.assignedTier,
             risk: autonomyDecision.assignedRisk,
@@ -858,14 +807,8 @@ export class PolicyGateway {
           });
           return autonomyDecision;
         }
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "AUTONOMY_SUPERVISOR_ERROR",
-          "Autonomy supervisor failed closed before permission evaluation",
-        );
-      }
+      });
+      if (autonomyFailure) return autonomyFailure;
     }
 
     // 4d. Execution envelope corridor checks (optional, additive guardrail).
@@ -906,6 +849,7 @@ export class PolicyGateway {
       token,
       requestId,
       timestamp,
+      failures,
     );
     if (spatialMissionDecision) {
       return spatialMissionDecision;
@@ -916,42 +860,42 @@ export class PolicyGateway {
       return vlaDecision;
     }
 
+    if (token.constraints.rateLimit && !this.config.rateLimitStore) {
+      return failures.missing("rateLimit.increment");
+    }
+
     // 4b. Rate-limit check (per-token sliding window)
     if (this.config.rateLimitStore && token.constraints.rateLimit) {
       const { maxCalls, windowMs } = token.constraints.rateLimit;
       const bucket = Math.floor(Date.now() / windowMs);
       const key = `sint:rate:${token.tokenId}:${bucket}`;
-      try {
-        const count = await this.config.rateLimitStore.increment(key, windowMs);
+      const rateLimitFailure = await failures.check("rateLimit.increment", () => this.config.rateLimitStore!.increment(key, windowMs), async count => {
         if (count > maxCalls) {
           if (this.config.circuitBreaker) {
-            try {
-              const newState = await this.config.circuitBreaker.recordDenial(
+            await failures.check("circuitBreaker.recordDenial", () => this.config.circuitBreaker!.recordDenial(
                 request.agentId, "RATE_LIMIT_EXCEEDED",
-              );
+              ), newState => {
               if (newState === "OPEN") {
-                this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
+                failures.emit("agent.circuit.opened", request.agentId, request.tokenId, {
                   triggeredBy: "RATE_LIMIT_EXCEEDED",
                   previousState: circuitState as string,
                 });
               }
-            } catch { /* fail-open */ }
+            });
           }
           return this.deny(requestId, timestamp, "RATE_LIMIT_EXCEEDED",
             `Token rate limit exceeded: ${count}/${maxCalls} calls in ${windowMs}ms window`);
         }
-      } catch {
-        // Rate-limit store error → fail-open, proceed normally
-      }
+      });
+      if (rateLimitFailure) return rateLimitFailure;
     }
 
     // 4c. Economy pre-intercept (budget, balance, trust checks)
     if (this.config.economyPlugin) {
-      try {
-        const economyDecision = await this.config.economyPlugin.preIntercept(request);
+      const economyFailure = await failures.check("economy.preIntercept", () => this.config.economyPlugin!.preIntercept(request), economyDecision => {
         if (economyDecision) {
           // Economy plugin short-circuits — emit and return
-          this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+          failures.emit("policy.evaluated", request.agentId, request.tokenId, {
             decision: economyDecision.action,
             tier: economyDecision.assignedTier,
             risk: economyDecision.assignedRisk,
@@ -959,18 +903,16 @@ export class PolicyGateway {
           });
           return economyDecision;
         }
-      } catch {
-        // Economy plugin error → fail-open, continue normal flow
-      }
+      });
+      if (economyFailure) return economyFailure;
     }
 
     // 4e. ASI04 Supply chain verification — model fingerprint, ID allowlist, bridge protocol
     if (this.config.supplyChainVerifier) {
-      try {
-        const scResult = this.config.supplyChainVerifier.verify(request, token);
+      const supplyChainFailure = await failures.check("supplyChain.verify", () => this.config.supplyChainVerifier!.verify(request, token), scResult => {
         if (!scResult.verified) {
           if (scResult.severity === "high") {
-            this.emitEvent("agent.supply_chain.violation", request.agentId, request.tokenId, {
+            failures.emit("agent.supply_chain.violation", request.agentId, request.tokenId, {
               violations: scResult.violations,
               severity: scResult.severity,
             });
@@ -978,32 +920,39 @@ export class PolicyGateway {
               `Supply chain violation: ${scResult.violations.join("; ")}`);
           } else if (scResult.severity === "medium") {
             // Medium: emit warning but continue
-            this.emitEvent("agent.supply_chain.warning", request.agentId, request.tokenId, {
+            failures.emit("agent.supply_chain.warning", request.agentId, request.tokenId, {
               violations: scResult.violations,
               severity: scResult.severity,
             });
           }
           // Low: no action needed
         }
-      } catch {
-        // Supply chain verifier error → fail-open, continue
-      }
+      });
+      if (supplyChainFailure) return supplyChainFailure;
     }
 
     // 5. Assign approval tier
-    const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
+    let agentTrustLevel: AgentTrustLevel | undefined;
+    if (this.config.getAgentTrustLevel) {
+      const trust = await failures.run("agentTrust.get", () => this.config.getAgentTrustLevel!(request.agentId));
+      if (!trust.ok) return failures.deny(trust.error);
+      agentTrustLevel = trust.value;
+    }
     let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
 
     // 5b. CSML escalation (Avatar Layer 5) — bump tier if agent's safety score exceeds θ
     if (this.config.csmlEscalation) {
-      try {
-        const csmlDecision = await this.config.csmlEscalation.evaluateAgent(
+      const csmlFailure = await failures.check("csml.evaluateAgent", () => this.config.csmlEscalation!.evaluateAgent(
           request.agentId,
           tierAssignment.approvalTier,
-        );
+        ), async csmlDecision => {
+        const orderedTiers = [ApprovalTier.T0_OBSERVE, ApprovalTier.T1_PREPARE, ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT];
+        if (orderedTiers.indexOf(csmlDecision.resultTier) < orderedTiers.indexOf(tierAssignment.approvalTier)) {
+          return failures.invalid("csml.evaluateAgent");
+        }
         if (csmlDecision.escalated && csmlDecision.resultTier !== tierAssignment.approvalTier) {
           // Emit escalation event before mutating tier
-          this.emitEvent("avatar.csml.escalated", request.agentId, request.tokenId, {
+          failures.emit("avatar.csml.escalated", request.agentId, request.tokenId, {
             baseTier: tierAssignment.approvalTier,
             resultTier: csmlDecision.resultTier,
             csmlScore: csmlDecision.csmlScore,
@@ -1025,23 +974,21 @@ export class PolicyGateway {
           this.config.circuitBreaker &&
           csmlDecision.reason.toLowerCase().includes("anomalous")
         ) {
-          try {
-            await this.config.circuitBreaker.trip(
+          const tripFailure = await failures.check("circuitBreaker.trip", () => this.config.circuitBreaker!.trip(
               request.agentId,
               `CSML anomalous persona: ${csmlDecision.reason}`,
-            );
-            this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
+            ), () => {
+            failures.emit("agent.circuit.opened", request.agentId, request.tokenId, {
               triggeredBy: "CSML_ANOMALOUS",
               csmlScore: csmlDecision.csmlScore,
               reason: csmlDecision.reason,
             });
-          } catch {
-            // fail-open
-          }
+            return this.deny(requestId, timestamp, "CIRCUIT_OPEN", "CSML anomaly tripped the circuit; current execution is blocked");
+          });
+          if (tripFailure) return tripFailure;
         }
-      } catch {
-        // CSML escalation error → fail-open, continue with base tier
-      }
+      });
+      if (csmlFailure) return csmlFailure;
     }
 
     // 5c-sim. Tier-aware signed predictive-simulation evidence gate.
@@ -1069,7 +1016,7 @@ export class PolicyGateway {
           { requestId, timestamp },
         );
         if (simulationDecision) {
-          this.emitEvent("simulation.receipt.rejected", request.agentId, request.tokenId, {
+          failures.emit("simulation.receipt.rejected", request.agentId, request.tokenId, {
             receiptId: request.executionContext?.simulationEvidence?.receiptId,
             evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
             assignedTier: tierAssignment.approvalTier,
@@ -1077,7 +1024,7 @@ export class PolicyGateway {
             enforcementMode: simulationEnforcementMode,
           });
           if (simulationEnforcementMode === "enforce") {
-            this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+            failures.emit("policy.evaluated", request.agentId, request.tokenId, {
               decision: simulationDecision.action,
               tier: simulationDecision.assignedTier,
               risk: simulationDecision.assignedRisk,
@@ -1089,7 +1036,7 @@ export class PolicyGateway {
           }
         }
         if (!simulationDecision && request.executionContext?.simulationEvidence) {
-          this.emitEvent("simulation.receipt.verified", request.agentId, request.tokenId, {
+          failures.emit("simulation.receipt.verified", request.agentId, request.tokenId, {
             receiptId: request.executionContext.simulationEvidence.receiptId,
             evidenceGrade: request.executionContext.simulationEvidence.evidenceGrade,
             requestDigest: request.executionContext.simulationEvidence.requestDigest,
@@ -1101,7 +1048,7 @@ export class PolicyGateway {
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {
-          this.emitEvent("simulation.receipt.rejected", request.agentId, request.tokenId, {
+          failures.emit("simulation.receipt.rejected", request.agentId, request.tokenId, {
             receiptId: request.executionContext?.simulationEvidence?.receiptId,
             evidenceGrade: request.executionContext?.simulationEvidence?.evidenceGrade,
             assignedTier: tierAssignment.approvalTier,
@@ -1122,9 +1069,8 @@ export class PolicyGateway {
     // 5f-pre. SafetyPermitPlugin — resolve external hardware safety state before built-in check
     let currentRequest = request; // mutable local for SafetyPermitPlugin merge
     if (this.config.safetyPermit) {
-      try {
-        const permitResult = await this.config.safetyPermit.resolvePermit(currentRequest);
-        if (permitResult && !currentRequest.executionContext?.hardwareSafety) {
+      const permitFailure = await failures.check("safetyPermit.resolve", () => this.config.safetyPermit!.resolvePermit(currentRequest), permitResult => {
+        if (permitResult) {
           currentRequest = {
             ...currentRequest,
             executionContext: {
@@ -1139,10 +1085,8 @@ export class PolicyGateway {
             },
           };
         }
-      } catch {
-        // Fail-open: plugin error doesn't block the request
-        // The built-in evaluateHardwareSafetyHandshake() runs with original request context
-      }
+      });
+      if (permitFailure) return permitFailure;
     }
 
     // 5f. Hardware safety-controller handshake checks.
@@ -1153,6 +1097,7 @@ export class PolicyGateway {
       timestamp,
       currentRequest.agentId,
       currentRequest.tokenId,
+      failures,
     );
     if (hardwareSafetyDecision) {
       return hardwareSafetyDecision;
@@ -1233,12 +1178,11 @@ export class PolicyGateway {
           }
         }
         if (this.config.verifiableCompute) {
-          try {
-            const verification = await this.config.verifiableCompute.verify(
+          const computeProofFailure = await failures.check("verifiableCompute.verify", () => this.config.verifiableCompute!.verify(
               request,
               token,
               tierAssignment.approvalTier,
-            );
+            ), verification => {
             if (!verification.verified) {
               return this.deny(
                 requestId,
@@ -1247,22 +1191,16 @@ export class PolicyGateway {
                 verification.reason ?? "Verifiable compute proof verification failed",
               );
             }
-            this.emitEvent("verifiable.compute.verified", request.agentId, request.tokenId, {
+            failures.emit("verifiable.compute.verified", request.agentId, request.tokenId, {
               tier: tierAssignment.approvalTier,
               proofType: proof.proofType,
               proofRef: proof.proofRef,
               verifierRef: verification.verifierRef ?? proof.verifierRef,
             });
-          } catch {
-            return this.deny(
-              requestId,
-              timestamp,
-              "CONSTRAINT_VIOLATION",
-              "Verifiable compute verifier plugin failed",
-            );
-          }
+          });
+          if (computeProofFailure) return computeProofFailure;
         } else {
-          this.emitEvent("verifiable.compute.verified", request.agentId, request.tokenId, {
+          failures.emit("verifiable.compute.verified", request.agentId, request.tokenId, {
             tier: tierAssignment.approvalTier,
             proofType: proof.proofType,
             proofRef: proof.proofRef,
@@ -1274,19 +1212,17 @@ export class PolicyGateway {
 
     // 6b. Argument injection detection (ASI05: code execution via parameter injection)
     if (this.config.argInjectionDetector) {
-      try {
-        const injResult = this.config.argInjectionDetector.analyze(request.params, request.resource);
+      const argumentFailure = await failures.check("argInjection.analyze", () => this.config.argInjectionDetector!.analyze(request.params, request.resource), injResult => {
         if (injResult.detected && injResult.severity === "high") {
-          this.emitEvent("agent.arg.injection_detected", request.agentId, request.tokenId, {
+          failures.emit("agent.arg.injection_detected", request.agentId, request.tokenId, {
             patterns: injResult.patterns,
             confidence: injResult.confidence,
           });
           return this.deny(requestId, timestamp, "ARG_INJECTION_DETECTED",
             `Argument injection pattern detected: ${injResult.patterns.join(", ")}`);
         }
-      } catch {
-        // Fail-open: plugin errors do not block requests
-      }
+      });
+      if (argumentFailure) return argumentFailure;
     }
 
     // 6c. Compute effective safety envelope (token execution envelope + dynamic envelope).
@@ -1301,8 +1237,7 @@ export class PolicyGateway {
 
     // 6d. Dynamic envelope can tighten the existing envelope further.
     if (this.config.dynamicEnvelope) {
-      try {
-        const envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
+      const envelopeFailure = await failures.check("dynamicEnvelope.compute", () => this.config.dynamicEnvelope!.computeEnvelope(request), envelope => {
         if (envelope.maxVelocityMps !== undefined || envelope.maxForceNewtons !== undefined) {
           envelopeOverrides = {
             maxVelocityMps:
@@ -1315,28 +1250,15 @@ export class PolicyGateway {
                 : (envelope.maxForceNewtons ?? envelopeOverrides?.maxForceNewtons),
           };
           if (envelope.reason) {
-            this.emitEvent("policy.envelope.applied", request.agentId, request.tokenId, {
+            failures.emit("policy.envelope.applied", request.agentId, request.tokenId, {
               maxVelocityMps: envelope.maxVelocityMps,
               maxForceNewtons: envelope.maxForceNewtons,
               reason: envelope.reason,
             });
           }
         }
-      } catch (cause) {
-        if (this.config.dynamicEnvelopeFailureMode === "deny") {
-          this.emitEvent("policy.envelope.unavailable", request.agentId, request.tokenId, {
-            failureMode: "deny",
-            reason: cause instanceof Error ? cause.message : "Dynamic envelope failed",
-          });
-          return this.deny(
-            requestId,
-            timestamp,
-            "DYNAMIC_ENVELOPE_UNAVAILABLE",
-            "Dynamic safety envelope could not be evaluated",
-          );
-        }
-        // Backwards-compatible fail-open mode uses the token's static limits.
-      }
+      });
+      if (envelopeFailure) return envelopeFailure;
     }
 
     // 7. Check physical constraints (with optional dynamic envelope overrides)
@@ -1432,8 +1354,7 @@ export class PolicyGateway {
 
     // 8aa. Edge mode: T2/T3 escalations fail-closed when central approval is unavailable.
     if (decision.action === "escalate" && this.config.edgeControlPlane) {
-      try {
-        const gate = await this.config.edgeControlPlane.checkCentralEscalation(request, decision);
+      const edgeFailure = await failures.check("edge.checkCentralEscalation", () => this.config.edgeControlPlane!.checkCentralEscalation(request, decision), gate => {
         if (!gate.allowed) {
           return this.deny(
             requestId,
@@ -1442,58 +1363,34 @@ export class PolicyGateway {
             gate.reason ?? "Edge mode requires central approval plane for T2/T3 escalation",
           );
         }
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "EDGE_CENTRAL_UNAVAILABLE",
-          "Edge mode central-approval check failed; fail-closed for T2/T3 actions",
-        );
-      }
+      });
+      if (edgeFailure) return edgeFailure;
     }
 
-    // 8b. Record circuit breaker outcome — must happen BEFORE returning
-    if (this.config.circuitBreaker) {
-      try {
-        if (decision.action === "allow") {
-          const newState = await this.config.circuitBreaker.recordSuccess(request.agentId);
+    // A failed state transition cannot silently authorize execution.
+    if (this.config.circuitBreaker && decision.action === "allow") {
+      const failed = await failures.check("circuitBreaker.recordSuccess",
+        () => this.config.circuitBreaker!.recordSuccess(request.agentId), newState => {
+          if (newState === "OPEN") return this.deny(requestId, timestamp, "CIRCUIT_OPEN", "Circuit opened before authorization completed");
           if (circuitState === "HALF_OPEN" && newState === "CLOSED") {
-            this.emitEvent("agent.circuit.closed", request.agentId, request.tokenId, {
-              recoveredFrom: "HALF_OPEN",
-            });
+            failures.emit("agent.circuit.closed", request.agentId, request.tokenId, { recoveredFrom: "HALF_OPEN" });
           }
-        } else if (decision.action === "deny") {
-          const newState = await this.config.circuitBreaker.recordDenial(
-            request.agentId,
-            decision.denial?.policyViolated ?? "POLICY_VIOLATION",
-          );
-          if (newState === "OPEN") {
-            this.emitEvent("agent.circuit.opened", request.agentId, request.tokenId, {
-              triggeredBy: decision.denial?.policyViolated,
-              previousState: circuitState as string,
-            });
-          }
-        }
-      } catch {
-        // Circuit breaker record error → fail-open, decision stands
-      }
+        });
+      if (failed) return failed;
+    } else if (this.config.circuitBreaker && decision.action === "deny") {
+      await failures.check("circuitBreaker.recordDenial",
+        () => this.config.circuitBreaker!.recordDenial(request.agentId, decision.denial?.policyViolated ?? "POLICY_VIOLATION"),
+        newState => { if (newState === "OPEN") failures.emit("agent.circuit.opened", request.agentId, request.tokenId, { previousState: circuitState }); });
     }
 
     // 9. Emit ledger event
-    this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+    failures.emit("policy.evaluated", request.agentId, request.tokenId, {
       decision: decision.action,
       tier: decision.assignedTier,
       risk: decision.assignedRisk,
     });
 
-    // 10. Economy post-intercept (billing on allow)
-    if (this.config.economyPlugin) {
-      try {
-        await this.config.economyPlugin.postIntercept(request, decision);
-      } catch {
-        // Post-intercept billing error → fail-open (decision stands)
-      }
-    }
+    // Billing runs only after primary audit acknowledgement in finalize().
 
     return decision;
   }
@@ -1659,6 +1556,7 @@ export class PolicyGateway {
     token: SintCapabilityToken,
     requestId: string,
     timestamp: string,
+    failures: PluginFailureScope,
   ): Promise<PolicyDecision | undefined> {
     const envelope = token.executionEnvelope;
     if (!envelope) {
@@ -1745,23 +1643,13 @@ export class PolicyGateway {
         );
       }
 
-      let corridorResult: Awaited<ReturnType<SpatialCorridorVerifierPlugin["verifyCorridor"]>>;
-      try {
-        corridorResult = await this.config.spatialCorridorVerifier.verifyCorridor(
-          request,
-          token,
-        );
-      } catch {
-        return this.deny(
-          requestId,
-          timestamp,
-          "SPATIAL_CORRIDOR_VERIFICATION_FAILED",
-          "Spatial corridor verifier failed closed",
-        );
-      }
+      const checkedCorridor = await failures.run("spatialCorridor.verify", () =>
+        this.config.spatialCorridorVerifier!.verifyCorridor(request, token));
+      if (!checkedCorridor.ok) return failures.deny(checkedCorridor.error);
+      const corridorResult = checkedCorridor.value;
 
       if (!corridorResult.verified || corridorResult.insideCorridor === false) {
-        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+        failures.emit("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
           corridorId: envelope.corridorId,
           missionType: envelope.missionType,
           verifierRef: corridorResult.verifierRef,
@@ -1783,7 +1671,7 @@ export class PolicyGateway {
         && corridorResult.lateralDeviationMeters !== undefined
         && corridorResult.lateralDeviationMeters > envelope.maxDeviationMeters
       ) {
-        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+        failures.emit("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
           corridorId: envelope.corridorId,
           missionType: envelope.missionType,
           verifierRef: corridorResult.verifierRef,
@@ -1803,7 +1691,7 @@ export class PolicyGateway {
         && corridorResult.headingDeviationDeg !== undefined
         && corridorResult.headingDeviationDeg > envelope.maxHeadingDeviationDeg
       ) {
-        this.emitEvent("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
+        failures.emit("policy.spatial.corridor_violation", request.agentId, request.tokenId, {
           corridorId: envelope.corridorId,
           missionType: envelope.missionType,
           verifierRef: corridorResult.verifierRef,
@@ -1818,7 +1706,7 @@ export class PolicyGateway {
         );
       }
 
-      this.emitEvent("policy.spatial.corridor_verified", request.agentId, request.tokenId, {
+      failures.emit("policy.spatial.corridor_verified", request.agentId, request.tokenId, {
         corridorId: envelope.corridorId,
         missionType: envelope.missionType,
         verifierRef: corridorResult.verifierRef,
@@ -1891,12 +1779,13 @@ export class PolicyGateway {
     timestamp: string,
     agentId: string,
     tokenId: string,
+    failures: PluginFailureScope,
   ): PolicyDecision | undefined {
     const safety = request.executionContext?.hardwareSafety;
 
     // E-stop preempts everything, including low-tier actions.
     if (safety?.estopState === "triggered") {
-      this.emitEvent("safety.estop.triggered", agentId, tokenId, {
+      failures.emit("safety.estop.triggered", agentId, tokenId, {
         source: "hardware_safety_context",
         controllerId: safety.controllerId,
         observedAt: safety.observedAt,
@@ -1927,7 +1816,7 @@ export class PolicyGateway {
     }
 
     if (!safety) {
-      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+      failures.emit("safety.hardware.permit.denied", agentId, tokenId, {
         anomalyType: "hardware_safety_context_missing",
         severity: "high",
         assignedTier,
@@ -1944,7 +1833,7 @@ export class PolicyGateway {
     if (safety.observedAt) {
       const observedAtMs = new Date(safety.observedAt).getTime();
       if (!Number.isFinite(observedAtMs) || Date.now() - observedAtMs > MAX_HARDWARE_SAFETY_STALENESS_MS) {
-        this.emitEvent("safety.hardware.state.stale", agentId, tokenId, {
+        failures.emit("safety.hardware.state.stale", agentId, tokenId, {
           anomalyType: "hardware_state_stale",
           severity: "high",
           observedAt: safety.observedAt,
@@ -1960,7 +1849,7 @@ export class PolicyGateway {
     }
 
     if (requiresIndustrialHandshake && safety.permitState !== "granted") {
-      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+      failures.emit("safety.hardware.permit.denied", agentId, tokenId, {
         anomalyType: "hardware_permit_not_granted",
         severity: "high",
         permitState: safety.permitState ?? "missing",
@@ -1975,7 +1864,7 @@ export class PolicyGateway {
     }
 
     if (safety.permitState && safety.permitState !== "granted") {
-      this.emitEvent("safety.hardware.permit.denied", agentId, tokenId, {
+      failures.emit("safety.hardware.permit.denied", agentId, tokenId, {
         anomalyType: "hardware_permit_not_granted",
         severity: "high",
         permitState: safety.permitState,
@@ -1989,7 +1878,7 @@ export class PolicyGateway {
     }
 
     if (safety.interlockState && safety.interlockState !== "closed") {
-      this.emitEvent("safety.hardware.interlock.open", agentId, tokenId, {
+      failures.emit("safety.hardware.interlock.open", agentId, tokenId, {
         anomalyType: "hardware_interlock_not_closed",
         severity: "high",
         interlockState: safety.interlockState,
@@ -2005,21 +1894,4 @@ export class PolicyGateway {
     return undefined;
   }
 
-  private emitEvent(
-    eventType: string,
-    agentId: string,
-    tokenId: string | undefined,
-    payload: Record<string, unknown>,
-  ): void {
-    const event = { eventType, agentId, tokenId, payload };
-    this.config.emitLedgerEvent?.(event);
-    if (this.config.edgeControlPlane?.replicateEvidenceEvent) {
-      this.runBestEffort(this.config.edgeControlPlane.replicateEvidenceEvent(event));
-    }
-  }
-
-  private runBestEffort(promiseOrVoid: Promise<void> | void): void {
-    if (!promiseOrVoid) return;
-    void Promise.resolve(promiseOrVoid).catch(() => {});
-  }
 }
