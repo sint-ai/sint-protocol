@@ -22,6 +22,13 @@ export class AuthenticatedOpenPiTransport implements OpenPiInferenceTransport {
   constructor(private readonly config: AuthenticatedOpenPiTransportConfig) {}
 
   async infer(request: OpenPiInferenceRequest): Promise<Result<OpenPiInferenceResponse, OpenPiTransportError>> {
+    const endpoint = this.config.endpoint as string;
+    if (!URL.canParse(endpoint) || !(endpoint.startsWith("wss://") || endpoint.startsWith("unix:///"))) {
+      return invalid("OpenPI requires an encrypted WebSocket or absolute Unix-socket endpoint");
+    }
+    if (!Number.isFinite(this.config.timeoutMs) || this.config.timeoutMs <= 0 || this.config.timeoutMs > 30_000) {
+      return invalid("OpenPI timeout must be between 0 and 30000 milliseconds");
+    }
     const exchanged = await this.config.channel.exchange(
       this.config.endpoint,
       { protocol: "sint-openpi/1", type: "infer", ...request },
@@ -42,6 +49,7 @@ export function parseOpenPiInferenceResponse(value: unknown): Result<OpenPiInfer
   if (requiredStrings.some((field) => typeof value[field] !== "string" || value[field].length === 0)) {
     return invalid("OpenPI response is missing a required string field");
   }
+  if (!Number.isFinite(Date.parse(value["issuedAt"] as string))) return invalid("OpenPI response timestamp is invalid");
   if (!Array.isArray(actions) || !actions.every(
     (action) => Array.isArray(action) && action.every((item) => typeof item === "number" && Number.isFinite(item)),
   )) return invalid("OpenPI response actions are malformed");

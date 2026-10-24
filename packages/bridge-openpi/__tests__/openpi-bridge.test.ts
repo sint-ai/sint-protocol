@@ -91,4 +91,17 @@ describe("OpenPiBridge", () => {
     expect(result.ok ? undefined : result.error.code).toBe("INFERENCE_UNTRUSTED");
     expect(gateway.intercept).not.toHaveBeenCalled();
   });
+
+  it("rejects invalid timestamps from typed inference transports without throwing", async () => {
+    const { instance, transport, gateway, safeStop } = bridge();
+    const original = transport.infer.getMockImplementation()!;
+    transport.infer.mockImplementation(async request => {
+      const result = await original(request);
+      return result.ok ? ok({ ...result.value, issuedAt: "invalid" }) : result;
+    });
+    const result = await instance.intercept(input);
+    expect(result.ok ? undefined : result.error.code).toBe("INFERENCE_STALE");
+    expect(gateway.intercept).not.toHaveBeenCalled();
+    expect(safeStop).toHaveBeenCalledOnce();
+  });
 });

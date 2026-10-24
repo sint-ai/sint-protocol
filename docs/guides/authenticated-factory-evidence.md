@@ -22,7 +22,13 @@ calibration state and expiry, inspection time, feature tolerance flags, and
 numeric deviations from nominal dimensions. Resolver errors and timeouts deny
 and appear in the gateway's plugin-failure audit.
 
-Both resolvers may return promises. They are trusted deployment dependencies:
+Human authority tokens likewise require `resolveHumanAuthorityProof(proofRef)`.
+It returns a `Result<HumanAuthorityProof, { message: string }>` from a trusted,
+current provider record. The default policy compares the entire proof, enforces
+both token and proof scopes, and rechecks freshness and validity windows after
+lookup. A provider name or proof hash supplied by the caller is insufficient.
+
+All three resolvers may return promises. They are trusted deployment dependencies:
 never implement either by copying fields from the agent request. Existing
 deployments that use evidence-gated tokens must configure these lookups before
 upgrading. Tokens without evidence requirements do not require a resolver.

@@ -55,3 +55,31 @@ The transport must use mutual authentication, request freshness, replay protecti
 - **I-VLA6:** Remote-policy responses are authenticated, fresh, single-use, runtime-bound, and structurally validated before policy evaluation.
 
 The bridge exposes a secure structured-channel interface for `wss://` and authenticated `unix://` transports. Deployment-specific WebSocket/mTLS certificate loading remains outside the package so private keys stay in the platform transport or secrets manager rather than SINT application code.
+
+## Foundation release boundary
+
+The merged foundation supports typed proposals, authenticated inference contracts,
+token-bound runtime identity, evidence recording, approval review, and local broker
+sequence/continuity checks. Future pilot and dashboard work is tracked separately;
+it is not part of this release's completion claim.
+
+Hazardous-energy envelopes and adaptation permits are signed and preserved in
+storage, but execution with either contract is denied explicitly until its
+end-to-end enforcement integration exists. Signed transition limits are likewise
+denied for VLA chunks because they cannot yet be passed to the broker as trusted
+limits. Required velocity, acceleration and jerk declarations may not be omitted.
+These fail-closed paths replace silent acceptance of unsupported restrictions.
+
+The OpenPI channel owns transport authentication; runtime configuration rejects
+insecure endpoints. A response verifier is required, and malformed response
+observations return errors before proposal construction. This foundation does not
+include a production OpenPI WebSocket client, GPU service, or hardware pilot.
+
+`ConsumerMediaInterceptor` is an experimental typed bridge. Resource mapping and
+interception return `Result` values for malformed input; callers must check `ok`
+before using the mapped resource or gateway decision.
+
+See [authenticated evidence configuration](./guides/authenticated-factory-evidence.md)
+for the deployment, inspection and human-authority trust dependencies, and
+[foundation release evidence](./reports/foundation-release-2026-10-24.md) for the
+completed local and CI validation and existing prototype exclusions.

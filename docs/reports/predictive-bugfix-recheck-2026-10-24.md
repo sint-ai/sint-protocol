@@ -67,17 +67,20 @@ Public inventory counts were corrected to 56 workspaces, 43 packages and 17 brid
   the existing unified delivery roadmap.
 - VLA concurrency and export-redaction regressions: passed.
 
-## Merge status
+## Follow-up completion
 
-The local conflicts with `main` are resolved. This report is local test and code
-review evidence, not an OhMyBug attestation. The OhMyBug MCP endpoint returned
-HTTP 401 requiring OAuth or an API key; no authenticated cloud re-hunt was
-submitted and no current account balance was checked.
+This section supersedes the initial merge hold. The user explicitly requested
+completion without OhMyBug on 24 October 2026. No paid re-hunt is required for
+this merge, no OhMyBug service was called during completion, and no cloud
+attestation is claimed.
 
-PR #270 still includes the pre-existing unfinished VLA/perception/consequence
-work. Before merging, that scope must be completed and reviewed or separated,
-remote CI must pass on the updated head, and the clean round-2 OhMyBug report and
-attestation must cover the final commit. No merge-gate records were changed.
+The follow-up review also read the GitHub review body and caught a finding that
+was missing from the initial inline-comment inventory: human-authority metadata
+was unauthenticated. The default gate now requires a trusted proof lookup,
+compares the entire record, and checks both proof and token scopes and validity.
 
-See [authenticated factory evidence](../guides/authenticated-factory-evidence.md)
-for resolver configuration, migration requirements and broker ownership limits.
+The VLA/perception/consequence scope is finalized as a foundation release, with
+unsupported enforcement contracts explicitly denied and future pilot work kept
+in the roadmap. See [foundation release evidence](./foundation-release-2026-10-24.md)
+and [authenticated factory evidence](../guides/authenticated-factory-evidence.md)
+for validation, required configuration, migrations and deployment limits.

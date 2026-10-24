@@ -29,4 +29,12 @@ describe("AuthenticatedOpenPiTransport", () => {
     const result = await transport.infer(request);
     expect(result.ok ? undefined : result.error.code).toBe("INVALID_RESPONSE");
   });
+
+  it("rejects insecure runtime endpoint configuration before network I/O", async () => {
+    const exchange = vi.fn();
+    const transport = new AuthenticatedOpenPiTransport({ endpoint: "ws://openpi.internal" as never, timeoutMs: 500, channel: { exchange } });
+    const result = await transport.infer(request);
+    expect(result.ok).toBe(false);
+    expect(exchange).not.toHaveBeenCalled();
+  });
 });

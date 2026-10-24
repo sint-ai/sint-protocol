@@ -2,6 +2,7 @@ export {
   ConsumerMediaInterceptor,
   toConsumerMediaResource,
   type ConsumerMediaDataClass,
+  type ConsumerMediaInputError,
   type ConsumerMediaGateway,
   type ConsumerMediaOperation,
   type ConsumerMediaRequest,

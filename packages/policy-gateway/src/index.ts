@@ -63,7 +63,7 @@ export type {
   RegulatedDataRequestMetadata,
 } from "./regulated-data-policy.js";
 export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
-export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+export type { HumanAuthorityPolicyPlugin, HumanAuthorityProofResolver } from "./human-authority-policy.js";
 export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
 export type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
 export { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";

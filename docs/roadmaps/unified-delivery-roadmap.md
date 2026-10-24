@@ -1,7 +1,8 @@
 # SINT Unified Delivery Roadmap
 
 **Status:** active execution plan  
-**Updated:** 2026-09-21  
+**Updated:** 2026-10-24
+
 **Supersedes for prioritization:** feature-first ordering in legacy phase and
 session-status documents. Those documents remain historical evidence, not the
 current execution queue.
@@ -27,7 +28,7 @@ contract, and an operator-facing failure path.
 | Core production slice | Build, token, policy, persistence, ledger, gateway, production docs, and readiness work exist. | Fresh CI on `main`, repeatable E2E release run, schema migration/rollback rehearsal, named supported topology. | P0 |
 | Release / supply-chain evidence | Release and dependency-review artifacts exist. | Resolve active dependency findings, maintain clean release evidence, publish only verified claims. | P0 |
 | Factory Action Pack | Sprint 1 is shipped; simulation-first work and industrial pack have substantial shipped artifacts. | Run the end-to-end demo against a supported simulator and document the exact supported adapter matrix. | P1 |
-| VLA / Axonnic data governance | VLA/OpenPI action governance exists; demonstration manifest and promotion validator are implemented. | Bind lineage/promotion authority in token + gateway, emit ledger events, add E2E conformance, dashboard and guarded pilot. | P1 |
+| VLA / Axonnic data governance | Token-bound lineage, digest-only provenance events and E2E conformance implement the reviewed VLA/OpenPI foundation. Unsupported signed enforcement contracts deny explicitly. | Guarded pilot, production model/transport integration and metrics dashboard. | P1 |
 | Spatial mission authorization | Token envelope is implemented; corridor and bridge context are partial. | GeoJSON/map resolvers, ROS2 odometry/TF context, multi-robot coordination fixtures. | P2 |
 | Humanoid / hardware safety | Profile, fixture, bridge, and evidence scaffolding are shipped. | Independent simulator/vendor validation, controller contracts, safety-controller latency tests. | P2 |
 | Post-quantum agility | Token metadata and fail-closed handling are implemented. | PQ verifier, hybrid issuance, ledger hash migration, transport hardening. | P2 |
@@ -108,4 +109,4 @@ backlog, not active sprint commitments.
 - [x] Wire event constructors into the capture/training orchestration service.
 - [x] Provide and verify the hash-chained EvidenceLedger adapter.
 - [ ] Validate the orchestration service in a real guarded pilot.
-- [ ] Run a clean full release gate and record any non-core prototype exemptions.
+- [x] Run the full build/typecheck/test/docs/fixture and explicit service gates; record non-core prototype exemptions in the [foundation release evidence](../reports/foundation-release-2026-10-24.md).

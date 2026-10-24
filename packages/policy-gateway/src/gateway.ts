@@ -45,7 +45,7 @@ import type { SafetyPermitPlugin } from "./safety-permit.js";
 import type { ArgInjectionDetector } from "./arg-injection-detector.js";
 import type { RegulatedDataPolicyPlugin } from "./regulated-data-policy.js";
 import type { SpatialIntegrityPolicyPlugin } from "./spatial-integrity-policy.js";
-import type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+import type { HumanAuthorityPolicyPlugin, HumanAuthorityProofResolver } from "./human-authority-policy.js";
 import { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
 import type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
 import { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
@@ -347,6 +347,8 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    * When omitted, the gateway uses the built-in default policy evaluator.
    */
   readonly humanAuthorityPolicy?: HumanAuthorityPolicyPlugin;
+  /** Required by the default gate for tokens carrying human authority requirements. */
+  readonly resolveHumanAuthorityProof?: HumanAuthorityProofResolver;
   /**
    * Optional shared deployment-envelope policy hook.
    * When omitted, the gateway uses the built-in default policy evaluator.
@@ -671,6 +673,17 @@ export class PolicyGateway {
       return decision;
     }
 
+    // These signed contracts are schema foundations only in this release.
+    // Never silently ignore an authority restriction without an enforcement path.
+    if (token.hazardousEnergyEnvelope !== undefined) {
+      return this.deny(requestId, timestamp, "HAZARDOUS_ENERGY_ENFORCEMENT_UNAVAILABLE",
+        "Hazardous-energy execution requires an enforcement integration that is not supported in this release");
+    }
+    if (token.adaptationPermit !== undefined) {
+      return this.deny(requestId, timestamp, "VLA_ADAPTATION_ENFORCEMENT_UNAVAILABLE",
+        "Online adaptation requires an enforcement integration that is not supported in this release");
+    }
+
     // A token may bind execution authority to an approved training lineage.
     // Record only immutable digests; raw demonstrations and biometric data stay
     // in the customer-controlled data plane.
@@ -687,7 +700,7 @@ export class PolicyGateway {
     // 4a-human. Human authority proof gate.
     // Tokens can require a bound human proof before any other policy logic runs.
     // This gate is fail-closed and uses the built-in policy evaluator by default.
-    const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy();
+    const humanAuthorityPolicy = this.config.humanAuthorityPolicy ?? new DefaultHumanAuthorityPolicy(this.config.resolveHumanAuthorityProof);
     const humanAuthorityFailure = await failures.check("humanAuthority.evaluate", () => humanAuthorityPolicy.evaluate(
         request,
         token,
@@ -1740,6 +1753,11 @@ export class PolicyGateway {
     }
     if (!chunk) return undefined;
 
+    if (envelope?.maxTransitionPositionDelta !== undefined || envelope?.maxTransitionVelocityDelta !== undefined) {
+      return this.deny(requestId, timestamp, "VLA_TRANSITION_ENFORCEMENT_UNAVAILABLE",
+        "Token-bound transition limits require a broker integration that is not supported in this release");
+    }
+
     if (Date.parse(chunk.executeBy) <= now) {
       return this.deny(requestId, timestamp, "VLA_CHUNK_STALE", "VLA action chunk missed its execution deadline");
     }
@@ -1757,12 +1775,12 @@ export class PolicyGateway {
         ? `horizon ${chunk.horizonMs}ms exceeds ${envelope.maxChunkHorizonMs}ms` : undefined,
       envelope?.maxControlHz !== undefined && chunk.controlHz > envelope.maxControlHz
         ? `control rate ${chunk.controlHz}Hz exceeds ${envelope.maxControlHz}Hz` : undefined,
-      envelope?.maxChunkVelocityMps !== undefined && chunk.maxVelocityMps !== undefined
-        && chunk.maxVelocityMps > envelope.maxChunkVelocityMps ? "velocity exceeds chunk envelope" : undefined,
-      envelope?.maxChunkAccelerationMps2 !== undefined && chunk.maxAccelerationMps2 !== undefined
-        && chunk.maxAccelerationMps2 > envelope.maxChunkAccelerationMps2 ? "acceleration exceeds chunk envelope" : undefined,
-      envelope?.maxChunkJerkMps3 !== undefined && chunk.maxJerkMps3 !== undefined
-        && chunk.maxJerkMps3 > envelope.maxChunkJerkMps3 ? "jerk exceeds chunk envelope" : undefined,
+      envelope?.maxChunkVelocityMps !== undefined
+        && (chunk.maxVelocityMps === undefined || chunk.maxVelocityMps > envelope.maxChunkVelocityMps) ? "velocity is missing or exceeds chunk envelope" : undefined,
+      envelope?.maxChunkAccelerationMps2 !== undefined
+        && (chunk.maxAccelerationMps2 === undefined || chunk.maxAccelerationMps2 > envelope.maxChunkAccelerationMps2) ? "acceleration is missing or exceeds chunk envelope" : undefined,
+      envelope?.maxChunkJerkMps3 !== undefined
+        && (chunk.maxJerkMps3 === undefined || chunk.maxJerkMps3 > envelope.maxChunkJerkMps3) ? "jerk is missing or exceeds chunk envelope" : undefined,
       envelope?.requireSafeStopOnFailure === true && !chunk.safeStopOnFailure
         ? "safe-stop behavior is required" : undefined,
     ].filter((value): value is string => value !== undefined);

@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { type SintCapabilityToken, type SintRequest } from "@pshkv/core";
+import { ok, type SintCapabilityToken, type SintRequest } from "@pshkv/core";
 import {
   generateKeypair,
   issueCapabilityToken,
@@ -115,11 +115,14 @@ function makeRequest(
 describe("HumanAuthorityPolicy", () => {
   it("allows a request with a valid human authority proof", async () => {
     const token = makeToken();
+    const request = makeRequest(token);
+    const trusted = structuredClone(request.executionContext!.humanAuthority!);
     const gateway = new PolicyGateway({
       resolveToken: () => token,
+      resolveHumanAuthorityProof: () => ok(trusted),
     });
 
-    const decision = await gateway.intercept(makeRequest(token));
+    const decision = await gateway.intercept(request);
 
     expect(decision.action).toBe("allow");
   });

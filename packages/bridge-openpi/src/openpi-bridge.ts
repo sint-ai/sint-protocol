@@ -151,7 +151,7 @@ export class OpenPiBridge {
       return this.stop("INFERENCE_REPLAYED", "Inference response nonce or response ID was replayed", false);
     }
     const responseAge = this.now() - Date.parse(response.issuedAt);
-    if (responseAge > this.config.maxResponseAgeMs || responseAge < -(this.config.maxClockSkewMs ?? 1_000)) {
+    if (!Number.isFinite(responseAge) || responseAge > this.config.maxResponseAgeMs || responseAge < -(this.config.maxClockSkewMs ?? 1_000)) {
       return this.stop("INFERENCE_STALE", "Inference response is stale or issued too far in the future", true);
     }
     if (
