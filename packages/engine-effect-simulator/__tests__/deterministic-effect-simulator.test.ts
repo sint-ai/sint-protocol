@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   ok,
   simulationEvidenceReceiptSchema,
   type SimulationPreflight,
@@ -11,6 +12,7 @@ import {
 } from "@pshkv/core";
 import {
   generateKeypair,
+  hashSha256,
   verify,
 } from "@pshkv/gate-capability-tokens";
 import { computeSimulationEvidenceSigningPayload } from "@pshkv/gate-policy-gateway";
@@ -24,6 +26,14 @@ import {
 const signer = generateKeypair();
 const now = Date.now();
 const digest = (character: string): string => character.repeat(64);
+
+const RESOURCE = "ros2:///arm/command";
+const ACTION = "publish";
+const effectPlanDigestFor = (
+  resource: string,
+  action: string,
+  params: Record<string, unknown>,
+): string => hashSha256(canonicalJsonStringify({ resource, action, params }));
 
 function world(overrides: Partial<SimulationWorldSnapshot> = {}): SimulationWorldSnapshot {
   return {
@@ -46,10 +56,10 @@ function preflight(
     assignedTier: ApprovalTier.T2_ACT,
     effectPlan: {
       requestDigest: digest("1"),
-      effectPlanDigest: digest("2"),
+      effectPlanDigest: effectPlanDigestFor(RESOURCE, ACTION, params),
       tokenDigest: digest("3"),
-      resource: "ros2:///arm/command",
-      action: "publish",
+      resource: RESOURCE,
+      action: ACTION,
       params,
     },
     requirement: { minEvidenceGrade: "deterministic" },
@@ -106,7 +116,7 @@ describe("DeterministicEffectSimulator", () => {
     if (!simulated.ok) return;
     expect(simulated.value.result.outcome).toBe("pass");
     expect(simulated.value.evidenceGrade).toBe("deterministic");
-    expect(simulated.value.effectPlanDigest).toBe(digest("2"));
+    expect(simulated.value.effectPlanDigest).toBe(effectPlanDigestFor(RESOURCE, ACTION, safeParams));
     expect(simulated.value.worldSnapshot.stateEpoch).toBe("cell-7:42");
     expect(simulated.value.bindings).toEqual({ robotId: "arm-7", controllerId: "ctrl-7" });
     expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 1 });
@@ -121,7 +131,7 @@ describe("DeterministicEffectSimulator", () => {
     if (artifact.ok) {
       expect(JSON.parse(artifact.value.content)).toMatchObject({
         schemaVersion: "1.0.0",
-        effectPlanDigest: digest("2"),
+        effectPlanDigest: effectPlanDigestFor(RESOURCE, ACTION, safeParams),
         worldSnapshotDigest: digest("a"),
       });
     }
@@ -154,13 +164,37 @@ describe("DeterministicEffectSimulator", () => {
     const unknown = preflight(safeParams);
     const simulated = await simulator().simulate({
       ...unknown,
-      effectPlan: { ...unknown.effectPlan, resource: "ros2:///unknown/actuator" },
+      effectPlan: {
+        ...unknown.effectPlan,
+        resource: "ros2:///unknown/actuator",
+        effectPlanDigest: effectPlanDigestFor("ros2:///unknown/actuator", ACTION, safeParams),
+      },
     }, world());
 
     expect(simulated.ok).toBe(true);
     if (!simulated.ok) return;
     expect(simulated.value.result.outcome).toBe("indeterminate");
     expect(simulated.value.result.unsupportedPhenomena?.[0]).toContain("unsupported effect");
+  });
+
+  it("rejects a preflight whose effectPlanDigest does not match the submitted params (substitution)", async () => {
+    const dangerousParams = { ...safeParams, velocityMps: 5 };
+    const tampered = preflight(safeParams, {
+      effectPlan: {
+        requestDigest: digest("1"),
+        tokenDigest: digest("3"),
+        resource: RESOURCE,
+        action: ACTION,
+        params: safeParams,
+        // Digest pinned to the dangerous request, but benign params submitted.
+        effectPlanDigest: effectPlanDigestFor(RESOURCE, ACTION, dangerousParams),
+      },
+    });
+    const simulated = await simulator().simulate(tampered, world());
+
+    expect(simulated.ok).toBe(false);
+    if (simulated.ok) return;
+    expect(simulated.error.code).toBe("INVALID_PREFLIGHT");
   });
 
   it("rejects an evidence grade this backend cannot produce", async () => {

@@ -11,14 +11,19 @@
 
 import {
   ApprovalTier,
+  RiskTier,
   type PolicyDecision,
   type RateLimitStore,
   type Result,
   type SimulationPreflight,
   type SintCapabilityToken,
   type SintRequest,
+  type TierAssignmentRule,
   sintRequestSchema,
   DEFAULT_APPROVAL_TIMEOUT_MS,
+  DEFAULT_FORBIDDEN_COMBOS,
+  normalizeComboAction,
+  parseMcpResource,
   err,
   ok,
 } from "@pshkv/core";
@@ -29,7 +34,7 @@ import {
 import { nowISO8601 } from "@pshkv/gate-capability-tokens";
 import { assignTier, type TierAssignment } from "./tier-assigner.js";
 import { checkConstraints, type EnvelopeOverrides } from "./constraint-checker.js";
-import { checkForbiddenCombos } from "./forbidden-combos.js";
+import { checkForbiddenCombos, type TimedComboAction } from "./forbidden-combos.js";
 import type { CircuitBreakerPlugin, CircuitState } from "./circuit-breaker.js";
 import type { AgentTrustLevel } from "@pshkv/core";
 import type { GoalHijackPlugin } from "./goal-hijack.js";
@@ -107,7 +112,9 @@ export interface AutonomySupervisorPlugin {
  *
  * The plugin receives the request + any physical context and returns tighter limits.
  * Effective limit = min(token.constraint, envelope.limit).
- * Fail-open: if the plugin throws, the token's original limits are used.
+ * Failure handling is selected by `dynamicEnvelopeFailureMode`. The default is
+ * `fail-open` for backwards compatibility; safety-critical deployments should
+ * select `deny`.
  *
  * @example
  * // Obstacle at 0.8m → cap velocity to 0.2 m/s regardless of token's 2.0 m/s limit
@@ -130,6 +137,8 @@ export interface DynamicEnvelopePlugin {
     reason?: string;
   }>;
 }
+
+export type DynamicEnvelopeFailureMode = "fail-open" | "deny";
 
 /**
  * Corridor verifier hook for spatial mission envelopes.
@@ -231,6 +240,8 @@ export interface PolicyGatewayConfig {
   readonly resolveToken: TokenResolver;
   readonly revocationStore?: RevocationStore;
   readonly emitLedgerEvent?: LedgerEmitter;
+  /** Custom resource rules cannot lower the built-in MCP consequence floor. */
+  readonly tierRules?: readonly TierAssignmentRule[];
   readonly getAgentTrustLevel?: (agentId: string) => AgentTrustLevel;
   /** Optional economy plugin for budget/balance/trust enforcement. */
   readonly economyPlugin?: EconomyPluginHooks;
@@ -269,6 +280,12 @@ export interface PolicyGatewayConfig {
    * static constraints. Fail-open: plugin errors fall back to token limits.
    */
   readonly dynamicEnvelope?: DynamicEnvelopePlugin;
+  /**
+   * Behavior when the dynamic envelope cannot produce a safety limit.
+   * Defaults to `fail-open` for backwards compatibility. Physical deployments
+   * whose safety case depends on live sensor state should use `deny`.
+   */
+  readonly dynamicEnvelopeFailureMode?: DynamicEnvelopeFailureMode;
   /**
    * Optional spatial corridor verifier for mission envelopes.
    * When a token requires spatial proof and declares deviation/heading limits,
@@ -399,6 +416,9 @@ export interface SimulationPreflightError {
  */
 export class PolicyGateway {
   private readonly config: PolicyGatewayConfig;
+  /** Per-agent history spans MCP sessions and tokens, using the gateway clock. */
+  private readonly mcpComboHistory = new Map<string, TimedComboAction[]>();
+  private readonly comboRetentionMs = Math.max(...DEFAULT_FORBIDDEN_COMBOS.map(combo => combo.windowMs));
 
   constructor(config: PolicyGatewayConfig) {
     this.config = config;
@@ -442,7 +462,7 @@ export class PolicyGateway {
     }
 
     const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
-    let tierAssignment = assignTier(request, { agentTrustLevel });
+    let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
     if (this.config.csmlEscalation) {
       try {
         const csmlDecision = await this.config.csmlEscalation.evaluateAgent(
@@ -627,6 +647,19 @@ export class PolicyGateway {
         policyViolated: tokenValidation.error,
       });
       return decision;
+    }
+
+    // A token may bind execution authority to an approved training lineage.
+    // Record only immutable digests; raw demonstrations and biometric data stay
+    // in the customer-controlled data plane.
+    if (token.modelConstraints?.datasetDigest !== undefined) {
+      this.emitEvent("vla.lineage.verified", request.agentId, request.tokenId, {
+        datasetDigest: token.modelConstraints.datasetDigest,
+        trainingRecipeDigest: token.modelConstraints.trainingRecipeDigest,
+        checkpointDigest: token.modelConstraints.checkpointDigest,
+        promotionEvidenceDigest: token.modelConstraints.promotionEvidenceDigest,
+        rollbackCheckpointDigest: token.modelConstraints.rollbackCheckpointDigest,
+      });
     }
 
     // 4a-human. Human authority proof gate.
@@ -878,6 +911,11 @@ export class PolicyGateway {
       return spatialMissionDecision;
     }
 
+    const vlaDecision = this.evaluateVlaEnvelope(request, token, requestId, timestamp);
+    if (vlaDecision) {
+      return vlaDecision;
+    }
+
     // 4b. Rate-limit check (per-token sliding window)
     if (this.config.rateLimitStore && token.constraints.rateLimit) {
       const { maxCalls, windowMs } = token.constraints.rateLimit;
@@ -954,7 +992,7 @@ export class PolicyGateway {
 
     // 5. Assign approval tier
     const agentTrustLevel = this.config.getAgentTrustLevel?.(request.agentId);
-    let tierAssignment = assignTier(request, { agentTrustLevel });
+    let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
 
     // 5b. CSML escalation (Avatar Layer 5) — bump tier if agent's safety score exceeds θ
     if (this.config.csmlEscalation) {
@@ -1234,21 +1272,6 @@ export class PolicyGateway {
       }
     }
 
-    // 6. Check forbidden tool combinations
-    if (request.recentActions && request.recentActions.length > 0) {
-      const comboCheck = checkForbiddenCombos(request.recentActions, request.action);
-      if (comboCheck.triggered && comboCheck.requiredTier) {
-        // Escalate to the required tier for this forbidden combo
-        return this.escalate(
-          requestId,
-          timestamp,
-          comboCheck.requiredTier,
-          `Forbidden combination detected: ${comboCheck.matchedCombo?.reason}`,
-          tierAssignment,
-        );
-      }
-    }
-
     // 6b. Argument injection detection (ASI05: code execution via parameter injection)
     if (this.config.argInjectionDetector) {
       try {
@@ -1299,8 +1322,20 @@ export class PolicyGateway {
             });
           }
         }
-      } catch {
-        // Dynamic envelope error → fail-open, use token's original limits
+      } catch (cause) {
+        if (this.config.dynamicEnvelopeFailureMode === "deny") {
+          this.emitEvent("policy.envelope.unavailable", request.agentId, request.tokenId, {
+            failureMode: "deny",
+            reason: cause instanceof Error ? cause.message : "Dynamic envelope failed",
+          });
+          return this.deny(
+            requestId,
+            timestamp,
+            "DYNAMIC_ENVELOPE_UNAVAILABLE",
+            "Dynamic safety envelope could not be evaluated",
+          );
+        }
+        // Backwards-compatible fail-open mode uses the token's static limits.
       }
     }
 
@@ -1316,12 +1351,81 @@ export class PolicyGateway {
       );
     }
 
+    // 7b. Canonical tool semantics and gateway-owned history prevent MCP naming
+    // mismatches and client omission of recentActions from bypassing combinations.
+    const comboNow = Date.now();
+    const isMcp = parseMcpResource(request.resource) !== undefined;
+    const comboAction = normalizeComboAction(request.action, isMcp ? request.resource : undefined);
+    const recordedHistory = isMcp
+      ? (this.mcpComboHistory.get(request.agentId) ?? []).filter(event => comboNow - event.timestampMs <= this.comboRetentionMs)
+      : [];
+    if (isMcp) {
+      // Sweep expired agents as well as the active agent to bound idle retention.
+      for (const [agentId, events] of this.mcpComboHistory) {
+        if (!events.length || comboNow - events[events.length - 1]!.timestampMs > this.comboRetentionMs) {
+          this.mcpComboHistory.delete(agentId);
+        }
+      }
+      this.mcpComboHistory.set(request.agentId, recordedHistory);
+      if (recordedHistory.length >= 1024) {
+        return this.deny(requestId, timestamp, "COMBO_HISTORY_CAPACITY", "MCP action history capacity reached; wait for the sequence window to expire");
+      }
+    }
+    const comboCheck = checkForbiddenCombos(
+      [...recordedHistory, ...(request.recentActions ?? [])], comboAction, DEFAULT_FORBIDDEN_COMBOS, comboNow,
+    );
+    const recordComboAction = () => {
+      if (isMcp && DEFAULT_FORBIDDEN_COMBOS.some(combo => combo.sequence.includes(comboAction))) {
+        recordedHistory.push({ action: comboAction, timestampMs: comboNow });
+        this.mcpComboHistory.set(request.agentId, recordedHistory);
+      }
+    };
+    if (comboCheck.triggered && comboCheck.requiredTier) {
+      const tiers = [ApprovalTier.T0_OBSERVE, ApprovalTier.T1_PREPARE, ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT];
+      const risks = [RiskTier.T0_READ, RiskTier.T1_WRITE_LOW, RiskTier.T2_STATEFUL, RiskTier.T3_IRREVERSIBLE];
+      const index = Math.max(tiers.indexOf(comboCheck.requiredTier), tiers.indexOf(tierAssignment.approvalTier));
+      tierAssignment = {
+        approvalTier: tiers[index]!,
+        riskTier: risks[index]!,
+        escalationReasons: [...tierAssignment.escalationReasons, `Forbidden combination detected: ${comboCheck.matchedCombo?.reason}`],
+      };
+    }
+
+    // Server restrictions can only narrow gateway authorization. Check the
+    // consequence ceiling even when a call would otherwise require approval.
+    if (isMcp && request.mcpPolicy) {
+      const tiers = [ApprovalTier.T0_OBSERVE, ApprovalTier.T1_PREPARE, ApprovalTier.T2_ACT, ApprovalTier.T3_COMMIT];
+      const maxTier = request.mcpPolicy.maxTier;
+      if (maxTier && tiers.indexOf(tierAssignment.approvalTier) > tiers.indexOf(maxTier)) {
+        return this.deny(requestId, timestamp, "MCP_SERVER_TIER_CEILING", `MCP server policy restricts to ${maxTier}; tool requires ${tierAssignment.approvalTier}`);
+      }
+    }
+
     // 8. Determine action based on tier
     let decision = this.decideBytier(
       requestId,
       timestamp,
       tierAssignment,
     );
+
+    // Approval policy changes the decision, not the operation's consequence tier.
+    if (isMcp && request.mcpPolicy?.requireApproval && decision.action === "allow"
+      && decision.assignedTier !== ApprovalTier.T0_OBSERVE) {
+      decision = {
+        ...decision,
+        action: "escalate",
+        escalation: {
+          requiredTier: decision.assignedTier,
+          reason: "MCP server requires human approval for non-observe actions",
+          timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+          fallbackAction: "deny",
+        },
+      };
+    }
+
+    // Include escalated attempts: they may execute after human approval outside
+    // this call. Requests rejected before tier evaluation never enter history.
+    if (decision.action === "allow" || decision.action === "escalate") recordComboAction();
 
     // 8a. Attach token-defined approval quorum to escalations.
     decision = this.attachApprovalQuorum(decision, token);
@@ -1414,6 +1518,18 @@ export class PolicyGateway {
         modelId: request.executionContext?.model?.modelId,
         modelVersion: request.executionContext?.model?.modelVersion,
         modelFingerprintHash: request.executionContext?.model?.modelFingerprintHash,
+        checkpointDigest: request.executionContext?.model?.checkpointDigest,
+        policyConfigDigest: request.executionContext?.model?.policyConfigDigest,
+        normalizationDigest: request.executionContext?.model?.normalizationDigest,
+        actionTransformDigest: request.executionContext?.model?.actionTransformDigest,
+        actionSpaceDigest: request.executionContext?.model?.actionSpaceDigest,
+        embodimentId: request.executionContext?.model?.embodimentId,
+        calibrationDigest: request.executionContext?.model?.calibrationDigest,
+        sensorLayoutDigest: request.executionContext?.model?.sensorLayoutDigest,
+        datasetDigest: request.executionContext?.model?.datasetDigest,
+        trainingRecipeDigest: request.executionContext?.model?.trainingRecipeDigest,
+        promotionEvidenceDigest: request.executionContext?.model?.promotionEvidenceDigest,
+        rollbackCheckpointDigest: request.executionContext?.model?.rollbackCheckpointDigest,
         attestationGrade: request.executionContext?.attestation?.grade,
         teeBackend: request.executionContext?.attestation?.teeBackend,
         verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
@@ -1515,28 +1631,6 @@ export class PolicyGateway {
       denial: { reason, policyViolated },
       assignedTier: "T3_commit" as ApprovalTier,
       assignedRisk: "T3_irreversible" as any,
-    };
-  }
-
-  private escalate(
-    requestId: string,
-    timestamp: string,
-    requiredTier: ApprovalTier,
-    reason: string,
-    tierAssignment: TierAssignment,
-  ): PolicyDecision {
-    return {
-      requestId,
-      timestamp,
-      action: "escalate",
-      escalation: {
-        requiredTier,
-        reason,
-        timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
-        fallbackAction: "deny",
-      },
-      assignedTier: tierAssignment.approvalTier,
-      assignedRisk: tierAssignment.riskTier,
     };
   }
 
@@ -1733,6 +1827,60 @@ export class PolicyGateway {
       });
     }
 
+    return undefined;
+  }
+
+  /** Validate token-bound continuous-control, task-intent, and memory boundaries. */
+  private evaluateVlaEnvelope(
+    request: SintRequest,
+    token: SintCapabilityToken,
+    requestId: string,
+    timestamp: string,
+  ): PolicyDecision | undefined {
+    const context = request.executionContext;
+    const chunk = context?.vlaActionChunk;
+    const envelope = token.executionEnvelope;
+    const now = Date.now();
+
+    if (context?.vlaTaskIntent && Date.parse(context.vlaTaskIntent.expiresAt) <= now) {
+      return this.deny(requestId, timestamp, "VLA_INTENT_EXPIRED", "VLA task-intent envelope has expired");
+    }
+    for (const memory of context?.vlaMemoryEvidence ?? []) {
+      if (Date.parse(memory.expiresAt) <= now) {
+        return this.deny(requestId, timestamp, "VLA_MEMORY_EXPIRED", `Embodied memory ${memory.evidenceDigest} has expired`);
+      }
+    }
+    if (!chunk) return undefined;
+
+    if (Date.parse(chunk.executeBy) <= now) {
+      return this.deny(requestId, timestamp, "VLA_CHUNK_STALE", "VLA action chunk missed its execution deadline");
+    }
+    if (context?.model?.actionSpaceDigest !== chunk.actionSpaceDigest) {
+      return this.deny(requestId, timestamp, "VLA_ACTION_SPACE_MISMATCH", "Chunk action space is not bound to the active model runtime");
+    }
+    if (context.model.embodimentId !== chunk.embodimentId) {
+      return this.deny(requestId, timestamp, "VLA_EMBODIMENT_MISMATCH", "Chunk embodiment is not bound to the active robot runtime");
+    }
+    if (context.simulationEvidence?.worldSnapshot.digest !== chunk.worldSnapshotDigest) {
+      return this.deny(requestId, timestamp, "VLA_WORLD_STATE_MISMATCH", "Chunk is not bound to the simulated world snapshot");
+    }
+    const violations = [
+      envelope?.maxChunkHorizonMs !== undefined && chunk.horizonMs > envelope.maxChunkHorizonMs
+        ? `horizon ${chunk.horizonMs}ms exceeds ${envelope.maxChunkHorizonMs}ms` : undefined,
+      envelope?.maxControlHz !== undefined && chunk.controlHz > envelope.maxControlHz
+        ? `control rate ${chunk.controlHz}Hz exceeds ${envelope.maxControlHz}Hz` : undefined,
+      envelope?.maxChunkVelocityMps !== undefined && chunk.maxVelocityMps !== undefined
+        && chunk.maxVelocityMps > envelope.maxChunkVelocityMps ? "velocity exceeds chunk envelope" : undefined,
+      envelope?.maxChunkAccelerationMps2 !== undefined && chunk.maxAccelerationMps2 !== undefined
+        && chunk.maxAccelerationMps2 > envelope.maxChunkAccelerationMps2 ? "acceleration exceeds chunk envelope" : undefined,
+      envelope?.maxChunkJerkMps3 !== undefined && chunk.maxJerkMps3 !== undefined
+        && chunk.maxJerkMps3 > envelope.maxChunkJerkMps3 ? "jerk exceeds chunk envelope" : undefined,
+      envelope?.requireSafeStopOnFailure === true && !chunk.safeStopOnFailure
+        ? "safe-stop behavior is required" : undefined,
+    ].filter((value): value is string => value !== undefined);
+    if (violations.length > 0) {
+      return this.deny(requestId, timestamp, "VLA_CHUNK_CONSTRAINT_VIOLATION", violations.join("; "));
+    }
     return undefined;
   }
 

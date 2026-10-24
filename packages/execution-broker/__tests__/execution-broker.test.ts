@@ -58,6 +58,53 @@ function request(): SintRequest {
   return { ...base, executionContext: { simulationEvidence: receipt } };
 }
 
+function vlaRequest(
+  sequence: number,
+  firstPosition: number,
+  lastPosition: number,
+): SintRequest {
+  const base = request();
+  const { simulationEvidence: _receipt, ...context } = base.executionContext ?? {};
+  const withoutReceipt: SintRequest = {
+    ...base,
+    requestId: `019fdd12-cc01-70d4-8174-${String(100 + sequence).padStart(12, "0")}` as SintRequest["requestId"],
+    executionContext: {
+      ...context,
+      model: { actionSpaceDigest: digest("7"), embodimentId: "arm-1" },
+      vlaActionChunk: {
+        chunkId: `019fdd12-cc01-70d4-8174-${String(200 + sequence).padStart(12, "0")}` as SintRequest["requestId"],
+        streamId: "stream-1",
+        sequence,
+        issuedAt: "2026-08-07T15:59:59.000Z",
+        executeBy: "2026-08-07T16:00:04.000Z",
+        horizonMs: 1_000,
+        controlHz: 50,
+        actionCount: 50,
+        actionSpaceDigest: digest("7"),
+        embodimentId: "arm-1",
+        worldSnapshotDigest: world.digest,
+        firstState: { positions: [firstPosition], velocities: [0] },
+        lastState: { positions: [lastPosition], velocities: [0] },
+        safeStopOnFailure: true,
+      },
+    },
+  };
+  const originalReceipt = base.executionContext!.simulationEvidence!;
+  return {
+    ...withoutReceipt,
+    executionContext: {
+      ...withoutReceipt.executionContext,
+      simulationEvidence: {
+        ...originalReceipt,
+        receiptId: `019fdd12-cc01-70d4-8174-${String(300 + sequence).padStart(12, "0")}` as typeof originalReceipt.receiptId,
+        nonce: `vla:${sequence}`,
+        requestDigest: computeExecutionRequestDigest(withoutReceipt),
+        effectPlanDigest: computeExecutionEffectPlanDigest(withoutReceipt),
+      },
+    },
+  };
+}
+
 function decision(requestId = request().requestId): PolicyDecision {
   return {
     requestId,
@@ -180,6 +227,52 @@ describe("ExecutionBroker", () => {
 
     expect(failed.ok ? undefined : failed.error.code).toBe("EXECUTION_FAILED");
     expect(replay.ok ? undefined : replay.error.code).toBe("SIMULATION_RECEIPT_REPLAYED");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("dispatches continuous VLA chunks only in sequence and within continuity limits", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    const safeStop = vi.fn();
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch },
+      now: () => now,
+      vlaContinuity: { maxPositionDelta: 0.1, maxVelocityDelta: 0.1, safeStop },
+    });
+    const first = vlaRequest(0, 0, 0.2);
+    const discontinuous = vlaRequest(1, 0.8, 1);
+
+    expect((await broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) })).ok).toBe(true);
+    const rejected = await broker.execute(discontinuous, {
+      decision: decision(discontinuous.requestId),
+      approval: approval(discontinuous.requestId),
+    });
+
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_DISCONTINUITY");
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(safeStop).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects skipped VLA sequences before consuming their simulation receipt", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch },
+      now: () => now,
+      vlaContinuity: { maxPositionDelta: 0.1, maxVelocityDelta: 0.1 },
+    });
+    const first = vlaRequest(0, 0, 0.2);
+    const skipped = vlaRequest(2, 0.2, 0.3);
+
+    await broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) });
+    const rejected = await broker.execute(skipped, {
+      decision: decision(skipped.requestId), approval: approval(skipped.requestId),
+    });
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_SEQUENCE_INVALID");
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 });

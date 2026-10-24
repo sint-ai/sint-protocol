@@ -89,13 +89,19 @@ export class HttpEffectSimulator implements EffectSimulator {
         true,
       );
     }
-    clearTimeout(timeout);
-
     let body: unknown;
     try {
       body = await response.json();
     } catch {
-      return failure("Simulation worker returned non-JSON output", response.status >= 500);
+      const timedOut = controller.signal.aborted;
+      return failure(
+        timedOut
+          ? `Simulation worker timed out after ${this.timeoutMs}ms`
+          : "Simulation worker returned non-JSON output",
+        timedOut || response.status >= 500,
+      );
+    } finally {
+      clearTimeout(timeout);
     }
 
     if (!response.ok) {

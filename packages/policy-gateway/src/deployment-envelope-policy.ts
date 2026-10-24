@@ -6,6 +6,9 @@ import {
   type SintRequest,
 } from "@pshkv/core";
 
+/** Allowable future clock skew for attestor timestamps; matches the gateway-side 5s tolerance. */
+const MAX_FUTURE_SKEW_MS = 5_000;
+
 export interface DeploymentEnvelopePolicyPlugin {
   evaluate(
     request: SintRequest,
@@ -33,83 +36,9 @@ export class DefaultDeploymentEnvelopePolicy implements DeploymentEnvelopePolicy
       }
     }
 
-    const evidence = request.executionContext?.deploymentEvidence ?? [];
-    const requiredEvidenceRefs = envelope.requiredEvidenceRefs ?? [];
-    const freshnessAgeMs = envelope.proofFreshness?.maxProofAgeMs;
-    const requireObservedAt = envelope.proofFreshness?.requireObservedAt === true || freshnessAgeMs !== undefined;
-
-    if ((requiredEvidenceRefs.length > 0 || freshnessAgeMs !== undefined) && evidence.length === 0) {
-      return this.deny(
-        context,
-        "DEPLOYMENT_PROOF_MISSING",
-        "Deployment envelope requires evidence but none was provided",
-      );
-    }
-
-    for (const required of requiredEvidenceRefs) {
-      const matched = evidence.find(
-        (entry) => entry.evidenceType === required.evidenceType && entry.evidenceRef === required.evidenceRef,
-      );
-      if (!matched) {
-        return this.deny(
-          context,
-          "DEPLOYMENT_PROOF_MISSING",
-          `Required deployment evidence ${required.evidenceType}:${required.evidenceRef} is missing`,
-        );
-      }
-
-      const maxAgeMs = required.maxAgeMs ?? freshnessAgeMs;
-      if ((requireObservedAt || maxAgeMs !== undefined) && !matched.observedAt) {
-        return this.deny(
-          context,
-          "DEPLOYMENT_PROOF_MISSING",
-          `Deployment evidence ${required.evidenceType}:${required.evidenceRef} is missing observedAt`,
-        );
-      }
-
-      if (maxAgeMs !== undefined) {
-        const observedAtMs = Date.parse(matched.observedAt);
-        if (!Number.isFinite(observedAtMs) || Date.now() - observedAtMs > maxAgeMs) {
-          return this.deny(
-            context,
-            "DEPLOYMENT_PROOF_STALE",
-            `Deployment evidence ${required.evidenceType}:${required.evidenceRef} exceeded maxAgeMs`,
-          );
-        }
-      }
-
-      if (required.proofHash && matched.proofHash && required.proofHash !== matched.proofHash) {
-        return this.deny(
-          context,
-          "DEPLOYMENT_CONTEXT_MISMATCH",
-          `Deployment evidence ${required.evidenceType}:${required.evidenceRef} hash mismatch`,
-        );
-      }
-
-      if (envelope.allowedVerifiers?.length && (!matched.verifierRef || !envelope.allowedVerifiers.includes(matched.verifierRef))) {
-        return this.deny(
-          context,
-          "DEPLOYMENT_CONTEXT_MISMATCH",
-          `Deployment evidence ${required.evidenceType}:${required.evidenceRef} verifier is not allowlisted`,
-        );
-      }
-    }
-
-    if (envelope.proofFreshness?.maxProofAgeMs !== undefined && requiredEvidenceRefs.length === 0) {
-      const staleEvidence = evidence.find((entry) => {
-        if (!entry.observedAt) {
-          return true;
-        }
-        const observedAtMs = Date.parse(entry.observedAt);
-        return !Number.isFinite(observedAtMs) || Date.now() - observedAtMs > envelope.proofFreshness!.maxProofAgeMs!;
-      });
-      if (staleEvidence) {
-        return this.deny(
-          context,
-          "DEPLOYMENT_PROOF_STALE",
-          "Deployment proof freshness requirement was not satisfied",
-        );
-      }
+    const evidenceDenial = evaluateDeploymentEvidenceRequirements(envelope, request);
+    if (evidenceDenial) {
+      return this.deny(context, evidenceDenial.policyViolated, evidenceDenial.reason);
     }
 
     return undefined;
@@ -180,4 +109,114 @@ export class DefaultDeploymentEnvelopePolicy implements DeploymentEnvelopePolicy
       assignedRisk: RiskTier.T3_IRREVERSIBLE,
     };
   }
+}
+
+interface EvidenceRefRequirement {
+  readonly evidenceType: string;
+  readonly evidenceRef: string;
+  readonly proofHash?: string;
+  readonly verifierRef?: string;
+  readonly observedAt?: string;
+  readonly maxAgeMs?: number;
+}
+
+interface EnvelopeEvidenceRequirements {
+  readonly proofFreshness?: { readonly maxProofAgeMs?: number; readonly requireObservedAt?: boolean };
+  readonly requiredEvidenceRefs?: readonly EvidenceRefRequirement[];
+  readonly allowedVerifiers?: readonly string[];
+}
+
+/**
+ * Shared evaluator for the deployment-envelope evidence contract
+ * (requiredEvidenceRefs, proofFreshness, allowedVerifiers). Returns the denial
+ * reason to raise, or undefined when every requirement is satisfied. Reused by
+ * both the deployment and manufacturing envelope policies so a requirement that
+ * is signed into a token is enforced no matter which envelope carries it.
+ */
+export function evaluateDeploymentEvidenceRequirements(
+  envelope: EnvelopeEvidenceRequirements,
+  request: SintRequest,
+): { readonly policyViolated: string; readonly reason: string } | undefined {
+  const evidence = request.executionContext?.deploymentEvidence ?? [];
+  const requiredEvidenceRefs = envelope.requiredEvidenceRefs ?? [];
+  const freshnessAgeMs = envelope.proofFreshness?.maxProofAgeMs;
+  const requireObservedAt = envelope.proofFreshness?.requireObservedAt === true || freshnessAgeMs !== undefined;
+
+  if ((requiredEvidenceRefs.length > 0 || freshnessAgeMs !== undefined) && evidence.length === 0) {
+    return { policyViolated: "DEPLOYMENT_PROOF_MISSING", reason: "Deployment envelope requires evidence but none was provided" };
+  }
+
+  for (const required of requiredEvidenceRefs) {
+    const matched = evidence.find(
+      (entry) => entry.evidenceType === required.evidenceType && entry.evidenceRef === required.evidenceRef,
+    );
+    if (!matched) {
+      return {
+        policyViolated: "DEPLOYMENT_PROOF_MISSING",
+        reason: `Required deployment evidence ${required.evidenceType}:${required.evidenceRef} is missing`,
+      };
+    }
+
+    const maxAgeMs = required.maxAgeMs ?? freshnessAgeMs;
+    if ((requireObservedAt || maxAgeMs !== undefined) && !matched.observedAt) {
+      return {
+        policyViolated: "DEPLOYMENT_PROOF_MISSING",
+        reason: `Deployment evidence ${required.evidenceType}:${required.evidenceRef} is missing observedAt`,
+      };
+    }
+
+    if (maxAgeMs !== undefined) {
+      const observedAtMs = Date.parse(matched.observedAt);
+      if (
+        !Number.isFinite(observedAtMs)
+        || Date.now() - observedAtMs > maxAgeMs
+        || observedAtMs - Date.now() > MAX_FUTURE_SKEW_MS
+      ) {
+        return {
+          policyViolated: "DEPLOYMENT_PROOF_STALE",
+          reason: `Deployment evidence ${required.evidenceType}:${required.evidenceRef} exceeded maxAgeMs or is future-dated`,
+        };
+      }
+    }
+
+    if (required.proofHash && required.proofHash !== matched.proofHash) {
+      return {
+        policyViolated: "DEPLOYMENT_CONTEXT_MISMATCH",
+        reason: `Deployment evidence ${required.evidenceType}:${required.evidenceRef} proof hash is missing or does not match the pinned value`,
+      };
+    }
+
+    if (required.verifierRef && matched.verifierRef !== required.verifierRef) {
+      return {
+        policyViolated: "DEPLOYMENT_CONTEXT_MISMATCH",
+        reason: `Deployment evidence ${required.evidenceType}:${required.evidenceRef} verifier does not match the pinned verifierRef`,
+      };
+    }
+
+    if (envelope.allowedVerifiers?.length && (!matched.verifierRef || !envelope.allowedVerifiers.includes(matched.verifierRef))) {
+      return {
+        policyViolated: "DEPLOYMENT_CONTEXT_MISMATCH",
+        reason: `Deployment evidence ${required.evidenceType}:${required.evidenceRef} verifier is not allowlisted`,
+      };
+    }
+  }
+
+  if (freshnessAgeMs !== undefined && requiredEvidenceRefs.length === 0) {
+    const staleEvidence = evidence.find((entry) => {
+      if (!entry.observedAt) {
+        return true;
+      }
+      const observedAtMs = Date.parse(entry.observedAt);
+      return (
+        !Number.isFinite(observedAtMs)
+        || Date.now() - observedAtMs > freshnessAgeMs
+        || observedAtMs - Date.now() > MAX_FUTURE_SKEW_MS
+      );
+    });
+    if (staleEvidence) {
+      return { policyViolated: "DEPLOYMENT_PROOF_STALE", reason: "Deployment proof freshness requirement was not satisfied" };
+    }
+  }
+
+  return undefined;
 }

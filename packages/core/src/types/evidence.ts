@@ -56,6 +56,14 @@ export type SintEventType =
   | "simulation.receipt.rejected"
   | "simulation.receipt.consumed"
   | "simulation.execution.drift_detected"
+  // VLA / training lineage — immutable authorization evidence, never raw biometric data
+  | "vla.lineage.verified"
+  | "vla.demonstration.admitted"
+  | "vla.dataset.assembled"
+  | "vla.checkpoint.promotion.requested"
+  | "vla.checkpoint.promoted"
+  | "vla.checkpoint.rollback.requested"
+  | "vla.demonstration.training_eligibility.revoked"
   // Token management
   | "token.issued"
   | "token.revoked"

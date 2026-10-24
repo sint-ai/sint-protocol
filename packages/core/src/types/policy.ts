@@ -7,6 +7,7 @@
  *
  * @module @sint/core/types/policy
  */
+import type { PerceptionEvidence } from "./hazardous-energy.js";
 
 import type {
   SintPhysicalConstraints,
@@ -16,6 +17,7 @@ import type { HumanAuthorityProof } from "./authority.js";
 import type { DeploymentEvidenceRef } from "./deployment-envelope.js";
 import type { ManufacturingExecutionContext } from "./manufacturing-execution.js";
 import type { SimulationEvidenceReceipt } from "./simulation-evidence.js";
+import type { VlaActionChunkEnvelope, VlaMemoryEvidenceRef, VlaTaskIntentEnvelope } from "./vla.js";
 import type {
   DurationMs,
   Ed25519PublicKey,
@@ -88,6 +90,18 @@ export interface SintModelRuntimeContext {
   readonly modelVersion?: string;
   /** Model weight fingerprint for tamper detection. */
   readonly modelFingerprintHash?: string;
+  readonly checkpointDigest?: string;
+  readonly policyConfigDigest?: string;
+  readonly normalizationDigest?: string;
+  readonly actionTransformDigest?: string;
+  readonly actionSpaceDigest?: string;
+  readonly embodimentId?: string;
+  readonly calibrationDigest?: string;
+  readonly sensorLayoutDigest?: string;
+  readonly datasetDigest?: string;
+  readonly trainingRecipeDigest?: string;
+  readonly promotionEvidenceDigest?: string;
+  readonly rollbackCheckpointDigest?: string;
 }
 
 /** Attestation metadata attached to a request. */
@@ -196,6 +210,14 @@ export interface SintExecutionContext {
   readonly manufacturingExecution?: ManufacturingExecutionContext;
   /** Signed predictive-simulation evidence bound to this exact request and token. */
   readonly simulationEvidence?: SimulationEvidenceReceipt;
+  /** Short-lived continuous-control proposal governed by this request. */
+  readonly vlaActionChunk?: VlaActionChunkEnvelope;
+  /** Operator-authorized task and subgoal boundary. */
+  readonly vlaTaskIntent?: VlaTaskIntentEnvelope;
+  /** Provenance references for embodied memories used by the policy. */
+  readonly vlaMemoryEvidence?: readonly VlaMemoryEvidenceRef[];
+  /** Signed perception proof for a target-bound physical action. */
+  readonly perceptionEvidence?: PerceptionEvidence;
 }
 
 /**
@@ -245,8 +267,24 @@ export interface SintRequest {
     readonly frameId?: string;
   };
 
+  /** Declared consequence estimate, independently constrained by the signed token. */
+  readonly consequenceContext?: {
+    readonly reversibility: "reversible" | "compensatable" | "irreversible";
+    readonly affectedEntities?: number;
+    readonly monetaryValue?: { readonly amount: number; readonly currency: string };
+    readonly operationalDurationMs?: DurationMs;
+    readonly propagationDepth?: number;
+  };
+
   /** Sequence of recent actions by this agent (for combo detection). */
   readonly recentActions?: readonly string[];
+  /** Additional MCP server restrictions; can only narrow authorization. */
+  readonly mcpPolicy?: {
+    readonly requireApproval?: boolean;
+    readonly maxTier?: ApprovalTier;
+  };
+  /** MCP annotations may raise the gateway's resource-based tier, never lower it. */
+  readonly mcpAnnotations?: import("../constants/mcp-risk.js").McpAnnotations;
 
   /** Optional execution/deployment metadata for policy and audit correlation. */
   readonly executionContext?: SintExecutionContext;

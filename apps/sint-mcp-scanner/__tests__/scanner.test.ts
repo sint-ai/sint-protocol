@@ -56,13 +56,12 @@ describe("scanTool", () => {
     expect(result.assignedTier).toBe(ApprovalTier.T1_PREPARE);
   });
 
-  it("readOnlyHint annotation overrides shell keyword → LOW risk", () => {
-    // 'exec' keyword would normally → CRITICAL, but readOnlyHint overrides
+  it("readOnlyHint cannot lower shell execution risk", () => {
     const result = scanTool("exec", "execReadOnly", "Read-only execution", {
       readOnlyHint: true,
     });
-    expect(result.riskLevel).toBe("LOW");
-    expect(result.assignedTier).toBe(ApprovalTier.T0_OBSERVE);
+    expect(result.riskLevel).toBe("CRITICAL");
+    expect(result.assignedTier).toBe(ApprovalTier.T3_COMMIT);
   });
 });
 
@@ -112,5 +111,17 @@ describe("scanServer", () => {
     expect(report.byRisk.HIGH).toBe(1);
     expect(report.byRisk.CRITICAL).toBe(1);
     expect(report.totalTools).toBe(4);
+  });
+});
+
+
+describe("scanner default gateway policy", () => {
+  it.each([
+    ["conway", "sandbox_read_file", ApprovalTier.T1_PREPARE],
+    ["credential", "customTool", ApprovalTier.T3_COMMIT],
+    ["market", "trade.buy", ApprovalTier.T3_COMMIT],
+    ["custom", "push_files", ApprovalTier.T1_PREPARE],
+  ])("reports the gateway floor for %s/%s", (server, tool, tier) => {
+    expect(scanTool(server, tool, "").assignedTier).toBe(tier);
   });
 });

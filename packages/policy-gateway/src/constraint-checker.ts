@@ -156,6 +156,63 @@ export function checkConstraints(
     });
   }
 
+  const consequenceLimits = token.constraints.consequenceConstraints;
+  const consequence = request.consequenceContext;
+  if (consequenceLimits && !consequence) {
+    violations.push({
+      constraint: "consequenceContext",
+      limit: "required",
+      actual: "missing",
+      message: "Signed consequence constraints require an explicit consequence declaration",
+    });
+  } else if (consequenceLimits && consequence) {
+    const reversibilityOrder = { reversible: 0, compensatable: 1, irreversible: 2 } as const;
+    if (
+      consequenceLimits.maxReversibility !== undefined &&
+      reversibilityOrder[consequence.reversibility] > reversibilityOrder[consequenceLimits.maxReversibility]
+    ) {
+      violations.push({
+        constraint: "maxReversibility",
+        limit: consequenceLimits.maxReversibility,
+        actual: consequence.reversibility,
+        message: `Action reversibility ${consequence.reversibility} exceeds token limit ${consequenceLimits.maxReversibility}`,
+      });
+    }
+
+    const numericLimits = [
+      ["maxAffectedEntities", consequenceLimits.maxAffectedEntities, consequence.affectedEntities],
+      ["maxOperationalDurationMs", consequenceLimits.maxOperationalDurationMs, consequence.operationalDurationMs],
+      ["maxPropagationDepth", consequenceLimits.maxPropagationDepth, consequence.propagationDepth],
+    ] as const;
+    for (const [constraint, limit, actual] of numericLimits) {
+      if (limit !== undefined && actual === undefined) {
+        violations.push({ constraint, limit, actual: "missing", message: `${constraint} requires a declared consequence value` });
+      } else if (limit !== undefined && actual !== undefined && actual > limit) {
+        violations.push({ constraint, limit, actual, message: `${constraint} limit ${limit} exceeded by ${actual}` });
+      }
+    }
+
+    const monetaryLimit = consequenceLimits.maxMonetaryValue;
+    const monetaryValue = consequence.monetaryValue;
+    if (monetaryLimit && monetaryValue) {
+      if (monetaryLimit.currency !== monetaryValue.currency || monetaryValue.amount > monetaryLimit.amount) {
+        violations.push({
+          constraint: "maxMonetaryValue",
+          limit: `${monetaryLimit.amount} ${monetaryLimit.currency}`,
+          actual: `${monetaryValue.amount} ${monetaryValue.currency}`,
+          message: "Monetary exposure exceeds the signed token limit or uses a different currency",
+        });
+      }
+    } else if (monetaryLimit) {
+      violations.push({
+        constraint: "maxMonetaryValue",
+        limit: `${monetaryLimit.amount} ${monetaryLimit.currency}`,
+        actual: "missing",
+        message: "maxMonetaryValue requires a declared monetary consequence",
+      });
+    }
+  }
+
   if (violations.length > 0) {
     return err(violations);
   }

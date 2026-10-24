@@ -9,6 +9,7 @@
     "test:watch": "turbo run test:watch",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "onboarding:check": "node ./scripts/check-agent-onboarding.mjs",
     "verify": "pnpm run build && pnpm run typecheck && pnpm run test",
     "clean": "turbo run clean",
     "demo": "pnpm --filter @pshkv/conformance-tests exec vitest run src/e2e-demo.test.ts --reporter=verbose",

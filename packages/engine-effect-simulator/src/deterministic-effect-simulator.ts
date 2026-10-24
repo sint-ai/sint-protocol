@@ -59,10 +59,12 @@ export class DeterministicEffectSimulator implements EffectSimulator {
   readonly supportedGrades = ["deterministic"] as const;
 
   private readonly receiptTtlMs: number;
+  private readonly maxClockSkewMs: number;
   private readonly now: () => number;
 
   constructor(private readonly options: DeterministicEffectSimulatorOptions) {
     this.receiptTtlMs = options.receiptTtlMs ?? 5_000;
+    this.maxClockSkewMs = options.maxClockSkewMs ?? 250;
     this.now = options.now ?? Date.now;
   }
 
@@ -88,8 +90,28 @@ export class DeterministicEffectSimulator implements EffectSimulator {
     const now = this.now();
     const observedAt = Date.parse(worldSnapshot.observedAt);
     const validUntil = Date.parse(worldSnapshot.validUntil);
-    if (!Number.isFinite(observedAt) || !Number.isFinite(validUntil) || observedAt > now || validUntil <= now) {
+    if (
+      !Number.isFinite(observedAt)
+      || !Number.isFinite(validUntil)
+      || observedAt - now > this.maxClockSkewMs
+      || validUntil <= now
+    ) {
       return error("WORLD_SNAPSHOT_STALE", "World snapshot is invalid, future-dated, or expired", true);
+    }
+
+    const recomputedEffectPlanDigest = hashSha256(
+      canonicalJsonStringify({
+        resource: preflight.effectPlan.resource,
+        action: preflight.effectPlan.action,
+        params: preflight.effectPlan.params,
+      }),
+    );
+    if (recomputedEffectPlanDigest !== preflight.effectPlan.effectPlanDigest) {
+      return error(
+        "INVALID_PREFLIGHT",
+        "Preflight effectPlanDigest does not match the submitted resource, action, and params",
+        false,
+      );
     }
 
     const model = this.options.models.find((candidate) => candidate.supports(preflight.effectPlan));

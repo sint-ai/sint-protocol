@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   type SimulationPreflight,
   type SimulationWorldSnapshot,
 } from "@pshkv/core";
-import { generateKeypair } from "@pshkv/gate-capability-tokens";
+import { generateKeypair, hashSha256 } from "@pshkv/gate-capability-tokens";
 import { EvidenceLedgerSimulationReceiptRecorder, LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import {
   BoundedMotionEffectModel,
@@ -18,22 +19,23 @@ const signer = generateKeypair();
 const now = Date.now();
 const digest = (character: string): string => character.repeat(64);
 
+const params = {
+  velocityMps: 0.3,
+  forceNewtons: 10,
+  collisions: 0,
+  safetyZoneViolations: 0,
+};
 const preflight: SimulationPreflight = {
   kind: "simulation-preflight",
   authorizesExecution: false,
   assignedTier: ApprovalTier.T2_ACT,
   effectPlan: {
     requestDigest: digest("1"),
-    effectPlanDigest: digest("2"),
+    effectPlanDigest: hashSha256(canonicalJsonStringify({ resource: "ros2:///cmd_vel", action: "publish", params })),
     tokenDigest: digest("3"),
     resource: "ros2:///cmd_vel",
     action: "publish",
-    params: {
-      velocityMps: 0.3,
-      forceNewtons: 10,
-      collisions: 0,
-      safetyZoneViolations: 0,
-    },
+    params,
   },
   requirement: { minEvidenceGrade: "deterministic" },
 };

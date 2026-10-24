@@ -32,6 +32,9 @@ As of May 2026, the repo should optimize for this order:
 4. convert one collaborator lane into a shared external artifact or adapter
 5. refresh public site copy only after the shipped story is sharper
 
+The authoritative cross-sprint execution order and evidence reconciliation are
+in the [Unified Delivery Roadmap](./roadmaps/unified-delivery-roadmap.md).
+
 ### Priority 1. Trust And Evidence
 
 These items matter most because they improve submission quality, production

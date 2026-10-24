@@ -12,9 +12,11 @@ import type {
   DurationMs,
   ISO8601,
   PolicyDecision,
+  SintCapabilityToken,
   SintRequest,
   UUIDv7,
 } from "@pshkv/core";
+import { buildReviewerEvidenceBundle, type ReviewerEvidenceBundle } from "./reviewer-evidence.js";
 
 /**
  * Multi-party quorum requirement for an approval request.
@@ -44,6 +46,8 @@ export interface ApprovalRequest {
    * Absent means single-approver (original behaviour).
    */
   readonly quorum?: ApprovalQuorum;
+  /** Gateway-generated, hash-bound context shown to reviewers. */
+  readonly reviewerEvidence?: ReviewerEvidenceBundle;
 }
 
 /** Resolution of an approval request. */
@@ -116,7 +120,12 @@ export class ApprovalQueue {
    * @param quorum  Optional K-of-N quorum configuration.  When supplied, the
    *                request is not resolved until `required` approvers have voted.
    */
-  enqueue(request: SintRequest, decision: PolicyDecision, quorum?: ApprovalQuorum): ApprovalRequest {
+  enqueue(
+    request: SintRequest,
+    decision: PolicyDecision,
+    quorum?: ApprovalQuorum,
+    token?: SintCapabilityToken,
+  ): ApprovalRequest {
     const timeoutMs = decision.escalation?.timeoutMs ?? this.defaultTimeoutMs;
     const fallbackAction = decision.escalation?.fallbackAction ?? this.defaultFallback;
     const now = nowISO8601();
@@ -133,6 +142,9 @@ export class ApprovalQueue {
         .toISOString()
         .replace(/\.(\d{3})Z$/, ".$1000Z"),
       quorum,
+      reviewerEvidence: token
+        ? buildReviewerEvidenceBundle(request, decision, token, now)
+        : undefined,
     };
 
     const timer = setTimeout(() => {

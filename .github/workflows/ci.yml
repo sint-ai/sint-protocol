@@ -57,6 +57,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Agent Onboarding Contract
+        run: pnpm run onboarding:check
+
+      - name: Public Facts Contract
+        run: node ./scripts/check-public-facts.mjs
+
       - name: Build
         run: pnpm run build
 

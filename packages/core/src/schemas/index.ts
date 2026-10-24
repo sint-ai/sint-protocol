@@ -10,3 +10,5 @@ export * from "./trace-bundle.schema.js";
 export * from "./inspection.schema.js";
 export * from "./manufacturing-execution.schema.js";
 export * from "./simulation-evidence.schema.js";
+export * from "./vla.schema.js";
+export * from "./hazardous-energy.schema.js";

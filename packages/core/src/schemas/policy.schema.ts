@@ -14,6 +14,8 @@ import { humanAuthorityProofSchema } from "./authority.schema.js";
 import { deploymentEvidenceRefSchema } from "./deployment-envelope.schema.js";
 import { manufacturingExecutionContextSchema } from "./manufacturing-execution.schema.js";
 import { simulationEvidenceReceiptSchema } from "./simulation-evidence.schema.js";
+import { vlaActionChunkEnvelopeSchema, vlaMemoryEvidenceRefSchema, vlaTaskIntentEnvelopeSchema } from "./vla.schema.js";
+import { perceptionEvidenceSchema } from "./hazardous-energy.schema.js";
 
 export const physicalContextSchema = z.object({
   humanDetected: z.boolean().optional(),
@@ -41,6 +43,17 @@ export const physicalContextSchema = z.object({
   frameId: z.string().min(1).max(128).optional(),
 }).strict();
 
+export const consequenceContextSchema = z.object({
+  reversibility: z.enum(["reversible", "compensatable", "irreversible"]),
+  affectedEntities: z.number().int().nonnegative().optional(),
+  monetaryValue: z.object({
+    amount: z.number().nonnegative(),
+    currency: z.string().regex(/^[A-Z]{3}$/),
+  }).strict().optional(),
+  operationalDurationMs: z.number().int().nonnegative().optional(),
+  propagationDepth: z.number().int().nonnegative().optional(),
+}).strict();
+
 export const executorIdentitySchema = z.object({
   runtimeId: z.string().min(1).max(128).optional(),
   nodeId: z.string().min(1).max(128).optional(),
@@ -52,6 +65,18 @@ export const modelRuntimeContextSchema = z.object({
   modelId: z.string().min(1).max(128).optional(),
   modelVersion: z.string().min(1).max(64).optional(),
   modelFingerprintHash: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  checkpointDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  policyConfigDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  normalizationDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  actionTransformDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  actionSpaceDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  embodimentId: z.string().min(1).max(128).optional(),
+  calibrationDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  sensorLayoutDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  datasetDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  trainingRecipeDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  promotionEvidenceDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+  rollbackCheckpointDigest: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
 }).strict();
 
 export const attestationContextSchema = z.object({
@@ -115,6 +140,10 @@ export const executionContextSchema = z.object({
   deploymentEvidence: z.array(deploymentEvidenceRefSchema).max(32).optional(),
   manufacturingExecution: manufacturingExecutionContextSchema.optional(),
   simulationEvidence: simulationEvidenceReceiptSchema.optional(),
+  vlaActionChunk: vlaActionChunkEnvelopeSchema.optional(),
+  vlaTaskIntent: vlaTaskIntentEnvelopeSchema.optional(),
+  vlaMemoryEvidence: z.array(vlaMemoryEvidenceRefSchema).max(128).optional(),
+  perceptionEvidence: perceptionEvidenceSchema.optional(),
 }).strict();
 
 export const sintRequestSchema = z.object({
@@ -126,7 +155,18 @@ export const sintRequestSchema = z.object({
   action: z.string().min(1).max(64),
   params: z.record(z.unknown()),
   physicalContext: physicalContextSchema.optional(),
+  consequenceContext: consequenceContextSchema.optional(),
   recentActions: z.array(z.string()).optional(),
+  mcpPolicy: z.object({
+    requireApproval: z.boolean().optional(),
+    maxTier: z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]).optional(),
+  }).strict().optional(),
+  mcpAnnotations: z.object({
+    readOnlyHint: z.boolean().optional(),
+    destructiveHint: z.boolean().optional(),
+    openWorldHint: z.boolean().optional(),
+    idempotentHint: z.boolean().optional(),
+  }).strict().optional(),
   executionContext: executionContextSchema.optional(),
 }).strict();
 

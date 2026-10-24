@@ -479,6 +479,11 @@ describe("Gateway Server API", () => {
     expect(body.count).toBe(1);
     expect(body.requests[0].resource).toBe("ros2:///cmd_vel");
     expect(body.requests[0].action).toBe("publish");
+    expect(body.requests[0].reviewerEvidence.evaluatedBy).toBe("PolicyGateway.intercept");
+    expect(body.requests[0].reviewerEvidence.requestedEffect.paramsDigest).toMatch(
+      /^sha256:[a-f0-9]{64}$/,
+    );
+    expect(body.requests[0].reviewerEvidence.bundleHash).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 
   it("GET /v1/approvals/pending includes factory-action evidence context", async () => {

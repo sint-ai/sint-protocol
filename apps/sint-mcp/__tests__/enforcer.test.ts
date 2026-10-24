@@ -2,7 +2,7 @@
  * SINT MCP — Enforcer tests.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { PolicyEnforcer } from "../src/enforcer.js";
 import { DownstreamManager } from "../src/downstream.js";
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
@@ -108,24 +108,24 @@ describe("PolicyEnforcer", () => {
     expect(result.decision.action).toBe("allow");
   });
 
-  it("allows tool calls that the gateway classifies as safe", async () => {
-    const { enforcer, downstream } = createTestSetup();
-
-    // filesystem.deleteFile is classified as T2 by TOOL_RISK_MAP
-    // but the PolicyGateway's tier assigner uses its own logic —
-    // with a valid token and "call" action, it auto-approves
-    downstream.callTool = async () => ({
-      content: [{ type: "text", text: "deleted" }],
-    });
-
-    const result = await enforcer.enforce(
-      { serverName: "filesystem", toolName: "deleteFile" },
-      { path: "/tmp/test.txt" },
-    );
-
-    // Gateway allows based on token permissions and action type
-    expect(result.decision).toBeDefined();
-    expect(result.decision.assignedTier).toBeDefined();
+  it.each([
+    ["filesystem", "deleteFile", "T2_act"],
+    ["terminal", "run_command", "T3_commit"],
+    ["conway", "sandbox_exec", "T3_commit"],
+  ])("requires approval before forwarding %s/%s", async (serverName, toolName, tier) => {
+    const { enforcer, downstream, approvalQueue } = createTestSetup();
+    const forward = vi.spyOn(downstream, "callTool");
+    const pending = enforcer.enforce({ serverName, toolName }, {});
+    await vi.waitFor(() => expect(approvalQueue.getPending()).toHaveLength(1));
+    expect(forward).not.toHaveBeenCalled();
+    const approval = approvalQueue.getPending()[0]!;
+    approvalQueue.resolve(approval.requestId, { status: "denied", by: "operator" });
+    const result = await pending;
+    expect(result.allowed).toBe(false);
+    expect(result.decision.action).toBe("escalate");
+    expect(result.decision.assignedTier).toBe(tier);
+    expect(forward).not.toHaveBeenCalled();
+    approvalQueue.dispose();
   });
 
   it("denies when token is revoked", async () => {
@@ -142,20 +142,35 @@ describe("PolicyEnforcer", () => {
     expect(result.denyReason).toContain("revoked");
   });
 
-  it("tracks recent actions for combo detection", async () => {
-    const { enforcer, downstream } = createTestSetup();
-
-    downstream.callTool = async () => ({
-      content: [{ type: "text", text: "ok" }],
-    });
-
-    // Make multiple calls
-    await enforcer.enforce({ serverName: "filesystem", toolName: "readFile" }, {});
+  it("detects write-execute history in the gateway", async () => {
+    const { enforcer, downstream, approvalQueue } = createTestSetup();
+    const forward = vi.spyOn(downstream, "callTool").mockResolvedValue({ content: [] });
     await enforcer.enforce({ serverName: "filesystem", toolName: "writeFile" }, {});
+    const pending = enforcer.enforce({ serverName: "conway", toolName: "sandbox_exec" }, {});
+    await vi.waitFor(() => expect(approvalQueue.getPending()).toHaveLength(1));
+    const approval = approvalQueue.getPending()[0]!;
+    approvalQueue.resolve(approval.requestId, { status: "denied", by: "operator" });
+    const result = await pending;
+    expect(result.decision.escalation?.reason).toContain("Forbidden combination detected");
+    expect(forward).toHaveBeenCalledTimes(1);
+    approvalQueue.dispose();
+  });
 
-    // The enforcer should have tracked these actions internally
-    // We can't directly inspect recentActions, but we verified it doesn't crash
-    expect(true).toBe(true);
+  it("uses discovered destructive annotations without requiring exec.run permission", async () => {
+    const { enforcer, downstream, approvalQueue } = createTestSetup();
+    downstream.addConnectedClient("files", {} as Client, [
+      { name: "purge", inputSchema: { type: "object" }, annotations: { destructiveHint: true } },
+    ]);
+    const forward = vi.spyOn(downstream, "callTool");
+    const pending = enforcer.enforce({ serverName: "files", toolName: "purge" }, {});
+    await vi.waitFor(() => expect(approvalQueue.getPending()).toHaveLength(1));
+    const approval = approvalQueue.getPending()[0]!;
+    expect(approval.request.action).toBe("call");
+    approvalQueue.resolve(approval.requestId, { status: "denied", by: "operator" });
+    const result = await pending;
+    expect(result.decision.assignedTier).toBe("T3_commit");
+    expect(forward).not.toHaveBeenCalled();
+    approvalQueue.dispose();
   });
 
   it("handles missing downstream server gracefully", async () => {
@@ -363,21 +378,29 @@ describe("Per-server policy enforcement", () => {
     expect(result.denyReason).toContain("Escalated");
   });
 
-  it("maxTier denies calls that exceed server tier ceiling", async () => {
-    // This test verifies that maxTier enforcement works.
-    // With the PolicyGateway, if the assigned tier is higher than maxTier,
-    // the enforcer should deny the call.
-    //
-    // However, the PolicyGateway's tier assignment depends on its own rules
-    // (resource patterns, actions, etc.), not on TOOL_RISK_MAP.
-    // We'll test that the config is stored and accessible.
-    const { downstream } = createSetupWithServerPolicy({
-      maxTier: "T1_prepare",
-    });
+  it("can require approval for a T1 operation within a T1 ceiling", async () => {
+    const { enforcer, downstream, approvalQueue } = createSetupWithServerPolicy({ maxTier: "T1_prepare", requireApproval: true });
+    const forward = vi.spyOn(downstream, "callTool");
+    const pending = enforcer.enforce({ serverName: "restricted", toolName: "writeFile" }, {});
+    await vi.waitFor(() => expect(approvalQueue.getPending()).toHaveLength(1));
+    const approval = approvalQueue.getPending()[0]!;
+    expect(approval.decision).toMatchObject({ action: "escalate", assignedTier: "T1_prepare" });
+    approvalQueue.resolve(approval.requestId, { status: "denied", by: "operator" });
+    expect((await pending).allowed).toBe(false);
+    expect(forward).not.toHaveBeenCalled();
+    approvalQueue.dispose();
+  });
 
-    const config = downstream.getServerConfig("restricted");
-    expect(config).toBeDefined();
-    expect(config!.policy?.maxTier).toBe("T1_prepare");
+  it.each([false, true])("maxTier denies execution even with requireApproval=%s", async requireApproval => {
+    const { enforcer, downstream, approvalQueue } = createSetupWithServerPolicy({ maxTier: "T1_prepare", requireApproval });
+    const forward = vi.spyOn(downstream, "callTool");
+    const result = await enforcer.enforce({ serverName: "restricted", toolName: "execute_workflow" }, {});
+    expect(result.allowed).toBe(false);
+    expect(result.decision.action).toBe("deny");
+    expect(result.decision.denial?.policyViolated).toBe("MCP_SERVER_TIER_CEILING");
+    expect(approvalQueue.getPending()).toHaveLength(0);
+    expect(forward).not.toHaveBeenCalled();
+    approvalQueue.dispose();
   });
 
   it("server without policy allows calls normally", async () => {
@@ -454,5 +477,37 @@ describe("Per-server policy enforcement", () => {
     expect(config).toBeDefined();
     expect(config!.policy?.maxTier).toBe("T2_act");
     expect(config!.policy?.requireApproval).toBe(true);
+  });
+});
+
+
+describe("MCP approval quorum", () => {
+  it("does not dispatch a write-execute sequence until both required operators approve", async () => {
+    const { gateway, downstream, approvalQueue, keypair, tokenStore } = createTestSetup();
+    const issued = issueCapabilityToken({
+      issuer: keypair.publicKey, subject: keypair.publicKey, resource: "mcp://*", actions: ["call", "exec.run"],
+      constraints: { quorum: { required: 2, authorized: ["alice", "bob"] } },
+      delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+      expiresAt: new Date(Date.now() + 3_600_000).toISOString(), revocable: true,
+    }, keypair.privateKey);
+    if (!issued.ok) throw new Error(issued.error);
+    tokenStore.set(issued.value.tokenId, issued.value);
+    const enforcer = new PolicyEnforcer(gateway, approvalQueue, downstream, keypair.publicKey, issued.value.tokenId);
+    const forward = vi.spyOn(downstream, "callTool").mockResolvedValue({ content: [] });
+    await enforcer.enforce({ serverName: "filesystem", toolName: "writeFile" }, {});
+    forward.mockClear();
+    const pending = enforcer.enforce({ serverName: "terminal", toolName: "run_command" }, {});
+    await vi.waitFor(() => expect(approvalQueue.getPending()).toHaveLength(1));
+    const approval = approvalQueue.getPending()[0]!;
+    expect(approval.quorum).toEqual({ required: 2, authorized: ["alice", "bob"] });
+    expect(approval.decision.escalation?.reason).toContain("Forbidden combination");
+    approvalQueue.resolve(approval.requestId, { status: "approved", by: "alice" });
+    await Promise.resolve();
+    expect(forward).not.toHaveBeenCalled();
+    expect(approvalQueue.getPending()).toHaveLength(1);
+    approvalQueue.resolve(approval.requestId, { status: "approved", by: "bob" });
+    expect((await pending).allowed).toBe(true);
+    expect(forward).toHaveBeenCalledTimes(1);
+    approvalQueue.dispose();
   });
 });

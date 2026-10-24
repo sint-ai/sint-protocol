@@ -48,6 +48,7 @@ class PhysicalConstraints:
     requires_human_presence: bool | None = None
     rate_limit_max_calls: int | None = None
     rate_limit_window_ms: int | None = None
+    consequence_constraints: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -64,6 +65,8 @@ class PhysicalConstraints:
                 "maxCalls": self.rate_limit_max_calls,
                 "windowMs": self.rate_limit_window_ms,
             }
+        if self.consequence_constraints is not None:
+            out["consequenceConstraints"] = self.consequence_constraints
         return out
 
 

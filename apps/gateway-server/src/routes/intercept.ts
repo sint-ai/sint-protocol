@@ -124,10 +124,12 @@ export function interceptRoutes(ctx: ServerContext): Hono {
     // If escalated, enqueue for human approval and also emit APPROVAL_REQUIRED
     if (decision.action === "escalate") {
       const quorum = decision.escalation?.approvalQuorum;
+      const token = await ctx.tokenStore.get(parsed.data.tokenId);
       const approvalRequest = ctx.approvalQueue.enqueue(
         parsed.data as SintRequest,
         decision,
         quorum,
+        token,
       );
       globalApprovalBus.emit({
         type: "APPROVAL_REQUIRED",
@@ -198,10 +200,12 @@ export function interceptRoutes(ctx: ServerContext): Hono {
 
       if (decision.action === "escalate") {
         const quorum = decision.escalation?.approvalQuorum;
+        const token = await ctx.tokenStore.get(parsed.data.tokenId);
         const approvalRequest = ctx.approvalQueue.enqueue(
           parsed.data as SintRequest,
           decision,
           quorum,
+          token,
         );
         globalApprovalBus.emit({
           type: "APPROVAL_REQUIRED",

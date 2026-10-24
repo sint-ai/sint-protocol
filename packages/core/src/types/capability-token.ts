@@ -21,10 +21,12 @@ import type {
   Newtons,
   UUIDv7,
 } from "./primitives.js";
+import type { VlaAdaptationPermit } from "./vla.js";
 import type { HumanAuthorityEnvelope } from "./authority.js";
 import type { DeploymentEnvelopeBase } from "./deployment-envelope.js";
 import type { ManufacturingExecutionEnvelope } from "./manufacturing-execution.js";
 import type { ApprovalTier } from "./policy.js";
+import type { HazardousEnergyEnvelope } from "./hazardous-energy.js";
 
 /**
  * Physical safety constraints enforced by the Policy Gateway
@@ -104,6 +106,20 @@ export interface SintPhysicalConstraints {
 
   /** Force threshold above which contact is detected, in Newtons. */
   readonly contactForceThresholdN?: number;
+
+  /** Signed limits on the non-physical consequences an action may create. */
+  readonly consequenceConstraints?: {
+    /** Most severe reversibility class permitted by this token. */
+    readonly maxReversibility?: "reversible" | "compensatable" | "irreversible";
+    /** Maximum number of records, people, devices, or other entities affected. */
+    readonly maxAffectedEntities?: number;
+    /** Maximum monetary exposure in one explicitly named currency. */
+    readonly maxMonetaryValue?: { readonly amount: number; readonly currency: string };
+    /** Maximum duration of the resulting operational effect. */
+    readonly maxOperationalDurationMs?: DurationMs;
+    /** Maximum number of downstream systems or agents to which the effect may propagate. */
+    readonly maxPropagationDepth?: number;
+  };
 }
 
 /**
@@ -165,6 +181,23 @@ export interface SintModelConstraints {
   readonly maxModelVersion?: string;
   /** Optional SHA-256 fingerprint of model/runtime bundle. */
   readonly modelFingerprintHash?: string;
+  /** Full runtime artifact bindings for VLA and other embodied policies. */
+  readonly checkpointDigest?: string;
+  readonly policyConfigDigest?: string;
+  readonly normalizationDigest?: string;
+  readonly actionTransformDigest?: string;
+  readonly actionSpaceDigest?: string;
+  readonly embodimentId?: string;
+  readonly calibrationDigest?: string;
+  readonly sensorLayoutDigest?: string;
+  /** Immutable eligible-demonstration set used to train this executable checkpoint. */
+  readonly datasetDigest?: string;
+  /** Content-addressed training configuration used for the checkpoint. */
+  readonly trainingRecipeDigest?: string;
+  /** Approved promotion evidence for this checkpoint and dataset lineage. */
+  readonly promotionEvidenceDigest?: string;
+  /** Known-safe checkpoint to use for an auditable rollback. */
+  readonly rollbackCheckpointDigest?: string;
 }
 
 /** Token-bound policy for regulated data runtime paths. */
@@ -264,6 +297,15 @@ export interface SintExecutionEnvelope {
   readonly minLocalizationConfidence?: number;
   /** Expected coordinate frame identifier for currentPosition evidence. */
   readonly frameId?: string;
+  /** Continuous-policy stream limits. */
+  readonly maxChunkHorizonMs?: DurationMs;
+  readonly maxControlHz?: number;
+  readonly maxChunkVelocityMps?: MetersPerSecond;
+  readonly maxChunkAccelerationMps2?: number;
+  readonly maxChunkJerkMps3?: number;
+  readonly maxTransitionPositionDelta?: number;
+  readonly maxTransitionVelocityDelta?: number;
+  readonly requireSafeStopOnFailure?: boolean;
 }
 
 /**
@@ -376,6 +418,8 @@ export interface SintCapabilityToken {
   readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   /** Optional pre-approved execution envelope for low-latency control. */
   readonly executionEnvelope?: SintExecutionEnvelope;
+  /** Optional authority to adapt a narrowly scoped policy component. */
+  readonly adaptationPermit?: VlaAdaptationPermit;
   /**
    * Optional runtime behavioral constraints enforced against tool-call inputs.
    * Supplements physical constraints with pattern-based input validation and
@@ -390,6 +434,8 @@ export interface SintCapabilityToken {
   readonly deploymentEnvelope?: DeploymentEnvelopeBase;
   /** Optional manufacturing execution envelope requirements. */
   readonly manufacturingEnvelope?: ManufacturingExecutionEnvelope;
+  /** Optional actuator-specific hazardous-energy limits. */
+  readonly hazardousEnergyEnvelope?: HazardousEnergyEnvelope;
 
   // --- Cross-protocol identity (Agent Passport System interop) ---
   /**
@@ -463,6 +509,8 @@ export interface SintCapabilityTokenRequest {
   readonly verifiableComputeRequirements?: SintVerifiableComputeRequirements;
   /** Optional pre-approved trajectory envelope for low-latency control. */
   readonly executionEnvelope?: SintExecutionEnvelope;
+  /** Optional authority to adapt a narrowly scoped policy component. */
+  readonly adaptationPermit?: VlaAdaptationPermit;
   /** Optional runtime behavioral constraints for this token. */
   readonly behavioralConstraints?: SintBehavioralConstraints;
   /** Optional managed-autonomy authority policy. */
@@ -473,6 +521,8 @@ export interface SintCapabilityTokenRequest {
   readonly deploymentEnvelope?: DeploymentEnvelopeBase;
   /** Optional manufacturing execution envelope requirements. */
   readonly manufacturingEnvelope?: ManufacturingExecutionEnvelope;
+  /** Optional actuator-specific hazardous-energy limits. */
+  readonly hazardousEnergyEnvelope?: HazardousEnergyEnvelope;
   /** APS passport identifier for cross-protocol identity linkage. */
   readonly passportId?: string;
   /** Delegation depth in the APS chain (0 = root). */

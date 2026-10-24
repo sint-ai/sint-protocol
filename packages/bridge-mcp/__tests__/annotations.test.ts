@@ -51,12 +51,10 @@ describe("tierFromAnnotations", () => {
 });
 
 describe("getRiskHint with annotations", () => {
-  it("annotations override keyword-based classification (readOnlyHint on exec tool)", () => {
-    // Without annotations, 'exec' server → T3_COMMIT via ASI05 keyword detection
-    // With readOnlyHint, annotations take precedence → T0_OBSERVE
+  it("readOnlyHint cannot lower execution classification", () => {
     const toolCall = makeToolCall("exec", "runQuery", { readOnlyHint: true });
     const hint = getRiskHint(toolCall);
-    expect(hint.suggestedTier).toBe(ApprovalTier.T0_OBSERVE);
+    expect(hint.suggestedTier).toBe(ApprovalTier.T3_COMMIT);
   });
 
   it("annotations override keyword-based classification (destructiveHint on read tool)", () => {
@@ -85,5 +83,20 @@ describe("getRiskHint with annotations", () => {
     const toolCall = makeToolCall("filesystem", "readFile", { idempotentHint: true });
     const hint = getRiskHint(toolCall);
     expect(hint.suggestedTier).toBe(ApprovalTier.T0_OBSERVE);
+  });
+});
+
+
+describe("annotation security boundaries", () => {
+  it("destructive wins over contradictory readOnly hints without changing capability action", () => {
+    const call = makeToolCall("credential", "read", { readOnlyHint: true, destructiveHint: true });
+    expect(getRiskHint(call)).toMatchObject({ suggestedTier: ApprovalTier.T3_COMMIT, action: "call" });
+    expect(tierFromAnnotations(call.annotations!)).toBe(ApprovalTier.T3_COMMIT);
+  });
+  it.each(["push_files", "publish_page", "refresh_token", "retrieval_search"])("does not mistake %s for shell execution", tool => {
+    expect(getRiskHint(makeToolCall("custom", tool)).suggestedTier).toBe(ApprovalTier.T1_PREPARE);
+  });
+  it.each(["sandbox_exec", "executeWorkflow", "runCommand", "eval", "cmd"])("recognizes execution word boundaries in %s", tool => {
+    expect(getRiskHint(makeToolCall("custom", tool)).suggestedTier).toBe(ApprovalTier.T3_COMMIT);
   });
 });

@@ -9,7 +9,7 @@ import {
   redactPartTraceBundle,
   type PartTraceBundleInput,
 } from "@pshkv/gate-evidence-ledger";
-import { sign } from "@pshkv/gate-capability-tokens";
+import { getPublicKey, sign } from "@pshkv/gate-capability-tokens";
 
 export interface FactoryTraceExportOptions {
   readonly rootDir: string;
@@ -101,7 +101,9 @@ export function runFactoryTraceExport(
       ...redactedBundle,
       generatedAt,
     },
-    signerPublicKey: fixture.signerPublicKey,
+    // Derive the public key from the signing key so the exported bundle always
+    // verifies, rather than trusting the fixture's advertised signerPublicKey.
+    signerPublicKey: getPublicKey(options.privateKey),
     signFn: (data) => sign(options.privateKey, data),
   });
 

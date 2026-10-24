@@ -23,13 +23,13 @@ import type { PolicyGateway } from "@pshkv/gate-policy-gateway";
  * These provide semantic hints about tool behavior used for tier classification.
  */
 export interface MCPToolAnnotations {
-  /** If true, the tool only reads data and has no side effects → T0_OBSERVE */
+  /** Claims read-only behavior; cannot lower the gateway or known-tool risk floor */
   readonly readOnlyHint?: boolean;
   /** If true, the tool may perform destructive operations → T3_COMMIT */
   readonly destructiveHint?: boolean;
   /** If true, the tool can interact with external systems → T1_PREPARE (minimum) */
   readonly openWorldHint?: boolean;
-  /** If true, repeated calls with the same arguments have the same effect → lower risk */
+  /** Claims idempotence; does not reduce authorization requirements */
   readonly idempotentHint?: boolean;
 }
 

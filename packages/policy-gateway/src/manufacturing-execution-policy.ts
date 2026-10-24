@@ -5,6 +5,7 @@ import {
   type SintCapabilityToken,
   type SintRequest,
 } from "@pshkv/core";
+import { evaluateDeploymentEvidenceRequirements } from "./deployment-envelope-policy.js";
 
 export interface ManufacturingExecutionPolicyPlugin {
   evaluate(
@@ -76,6 +77,15 @@ export class DefaultManufacturingExecutionPolicy
       if (binding.controllerId !== undefined && request.executionContext?.hardwareSafety?.controllerId !== binding.controllerId) {
         return deny(context, "FACTORY_CONTEXT_MISMATCH", "Controller does not match manufacturing binding");
       }
+      if (binding.robotId !== undefined && request.executionContext?.executor?.nodeId !== binding.robotId) {
+        return deny(context, "FACTORY_CONTEXT_MISMATCH", "Robot does not match manufacturing binding");
+      }
+      if (binding.fleetId !== undefined && request.executionContext?.executor?.runtimeId !== binding.fleetId) {
+        return deny(context, "FACTORY_CONTEXT_MISMATCH", "Fleet does not match manufacturing binding");
+      }
+      if (binding.zoneId !== undefined && request.executionContext?.preapprovedCorridor?.corridorId !== binding.zoneId) {
+        return deny(context, "FACTORY_CONTEXT_MISMATCH", "Zone does not match manufacturing binding");
+      }
       if (binding.resource !== undefined && request.resource !== binding.resource) {
         return deny(context, "FACTORY_CONTEXT_MISMATCH", "Resource does not match manufacturing binding");
       }
@@ -145,6 +155,14 @@ export class DefaultManufacturingExecutionPolicy
     if (envelope.inspectionRequired === true) {
       const receipt = execution.inspectionReceipt;
       if (receipt) {
+        const authorizedPart = envelope.partNumber ?? execution.partNumber;
+        if (authorizedPart !== undefined && receipt.partNumber !== authorizedPart) {
+          return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection receipt part number does not match the authorized part");
+        }
+        const authorizedRevision = envelope.revision ?? execution.revision;
+        if (authorizedRevision !== undefined && receipt.revision !== authorizedRevision) {
+          return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection receipt revision does not match the authorized revision");
+        }
         if (receipt.disposition !== "pass") {
           return deny(context, "FACTORY_CONTEXT_MISMATCH", "Inspection receipt disposition must be pass before factory execution");
         }
@@ -168,6 +186,11 @@ export class DefaultManufacturingExecutionPolicy
           return deny(context, "FACTORY_PROOF_MISSING", "Inspection timestamp is required before factory execution");
         }
       }
+    }
+
+    const inheritedDenial = evaluateDeploymentEvidenceRequirements(envelope, request);
+    if (inheritedDenial) {
+      return deny(context, inheritedDenial.policyViolated, inheritedDenial.reason);
     }
 
     return undefined;

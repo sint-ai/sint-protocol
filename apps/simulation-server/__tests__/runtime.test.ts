@@ -4,10 +4,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   type SimulationPreflight,
   type SimulationWorldSnapshot,
 } from "@pshkv/core";
-import { generateKeypair } from "@pshkv/gate-capability-tokens";
+import { generateKeypair, hashSha256 } from "@pshkv/gate-capability-tokens";
 import { loadSimulationWorkerConfig } from "../src/config.js";
 import { createConfiguredSimulationRuntime } from "../src/runtime.js";
 
@@ -32,7 +33,16 @@ describe("configured simulation worker runtime", () => {
         assignedTier: ApprovalTier.T2_ACT,
         effectPlan: {
           requestDigest: digest("1"),
-          effectPlanDigest: digest("2"),
+          effectPlanDigest: hashSha256(canonicalJsonStringify({
+            resource: "ros2:///cmd_vel",
+            action: "publish",
+            params: {
+              velocityMps: 0.2,
+              forceNewtons: 10,
+              collisions: 0,
+              safetyZoneViolations: 0,
+            },
+          })),
           tokenDigest: digest("3"),
           resource: "ros2:///cmd_vel",
           action: "publish",

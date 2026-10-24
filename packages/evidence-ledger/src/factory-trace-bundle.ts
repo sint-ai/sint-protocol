@@ -41,24 +41,51 @@ export function redactPartTraceBundle(
 ): PartTraceBundleInput {
   if (mode === "unredacted") return bundle;
 
+  const redactInspection = mode === "redacted";
   const redactedFields =
     mode === "partial"
-      ? ["authorityTokenRefs", "approvalRefs"]
+      ? ["authorityTokenRefs", "approvalRefs", "routeSteps.approvalRef"]
       : [
           "authorityTokenRefs",
           "inspectionReceiptRefs",
           "approvalRefs",
           "nonconformanceRefs",
           "reworkRefs",
+          "routeSteps.approvalRef",
+          "routeSteps.inspectionReceiptRef",
+          "evidenceArtifacts",
         ];
+
+  // The same identifiers removed from the top-level ref arrays also appear in
+  // nested route steps and in evidence artifacts; a customer-safe export must
+  // strip them everywhere, not just at the top level.
+  const redactedRefs = new Set<string>(bundle.approvalRefs);
+  if (redactInspection) {
+    bundle.inspectionReceiptRefs.forEach((ref) => redactedRefs.add(ref));
+  }
+
+  const routeSteps = bundle.routeSteps.map((step) => {
+    // approvalRef is always redacted (mirrors the top-level approvalRefs);
+    // inspectionReceiptRef is redacted only in the fully redacted mode.
+    const { approvalRef: _approvalRef, inspectionReceiptRef, ...rest } = step;
+    return redactInspection || inspectionReceiptRef === undefined
+      ? rest
+      : { ...rest, inspectionReceiptRef };
+  });
+
+  const evidenceArtifacts = bundle.evidenceArtifacts.filter(
+    (artifact) => !redactedRefs.has(artifact.evidenceRef),
+  );
 
   return {
     ...bundle,
+    routeSteps,
+    evidenceArtifacts,
     authorityTokenRefs: [],
-    inspectionReceiptRefs: mode === "redacted" ? [] : bundle.inspectionReceiptRefs,
+    inspectionReceiptRefs: redactInspection ? [] : bundle.inspectionReceiptRefs,
     approvalRefs: [],
-    nonconformanceRefs: mode === "redacted" ? [] : bundle.nonconformanceRefs,
-    reworkRefs: mode === "redacted" ? [] : bundle.reworkRefs,
+    nonconformanceRefs: redactInspection ? [] : bundle.nonconformanceRefs,
+    reworkRefs: redactInspection ? [] : bundle.reworkRefs,
     customerSafe: true,
     redactionProfile: {
       mode,

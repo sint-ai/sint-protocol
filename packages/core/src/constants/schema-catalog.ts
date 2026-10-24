@@ -274,6 +274,7 @@ const REQUEST_SCHEMA: JsonSchemaDoc = {
           },
           additionalProperties: false,
         },
+        simulationEvidence: { type: "object" },
       },
       additionalProperties: false,
     },

@@ -66,6 +66,8 @@ export interface DeterministicEffectSimulatorOptions {
   /** Every returned receipt must first be appended to the Evidence Ledger. */
   readonly receiptRecorder: SimulationReceiptRecorder;
   readonly receiptTtlMs?: number;
+  /** Future clock-skew tolerance (ms) for a snapshot's observedAt; defaults to 250ms to match the ROS2 adapter. */
+  readonly maxClockSkewMs?: number;
   readonly bindings?: SimulationSubjectBindings;
   readonly now?: () => number;
 }

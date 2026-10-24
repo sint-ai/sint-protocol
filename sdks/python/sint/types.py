@@ -130,6 +130,7 @@ class SintRequest(BaseModel):
     action: str
     params: dict[str, Any] = Field(default_factory=dict)
     physical_context: PhysicalContext | None = Field(None, alias="physicalContext")
+    consequence_context: dict[str, Any] | None = Field(None, alias="consequenceContext")
     recent_actions: list[str] | None = Field(None, alias="recentActions")
     execution_context: ExecutionContext | None = Field(None, alias="executionContext")
 

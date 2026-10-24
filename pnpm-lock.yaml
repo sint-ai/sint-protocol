@@ -430,6 +430,22 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/bridge-consumer-media:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/bridge-economy:
     dependencies:
       '@pshkv/core':
@@ -628,6 +644,22 @@ importers:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
 
+  packages/bridge-openpi:
+    dependencies:
+      '@pshkv/core':
+        specifier: workspace:*
+        version: link:../core
+      '@pshkv/gate-capability-tokens':
+        specifier: workspace:*
+        version: link:../capability-tokens
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
   packages/bridge-ros2:
     dependencies:
       '@pshkv/core':
@@ -745,12 +777,18 @@ importers:
       '@pshkv/bridge-open-rmf':
         specifier: workspace:*
         version: link:../bridge-open-rmf
+      '@pshkv/bridge-openpi':
+        specifier: workspace:*
+        version: link:../bridge-openpi
       '@pshkv/bridge-ros2':
         specifier: workspace:*
         version: link:../bridge-ros2
       '@pshkv/core':
         specifier: workspace:*
         version: link:../core
+      '@pshkv/demonstration-provenance':
+        specifier: workspace:*
+        version: link:../demonstration-provenance
       '@pshkv/engine-effect-simulator':
         specifier: workspace:*
         version: link:../engine-effect-simulator
@@ -784,6 +822,19 @@ importers:
       zod:
         specifier: ^3.24.0
         version: 3.25.76
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.4(@types/node@22.19.15)(jsdom@25.0.1)(tsx@4.21.0)
+
+  packages/demonstration-provenance:
+    dependencies:
+      '@pshkv/gate-evidence-ledger':
+        specifier: workspace:*
+        version: link:../evidence-ledger
     devDependencies:
       typescript:
         specifier: ^5.7.0
@@ -2100,6 +2151,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}

@@ -31,6 +31,7 @@ export default defineConfig({
           { text: "Protocol", link: "/protocol" },
           { text: "Getting Started", link: "/getting-started" },
           { text: "Protocol Spec v0.2", link: "/SINT_v0.2_SPEC" },
+          { text: "VLA Governance", link: "/vla-governance" },
           { text: "Roadmap", link: "/roadmap" },
         ],
       },
@@ -141,6 +142,8 @@ export default defineConfig({
       {
         text: "Compliance & Reports",
         items: [
+          { text: "Project Facts", link: "/project-facts" },
+          { text: "EU Machinery Regulation", link: "/compliance/eu-machinery-regulation-mapping" },
           { text: "Production Slice Validation Artifact", link: "/reports/production-slice-validation-artifact" },
           { text: "AAIF Release Gate 2026-05-21", link: "/reports/aaif-release-gate-2026-05-21" },
           { text: "Tier Crosswalk Pack", link: "/compliance/tier-crosswalk-pack" },

@@ -7,6 +7,7 @@ export type {
   AutonomySupervisorPlugin,
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
+  DynamicEnvelopeFailureMode,
   SpatialCorridorVerifierPlugin,
   EdgeControlPlanePlugin,
   VerifiableComputePlugin,
@@ -44,6 +45,8 @@ export type { EscalationAlert, EventSource, ProactiveEscalationEngineOptions } f
 export { assignTier } from "./tier-assigner.js";
 export type { TierAssignment } from "./tier-assigner.js";
 export { checkConstraints, extractPhysicalContext } from "./constraint-checker.js";
+export { buildReviewerEvidenceBundle } from "./reviewer-evidence.js";
+export type { ReviewerEvidenceBundle } from "./reviewer-evidence.js";
 export type { ConstraintViolation } from "./constraint-checker.js";
 export { checkForbiddenCombos } from "./forbidden-combos.js";
 export type { ComboCheckResult } from "./forbidden-combos.js";
@@ -114,3 +117,4 @@ export type {
 // The source of truth for these types lives in @pshkv/core, but downstream code
 // commonly imports them from the gateway package.
 export type { SintRequest as PolicyContext, PolicyDecision } from "@pshkv/core";
+export type { TimedComboAction } from "./forbidden-combos.js";

@@ -7,6 +7,7 @@ import {
   type Result,
   type SimulationWorldSnapshot,
   type SintRequest,
+  type VlaActionChunkEnvelope,
 } from "@pshkv/core";
 import { hashSha256 } from "@pshkv/gate-capability-tokens";
 
@@ -72,6 +73,10 @@ export type ExecutionBrokerErrorCode =
   | "WORLD_STATE_EXPIRED"
   | "WORLD_STATE_DRIFTED"
   | "SIMULATION_RECEIPT_REPLAYED"
+  | "VLA_CHUNK_STALE"
+  | "VLA_CHUNK_SEQUENCE_INVALID"
+  | "VLA_CHUNK_DISCONTINUITY"
+  | "VLA_CHUNK_CONTEXT_MISMATCH"
   | "EXECUTION_FAILED";
 
 export interface ExecutionBrokerError {
@@ -95,6 +100,11 @@ export interface ExecutionBrokerOptions<T> {
   readonly adapter: ExecutionAdapter<T>;
   readonly emitEvent?: (event: ExecutionBrokerEvent) => Promise<void> | void;
   readonly now?: () => number;
+  readonly vlaContinuity?: {
+    readonly maxPositionDelta: number;
+    readonly maxVelocityDelta: number;
+    readonly safeStop?: (request: SintRequest, reason: string) => Promise<void> | void;
+  };
 }
 
 /** Exact request binding; receipt evidence is excluded to avoid recursion. */
@@ -128,6 +138,7 @@ function failure(code: ExecutionBrokerErrorCode, message: string, retryable = fa
  */
 export class ExecutionBroker<T> {
   private readonly now: () => number;
+  private readonly lastChunks = new Map<string, VlaActionChunkEnvelope>();
 
   constructor(private readonly options: ExecutionBrokerOptions<T>) {
     this.now = options.now ?? Date.now;
@@ -213,9 +224,27 @@ export class ExecutionBroker<T> {
       return reject("WORLD_STATE_DRIFTED", "World state changed after simulation; re-simulation is required", true);
     }
 
+    const chunk = request.executionContext?.vlaActionChunk;
+    if (chunk) {
+      const vlaError = this.validateVlaChunk(chunk, currentWorld.digest);
+      if (vlaError) {
+        if (chunk.safeStopOnFailure) {
+          await this.options.vlaContinuity?.safeStop?.(request, vlaError.message);
+        }
+        return reject(vlaError.code, vlaError.message, vlaError.retryable);
+      }
+    }
+
     const consumed = await this.options.nonceStore.consume(receipt.receiptId, receipt.nonce);
     if (!consumed) {
       return reject("SIMULATION_RECEIPT_REPLAYED", "Simulation receipt was already consumed");
+    }
+
+    // Nonce consumption may be an async/remote round-trip; re-check freshness so
+    // evidence that expired while consuming is never dispatched against.
+    const nowAfterConsume = this.now();
+    if (Date.parse(receipt.expiresAt) <= nowAfterConsume || Date.parse(currentWorld.validUntil) <= nowAfterConsume) {
+      return reject("WORLD_STATE_EXPIRED", "Simulation receipt or current world state expired before dispatch", true);
     }
 
     const dispatched = await this.options.adapter.dispatch(request);
@@ -232,8 +261,13 @@ export class ExecutionBroker<T> {
         receiptId: receipt.receiptId,
         payload: { code: brokerError.code, adapterCode: dispatched.error.code },
       });
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, dispatched.error.message);
+      }
       return err(brokerError);
     }
+
+    if (chunk) this.lastChunks.set(chunk.streamId, chunk);
 
     await this.options.emitEvent?.({
       eventType: "execution.dispatched",
@@ -247,4 +281,51 @@ export class ExecutionBroker<T> {
     });
     return ok(dispatched.value);
   }
+
+  private validateVlaChunk(
+    chunk: VlaActionChunkEnvelope,
+    currentWorldDigest: string,
+  ): ExecutionBrokerError | undefined {
+    if (Date.parse(chunk.executeBy) <= this.now()) {
+      return { code: "VLA_CHUNK_STALE", message: "VLA action chunk missed its execution deadline", retryable: true };
+    }
+    if (chunk.worldSnapshotDigest !== currentWorldDigest) {
+      return { code: "VLA_CHUNK_CONTEXT_MISMATCH", message: "VLA chunk world snapshot does not match current world state", retryable: true };
+    }
+    const previous = this.lastChunks.get(chunk.streamId);
+    if (!previous) return undefined;
+    if (chunk.sequence !== previous.sequence + 1) {
+      return { code: "VLA_CHUNK_SEQUENCE_INVALID", message: `Expected chunk sequence ${previous.sequence + 1}, received ${chunk.sequence}`, retryable: true };
+    }
+    if (previous.actionSpaceDigest !== chunk.actionSpaceDigest || previous.embodimentId !== chunk.embodimentId) {
+      return { code: "VLA_CHUNK_CONTEXT_MISMATCH", message: "VLA stream changed action space or embodiment", retryable: false };
+    }
+    const limits = this.options.vlaContinuity;
+    if (!limits) return undefined;
+    const positionDelta = maxVectorDelta(previous.lastState?.positions, chunk.firstState?.positions);
+    const velocityDelta = maxVectorDelta(previous.lastState?.velocities, chunk.firstState?.velocities);
+    if (positionDelta === undefined || velocityDelta === undefined) {
+      return { code: "VLA_CHUNK_DISCONTINUITY", message: "VLA continuity state is missing or dimensionally inconsistent", retryable: true };
+    }
+    if (positionDelta > limits.maxPositionDelta || velocityDelta > limits.maxVelocityDelta) {
+      return {
+        code: "VLA_CHUNK_DISCONTINUITY",
+        message: `VLA transition exceeds continuity limits (position=${positionDelta}, velocity=${velocityDelta})`,
+        retryable: true,
+      };
+    }
+    return undefined;
+  }
+}
+
+function maxVectorDelta(
+  previous: readonly number[] | undefined,
+  next: readonly number[] | undefined,
+): number | undefined {
+  if (!previous || !next || previous.length !== next.length || previous.length === 0) return undefined;
+  let maximum = 0;
+  for (let index = 0; index < previous.length; index += 1) {
+    maximum = Math.max(maximum, Math.abs(previous[index]! - next[index]!));
+  }
+  return maximum;
 }
