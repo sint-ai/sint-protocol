@@ -19,6 +19,7 @@ services:
       SINT_WS_ALLOW_QUERY_API_KEY: ${SINT_WS_ALLOW_QUERY_API_KEY:-false}
       SINT_TRUSTED_ISSUERS: ${SINT_TRUSTED_ISSUERS:-}
       SINT_LEDGER_SIGNING_KEY: ${SINT_LEDGER_SIGNING_KEY:-}
+      SINT_APPROVAL_OPERATOR_KEYS: ${SINT_APPROVAL_OPERATOR_KEYS:-}
     depends_on:
       postgres:
         condition: service_healthy

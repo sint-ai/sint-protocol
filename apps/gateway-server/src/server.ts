@@ -71,6 +71,8 @@ export interface ServerContext {
   readonly registryStore: InMemoryRegistryStore;
   readonly missionManifestStore: MissionManifestStore;
   readonly ledgerSigner: { readonly publicKey: string; readonly sign: (message: string) => string };
+  readonly requireSignedApprovals?: boolean;
+  readonly approvalOperatorKeys?: readonly string[];
   readonly backend: {
     readonly store: "memory" | "postgres";
     readonly cache: "memory" | "redis";
@@ -133,6 +135,7 @@ export function createContext(): ServerContext {
     registryStore,
     missionManifestStore,
     ledgerSigner: { publicKey: ledgerKey.publicKey, sign: message => sign(ledgerKey.privateKey, message) },
+    requireSignedApprovals: false,
     backend: { store: "memory", cache: "memory" },
     readinessProbe: async () => ({
       ok: true,
@@ -264,6 +267,8 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     registryStore,
     missionManifestStore,
     ledgerSigner: { publicKey: getPublicKey(ledgerPrivateKey), sign: message => sign(ledgerPrivateKey, message) },
+    requireSignedApprovals: config.env === "production",
+    approvalOperatorKeys: config.approvalOperatorKeys,
     backend: { store: config.store, cache: config.cache },
     readinessProbe: async () => {
       const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);

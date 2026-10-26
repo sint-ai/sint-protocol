@@ -62,7 +62,7 @@ export class PolicyEnforcer {
     private readonly approvalQueue: ApprovalQueue,
     private readonly downstream: DownstreamManager,
     private readonly agentId: string,
-    private readonly tokenId: string,
+    private readonly tokenId: string | ((serverName: string) => string),
     private readonly trajectory?: TrajectoryRecorder,
   ) {}
 
@@ -115,7 +115,7 @@ export class PolicyEnforcer {
       requestId: generateUUIDv7(),
       timestamp: nowISO8601(),
       agentId: this.agentId,
-      tokenId: this.tokenId,
+      tokenId: typeof this.tokenId === "string" ? this.tokenId : this.tokenId(parsed.serverName),
       resource: toResourceUri(toolCall),
       action: toSintAction(toolCall),
       params: args,

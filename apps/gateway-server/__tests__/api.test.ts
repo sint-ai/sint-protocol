@@ -10,8 +10,9 @@ import type { Hono } from "hono";
 import {
   generateKeypair,
   issueCapabilityToken,
+  sign,
 } from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import { canonicalJsonStringify, type SintCapabilityTokenRequest } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);
@@ -556,6 +557,35 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.resolution.status).toBe("approved");
     expect(body.resolution.by).toBe("operator-1");
+  });
+
+  it("requires a fresh signature from a non-agent operator in production mode", async () => {
+    const operator = generateKeypair();
+    const signedApp = createApp({ ...ctx, requireSignedApprovals: true,
+      approvalOperatorKeys: [operator.publicKey] });
+    const token = await issueT2Token();
+    const interceptRes = await app.request("/v1/intercept", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(makeT2Request(token.tokenId)),
+    });
+    const { approvalRequestId } = await interceptRes.json();
+    const endpoint = `/v1/approvals/${approvalRequestId}/resolve`;
+    const unsigned = await signedApp.request(endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: operator.publicKey }),
+    });
+    expect(unsigned.status).toBe(403);
+    const signedAt = new Date().toISOString();
+    const vote = { requestId: approvalRequestId, status: "approved", by: operator.publicKey,
+      signedAt, reason: null };
+    const signature = sign(operator.privateKey, canonicalJsonStringify(vote));
+    const approved = await signedApp.request(endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: operator.publicKey, signedAt, signature }),
+    });
+    expect(approved.status).toBe(200);
+    expect(ctx.ledger.getAll().some(event =>
+      event.eventType === "approval.vote.recorded" && event.payload["signature"] === signature)).toBe(true);
   });
 
   it("POST /v1/approvals/:requestId/resolve fail-closes revoked token approvals", async () => {

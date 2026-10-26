@@ -29,6 +29,7 @@ export interface AgentIdentity {
  */
 export function createAgentIdentity(
   privateKeyHex?: string,
+  resource = "mcp://*",
 ): AgentIdentity {
   let publicKey: string;
   let privateKey: string;
@@ -52,7 +53,7 @@ export function createAgentIdentity(
     {
       issuer: publicKey,
       subject: publicKey,
-      resource: "mcp://*",
+      resource,
       actions: ["call"],
       constraints: {},
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },

@@ -20,7 +20,7 @@ import {
 import { ApprovalTier, RiskTier, DEFAULT_TIER_RULES, type SintCapabilityToken, type SintRequest } from "@pshkv/core";
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
-import { RevocationStore, generateUUIDv7, nowISO8601 } from "@pshkv/gate-capability-tokens";
+import { RevocationStore, generateUUIDv7, nowISO8601, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import { DownstreamManager } from "./downstream.js";
 import { ToolAggregator, parseNamespace } from "./aggregator.js";
@@ -80,6 +80,7 @@ export class SintMCPServer {
   private enforcer: PolicyEnforcer | null = null;
   private readonly config: SintMCPConfig;
   private readonly trustedIssuers: string[] = [];
+  private readonly serverTokenIds = new Map<string, string>();
 
   constructor(config: SintMCPConfig) {
     this.config = config;
@@ -155,7 +156,7 @@ export class SintMCPServer {
    */
   async initialize(): Promise<void> {
     // Create agent identity
-    this.identity = createAgentIdentity(this.config.agentPrivateKey);
+    this.identity = createAgentIdentity(this.config.agentPrivateKey, "mcp://sint/*");
     this.trustedIssuers.push(this.identity.publicKey);
 
     // Store the default token
@@ -164,13 +165,30 @@ export class SintMCPServer {
       this.identity.defaultToken,
     );
 
+    // Give each configured downstream a separate capability. A compromised
+    // server token cannot name tools on another server or proxy control tools.
+    for (const name of Object.keys(this.config.servers)) {
+      const result = issueCapabilityToken({
+        issuer: this.identity.publicKey, subject: this.identity.publicKey,
+        resource: `mcp://${name}/*`, actions: ["call"], constraints: {},
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: this.identity.defaultToken.expiresAt, revocable: true,
+      }, this.identity.privateKey);
+      if (!result.ok) {
+        console.error(`Cannot issue configured server capability for ${name}: ${result.error}`);
+        continue;
+      }
+      this.tokenStore.set(result.value.tokenId, result.value);
+      this.serverTokenIds.set(name, result.value.tokenId);
+    }
+
     // Create enforcer
     this.enforcer = new PolicyEnforcer(
       this.gateway,
       this.approvalQueue,
       this.downstream,
       this.identity.publicKey,
-      this.identity.defaultToken.tokenId,
+      serverName => this.serverTokenIds.get(serverName) ?? this.identity!.defaultToken.tokenId,
       this.trajectory,
     );
 

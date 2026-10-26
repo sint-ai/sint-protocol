@@ -18,6 +18,7 @@ SINT_REQUIRE_SIGNATURES=true
 SINT_WS_ALLOW_QUERY_API_KEY=false
 SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
 SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
+SINT_APPROVAL_OPERATOR_KEYS=<64-hex-operator-public-key>
 SINT_RATE_LIMIT=100
 ```
 
@@ -34,7 +35,16 @@ Production startup fails if any required value is missing or insecure.
 | `SINT_WS_ALLOW_QUERY_API_KEY` | `false` | API keys must not appear in URLs, logs, browser history, or proxy traces. |
 | `SINT_TRUSTED_ISSUERS` | comma-separated Ed25519 root public keys | Prevents self-issued capability tokens from becoming authority. |
 | `SINT_LEDGER_SIGNING_KEY` | stable Ed25519 private key from a secret manager | Signs ledger proof responses across process restarts. |
+| `SINT_APPROVAL_OPERATOR_KEYS` | comma-separated Ed25519 operator public keys | Production approval votes require a fresh signature from a non-agent allowlisted key. |
 | `SINT_ALLOWED_ORIGINS` | explicit browser origins, if needed | Production browser requests from other origins are refused. |
+
+For `POST /v1/approvals/:requestId/resolve`, sign the canonical JSON object
+`{requestId,status,by,signedAt,reason}` with the operator private key. Use
+`reason: null` when omitted. Send `status`, `by` (the public key), `signedAt`,
+`reason` (if any), and the hex Ed25519 `signature` in the request body. Votes
+older than five minutes or from the requesting agent are rejected. The current
+dashboard does not yet produce these signatures; production operators can use
+the signed REST endpoint until the dashboard gains key custody integration.
 
 Development and tests can still use in-memory backends by leaving
 `SINT_ENV`/`NODE_ENV` unset or setting `SINT_ENV=development`.

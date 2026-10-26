@@ -32,6 +32,8 @@ export interface SintConfig {
   trustedIssuers?: readonly string[];
   /** Stable Ed25519 authority key for signed ledger proofs. */
   ledgerSigningKey?: string;
+  /** Ed25519 public keys authorized to sign dashboard approval votes. */
+  approvalOperatorKeys?: readonly string[];
 }
 
 function parsePositiveInt(name: string, raw: string, fallback?: number): number {
@@ -86,6 +88,11 @@ export function loadConfig(): SintConfig {
   if (ledgerSigningKey && !/^[0-9a-fA-F]{64}$/.test(ledgerSigningKey)) {
     throw new Error("SINT_LEDGER_SIGNING_KEY must be a 64-character Ed25519 private key in hex");
   }
+  const approvalOperatorKeys = (process.env.SINT_APPROVAL_OPERATOR_KEYS ?? "")
+    .split(",").map(value => value.trim()).filter(Boolean);
+  if (approvalOperatorKeys.some(value => !/^[0-9a-fA-F]{64}$/.test(value))) {
+    throw new Error("SINT_APPROVAL_OPERATOR_KEYS must contain comma-separated Ed25519 public keys");
+  }
   const requireSignatures = parseBoolean(
     "SINT_REQUIRE_SIGNATURES",
     process.env.SINT_REQUIRE_SIGNATURES,
@@ -119,6 +126,9 @@ export function loadConfig(): SintConfig {
     if (!ledgerSigningKey) {
       throw new Error("SINT_LEDGER_SIGNING_KEY is required when SINT_ENV/NODE_ENV=production");
     }
+    if (approvalOperatorKeys.length === 0) {
+      throw new Error("SINT_APPROVAL_OPERATOR_KEYS is required when SINT_ENV/NODE_ENV=production");
+    }
   }
 
   return {
@@ -134,5 +144,6 @@ export function loadConfig(): SintConfig {
     wsAllowQueryApiKey,
     trustedIssuers,
     ledgerSigningKey,
+    approvalOperatorKeys,
   };
 }

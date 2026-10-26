@@ -31,6 +31,7 @@ export type SintEventType =
   | "policy.plugin.failed"
   | "policy.decision.corrected"
   | "approval.requested"
+  | "approval.vote.recorded"
   | "approval.granted"
   | "approval.denied"
   | "approval.timeout"

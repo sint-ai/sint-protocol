@@ -161,6 +161,7 @@ SINT_REQUIRE_SIGNATURES=true
 SINT_WS_ALLOW_QUERY_API_KEY=false
 SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
 SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
+SINT_APPROVAL_OPERATOR_KEYS=<64-hex-operator-public-key>
 ```
 
 Use `/v1/ready` as the orchestration health gate; it verifies the configured
