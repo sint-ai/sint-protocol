@@ -324,10 +324,7 @@ export class SintEdgeRunner {
     }
 
     const token = dispatch.capabilityToken;
-    if (
-      admission.trustedCapabilityIssuers !== undefined
-      && !admission.trustedCapabilityIssuers.includes(token.issuer)
-    ) {
+    if (admission.trustedCapabilityIssuers?.includes(token.issuer) !== true) {
       return denial("CAPABILITY_REJECTED", "capability issuer is not trusted locally");
     }
     const tokenResult = validateCapabilityToken(token, {

@@ -327,4 +327,19 @@ describe("SintEdgeRunner", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "CAPABILITY_REJECTED" } });
     expect(executor).not.toHaveBeenCalled();
   });
+
+  it("rejects capability tokens when no local issuer trust anchor is configured", async () => {
+    const pack = makePack();
+    const dispatch = makeDispatch(pack);
+    const executor = vi.fn(() => ok({ status: "completed" as const }));
+    const runner = new SintEdgeRunner({
+      runnerId: "edge-cell-7",
+      admission: admission({ trustedCapabilityIssuers: undefined }),
+      executor,
+    });
+    expect(await runner.run(pack, dispatch)).toMatchObject({
+      ok: false, error: { code: "CAPABILITY_REJECTED" },
+    });
+    expect(executor).not.toHaveBeenCalled();
+  });
 });

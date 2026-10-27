@@ -26,7 +26,7 @@ against each subsequent commit, not as instructions to execute verbatim.
 |---|---|---|
 | R1 Non-bypassable enforcement | MCP built-ins now use the gate; operator-only calls deny; SROS2 Enforce demo exists | A production ROS 2 command-gate node owns `send_goal`, `cancel_goal`, and motion writes; a same-graph bypass attempt fails. |
 | R2 Agent and robot identity | Ed25519 agent signatures and platform-signed mission outcomes | Verify a nonce-bound device quote against a trusted hardware root; never trust a request's claimed attestation grade. |
-| R3 Delegator lineage | Configured gateways verify root, each parent, attenuation, expiry, and ancestor revocation | Make trusted roots mandatory for all library deployments; persist and test cascade revocation across nodes. |
+| R3 Delegator lineage | Configured gateways verify root, each parent, attenuation, expiry, and ancestor revocation; edge runner denies without a local capability issuer anchor | Make trusted roots mandatory for all gateway library deployments; persist and test cascade revocation across nodes. |
 | R4 Least privilege | Tool action scopes, force, velocity, geofence, corridor, localization checks | Bind payload, tool, cell, and robot identity to token and execution receipt; reject substitutions. |
 | R5 Context freshness | Hardware and localization age gates; predictive snapshot path | Invalidate a permit when scene, sensor preconditions, or policy version changes at dispatch. |
 | R6 Human approval | Production votes are signed by allowlisted non-agent keys and recorded individually | Add dashboard key custody, approval-to-plan digest binding, and a documented K-of-N signature profile. FROST remains research. |

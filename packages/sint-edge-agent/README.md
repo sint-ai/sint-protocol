@@ -26,6 +26,9 @@ Signed physical bindings map effect parameters directly to capability checks
 such as commanded velocity and force. A dispatch cannot weaken those checks by
 supplying a different physical-context value.
 
+The local admission policy must configure `trustedCapabilityIssuers`; an
+omitted or empty list denies execution.
+
 Execution output is redacted and byte-limited before it leaves the runner. Each
 accepted, denied, started, and terminal state is appended to a local SHA-256
 hash-chained journal.
