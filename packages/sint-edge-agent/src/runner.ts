@@ -10,6 +10,7 @@ import {
   validateCapabilityToken,
 } from "@pshkv/gate-capability-tokens";
 import { EdgeJournal } from "./journal.js";
+import { InMemoryEdgeReplayStore, type EdgeReplayStore } from "./replay-store.js";
 import {
   verifySignedDispatchEnvelope,
   verifySignedEffectPack,
@@ -151,16 +152,17 @@ export interface EdgeRunnerOptions {
   readonly admission: LocalAdmissionPolicy;
   readonly executor: EffectExecutor;
   readonly journal?: EdgeJournal;
+  readonly replayStore?: EdgeReplayStore;
   readonly now?: () => Date;
 }
 
 export class SintEdgeRunner {
   readonly journal: EdgeJournal;
-  private readonly usedDispatchIds = new Set<string>();
-  private readonly usedNonces = new Set<string>();
+  private readonly replayStore: EdgeReplayStore;
 
   constructor(private readonly options: EdgeRunnerOptions) {
     this.journal = options.journal ?? new EdgeJournal();
+    this.replayStore = options.replayStore ?? new InMemoryEdgeReplayStore();
   }
 
   async run(
@@ -182,8 +184,19 @@ export class SintEdgeRunner {
     }
     const effect = preflight.value;
 
-    this.usedDispatchIds.add(dispatch.dispatchId);
-    this.usedNonces.add(dispatch.nonce);
+    let consumed: boolean;
+    try {
+      consumed = await this.replayStore.consume(dispatch.dispatchId, dispatch.nonce);
+    } catch {
+      const unavailable = { code: "REPLAY_STORE_UNAVAILABLE", reason: "replay state could not be recorded durably" } as const;
+      this.recordDenial(dispatch, unavailable);
+      return err(unavailable);
+    }
+    if (!consumed) {
+      const replay = { code: "REPLAY_DETECTED", reason: "dispatch identifier or nonce has already been consumed" } as const;
+      this.recordDenial(dispatch, replay);
+      return err(replay);
+    }
     this.journal.append({
       event: "dispatch.accepted",
       dispatchId: dispatch.dispatchId,
@@ -276,9 +289,6 @@ export class SintEdgeRunner {
     }
     if (dispatch.runnerId !== this.options.runnerId) {
       return denial("WRONG_RUNNER", "dispatch is bound to a different runner");
-    }
-    if (this.usedDispatchIds.has(dispatch.dispatchId) || this.usedNonces.has(dispatch.nonce)) {
-      return denial("REPLAY_DETECTED", "dispatch identifier or nonce has already been consumed");
     }
     if (dispatch.packId !== pack.packId || dispatch.packDigest !== pack.digest) {
       return denial("INVALID_DISPATCH", "dispatch does not bind the supplied effect pack");

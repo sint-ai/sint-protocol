@@ -15,7 +15,7 @@ against each subsequent commit, not as instructions to execute verbatim.
 | 0C | Proxy transport and credential isolation | Downstream receives only explicitly selected environment; HTTP Origin/Host and gateway CORS are deployment restricted; unsupported network transports reject private targets | Environment isolation and loopback HTTP/production CORS controls implemented. Remote downstream transport remains unsupported. |
 | 0D | Evidence durability | Database refuses UPDATE, DELETE and TRUNCATE; signed proof served over HTTP; retention and authority export documented and enforced | Database guard and signed HTTP proof implemented; retention and authority export pending. |
 | 1 | Signed decision and simulation receipts | Denials have signed, verifiable decision records; no simulator run is indeterminate; forged, stale, replayed and mismatched receipts deny | Predictive broker and V2 verifier landed in `8ba9660`; legacy industrial fixture now defaults to nonapproval. Decision proof route and attack reporting need review. |
-| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; durable nonce and controller hold pending. |
+| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; file-backed edge nonce consumption now survives restart when configured. Controller hold and complete binding remain pending. |
 | 3 | Robot enforcement pilot | SROS2 Enforce mode plus a command-gate node owns action endpoints; direct actuator bypass fails in an actual ROS graph | Docker demonstration exists; product binding pending. |
 | 4 | Continuous safety shield | Controller-rate barrier/QP filter and tested safe-hold behavior, independent of uplink and gateway availability | Research and hardware integration pending. |
 | 5 | Third-party evidence | COSE/SCITT receipts, signed ledger heads, inclusion proof export, field drift measurements | Pending. |
@@ -30,7 +30,7 @@ against each subsequent commit, not as instructions to execute verbatim.
 | R4 Least privilege | Tool action scopes, force, velocity, geofence, corridor, localization checks | Bind payload, tool, cell, and robot identity to token and execution receipt; reject substitutions. |
 | R5 Context freshness | Hardware and localization age gates; predictive snapshot path | Invalidate a permit when scene, sensor preconditions, or policy version changes at dispatch. |
 | R6 Human approval | Production votes are signed by allowlisted non-agent keys and recorded individually | Add dashboard key custody, approval-to-plan digest binding, and a documented K-of-N signature profile. FROST remains research. |
-| R7 Local autonomy | Offline edge dispatch verifier and replay checks | Persist nonce consumption across restart and drive a controller-specific safe hold on uplink loss or approval timeout. |
+| R7 Local autonomy | Offline edge dispatch verifier and optional file-backed replay store, tested across restart and concurrent runners | Require durable replay storage in deployment and drive a controller-specific safe hold on uplink loss or approval timeout. |
 | R8 Safety separation | E-stop and PLC permit/interlock checks deny at the gate | Prove the safety controller acts independently and test a controller-rate shield on hardware. |
 | R9 Audit and retention | Hash chain, signed HTTP proof, database mutation guard | Define and enforce record-class retention, legal hold, minimization, authority export, and external anchoring. |
 | R10 Interoperability | MCP bridge, JSON Ed25519 tokens, DID helpers | Publish COSE/CWT/SCITT profiles and test independent verifier interoperability. |
@@ -64,7 +64,7 @@ signed outcomes from an actual device, numeric tolerances, and a field data set.
    transport; keep the current HTTP proxy loopback-only.
 3. Wire the existing signed proof receipt into the ledger HTTP route, and
    define evidence retention by record class without deleting hash-chain events.
-4. Persist edge replay state atomically, then test a consumed nonce after
-   process restart and a stale world snapshot at dispatch.
+4. Require the durable edge replay store in deployments, then test a stale
+   world snapshot at dispatch and a controller safe hold on link loss.
 5. Build an adversarial conformance lane that runs those behaviors against
    production code, not fixture-only JSON assertions.

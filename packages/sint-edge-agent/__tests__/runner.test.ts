@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   ApprovalTier,
   ok,
@@ -16,6 +19,7 @@ import {
   createSignedDispatchEnvelope,
   createSignedEffectPack,
   SintEdgeRunner,
+  FileEdgeReplayStore,
   type DispatchEnvelopePayload,
   type EffectPackPayload,
   type LocalAdmissionPolicy,
@@ -204,6 +208,48 @@ describe("SintEdgeRunner", () => {
     expect(replay).toMatchObject({ ok: false, error: { code: "REPLAY_DETECTED" } });
     expect(wrongRunner).toMatchObject({ ok: false, error: { code: "WRONG_RUNNER" } });
     expect(executor).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a consumed nonce across runner restart and admits only one concurrent use", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sint-edge-replay-"));
+    try {
+      const pack = makePack();
+      const dispatch = makeDispatch(pack);
+      const executor = vi.fn(() => ok({ status: "completed" as const }));
+      const options = { runnerId: "edge-cell-7", admission: admission(), executor,
+        replayStore: new FileEdgeReplayStore(directory) };
+      const [first, simultaneous] = await Promise.all([
+        new SintEdgeRunner(options).run(pack, dispatch),
+        new SintEdgeRunner(options).run(pack, dispatch),
+      ]);
+      expect([first.ok, simultaneous.ok].sort()).toEqual([false, true]);
+      expect(executor).toHaveBeenCalledOnce();
+
+      const restarted = await new SintEdgeRunner({ ...options,
+        replayStore: new FileEdgeReplayStore(directory) }).run(pack, dispatch);
+      expect(restarted).toMatchObject({ ok: false, error: { code: "REPLAY_DETECTED" } });
+      const reusedId = makeDispatch(pack, {
+        dispatchId: dispatch.dispatchId, nonce: "different-nonce-1234567890",
+      });
+      const reused = await new SintEdgeRunner({ ...options,
+        replayStore: new FileEdgeReplayStore(directory) }).run(pack, reusedId);
+      expect(reused).toMatchObject({ ok: false, error: { code: "REPLAY_DETECTED" } });
+      expect(executor).toHaveBeenCalledOnce();
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed when replay state cannot be saved", async () => {
+    const pack = makePack();
+    const dispatch = makeDispatch(pack);
+    const executor = vi.fn(() => ok({ status: "completed" as const }));
+    const runner = new SintEdgeRunner({ runnerId: "edge-cell-7", admission: admission(),
+      executor, replayStore: { consume: async () => { throw new Error("disk unavailable"); } } });
+    expect(await runner.run(pack, dispatch)).toMatchObject({
+      ok: false, error: { code: "REPLAY_STORE_UNAVAILABLE" },
+    });
+    expect(executor).not.toHaveBeenCalled();
   });
 
   it("enforces local deny policy after valid central authorization", async () => {

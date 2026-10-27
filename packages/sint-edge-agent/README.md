@@ -32,3 +32,10 @@ hash-chained journal.
 
 Hardware integration is supplied as an `EffectExecutor`; the package does not
 construct shell commands or grant ambient host authority.
+
+For an offline runner, pass `replayStore: new FileEdgeReplayStore(path)` and
+place the directory on a durable local filesystem. The store atomically claims
+the signed dispatch nonce before an effect starts and keeps the claim across
+process restarts. Disk errors deny execution. The default in-memory store is
+for tests and development only. The marker directory must be protected from
+deletion or rollback by the runner's operating environment.
