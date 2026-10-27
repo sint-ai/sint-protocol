@@ -6,6 +6,9 @@ signed simulation evidence policy, world snapshot adapter, and simulation server
 Treat the whitepaper as the target design and the audit as findings to verify
 against each subsequent commit, not as instructions to execute verbatim.
 
+The [Sereact comparison and SINT upgrade proposal](../research/sereact-sint-assessment-2026.md)
+adds a concrete VLA planning, recovery, and learning-loop research lane.
+
 ## Release gates
 
 | Order | Deliverable | Exit evidence | Status at this branch |
