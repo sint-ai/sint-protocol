@@ -10,7 +10,9 @@ The [Sereact comparison and SINT upgrade proposal](../research/sereact-sint-asse
 adds a concrete VLA planning, recovery, and learning-loop research lane.
 The [live scene command-validation comparison](../research/live-scene-command-validation-2026.md)
 maps MoveIt, Autoware, Nav2, Isaac Sim, Waymo, Realtime Robotics, and Siemens
-to a scan-test-authorize-dispatch implementation plan.
+to a scan-test-authorize-dispatch implementation plan. It also separates
+human demonstrations, human-near-robot motion, and synthetic counterfactual
+episodes into offline calibration and online per-command checks.
 
 ## Product direction: synthetic probabilistic environment
 
@@ -97,7 +99,9 @@ unsupported state yielding `indeterminate` and blocking dispatch.
    narrower software check until this adapter is measured.
 5. **Calibrate and compare.** Capture signed device outcomes and near misses,
    compare predicted with observed contact, clearance and task outcome, and
-   measure risk calibration by site and effect class. Tighten or disable a
+   measure risk calibration by site and effect class. Replay held-out human
+   demonstrations and interventions without treating an unexecuted
+   counterfactual as an observed outcome. Tighten or disable a
    simulator whose field drift exceeds its approved bound.
 6. **Prove the physical boundary.** In a ROS 2 Enforce graph and low-energy
    cell, show that direct topic/action bypass, stale scene, swapped payload,

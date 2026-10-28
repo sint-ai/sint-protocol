@@ -74,6 +74,61 @@ but the reference deterministic simulator does not yet generate perturbed live
 scenes. Thus SINT does **not** yet implement the user's full live environment
 test for every physical command.
 
+## Human and simulated robotics data: test before the outcome exists
+
+There are two distinct uses for human data. **Human demonstration data** shows
+how people teleoperated or taught a robot to perform a task. [DROID](https://droid-dataset.github.io/)
+contains synchronized camera, robot-state, and teleoperation trajectories
+across many manipulation scenes; [Open X-Embodiment](https://github.com/google-deepmind/open_x_embodiment/blob/main/README.md)
+standardizes robot episodes from different platforms. These records can supply
+task starts, candidate effects, realistic object placements, and observed
+outcomes for offline replay. They are not evidence that a *new* command is safe
+in a *new* scene. [robomimic](https://github.com/ARISE-Initiative/robomimic/blob/master/docs/datasets/robomimic_v0.1.md)
+also documents mixed-quality human and machine trajectories, a reminder to
+retain failures and interventions rather than treating every demonstration as
+an approved behavior.
+
+**Human-near-robot data** describes the person as part of the changing scene.
+The [INTERACT dataset](https://github.com/MohammadYasar/Interact) includes 3D
+skeleton, RGB-D, gaze, and robot data for collaborative tasks. Research on
+[confidence-aware human prediction](https://roboticsproceedings.org/rss14/p69.html)
+and [uncertain human dynamics](https://roboticsproceedings.org/rss17/p050.html)
+shows why a single predicted human path is insufficient: the model may become
+less reliable when a person behaves differently from the training data. SINT
+should represent a short-horizon *reachable region* around each detected
+person, widened by sensor and prediction uncertainty, with a conservative
+fallback for occlusion or out-of-distribution behavior. Human presence, entry
+into a protected zone, or loss of tracking can stop the command even when the
+most likely predicted path looked clear.
+
+[Isaac Lab](https://isaac-sim.github.io/IsaacLab/v2.3.0/) supports physics
+simulation and domain randomization. SINT can use that pattern to generate
+counterfactual versions of a recorded scene: a person steps toward the robot,
+an object slips, a gripper has lower friction, a sensor frame arrives late, or
+a controller responds slowly. Every generated case needs a recorded seed,
+parameter bounds, model identity, and hard-check result. Synthetic cases expand
+test coverage; held-out real episodes and live near misses measure whether the
+simulation is predictive enough for the specific robot, site, and effect.
+
+The operational loop has two timescales:
+
+1. **Offline, before deployment:** replay human demonstrations, failures, and
+   near misses; generate counterfactual scenes; compare simulated and recorded
+   outcomes; calibrate uncertainty and set effect-specific thresholds. Treat
+   the outcome of an unexecuted alternative as a simulated estimate, never an
+   observed fact.
+2. **Online, before each bounded effect:** capture the current scene and human
+   reachable regions, run short rollouts for the exact proposed command,
+   apply hard limits, and issue a signed receipt only for a passing and
+   sufficiently covered scenario set. Scene drift or a person entering the
+   region invalidates the receipt before dispatch.
+
+For a first human-aware pilot, record only the features needed for testing
+(tracked occupancy, pose uncertainty, timestamps, intervention and outcome)
+in the live safety path. Keep raw video under a separate, access-controlled
+retention policy. This minimizes unnecessary personal data in the authorization
+ledger while preserving reproducible safety evidence.
+
 ## Build order and acceptance evidence
 
 1. **Scene contract.** Version the canonical scene with sensor provenance and
@@ -93,7 +148,9 @@ test for every physical command.
    This can precede a full Isaac/Gazebo adapter.
 4. **Uncertainty and counterfactuals.** Reproducibly perturb object pose and
    velocity, sensor error, actuation delay, friction, payload mass, and human
-   entry. Include mandatory adversarial cases for the effect class. Record
+   entry. Use recorded human-robot episodes to seed plausible behavior, then
+   widen the human reachable region when tracking or prediction confidence
+   falls. Include mandatory adversarial cases for the effect class. Record
    seeds, bounds, model version, number of runs, failures, and coverage in the
    signed artifact. A model can propose scenarios but cannot mark them safe.
 5. **Threat policy.** Keep consequence tier and predicted hazard separate.
