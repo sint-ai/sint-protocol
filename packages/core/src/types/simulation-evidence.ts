@@ -35,6 +35,8 @@ export interface SimulationEvidenceRequirement {
   readonly minEvidenceGrade: SimulationEvidenceGrade;
   readonly minScenarioRuns?: number;
   readonly minScenarioCoverage?: number;
+  /** Exact approved distribution/adversarial case policy for coverage claims. */
+  readonly requiredScenarioSetDigest?: SHA256;
   readonly maxWorldUncertainty?: number;
   readonly allowedBackends?: readonly string[];
   readonly requiredBindings?: readonly (keyof SimulationSubjectBindings)[];

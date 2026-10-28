@@ -25,7 +25,12 @@ const issuer = generateKeypair();
 const agent = generateKeypair();
 const simulator = generateKeypair();
 
-function createFixture(escalateToT3 = false, lowTierRule = false) {
+function createFixture(
+  escalateToT3 = false,
+  lowTierRule = false,
+  requiredScenarioSetDigest?: string,
+  minScenarioCoverage?: number,
+) {
   const now = Date.now();
   const issued = issueCapabilityToken({
     issuer: issuer.publicKey,
@@ -103,7 +108,11 @@ function createFixture(escalateToT3 = false, lowTierRule = false) {
     simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
       trustedSignerKeys: [simulator.publicKey],
       tierRequirements: {
-        [ApprovalTier.T2_ACT]: { minEvidenceGrade: "deterministic" },
+        [ApprovalTier.T2_ACT]: {
+          minEvidenceGrade: "deterministic",
+          ...(requiredScenarioSetDigest !== undefined && { requiredScenarioSetDigest }),
+          ...(minScenarioCoverage !== undefined && { minScenarioCoverage }),
+        },
         [ApprovalTier.T3_COMMIT]: {
           minEvidenceGrade: "physics",
           minApprovalQuorum: 2,
@@ -128,6 +137,24 @@ function createFixture(escalateToT3 = false, lowTierRule = false) {
 }
 
 describe("predictive simulation evidence conformance", () => {
+  it("does not accept a coverage percentage without an approved scenario policy", async () => {
+    const { gateway, receipt, request } = createFixture(false, false, undefined, 0.9);
+    const decision = await gateway.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_SCENARIO_POLICY_UNBOUND");
+  });
+  it("rejects a signed pass from an unapproved scenario set", async () => {
+    const { gateway, receipt, request } = createFixture(false, false, "f".repeat(64));
+    const decision = await gateway.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_SCENARIO_SET_MISMATCH");
+  });
   it("denies a physical command without evidence despite a low-tier site rule", async () => {
     const { gateway, request } = createFixture(false, true);
     const decision = await gateway.intercept(request);

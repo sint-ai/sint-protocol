@@ -144,7 +144,12 @@ The deterministic backend runs one observed-state check and reports
 `runCount: 1`, `coverage: 0`, and no seeds. A passing deterministic receipt
 does not claim probabilistic or adversarial scenario coverage; a gateway with
 `minScenarioCoverage > 0` rejects it until a real scenario runner supplies
-that evidence.
+that evidence. A deployment can additionally set
+`requiredScenarioSetDigest` in its evidence requirement. The gateway then
+rejects receipts from any other scenario distribution or adversarial case
+policy, even if the reported run count and coverage are high. A policy asking
+for more than one run or positive scenario coverage without this approved
+digest fails closed as `SIMULATION_SCENARIO_POLICY_UNBOUND`.
 
 The standalone worker enables this model only with `SINT_SIM_MODEL.kind` set to
 `scene-aware-navigation`, explicit `scene.robotRadiusMeters`,

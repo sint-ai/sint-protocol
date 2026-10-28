@@ -5,6 +5,7 @@ import {
   type Ed25519PublicKey,
   type ISO8601,
   type PolicyDecision,
+  type SHA256,
   type SimulationEvidenceGrade,
   type SimulationEvidenceReceipt,
   type SimulationEvidenceRequirement,
@@ -90,6 +91,8 @@ export interface DefaultSimulationEvidencePolicyOptions {
   readonly maxWorldUncertainty?: number;
   readonly minScenarioRuns?: number;
   readonly minScenarioCoverage?: number;
+  /** Exact approved scenario-set policy digest for every matched request. */
+  readonly requiredScenarioSetDigest?: SHA256;
   readonly maxClockSkewMs?: number;
   readonly denyUnsupportedPhenomena?: boolean;
   readonly replayStore?: SimulationReceiptReplayStore;
@@ -315,11 +318,18 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
     if (allowedBackends?.length && !allowedBackends.includes(receipt.simulator.backend)) {
       return deny(context, "SIMULATION_BACKEND_NOT_ALLOWED", "Simulation backend is not approved for this deployment");
     }
+    const requiredScenarioSetDigest = requirement?.requiredScenarioSetDigest ?? this.options.requiredScenarioSetDigest;
     const minScenarioRuns = requirement?.minScenarioRuns ?? this.options.minScenarioRuns ?? 1;
+    const minScenarioCoverage = requirement?.minScenarioCoverage ?? this.options.minScenarioCoverage;
+    if ((minScenarioRuns > 1 || (minScenarioCoverage ?? 0) > 0) && !requiredScenarioSetDigest) {
+      return deny(context, "SIMULATION_SCENARIO_POLICY_UNBOUND", "Scenario thresholds require an approved scenario-set digest");
+    }
+    if (requiredScenarioSetDigest && receipt.scenarios.scenarioSetDigest !== requiredScenarioSetDigest) {
+      return deny(context, "SIMULATION_SCENARIO_SET_MISMATCH", "Simulation used a scenario set not approved for this effect");
+    }
     if (receipt.scenarios.runCount < minScenarioRuns) {
       return deny(context, "SIMULATION_COVERAGE_INSUFFICIENT", "Simulation scenario run count is below policy minimum");
     }
-    const minScenarioCoverage = requirement?.minScenarioCoverage ?? this.options.minScenarioCoverage;
     if (
       minScenarioCoverage !== undefined
       && (receipt.scenarios.coverage === undefined || receipt.scenarios.coverage < minScenarioCoverage)

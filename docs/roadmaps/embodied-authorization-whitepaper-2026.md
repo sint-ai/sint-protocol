@@ -95,7 +95,10 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
    and robot/tool/payload state. Preserve a digest of exact inputs and reject
    stale or internally inconsistent scenes.
 3. **Add scenario generation.** Build a bounded, reproducible scenario sampler
-   and adversarial case library per effect class. Log seeds and distributions;
+   and adversarial case library per effect class. The gateway now supports an
+   exact required scenario-set digest and rejects coverage thresholds without
+   one. Configure it once an approved set exists.
+   Log seeds and distributions;
    prohibit a model-generated "safe" label from becoming a policy decision.
 4. **Add a physical simulator adapter.** Run the same effect against a real
    Gazebo/MoveIt or equivalent backend and deterministic envelope checker.

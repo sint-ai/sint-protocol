@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   type SintRequest,
   type SimulationWorldSnapshot,
 } from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
+  hashSha256,
   issueCapabilityToken,
 } from "@pshkv/gate-capability-tokens";
 import {
@@ -99,6 +101,12 @@ function setup(minScenarioCoverage?: number) {
         minEvidenceGrade: "deterministic",
         minScenarioRuns: 1,
         ...(minScenarioCoverage !== undefined && { minScenarioCoverage }),
+        ...(minScenarioCoverage !== undefined && {
+          requiredScenarioSetDigest: hashSha256(canonicalJsonStringify({
+            kind: "single-observed-state",
+            modelId: "bounded-motion-v1",
+          })),
+        }),
         requiredBindings: ["robotId", "controllerId"],
         expectedBindings: { robotId: "mobile-base-1", controllerId: "nav-controller-1" },
       },
