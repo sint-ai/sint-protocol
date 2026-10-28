@@ -1,0 +1,208 @@
+import { describe, expect, it } from "vitest";
+import { ApprovalTier, canonicalJsonStringify, ok, type SimulationPreflight } from "@pshkv/core";
+import { generateKeypair, hashSha256 } from "@pshkv/gate-capability-tokens";
+import { createROS2WorldSnapshot, persistROS2WorldSnapshot, type ROS2WorldStateInput } from "@pshkv/bridge-ros2";
+import { DeterministicEffectSimulator, InMemorySimulationArtifactStore, SceneAwareNavigationModel } from "@pshkv/engine-effect-simulator";
+
+const now = Date.now();
+const observedAt = new Date(now - 20).toISOString();
+const capturedAt = new Date(now).toISOString();
+const signer = generateKeypair();
+const resource = "ros2:///nav/segment";
+const action = "publish";
+
+function scene(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInput {
+  return {
+    robotId: "mobile-1",
+    frameId: "map",
+    stateEpoch: "mobile-1:42",
+    capturedAt,
+    robotPositionUncertaintyMeters: 0.02,
+    odometry: {
+      observedAt,
+      value: {
+        pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+        twist: { linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } },
+      },
+    },
+    map: { digest: "a".repeat(64), frameId: "map", observedAt },
+    obstacleScanObservedAt: observedAt,
+    obstacles: [{
+      id: "shelf",
+      kind: "static",
+      position: { x: 0.5, y: 2, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }],
+    safetyController: {
+      controllerId: "plc-1",
+      observedAt,
+      permitState: "granted",
+      estopEngaged: false,
+      protectiveStopEngaged: false,
+      safetyZoneClear: true,
+    },
+    ...overrides,
+  };
+}
+
+function preflight(): SimulationPreflight {
+  const params = { robotId: "mobile-1", frameId: "map", target: { x: 1, y: 0, z: 0 }, velocityMps: 0.5 };
+  return {
+    kind: "simulation-preflight",
+    authorizesExecution: false,
+    assignedTier: ApprovalTier.T2_ACT,
+    effectPlan: {
+      requestDigest: "1".repeat(64),
+      tokenDigest: "2".repeat(64),
+      effectPlanDigest: hashSha256(canonicalJsonStringify({ resource, action, params })),
+      resource,
+      action,
+      params,
+    },
+    requirement: { minEvidenceGrade: "deterministic" },
+  };
+}
+
+async function simulate(input: ROS2WorldStateInput) {
+  const store = new InMemorySimulationArtifactStore();
+  const captured = createROS2WorldSnapshot(input, { now: () => now, validityMs: 1_000 });
+  if (!captured.ok) return captured;
+  const persisted = await persistROS2WorldSnapshot(captured.value, store);
+  if (!persisted.ok) return persisted;
+  const simulator = new DeterministicEffectSimulator({
+    signerPublicKey: signer.publicKey,
+    signerPrivateKey: signer.privateKey,
+    version: "0.1.0",
+    modelDigest: "b".repeat(64),
+    now: () => now,
+    artifactStore: store,
+    receiptRecorder: { recordIssued: async () => ok(undefined) },
+    models: [new SceneAwareNavigationModel({
+      resources: [resource],
+      actions: [action],
+      artifactStore: store,
+      robotRadiusMeters: 0.2,
+      minClearanceMeters: 0.1,
+      maxVelocityMps: 0.6,
+      maxHorizonMs: 3_000,
+      maxHumanSpeedMps: 0.3,
+    })],
+  });
+  return simulator.simulate(preflight(), captured.value.snapshot);
+}
+
+describe("scene-aware navigation conformance", () => {
+  it("passes a clear short segment with a digest-bound sensor scene", async () => {
+    const result = await simulate(scene());
+    expect(result.ok).toBe(true);
+    if (!result.ok || !('result' in result.value)) return;
+    expect(result.value.result).toMatchObject({ outcome: "pass", collisions: 0 });
+    expect(result.value.result.minClearanceMeters).toBeGreaterThan(1);
+  });
+
+  it("fails a crossing moving obstacle before the robot moves", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "cart",
+      kind: "dynamic",
+      position: { x: 0.5, y: -1, z: 0 },
+      velocityMps: { x: 0, y: 1, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }] }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("projects a moving obstacle from its observation time to the scene time", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "older-cart-track",
+      kind: "dynamic",
+      position: { x: 0.5, y: -2.5, z: 0 },
+      velocityMps: { x: 0, y: 1, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt: new Date(now - 900).toISOString(),
+    }] }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("expands a person's reachable region beyond the most likely stationary path", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "worker",
+      kind: "human",
+      position: { x: 0.5, y: 0.8, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }] }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("refuses to trust a human prediction above the calibrated speed bound", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "runner",
+      kind: "human",
+      position: { x: 0.5, y: 2, z: 0 },
+      velocityMps: { x: 0, y: -1, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }] }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("returns indeterminate rather than passing an unclassified obstacle", async () => {
+    const input = scene();
+    const result = await simulate({ ...input, obstacles: input.obstacles?.map((obstacle) => ({ ...obstacle, kind: undefined })) });
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("returns indeterminate when an empty obstacle list has no scan timestamp", async () => {
+    const result = await simulate(scene({ obstacles: [], obstacleScanObservedAt: undefined }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("rejects a scene for another robot even when its geometry is clear", async () => {
+    const result = await simulate(scene({ robotId: "other-robot" }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("rejects a stale obstacle scan before issuing a receipt", async () => {
+    const result = await simulate(scene({ obstacleScanObservedAt: new Date(now - 5_000).toISOString() }));
+    expect(result.ok ? undefined : result.error.code).toBe("WORLD_STATE_SOURCE_STALE");
+  });
+
+  it("fails on a controller protective stop", async () => {
+    const input = scene();
+    const result = await simulate({ ...input, safetyController: { ...input.safetyController!, protectiveStopEngaged: true } });
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("rejects a snapshot artifact whose content does not match its digest", async () => {
+    const model = new SceneAwareNavigationModel({
+      resources: [resource],
+      actions: [action],
+      artifactStore: {
+        get: async () => ok({
+          mediaType: "application/vnd.sint.ros2-world-snapshot+json;version=1",
+          content: "{}",
+        }),
+        put: async () => ok({ digest: "0".repeat(64), mediaType: "x", sizeBytes: 2 }),
+      },
+      robotRadiusMeters: 0.2,
+      minClearanceMeters: 0.1,
+      maxVelocityMps: 0.6,
+      maxHorizonMs: 3_000,
+      maxHumanSpeedMps: 0.3,
+    });
+    const evaluated = await model.evaluate(preflight().effectPlan, {
+      digest: "a".repeat(64),
+      observedAt: capturedAt,
+      validUntil: new Date(now + 1_000).toISOString(),
+      stateEpoch: "mobile-1:42",
+    });
+    expect(evaluated.ok ? undefined : evaluated.error.code).toBe("SIMULATION_FAILED");
+  });
+});

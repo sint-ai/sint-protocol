@@ -120,6 +120,55 @@ skew, and aggregate uncertainty are deployment policy. The separate
 the digest carried by the receipt; neither helper can authorize or dispatch a
 ROS 2 command.
 
+The opt-in `SceneAwareNavigationModel` reads that stored ROS 2 snapshot by
+digest and checks one straight, planar `target`/`velocityMps` segment against
+static and linearly moving circular obstacles. It expands a human obstacle's
+reachable region over the full segment duration and includes explicit robot
+and obstacle position-error bounds. The model requires a fresh obstacle-scan
+timestamp even when no obstacles were detected, an odometry pose, a matching
+map frame, matching `robotId`/`frameId` effect parameters, and a clear
+safety-controller permit. Missing or unclassified scene
+data returns signed `indeterminate` evidence; a failed controller permit or
+insufficient clearance returns signed `fail` evidence. A missing or corrupted
+snapshot artifact prevents receipt issuance. This is a conservative 2D software
+check, not a physics simulation or controller-rate safety mechanism.
+
+The standalone worker enables this model only with `SINT_SIM_MODEL.kind` set to
+`scene-aware-navigation`, explicit `scene.robotRadiusMeters`,
+`scene.maxHorizonMs`, `scene.maxHumanSpeedMps`, and envelope
+`maxVelocityMps`/`minClearanceMeters`. The ROS 2 bridge and worker must use a
+shared trusted content-addressed artifact store for the exact scene payload.
+The default worker model remains the original bounded parameter checker.
+Production workers require an explicit `SINT_SIM_MODEL`; known physical
+protocol resources cannot use the parameter-only model there. Other physical
+effects hidden behind generic tool URLs still need the command inventory and
+classification work in the roadmap.
+
+Example `SINT_SIM_MODEL` JSON for the first navigation slice:
+
+```json
+{
+  "id": "warehouse-nav-scene-v1",
+  "kind": "scene-aware-navigation",
+  "resources": ["ros2:///nav/segment"],
+  "actions": ["publish"],
+  "envelope": { "maxVelocityMps": 0.5, "minClearanceMeters": 0.1 },
+  "scene": {
+    "robotRadiusMeters": 0.25,
+    "maxHorizonMs": 3000,
+    "maxHumanSpeedMps": 1.5
+  }
+}
+```
+
+These numbers are illustrative, not approved safety limits. A site must
+measure the robot footprint, human reachability assumption, localization and
+obstacle uncertainty, and controller behavior before using this check on
+hardware. The model projects moving obstacle positions from their observation
+times to the captured scene time and expands the robot position bound by the
+age of odometry. It still lacks curved paths, acceleration and braking, and
+occluded-human modeling.
+
 ## Isolated Worker HTTP Contract
 
 `@pshkv/simulation-server` exposes the backend-neutral worker boundary:

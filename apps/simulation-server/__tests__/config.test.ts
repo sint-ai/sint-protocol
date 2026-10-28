@@ -46,6 +46,53 @@ describe("standalone simulation worker configuration", () => {
     expect(config.model.envelope.maxVelocityMps).toBe(0.25);
   });
 
+  it("requires explicit safety bounds for scene-aware navigation", () => {
+    const model = {
+      id: "warehouse-scene-v1",
+      kind: "scene-aware-navigation",
+      resources: ["ros2:///nav/segment"],
+      actions: ["publish"],
+      envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 },
+    };
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test", SINT_SIM_MODEL: JSON.stringify(model) }).model)
+      .toMatchObject(model);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MODEL: JSON.stringify({ ...model, scene: { ...model.scene, maxHumanSpeedMps: -1 } }),
+    })).toThrow("scene-aware-navigation requires explicit");
+  });
+
+  it("rejects the parameter-only ROS 2 worker in production", () => {
+    const signer = generateKeypair();
+    const base = {
+      NODE_ENV: "production",
+      SINT_SIM_SIGNER_PUBLIC_KEY: signer.publicKey,
+      SINT_SIM_SIGNER_PRIVATE_KEY: signer.privateKey,
+      SINT_SIM_BEARER_TOKEN: "worker-secret",
+    };
+    expect(() => loadSimulationWorkerConfig(base)).toThrow("SINT_SIM_MODEL is required in production");
+    expect(() => loadSimulationWorkerConfig({
+      ...base,
+      SINT_SIM_MODEL: JSON.stringify({
+        id: "legacy-ros2",
+        resources: ["ros2:///cmd_vel"],
+        actions: ["publish"],
+        envelope: { maxVelocityMps: 0.5 },
+      }),
+    })).toThrow("Physical protocol resources require a scene-aware simulation model");
+    const sceneModel = {
+      id: "nav-scene-v1",
+      kind: "scene-aware-navigation",
+      resources: ["ros2:///nav/segment"],
+      actions: ["publish"],
+      envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 },
+    };
+    expect(loadSimulationWorkerConfig({ ...base, SINT_SIM_MODEL: JSON.stringify(sceneModel) }).model)
+      .toMatchObject(sceneModel);
+  });
+
   it("rejects malformed physical envelopes and model digests", () => {
     expect(() => loadSimulationWorkerConfig({
       NODE_ENV: "test",

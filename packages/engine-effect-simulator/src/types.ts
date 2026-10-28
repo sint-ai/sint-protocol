@@ -51,7 +51,7 @@ export interface DeterministicEffectModel {
   evaluate(
     effectPlan: EffectPlan,
     worldSnapshot: SimulationWorldSnapshot,
-  ): Result<DeterministicCheckResult, EffectSimulationError>;
+  ): Promise<Result<DeterministicCheckResult, EffectSimulationError>> | Result<DeterministicCheckResult, EffectSimulationError>;
 }
 
 export interface DeterministicEffectSimulatorOptions {
@@ -77,4 +77,18 @@ export interface BoundedMotionEffectModelOptions {
   readonly resources: readonly (string | RegExp)[];
   readonly actions: readonly string[];
   readonly envelope: DeterministicSafetyEnvelope;
+}
+
+/** Conservative 2D checker for one short ROS 2 navigation segment. */
+export interface SceneAwareNavigationModelOptions {
+  readonly id?: string;
+  readonly resources: readonly (string | RegExp)[];
+  readonly actions: readonly string[];
+  readonly artifactStore: SimulationArtifactStore;
+  readonly robotRadiusMeters: number;
+  readonly minClearanceMeters: number;
+  readonly maxVelocityMps: number;
+  readonly maxHorizonMs: number;
+  /** Worst-case human displacement rate during the bounded action. */
+  readonly maxHumanSpeedMps: number;
 }

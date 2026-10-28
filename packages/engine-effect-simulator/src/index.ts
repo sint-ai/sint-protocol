@@ -6,6 +6,7 @@
  */
 
 export { BoundedMotionEffectModel } from "./bounded-motion-model.js";
+export { SceneAwareNavigationModel } from "./scene-aware-navigation-model.js";
 export { DeterministicEffectSimulator } from "./deterministic-effect-simulator.js";
 export {
   FileSystemSimulationArtifactStore,
@@ -20,6 +21,7 @@ export type {
   DeterministicEffectSimulatorOptions,
   DeterministicSafetyEnvelope,
   NumericRange,
+  SceneAwareNavigationModelOptions,
 } from "./types.js";
 export type {
   SimulationArtifact,

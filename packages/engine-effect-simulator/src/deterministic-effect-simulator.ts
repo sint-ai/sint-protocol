@@ -127,7 +127,7 @@ export class DeterministicEffectSimulator implements EffectSimulator {
         unsupportedPhenomena: [`unsupported effect ${preflight.effectPlan.action} ${preflight.effectPlan.resource}`],
       };
     } else {
-      const evaluated = model.evaluate(preflight.effectPlan, worldSnapshot);
+      const evaluated = await model.evaluate(preflight.effectPlan, worldSnapshot);
       if (!evaluated.ok) return evaluated;
       modelId = model.id;
       checks = evaluated.value.checks;

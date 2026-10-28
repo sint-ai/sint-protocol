@@ -61,18 +61,17 @@ parameters requires new evidence.
 
 ## What SINT has and what is missing
 
-SINT already has a ROS 2 world-snapshot adapter, V2 signed simulation receipts,
-an `EffectSimulator` boundary, a tier-aware evidence policy, production
+SINT has a ROS 2 world-snapshot adapter, V2 signed simulation receipts, an
+`EffectSimulator` boundary, a tier-aware evidence policy, production
 enforcement for T2/T3 requests, and an execution broker that checks world
-digest/epoch and consumes a nonce before dispatch. These are useful protocol
-pieces, but the current `BoundedMotionEffectModel.evaluate()` receives a world
-snapshot and does not inspect it. It checks declared effect parameters against
-configured envelopes; it does not roll a motion path through live obstacles.
-The ROS 2 snapshot currently contains obstacle positions and radii but no
-object velocity or covariance. The receipt records scenario count and coverage,
-but the reference deterministic simulator does not yet generate perturbed live
-scenes. Thus SINT does **not** yet implement the user's full live environment
-test for every physical command.
+digest/epoch and consumes a nonce before dispatch. The opt-in
+`SceneAwareNavigationModel` now checks one short 2D navigation segment against
+the stored scene's static, moving, and human obstacles, including explicit
+position uncertainty and a conservative human reachability bound. The default
+`BoundedMotionEffectModel` still checks declared effect parameters rather than
+scene geometry. The receipt records one deterministic check; the reference
+worker does not yet generate multiple perturbed scenes or calibrated
+probabilities. A real command-gate deployment and bypass proof remain pending.
 
 ## Human and simulated robotics data: test before the outcome exists
 
@@ -141,10 +140,11 @@ ledger while preserving reproducible safety evidence.
    physical effect. Normalize ROS 2, MAVLink, OPC-UA, MQTT/IoT, MCP robot tools,
    and VLA action chunks into a bounded `EffectPlan`. A physical action
    classified T0/T1 must deny as a tiering error. Audit direct hardware paths.
-3. **Fast scene-aware validator.** For a ROS 2 navigation slice, project the
-   candidate trajectory and robot footprint into the observed scene, calculate
-   swept-volume clearance, stopping distance, time to contact, geofence and
-   velocity limits. Check every sampled time step and fail on any hard limit.
+3. **Fast scene-aware validator.** The first slice now checks a straight planar
+   navigation segment, robot footprint, static/moving obstacles, human
+   reachability, explicit position error, velocity, horizon, and controller
+   permit. Extend it to curved trajectories, braking/stopping distance,
+   time-to-contact, geofence, and controller dynamics before a robot pilot.
    This can precede a full Isaac/Gazebo adapter.
 4. **Uncertainty and counterfactuals.** Reproducibly perturb object pose and
    velocity, sensor error, actuation delay, friction, payload mass, and human
