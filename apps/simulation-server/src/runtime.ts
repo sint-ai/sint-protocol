@@ -27,6 +27,8 @@ export function createConfiguredSimulationRuntime(config: SimulationWorkerConfig
         artifactStore,
         robotRadiusMeters: config.model.scene.robotRadiusMeters,
         maxHumanSpeedMps: config.model.scene.maxHumanSpeedMps,
+        minDecelerationMps2: config.model.scene.minDecelerationMps2,
+        reactionTimeMs: config.model.scene.reactionTimeMs,
         maxHorizonMs: config.model.scene.maxHorizonMs,
         maxVelocityMps: config.model.envelope.maxVelocityMps!,
         minClearanceMeters: config.model.envelope.minClearanceMeters!,

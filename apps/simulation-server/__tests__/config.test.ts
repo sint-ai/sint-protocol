@@ -53,13 +53,17 @@ describe("standalone simulation worker configuration", () => {
       resources: ["ros2:///nav/segment"],
       actions: ["publish"],
       envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
-      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
     };
     expect(loadSimulationWorkerConfig({ NODE_ENV: "test", SINT_SIM_MODEL: JSON.stringify(model) }).model)
       .toMatchObject(model);
     expect(() => loadSimulationWorkerConfig({
       NODE_ENV: "test",
       SINT_SIM_MODEL: JSON.stringify({ ...model, scene: { ...model.scene, maxHumanSpeedMps: -1 } }),
+    })).toThrow("scene-aware-navigation requires explicit");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MODEL: JSON.stringify({ ...model, scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 } }),
     })).toThrow("scene-aware-navigation requires explicit");
   });
 
@@ -87,7 +91,7 @@ describe("standalone simulation worker configuration", () => {
       resources: ["ros2:///nav/segment"],
       actions: ["publish"],
       envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
-      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
     };
     expect(loadSimulationWorkerConfig({ ...base, SINT_SIM_MODEL: JSON.stringify(sceneModel) }).model)
       .toMatchObject(sceneModel);

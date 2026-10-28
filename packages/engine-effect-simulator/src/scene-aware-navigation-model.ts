@@ -23,6 +23,7 @@ interface SceneObstacle {
   readonly velocity: Point3D;
   readonly radiusMeters: number;
   readonly positionUncertaintyMeters: number;
+  readonly velocityUncertaintyMps: number;
   readonly observationAgeSeconds: number;
 }
 
@@ -34,6 +35,12 @@ interface NavigationScene {
   readonly odometryAgeSeconds: number;
   readonly obstacles: readonly SceneObstacle[];
   readonly controllerPermitsMotion: boolean;
+}
+
+interface NavigationSegment {
+  readonly start: Point3D;
+  readonly target: Point3D;
+  readonly durationSeconds: number;
 }
 
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -82,6 +89,7 @@ function readScene(
     || scene.capturedAt !== snapshot.observedAt
     || scene.stateEpoch !== snapshot.stateEpoch
     || map?.frameId !== scene.frameId
+    || odometry?.frameId !== scene.frameId
     || !Number.isFinite(observedAt)
     || !start
     || !nonnegative(scene.robotPositionUncertaintyMeters)
@@ -105,12 +113,14 @@ function readScene(
       typeof obstacle?.id !== "string"
       || obstacle.id.length === 0
       || ids.has(obstacle.id)
+      || obstacle.frameId !== scene.frameId
       || (kind !== "static" && kind !== "dynamic" && kind !== "human")
       || !position
       || !nonnegative(obstacle.radiusMeters)
       || !nonnegative(obstacle.positionUncertaintyMeters)
       || !sourceFresh(obstacle.observedAt, observedAt, maxSourceAgeMs)
       || (kind === "dynamic" && !velocity)
+      || (kind === "dynamic" && !nonnegative(obstacle.velocityUncertaintyMps))
       || (kind === "static" && velocity !== undefined
         && (velocity.x !== 0 || velocity.y !== 0 || velocity.z !== 0))
     ) {
@@ -124,6 +134,7 @@ function readScene(
       velocity: velocity ?? { x: 0, y: 0, z: 0 },
       radiusMeters: obstacle.radiusMeters,
       positionUncertaintyMeters: obstacle.positionUncertaintyMeters,
+      velocityUncertaintyMps: kind === "dynamic" ? obstacle.velocityUncertaintyMps as number : 0,
       observationAgeSeconds: (observedAt - Date.parse(obstacle.observedAt as string)) / 1_000,
     });
   }
@@ -162,32 +173,36 @@ function closestClearance(
   robotRadiusMeters: number,
   robotUncertaintyMeters: number,
   maxHumanSpeedMps: number,
+  totalDurationSeconds: number,
 ): number {
   const robotVx = (target.x - start.x) / durationSeconds;
   const robotVy = (target.y - start.y) / durationSeconds;
-  const obstacleStartX = obstacle.position.x + (obstacle.kind === "dynamic" ? obstacle.velocity.x * obstacle.observationAgeSeconds : 0);
-  const obstacleStartY = obstacle.position.y + (obstacle.kind === "dynamic" ? obstacle.velocity.y * obstacle.observationAgeSeconds : 0);
-  const dx = start.x - obstacleStartX;
-  const dy = start.y - obstacleStartY;
-  // Human reachability is centered on the observed position, not a single
-  // predicted path. The full speed bound covers any direction of movement.
-  const vx = robotVx - (obstacle.kind === "human" ? 0 : obstacle.velocity.x);
-  const vy = robotVy - (obstacle.kind === "human" ? 0 : obstacle.velocity.y);
+  const dx = start.x - obstacle.position.x;
+  const dy = start.y - obstacle.position.y;
+  // Moving-object reachability is a spatial ball over the whole horizon. It
+  // remains conservative when the robot brakes or its timing varies.
+  const vx = robotVx;
+  const vy = robotVy;
   const speedSquared = vx * vx + vy * vy;
   const nearestTime = speedSquared === 0
     ? 0
     : Math.max(0, Math.min(durationSeconds, -(dx * vx + dy * vy) / speedSquared));
   const separation = Math.hypot(dx + vx * nearestTime, dy + vy * nearestTime);
   const humanReach = obstacle.kind === "human"
-    ? maxHumanSpeedMps * (obstacle.observationAgeSeconds + durationSeconds)
+    ? maxHumanSpeedMps * (obstacle.observationAgeSeconds + totalDurationSeconds)
+    : 0;
+  const motionError = obstacle.kind === "dynamic"
+    ? (Math.hypot(obstacle.velocity.x, obstacle.velocity.y) + obstacle.velocityUncertaintyMps)
+      * (obstacle.observationAgeSeconds + totalDurationSeconds)
     : 0;
   return separation - robotRadiusMeters - robotUncertaintyMeters
-    - obstacle.radiusMeters - obstacle.positionUncertaintyMeters - humanReach;
+    - obstacle.radiusMeters - obstacle.positionUncertaintyMeters - humanReach - motionError;
 }
 
 /**
  * Short-horizon, planar navigation checker over a stored ROS 2 scene.
- * It does not model contact, actuator lag, or a controller-rate safety shield.
+ * The stop corridor assumes full commanded speed until the worst-case stop time;
+ * this over-approximates the braking path. Contact and controller dynamics remain unsupported.
  */
 export class SceneAwareNavigationModel implements DeterministicEffectModel {
   readonly id: string;
@@ -207,14 +222,15 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
     effectPlan: EffectPlan,
     worldSnapshot: SimulationWorldSnapshot,
   ): Promise<Result<DeterministicCheckResult, EffectSimulationError>> {
-    const { robotRadiusMeters, minClearanceMeters, maxVelocityMps, maxHorizonMs, maxHumanSpeedMps } = this.options;
+    const { robotRadiusMeters, minClearanceMeters, maxVelocityMps, maxHorizonMs, maxHumanSpeedMps, minDecelerationMps2, reactionTimeMs } = this.options;
     if (
-      ![robotRadiusMeters, minClearanceMeters, maxVelocityMps, maxHorizonMs, maxHumanSpeedMps].every(nonnegative)
+      ![robotRadiusMeters, minClearanceMeters, maxVelocityMps, maxHorizonMs, maxHumanSpeedMps, minDecelerationMps2, reactionTimeMs].every(nonnegative)
       || maxVelocityMps === 0
       || maxHorizonMs === 0
       || robotRadiusMeters === 0
       || minClearanceMeters === 0
       || maxHumanSpeedMps === 0
+      || minDecelerationMps2 === 0
     ) {
       return err({ code: "SIMULATOR_MISCONFIGURED", message: "Scene-aware navigation bounds are invalid", retryable: false });
     }
@@ -242,22 +258,63 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       return ok(indeterminate("Navigation robotId and frameId must match the captured scene"));
     }
 
-    const target = point(effectPlan.params.target);
+    const rawWaypoints = effectPlan.params.waypoints;
+    const waypoints = rawWaypoints === undefined
+      ? [point(effectPlan.params.target)]
+      : Array.isArray(rawWaypoints) && rawWaypoints.length > 0 && rawWaypoints.length <= 32
+        ? rawWaypoints.map(point)
+        : [];
     const velocity = effectPlan.params.velocityMps;
-    if (!target || typeof velocity !== "number" || !Number.isFinite(velocity) || velocity <= 0) {
-      return ok(indeterminate("Navigation requires a finite target and positive velocityMps"));
+    if (
+      (rawWaypoints !== undefined && effectPlan.params.target !== undefined)
+      || waypoints.length === 0 || waypoints.some((waypoint) => !waypoint)
+      || typeof velocity !== "number" || !Number.isFinite(velocity) || velocity <= 0
+    ) {
+      return ok(indeterminate("Navigation requires a target or 1–32 finite waypoints and positive velocityMps"));
     }
-    const distance = Math.hypot(target.x - scene.value.start.x, target.y - scene.value.start.y);
-    const durationSeconds = distance / velocity;
-    if (distance === 0 || target.z !== scene.value.start.z || !Number.isFinite(durationSeconds)) {
-      return ok(indeterminate("Navigation requires a nonzero planar segment in the scene frame"));
+    const segments: NavigationSegment[] = [];
+    let cursor = scene.value.start;
+    let elapsedSeconds = 0;
+    for (const next of waypoints as Point3D[]) {
+      const distance = Math.hypot(next.x - cursor.x, next.y - cursor.y);
+      const durationSeconds = distance / velocity;
+      if (distance === 0 || next.z !== cursor.z || !Number.isFinite(durationSeconds)) {
+        return ok(indeterminate("Navigation requires nonzero planar segments in the scene frame"));
+      }
+      const previous = segments[segments.length - 1];
+      if (previous) {
+        const previousDx = previous.target.x - previous.start.x;
+        const previousDy = previous.target.y - previous.start.y;
+        const nextDx = next.x - cursor.x;
+        const nextDy = next.y - cursor.y;
+        const cross = previousDx * nextDy - previousDy * nextDx;
+        const dot = previousDx * nextDx + previousDy * nextDy;
+        if (dot <= 0 || Math.abs(cross) > 1e-9 * Math.hypot(previousDx, previousDy) * distance) {
+          return ok(indeterminate("Turning and reversing between waypoints require a validated controller model"));
+        }
+      }
+      segments.push({ start: cursor, target: next, durationSeconds });
+      elapsedSeconds += durationSeconds;
+      cursor = next;
     }
+    const last = segments[segments.length - 1]!;
+    const stopDurationSeconds = reactionTimeMs / 1_000 + velocity / minDecelerationMps2;
+    const stopTarget: Point3D = {
+      x: last.target.x + (last.target.x - last.start.x) / last.durationSeconds * stopDurationSeconds,
+      y: last.target.y + (last.target.y - last.start.y) / last.durationSeconds * stopDurationSeconds,
+      z: last.target.z,
+    };
+    const stopSegment: NavigationSegment = {
+      start: last.target, target: stopTarget,
+      durationSeconds: stopDurationSeconds,
+    };
+    const totalDurationSeconds = elapsedSeconds + stopDurationSeconds;
     const checks: DeterministicCheckRecord[] = [
       { check: "max-velocity", status: velocity <= maxVelocityMps ? "pass" : "fail", observed: velocity, expected: `velocityMps <= ${maxVelocityMps}` },
-      { check: "segment-horizon", status: durationSeconds * 1_000 <= maxHorizonMs ? "pass" : "unknown", observed: durationSeconds * 1_000, expected: `durationMs <= ${maxHorizonMs}` },
+      { check: "path-and-stop-horizon", status: totalDurationSeconds * 1_000 <= maxHorizonMs ? "pass" : "unknown", observed: totalDurationSeconds * 1_000, expected: `durationMs <= ${maxHorizonMs}` },
       { check: "safety-controller", status: scene.value.controllerPermitsMotion ? "pass" : "fail", expected: "controller permit granted and all protective stops clear" },
     ];
-    if (checks[1]!.status === "unknown") return ok(indeterminate("Navigation segment exceeds the configured scene-check horizon"));
+    if (checks[1]!.status === "unknown") return ok(indeterminate("Navigation path plus stopping corridor exceeds the configured scene-check horizon"));
 
     let minimum = Infinity;
     let collisions = 0;
@@ -265,19 +322,29 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       if (obstacle.kind === "human" && Math.hypot(obstacle.velocity.x, obstacle.velocity.y) > maxHumanSpeedMps) {
         return ok(indeterminate("Observed human speed exceeds the configured reachability bound"));
       }
-      const clearance = closestClearance(
-        scene.value.start, target, durationSeconds, obstacle,
-        robotRadiusMeters,
-        scene.value.robotPositionUncertaintyMeters + maxVelocityMps * scene.value.odometryAgeSeconds,
-        maxHumanSpeedMps,
+      const robotUncertainty = scene.value.robotPositionUncertaintyMeters + maxVelocityMps * scene.value.odometryAgeSeconds;
+      const clearance = Math.min(...segments.map((segment) => closestClearance(
+        segment.start, segment.target, segment.durationSeconds,
+        obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
+      )));
+      const stopClearance = closestClearance(
+        stopSegment.start, stopSegment.target, stopSegment.durationSeconds,
+        obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
       );
       minimum = Math.min(minimum, clearance);
-      if (clearance < 0) collisions++;
+      minimum = Math.min(minimum, stopClearance);
+      if (Math.min(clearance, stopClearance) < 0) collisions++;
       checks.push({
         check: `clearance:${obstacle.id}`,
         status: clearance >= minClearanceMeters ? "pass" : "fail",
         observed: clearance,
         expected: `conservative clearance >= ${minClearanceMeters} m`,
+      });
+      checks.push({
+        check: `stop-clearance:${obstacle.id}`,
+        status: stopClearance >= minClearanceMeters ? "pass" : "fail",
+        observed: stopClearance,
+        expected: `full-speed stopping corridor clearance >= ${minClearanceMeters} m`,
       });
     }
     const outcome: SimulationSafetyResult["outcome"] = checks.some((check) => check.status === "fail") ? "fail" : "pass";
@@ -290,10 +357,11 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
         maxVelocityMps: velocity,
         ...(Number.isFinite(minimum) && { minClearanceMeters: Math.max(0, minimum) }),
         assumptions: [
-          "The robot follows a straight planar segment at constant commanded speed",
-          "Human reachability is conservatively expanded over the full segment duration",
+          "The robot follows each planar waypoint segment at constant commanded speed",
+          "The stopping corridor assumes full speed through reaction and braking time, over-approximating travel",
+          "Human reachability is conservatively expanded over the full path and stop duration",
         ],
-        unsupportedPhenomena: ["actuator lag and control-loop dynamics", "contact and material deformation"],
+        unsupportedPhenomena: ["turning dynamics and controller-rate behavior", "contact and material deformation"],
       },
     });
   }

@@ -20,6 +20,7 @@ function scene(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
     robotPositionUncertaintyMeters: 0.02,
     odometry: {
       observedAt,
+      frameId: "map",
       value: {
         pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
         twist: { linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } },
@@ -29,6 +30,7 @@ function scene(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
     obstacleScanObservedAt: observedAt,
     obstacles: [{
       id: "shelf",
+      frameId: "map",
       kind: "static",
       position: { x: 0.5, y: 2, z: 0 },
       radiusMeters: 0.2,
@@ -47,8 +49,7 @@ function scene(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
   };
 }
 
-function preflight(): SimulationPreflight {
-  const params = { robotId: "mobile-1", frameId: "map", target: { x: 1, y: 0, z: 0 }, velocityMps: 0.5 };
+function preflight(params: Record<string, unknown> = { robotId: "mobile-1", frameId: "map", target: { x: 1, y: 0, z: 0 }, velocityMps: 0.5 }): SimulationPreflight {
   return {
     kind: "simulation-preflight",
     authorizesExecution: false,
@@ -65,7 +66,7 @@ function preflight(): SimulationPreflight {
   };
 }
 
-async function simulate(input: ROS2WorldStateInput) {
+async function simulate(input: ROS2WorldStateInput, params?: Record<string, unknown>) {
   const store = new InMemorySimulationArtifactStore();
   const captured = createROS2WorldSnapshot(input, { now: () => now, validityMs: 1_000 });
   if (!captured.ok) return captured;
@@ -88,9 +89,11 @@ async function simulate(input: ROS2WorldStateInput) {
       maxVelocityMps: 0.6,
       maxHorizonMs: 3_000,
       maxHumanSpeedMps: 0.3,
+      minDecelerationMps2: 2,
+      reactionTimeMs: 100,
     })],
   });
-  return simulator.simulate(preflight(), captured.value.snapshot);
+  return simulator.simulate(preflight(params), captured.value.snapshot);
 }
 
 describe("scene-aware navigation conformance", () => {
@@ -105,9 +108,11 @@ describe("scene-aware navigation conformance", () => {
   it("fails a crossing moving obstacle before the robot moves", async () => {
     const result = await simulate(scene({ obstacles: [{
       id: "cart",
+      frameId: "map",
       kind: "dynamic",
       position: { x: 0.5, y: -1, z: 0 },
       velocityMps: { x: 0, y: 1, z: 0 },
+      velocityUncertaintyMps: 0.1,
       radiusMeters: 0.2,
       positionUncertaintyMeters: 0.05,
       observedAt,
@@ -115,12 +120,49 @@ describe("scene-aware navigation conformance", () => {
     expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
   });
 
+  it("checks every waypoint leg against the same scene", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "second-leg-shelf", frameId: "map", kind: "static", position: { x: 0.75, y: 0, z: 0 },
+      radiusMeters: 0.1, positionUncertaintyMeters: 0.02, observedAt,
+    }] }), {
+      robotId: "mobile-1", frameId: "map", velocityMps: 0.5,
+      waypoints: [{ x: 0.5, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }],
+    });
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("returns indeterminate for a turn without a controller dynamics model", async () => {
+    const result = await simulate(scene(), {
+      robotId: "mobile-1", frameId: "map", velocityMps: 0.5,
+      waypoints: [{ x: 0.5, y: 0, z: 0 }, { x: 0.5, y: 0.5, z: 0 }],
+    });
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("checks the conservative stopping corridor beyond the final waypoint", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "after-target", frameId: "map", kind: "static", position: { x: 1.22, y: 0, z: 0 },
+      radiusMeters: 0.02, positionUncertaintyMeters: 0.01, observedAt,
+    }] }));
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("returns indeterminate when the path and stop corridor exceed the scene horizon", async () => {
+    const result = await simulate(scene(), {
+      robotId: "mobile-1", frameId: "map", velocityMps: 0.5,
+      waypoints: [{ x: 1, y: 0, z: 0 }, { x: 2, y: 0, z: 0 }],
+    });
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
   it("projects a moving obstacle from its observation time to the scene time", async () => {
     const result = await simulate(scene({ obstacles: [{
       id: "older-cart-track",
+      frameId: "map",
       kind: "dynamic",
       position: { x: 0.5, y: -2.5, z: 0 },
       velocityMps: { x: 0, y: 1, z: 0 },
+      velocityUncertaintyMps: 0.1,
       radiusMeters: 0.2,
       positionUncertaintyMeters: 0.05,
       observedAt: new Date(now - 900).toISOString(),
@@ -128,9 +170,28 @@ describe("scene-aware navigation conformance", () => {
     expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
   });
 
+  it("fails when bounded velocity uncertainty could bring a moving object into the path", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "uncertain-cart", frameId: "map", kind: "dynamic", position: { x: 0.5, y: 0.8, z: 0 },
+      velocityMps: { x: 0, y: 0, z: 0 }, velocityUncertaintyMps: 0.3,
+      radiusMeters: 0.1, positionUncertaintyMeters: 0.02, observedAt,
+    }] }));
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("returns indeterminate for a moving object without a velocity error bound", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "unbounded-cart", frameId: "map", kind: "dynamic", position: { x: 0.5, y: 2, z: 0 },
+      velocityMps: { x: 0, y: 0, z: 0 },
+      radiusMeters: 0.1, positionUncertaintyMeters: 0.02, observedAt,
+    }] }));
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
   it("expands a person's reachable region beyond the most likely stationary path", async () => {
     const result = await simulate(scene({ obstacles: [{
       id: "worker",
+      frameId: "map",
       kind: "human",
       position: { x: 0.5, y: 0.8, z: 0 },
       radiusMeters: 0.2,
@@ -143,6 +204,7 @@ describe("scene-aware navigation conformance", () => {
   it("refuses to trust a human prediction above the calibrated speed bound", async () => {
     const result = await simulate(scene({ obstacles: [{
       id: "runner",
+      frameId: "map",
       kind: "human",
       position: { x: 0.5, y: 2, z: 0 },
       velocityMps: { x: 0, y: -1, z: 0 },
@@ -167,6 +229,18 @@ describe("scene-aware navigation conformance", () => {
   it("rejects a scene for another robot even when its geometry is clear", async () => {
     const result = await simulate(scene({ robotId: "other-robot" }));
     expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("returns indeterminate for odometry in a different coordinate frame", async () => {
+    const input = scene();
+    const result = await simulate({ ...input, odometry: { ...input.odometry!, frameId: "odom" } });
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+  });
+
+  it("returns indeterminate for an obstacle in a different coordinate frame", async () => {
+    const input = scene();
+    const result = await simulate({ ...input, obstacles: input.obstacles!.map((obstacle) => ({ ...obstacle, frameId: "camera" })) });
+    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
   });
 
   it("rejects a stale obstacle scan before issuing a receipt", async () => {
@@ -196,6 +270,8 @@ describe("scene-aware navigation conformance", () => {
       maxVelocityMps: 0.6,
       maxHorizonMs: 3_000,
       maxHumanSpeedMps: 0.3,
+      minDecelerationMps2: 2,
+      reactionTimeMs: 100,
     });
     const evaluated = await model.evaluate(preflight().effectPlan, {
       digest: "a".repeat(64),

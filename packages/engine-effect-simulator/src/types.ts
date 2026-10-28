@@ -79,7 +79,7 @@ export interface BoundedMotionEffectModelOptions {
   readonly envelope: DeterministicSafetyEnvelope;
 }
 
-/** Conservative 2D checker for one short ROS 2 navigation segment. */
+/** Conservative 2D checker for a short ROS 2 waypoint path. */
 export interface SceneAwareNavigationModelOptions {
   readonly id?: string;
   readonly resources: readonly (string | RegExp)[];
@@ -91,4 +91,8 @@ export interface SceneAwareNavigationModelOptions {
   readonly maxHorizonMs: number;
   /** Worst-case human displacement rate during the bounded action. */
   readonly maxHumanSpeedMps: number;
+  /** Minimum validated braking capability for the robot/controller pair. */
+  readonly minDecelerationMps2: number;
+  /** Worst-case delay before braking begins. */
+  readonly reactionTimeMs: number;
 }

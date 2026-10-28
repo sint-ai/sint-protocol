@@ -12,6 +12,8 @@ export interface SimulationWorkerModelConfig {
     readonly robotRadiusMeters: number;
     readonly maxHorizonMs: number;
     readonly maxHumanSpeedMps: number;
+    readonly minDecelerationMps2: number;
+    readonly reactionTimeMs: number;
   };
 }
 
@@ -130,6 +132,9 @@ function parseModel(raw: string | undefined): SimulationWorkerModelConfig {
       || scene.robotRadiusMeters === 0
       || !nonNegativeNumber(scene.maxHumanSpeedMps)
       || scene.maxHumanSpeedMps === 0
+      || !nonNegativeNumber(scene.minDecelerationMps2)
+      || scene.minDecelerationMps2 === 0
+      || !nonNegativeNumber(scene.reactionTimeMs)
       || !nonNegativeNumber(scene.maxHorizonMs)
       || scene.maxHorizonMs === 0
       || !nonNegativeNumber(envelope.maxVelocityMps)
@@ -138,7 +143,7 @@ function parseModel(raw: string | undefined): SimulationWorkerModelConfig {
       || envelope.minClearanceMeters === 0
       || Object.keys(envelope).some((key) => !["maxVelocityMps", "minClearanceMeters"].includes(key))
     ) {
-      throw new Error("SINT_SIM_MODEL scene-aware-navigation requires explicit radius, horizon, human speed, velocity and clearance bounds");
+      throw new Error("SINT_SIM_MODEL scene-aware-navigation requires explicit radius, horizon, human speed, braking, reaction time, velocity and clearance bounds");
     }
   } else if (model.scene !== undefined) {
     throw new Error("SINT_SIM_MODEL scene settings require scene-aware-navigation kind");

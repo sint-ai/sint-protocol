@@ -121,12 +121,20 @@ the digest carried by the receipt; neither helper can authorize or dispatch a
 ROS 2 command.
 
 The opt-in `SceneAwareNavigationModel` reads that stored ROS 2 snapshot by
-digest and checks one straight, planar `target`/`velocityMps` segment against
-static and linearly moving circular obstacles. It expands a human obstacle's
-reachable region over the full segment duration and includes explicit robot
-and obstacle position-error bounds. The model requires a fresh obstacle-scan
+digest and checks a straight, planar `target`/`velocityMps` command or 1–32
+collinear waypoint segments. Turns and reversals return `indeterminate` until
+a validated controller dynamics model is available. It checks static and
+moving circular obstacles along the complete path and stop corridor.
+It expands a human obstacle's reachable region over the full path and stop
+duration and includes explicit robot and obstacle position-error bounds.
+Moving objects also require a speed-prediction error bound. Their reachable
+region expands using observed speed plus this bound over the whole horizon,
+including the time from observation to scene capture. This avoids assuming a
+single obstacle trajectory while robot braking timing is uncertain. The model
+requires a fresh obstacle-scan
 timestamp even when no obstacles were detected, an odometry pose, a matching
-map frame, matching `robotId`/`frameId` effect parameters, and a clear
+map/odometry/obstacle coordinate frame, matching `robotId`/`frameId` effect
+parameters, and a clear
 safety-controller permit. Missing or unclassified scene
 data returns signed `indeterminate` evidence; a failed controller permit or
 insufficient clearance returns signed `fail` evidence. A missing or corrupted
@@ -135,7 +143,8 @@ check, not a physics simulation or controller-rate safety mechanism.
 
 The standalone worker enables this model only with `SINT_SIM_MODEL.kind` set to
 `scene-aware-navigation`, explicit `scene.robotRadiusMeters`,
-`scene.maxHorizonMs`, `scene.maxHumanSpeedMps`, and envelope
+`scene.maxHorizonMs`, `scene.maxHumanSpeedMps`,
+`scene.minDecelerationMps2`, `scene.reactionTimeMs`, and envelope
 `maxVelocityMps`/`minClearanceMeters`. The ROS 2 bridge and worker must use a
 shared trusted content-addressed artifact store for the exact scene payload.
 The default worker model remains the original bounded parameter checker.
@@ -156,18 +165,24 @@ Example `SINT_SIM_MODEL` JSON for the first navigation slice:
   "scene": {
     "robotRadiusMeters": 0.25,
     "maxHorizonMs": 3000,
-    "maxHumanSpeedMps": 1.5
+    "maxHumanSpeedMps": 1.5,
+    "minDecelerationMps2": 2.0,
+    "reactionTimeMs": 100
   }
 }
 ```
 
 These numbers are illustrative, not approved safety limits. A site must
 measure the robot footprint, human reachability assumption, localization and
-obstacle uncertainty, and controller behavior before using this check on
-hardware. The model projects moving obstacle positions from their observation
-times to the captured scene time and expands the robot position bound by the
-age of odometry. It still lacks curved paths, acceleration and braking, and
-occluded-human modeling.
+obstacle uncertainty, minimum braking capability, and worst-case controller
+reaction time before using this check on
+hardware. The model expands moving obstacle reachability from observation
+through the whole horizon and expands the robot position bound by the
+age of odometry. The final waypoint is followed by a conservative full-speed
+stop corridor for reaction time plus `velocityMps/minDecelerationMps2`. This
+over-approximates actual braking travel and may reject feasible routes. It does
+not simulate acceleration, turning dynamics, controller-rate behavior, or
+occluded humans.
 
 ## Isolated Worker HTTP Contract
 

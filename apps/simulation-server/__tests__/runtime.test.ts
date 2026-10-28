@@ -94,7 +94,7 @@ describe("configured simulation worker runtime", () => {
           resources: ["ros2:///nav/segment"],
           actions: ["publish"],
           envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
-          scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3 },
+          scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
         }),
       });
       const runtime = createConfiguredSimulationRuntime(config);

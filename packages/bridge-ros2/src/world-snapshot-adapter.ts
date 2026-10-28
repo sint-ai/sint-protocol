@@ -13,6 +13,7 @@ import type { JointState, Odometry, Pose } from "./ros2-message-types.js";
 
 export interface ROS2Stamped<T> {
   readonly observedAt: string;
+  readonly frameId?: string;
   readonly value: T;
 }
 
@@ -33,10 +34,13 @@ export interface ROS2MapState {
 
 export interface ROS2ObstacleState {
   readonly id: string;
+  readonly frameId?: string;
   /** A missing classification is unsupported by scene-aware validation. */
   readonly kind?: "static" | "dynamic" | "human";
   readonly position: { readonly x: number; readonly y: number; readonly z: number };
   readonly velocityMps?: { readonly x: number; readonly y: number; readonly z: number };
+  /** Absolute speed prediction error bound in metres per second for moving objects. */
+  readonly velocityUncertaintyMps?: number;
   /** Absolute position bound in metres, including sensor and tracking error. */
   readonly positionUncertaintyMeters?: number;
   readonly radiusMeters: number;
@@ -198,7 +202,8 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   if (
     input.odometry
-    && (!isFinitePose(input.odometry.value.pose)
+    && ((input.odometry.frameId !== undefined && input.odometry.frameId.length === 0)
+      || !isFinitePose(input.odometry.value.pose)
       || [
         input.odometry.value.twist.linear.x,
         input.odometry.value.twist.linear.y,
@@ -234,6 +239,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   for (const obstacle of input.obstacles ?? []) {
     if (
       !obstacle.id
+      || (obstacle.frameId !== undefined && obstacle.frameId.length === 0)
       || !isFiniteNumber(obstacle.position.x)
       || !isFiniteNumber(obstacle.position.y)
       || !isFiniteNumber(obstacle.position.z)
@@ -243,6 +249,8 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
         && (!isFiniteNumber(obstacle.positionUncertaintyMeters) || obstacle.positionUncertaintyMeters < 0))
       || (obstacle.velocityMps !== undefined
         && ![obstacle.velocityMps.x, obstacle.velocityMps.y, obstacle.velocityMps.z].every(isFiniteNumber))
+      || (obstacle.velocityUncertaintyMps !== undefined
+        && (!isFiniteNumber(obstacle.velocityUncertaintyMps) || obstacle.velocityUncertaintyMps < 0))
       || (obstacle.kind !== undefined && !["static", "dynamic", "human"].includes(obstacle.kind))
       || !isNormalized(obstacle.uncertainty)
     ) {
