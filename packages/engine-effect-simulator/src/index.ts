@@ -7,6 +7,7 @@
 
 export { BoundedMotionEffectModel } from "./bounded-motion-model.js";
 export { SceneAwareNavigationModel } from "./scene-aware-navigation-model.js";
+export { FixedCaseNavigationModel, isValidNavigationScenarioPolicy, navigationScenarioPolicyDigest } from "./fixed-case-navigation-model.js";
 export { DeterministicEffectSimulator } from "./deterministic-effect-simulator.js";
 export {
   FileSystemSimulationArtifactStore,
@@ -21,6 +22,8 @@ export type {
   DeterministicEffectSimulatorOptions,
   DeterministicSafetyEnvelope,
   NumericRange,
+  NavigationScenarioPolicy,
+  NavigationStressCase,
   SceneAwareNavigationModelOptions,
 } from "./types.js";
 export type {

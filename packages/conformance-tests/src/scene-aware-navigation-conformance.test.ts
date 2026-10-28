@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import { ApprovalTier, canonicalJsonStringify, ok, type SimulationPreflight } from "@pshkv/core";
 import { generateKeypair, hashSha256 } from "@pshkv/gate-capability-tokens";
 import { createROS2WorldSnapshot, persistROS2WorldSnapshot, type ROS2WorldStateInput } from "@pshkv/bridge-ros2";
-import { DeterministicEffectSimulator, InMemorySimulationArtifactStore, SceneAwareNavigationModel } from "@pshkv/engine-effect-simulator";
+import {
+  DeterministicEffectSimulator,
+  FixedCaseNavigationModel,
+  InMemorySimulationArtifactStore,
+  SceneAwareNavigationModel,
+  navigationScenarioPolicyDigest,
+  type NavigationScenarioPolicy,
+} from "@pshkv/engine-effect-simulator";
 
 const now = Date.now();
 const observedAt = new Date(now - 20).toISOString();
@@ -66,12 +73,22 @@ function preflight(params: Record<string, unknown> = { robotId: "mobile-1", fram
   };
 }
 
-async function simulate(input: ROS2WorldStateInput, params?: Record<string, unknown>) {
-  const store = new InMemorySimulationArtifactStore();
+async function simulate(
+  input: ROS2WorldStateInput,
+  params?: Record<string, unknown>,
+  policy?: NavigationScenarioPolicy,
+  store = new InMemorySimulationArtifactStore(),
+) {
   const captured = createROS2WorldSnapshot(input, { now: () => now, validityMs: 1_000 });
   if (!captured.ok) return captured;
   const persisted = await persistROS2WorldSnapshot(captured.value, store);
   if (!persisted.ok) return persisted;
+  const modelOptions = {
+    resources: [resource], actions: [action], artifactStore: store,
+    robotRadiusMeters: 0.2, minClearanceMeters: 0.1, maxVelocityMps: 0.6,
+    maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3,
+    minDecelerationMps2: 2, reactionTimeMs: 100,
+  };
   const simulator = new DeterministicEffectSimulator({
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
@@ -80,23 +97,80 @@ async function simulate(input: ROS2WorldStateInput, params?: Record<string, unkn
     now: () => now,
     artifactStore: store,
     receiptRecorder: { recordIssued: async () => ok(undefined) },
-    models: [new SceneAwareNavigationModel({
-      resources: [resource],
-      actions: [action],
-      artifactStore: store,
-      robotRadiusMeters: 0.2,
-      minClearanceMeters: 0.1,
-      maxVelocityMps: 0.6,
-      maxHorizonMs: 3_000,
-      maxHumanSpeedMps: 0.3,
-      minDecelerationMps2: 2,
-      reactionTimeMs: 100,
-    })],
+    models: [policy
+      ? new FixedCaseNavigationModel(modelOptions, policy)
+      : new SceneAwareNavigationModel(modelOptions)],
   });
   return simulator.simulate(preflight(params), captured.value.snapshot);
 }
 
 describe("scene-aware navigation conformance", () => {
+  it("reports full fixed-case coverage only after every case runs conclusively", async () => {
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0", policyId: "clear-scene-v1",
+      cases: [
+        { id: "larger-footprint", extraRobotRadiusMeters: 0.1 },
+        { id: "slow-reaction", extraReactionTimeMs: 100 },
+      ],
+    };
+    const result = await simulate(scene(), undefined, policy);
+    expect(result.ok).toBe(true);
+    if (!result.ok || !("scenarios" in result.value)) return;
+    expect(result.value.result.outcome).toBe("pass");
+    expect(result.value.scenarios).toMatchObject({
+      scenarioSetDigest: navigationScenarioPolicyDigest(policy), runCount: 3, coverage: 1, seeds: [],
+    });
+  });
+
+  it("runs a digest-bound fixed case set and fails when one stress case is unsafe", async () => {
+    const store = new InMemorySimulationArtifactStore();
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0", policyId: "near-obstacle-v1",
+      cases: [
+        { id: "small-localization-error", extraRobotRadiusMeters: 0.05 },
+        { id: "large-localization-error", extraRobotRadiusMeters: 0.25 },
+      ],
+    };
+    const result = await simulate(scene({ obstacles: [{
+      id: "shelf", frameId: "map", kind: "static", position: { x: 0.5, y: 0.8, z: 0 },
+      radiusMeters: 0.2, positionUncertaintyMeters: 0.05, observedAt,
+    }] }), undefined, policy, store);
+    expect(result.ok).toBe(true);
+    if (!result.ok || !("scenarios" in result.value)) return;
+    expect(result.value.result.outcome).toBe("fail");
+    expect(result.value.scenarios).toMatchObject({
+      scenarioSetDigest: navigationScenarioPolicyDigest(policy), runCount: 3, coverage: 1, seeds: [],
+    });
+    const trace = await store.get(result.value.artifactDigest);
+    expect(trace.ok).toBe(true);
+    if (trace.ok) {
+      const parsed = JSON.parse(trace.value.content) as { scenarioPolicy: NavigationScenarioPolicy; checks: Array<{ check: string }> };
+      expect(parsed.scenarioPolicy).toEqual(policy);
+      expect(parsed.checks.some((check) => check.check.startsWith("large-localization-error:"))).toBe(true);
+    }
+  });
+
+  it("reports incomplete fixed-case coverage when a stress case is indeterminate", async () => {
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0", policyId: "reaction-delay-v1",
+      cases: [{ id: "long-reaction-delay", extraReactionTimeMs: 4_000 }],
+    };
+    const result = await simulate(scene(), undefined, policy);
+    expect(result.ok).toBe(true);
+    if (!result.ok || !("scenarios" in result.value)) return;
+    expect(result.value.result.outcome).toBe("indeterminate");
+    expect(result.value.scenarios).toMatchObject({ runCount: 2, coverage: 0.5, seeds: [] });
+  });
+
+  it("rejects an invalid fixed-case policy before issuing a receipt", async () => {
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0", policyId: "invalid",
+      cases: [{ id: "no-stress" }],
+    };
+    const result = await simulate(scene(), undefined, policy);
+    expect(result.ok ? undefined : result.error.code).toBe("SIMULATOR_MISCONFIGURED");
+  });
+
   it("passes a clear short segment with a digest-bound sensor scene", async () => {
     const result = await simulate(scene());
     expect(result.ok).toBe(true);

@@ -79,8 +79,11 @@ odometry/map/obstacle scene, and an opt-in checker for static, moving, and human
 obstacle clearance with explicit position and moving-object speed uncertainty.
 It checks a conservative full-speed stopping corridor using configured braking
 and reaction-time bounds. The default bounded
-motion model still checks declared effect parameters. Deterministic receipts
-now report zero sampled-scenario coverage until a real scenario runner exists.
+motion model still checks declared effect parameters. Default deterministic
+receipts report zero sampled-scenario coverage. An opt-in fixed-case navigation
+runner now checks bounded adversarial footprint, reaction-delay, and
+human-speed stresses against the same live scene and reports conclusive
+fixed-case coverage. It does not estimate probability or replace physics.
 Before a robot pilot,
 extend the scene checker to controller-validated braking profiles, time to
 contact, geofence, and controller dynamics; then add a richer physics adapter.
@@ -94,11 +97,11 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
    versioned sensor provenance, uncertainty distributions/bounds, task phase,
    and robot/tool/payload state. Preserve a digest of exact inputs and reject
    stale or internally inconsistent scenes.
-3. **Add scenario generation.** Build a bounded, reproducible scenario sampler
-   and adversarial case library per effect class. The gateway now supports an
-   exact required scenario-set digest and rejects coverage thresholds without
-   one. Configure it once an approved set exists.
-   Log seeds and distributions;
+3. **Add scenario generation.** The first bounded fixed adversarial case
+   runner exists for scene-aware navigation, with an exact digest the gateway
+   can require. Extend it to seeded perturbation distributions and other
+   effect classes; calibrate coverage semantics before interpreting it as
+   probability. Log seeds and distributions;
    prohibit a model-generated "safe" label from becoming a policy decision.
 4. **Add a physical simulator adapter.** Run the same effect against a real
    Gazebo/MoveIt or equivalent backend and deterministic envelope checker.
@@ -125,7 +128,7 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
 | 0B | Close MCP self-approval and process-spawn path | Agent cannot call approval, token minting, delegation or server-management tools; all built-ins traverse `intercept()` | Implemented in proxy with per-server tokens. Production dashboard votes now require allowlisted operator signatures. |
 | 0C | Proxy transport and credential isolation | Downstream receives only explicitly selected environment; HTTP Origin/Host and gateway CORS are deployment restricted; unsupported network transports reject private targets | Environment isolation and loopback HTTP/production CORS controls implemented. Remote downstream transport remains unsupported. |
 | 0D | Evidence durability | Database refuses UPDATE, DELETE and TRUNCATE; signed proof served over HTTP; retention and authority export documented and enforced | Database guard and signed HTTP proof implemented; retention and authority export pending. |
-| 1 | Simulation-before-dispatch for every physical effect | Every T2/T3 physical command and bounded VLA chunk has an exact, fresh, signed pass receipt; failed/indeterminate/absent evidence cannot dispatch | Production gateway requires trusted simulator signers and signed V2 receipts for T2/T3. Known physical transport commands now have a T2 floor even if a site rule labels them T0/T1; explicit read and staging actions retain lower tiers. An opt-in scene-aware navigation model checks a bounded collinear waypoint path and conservative stop corridor against stored ROS 2 scene geometry, including measured position and moving-object speed-error bounds. Turns and reversals return indeterminate. Production workers reject the default parameter-only ROS 2 model. Probabilistic scenario generation, physical simulator adapter, generic-tool effect classification, complete dispatch inventory and bypass proof remain pending. |
+| 1 | Simulation-before-dispatch for every physical effect | Every T2/T3 physical command and bounded VLA chunk has an exact, fresh, signed pass receipt; failed/indeterminate/absent evidence cannot dispatch | Production gateway requires trusted simulator signers and signed V2 receipts for T2/T3. Known physical transport commands now have a T2 floor even if a site rule labels them T0/T1; explicit read and staging actions retain lower tiers. An opt-in scene-aware navigation model checks a bounded collinear waypoint path and conservative stop corridor against stored ROS 2 scene geometry, including measured position and moving-object speed-error bounds. Turns and reversals return indeterminate. Production workers reject the default parameter-only ROS 2 model. An optional fixed adversarial case policy runs bounded footprint, reaction, and human-speed stresses; its signed receipt identifies the exact policy and conclusive case coverage. Probabilistic distributions, physical simulator adapter, generic-tool effect classification, complete dispatch inventory and bypass proof remain pending. |
 | 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; the broker now re-reads scene digest and epoch after nonce consumption and rejects drift before adapter dispatch. File-backed edge nonce consumption survives restart when configured. Atomic controller-side scene locking, controller hold, and complete binding remain pending. |
 | 3 | Robot enforcement pilot | SROS2 Enforce mode plus a command-gate node owns action endpoints; direct actuator bypass fails in an actual ROS graph | Docker demonstration exists; product binding pending. |
 | 4 | Continuous safety shield | Controller-rate barrier/QP filter and tested safe-hold behavior, independent of uplink and gateway availability | Research and hardware integration pending. |

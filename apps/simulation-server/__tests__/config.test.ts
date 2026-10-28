@@ -67,6 +67,28 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("scene-aware-navigation requires explicit");
   });
 
+  it("accepts only bounded, explicit navigation scenario policies", () => {
+    const model = {
+      id: "nav-cases-v1", kind: "scene-aware-navigation",
+      resources: ["ros2:///nav/segment"], actions: ["publish"],
+      envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
+      scenarioPolicy: { version: "1.0.0", policyId: "warehouse-v1", cases: [{ id: "human-speed", extraHumanSpeedMps: 0.5 }] },
+    };
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test", SINT_SIM_MODEL: JSON.stringify(model) }).model)
+      .toMatchObject(model);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MODEL: JSON.stringify({ ...model, scenarioPolicy: { ...model.scenarioPolicy, cases: [{ id: "ignored", unknownStress: 1 }] } }),
+    })).toThrow("scenarioPolicy must contain");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MODEL: JSON.stringify({ ...model, scenarioPolicy: { ...model.scenarioPolicy, cases: [
+        { id: "duplicate", extraHumanSpeedMps: 0.2 }, { id: "duplicate", extraReactionTimeMs: 100 },
+      ] } }),
+    })).toThrow("scenarioPolicy must contain");
+  });
+
   it("rejects the parameter-only ROS 2 worker in production", () => {
     const signer = generateKeypair();
     const base = {

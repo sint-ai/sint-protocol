@@ -2,6 +2,7 @@ import {
   BoundedMotionEffectModel,
   DeterministicEffectSimulator,
   FileSystemSimulationArtifactStore,
+  FixedCaseNavigationModel,
   SceneAwareNavigationModel,
 } from "@pshkv/engine-effect-simulator";
 import {
@@ -19,8 +20,8 @@ export interface ConfiguredSimulationRuntime {
 export function createConfiguredSimulationRuntime(config: SimulationWorkerConfig): ConfiguredSimulationRuntime {
   const evidenceLedger = new LedgerWriter();
   const artifactStore = new FileSystemSimulationArtifactStore(config.artifactDirectory);
-  const model = config.model.kind === "scene-aware-navigation" && config.model.scene
-    ? new SceneAwareNavigationModel({
+  const sceneOptions = config.model.kind === "scene-aware-navigation" && config.model.scene
+    ? {
         id: config.model.id,
         resources: config.model.resources,
         actions: config.model.actions,
@@ -32,7 +33,11 @@ export function createConfiguredSimulationRuntime(config: SimulationWorkerConfig
         maxHorizonMs: config.model.scene.maxHorizonMs,
         maxVelocityMps: config.model.envelope.maxVelocityMps!,
         minClearanceMeters: config.model.envelope.minClearanceMeters!,
-      })
+      } : undefined;
+  const model = sceneOptions
+    ? config.model.scenarioPolicy
+      ? new FixedCaseNavigationModel(sceneOptions, config.model.scenarioPolicy)
+      : new SceneAwareNavigationModel(sceneOptions)
     : new BoundedMotionEffectModel({
         id: config.model.id,
         resources: config.model.resources,

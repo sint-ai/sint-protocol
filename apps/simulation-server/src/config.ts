@@ -1,4 +1,4 @@
-import type { DeterministicSafetyEnvelope } from "@pshkv/engine-effect-simulator";
+import { isValidNavigationScenarioPolicy, type DeterministicSafetyEnvelope, type NavigationScenarioPolicy } from "@pshkv/engine-effect-simulator";
 import { canonicalJsonStringify } from "@pshkv/core";
 import { generateKeypair, getPublicKey, hashSha256 } from "@pshkv/gate-capability-tokens";
 
@@ -15,6 +15,7 @@ export interface SimulationWorkerModelConfig {
     readonly minDecelerationMps2: number;
     readonly reactionTimeMs: number;
   };
+  readonly scenarioPolicy?: NavigationScenarioPolicy;
 }
 
 export interface SimulationWorkerConfig {
@@ -145,8 +146,13 @@ function parseModel(raw: string | undefined): SimulationWorkerModelConfig {
     ) {
       throw new Error("SINT_SIM_MODEL scene-aware-navigation requires explicit radius, horizon, human speed, braking, reaction time, velocity and clearance bounds");
     }
+    if (model.scenarioPolicy !== undefined && !isValidNavigationScenarioPolicy(model.scenarioPolicy)) {
+      throw new Error("SINT_SIM_MODEL scenarioPolicy must contain 1–16 distinct, nonzero fixed navigation stress cases");
+    }
   } else if (model.scene !== undefined) {
     throw new Error("SINT_SIM_MODEL scene settings require scene-aware-navigation kind");
+  } else if (model.scenarioPolicy !== undefined) {
+    throw new Error("SINT_SIM_MODEL scenarioPolicy requires scene-aware-navigation kind");
   }
   return value as SimulationWorkerModelConfig;
 }

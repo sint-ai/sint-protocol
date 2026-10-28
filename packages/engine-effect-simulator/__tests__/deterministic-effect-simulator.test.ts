@@ -259,6 +259,37 @@ describe("DeterministicEffectSimulator", () => {
     expect(simulated.ok ? undefined : simulated.error.code).toBe("SIMULATOR_MISCONFIGURED");
   });
 
+  it("refuses to sign inflated scenario counts that disagree with the retained policy", async () => {
+    let recorded = false;
+    const policy = {
+      version: "1.0.0" as const,
+      policyId: "adversarial-v1",
+      cases: [{ id: "slow-reaction", extraReactionTimeMs: 100 }],
+    };
+    const worker = new DeterministicEffectSimulator({
+      signerPublicKey: signer.publicKey,
+      signerPrivateKey: signer.privateKey,
+      version: "0.1.0",
+      modelDigest: digest("b"),
+      now: () => now,
+      artifactStore: new InMemorySimulationArtifactStore(),
+      receiptRecorder: { recordIssued: async () => { recorded = true; return ok(undefined); } },
+      models: [{
+        id: "dishonest-case-model",
+        supports: () => true,
+        evaluate: () => ok({
+          result: { outcome: "pass", collisions: 0, safetyZoneViolations: 0 },
+          checks: [],
+          scenarioPolicy: policy,
+          scenarios: { scenarioSetDigest: digest("9"), runCount: 100, coverage: 1, seeds: [] },
+        }),
+      }],
+    });
+    const simulated = await worker.simulate(preflight(safeParams), world());
+    expect(simulated.ok ? undefined : simulated.error.code).toBe("SIMULATOR_MISCONFIGURED");
+    expect(recorded).toBe(false);
+  });
+
   it("round-trips and integrity-checks artifacts in the durable filesystem store", async () => {
     const directory = await mkdtemp(join(tmpdir(), "sint-simulation-artifacts-"));
     try {

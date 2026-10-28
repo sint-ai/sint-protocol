@@ -19,7 +19,9 @@ import {
 import type {
   DeterministicCheckRecord,
   DeterministicEffectSimulatorOptions,
+  NavigationScenarioPolicy,
 } from "./types.js";
+import { isValidNavigationScenarioPolicy, navigationScenarioPolicyDigest } from "./fixed-case-navigation-model.js";
 
 const GRADE_ORDER: Record<SimulationEvidenceGrade, number> = {
   deterministic: 0,
@@ -34,6 +36,7 @@ interface DeterministicArtifact {
   readonly effectPlanDigest: string;
   readonly worldSnapshotDigest: string;
   readonly checks: readonly DeterministicCheckRecord[];
+  readonly scenarioPolicy?: NavigationScenarioPolicy;
   readonly result: SimulationSafetyResult;
 }
 
@@ -118,6 +121,8 @@ export class DeterministicEffectSimulator implements EffectSimulator {
     let modelId: string | undefined;
     let checks: readonly DeterministicCheckRecord[] = [];
     let result: SimulationSafetyResult;
+    let scenarioEvidence: SimulationEvidenceReceipt["scenarios"] | undefined;
+    let scenarioPolicy: NavigationScenarioPolicy | undefined;
     if (!model) {
       result = {
         outcome: "indeterminate",
@@ -132,6 +137,21 @@ export class DeterministicEffectSimulator implements EffectSimulator {
       modelId = model.id;
       checks = evaluated.value.checks;
       result = evaluated.value.result;
+      scenarioEvidence = evaluated.value.scenarios;
+      scenarioPolicy = evaluated.value.scenarioPolicy;
+    }
+
+    if (scenarioEvidence !== undefined || scenarioPolicy !== undefined) {
+      if (!isValidNavigationScenarioPolicy(scenarioPolicy)
+        || scenarioEvidence === undefined
+        || scenarioEvidence.scenarioSetDigest !== navigationScenarioPolicyDigest(scenarioPolicy)
+        || scenarioEvidence.runCount !== scenarioPolicy.cases.length + 1
+        || scenarioEvidence.coverage === undefined
+        || !Number.isFinite(scenarioEvidence.coverage)
+        || scenarioEvidence.coverage < 0 || scenarioEvidence.coverage > 1
+        || (scenarioEvidence.seeds?.length ?? 0) !== 0) {
+        return error("SIMULATOR_MISCONFIGURED", "Scenario evidence does not match its retained fixed-case policy", false);
+      }
     }
 
     const artifact: DeterministicArtifact = {
@@ -141,6 +161,7 @@ export class DeterministicEffectSimulator implements EffectSimulator {
       effectPlanDigest: preflight.effectPlan.effectPlanDigest,
       worldSnapshotDigest: worldSnapshot.digest,
       checks,
+      ...(scenarioPolicy !== undefined && { scenarioPolicy }),
       result,
     };
     const artifactContent = canonicalJsonStringify(artifact);
@@ -183,7 +204,7 @@ export class DeterministicEffectSimulator implements EffectSimulator {
         modelDigest: this.options.modelDigest,
         ...(this.options.imageDigest !== undefined && { imageDigest: this.options.imageDigest }),
       },
-      scenarios: {
+      scenarios: scenarioEvidence ?? {
         scenarioSetDigest: hashSha256(canonicalJsonStringify({ kind: "single-observed-state", modelId })),
         runCount: 1,
         // A single deterministic state check covers no sampled scenario classes.

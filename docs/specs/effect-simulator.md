@@ -140,11 +140,19 @@ data returns signed `indeterminate` evidence; a failed controller permit or
 insufficient clearance returns signed `fail` evidence. A missing or corrupted
 snapshot artifact prevents receipt issuance. This is a conservative 2D software
 check, not a physics simulation or controller-rate safety mechanism.
-The deterministic backend runs one observed-state check and reports
-`runCount: 1`, `coverage: 0`, and no seeds. A passing deterministic receipt
-does not claim probabilistic or adversarial scenario coverage; a gateway with
-`minScenarioCoverage > 0` rejects it until a real scenario runner supplies
-that evidence. A deployment can additionally set
+Without a configured case policy, the deterministic backend runs one
+observed-state check and reports `runCount: 1`, `coverage: 0`, and no seeds.
+An optional `scenarioPolicy` on the scene-aware navigation worker runs the
+observed scene plus 1–16 fixed adversarial cases. Each case increases the
+robot footprint, reaction delay, or human reach speed by a bounded amount;
+all cases use the same digest-verified sensor scene. A failed case fails the
+aggregate result. An indeterminate case lowers coverage and makes the result
+indeterminate unless another case failed. The signed trace retains the exact
+case policy and each case's checks. `coverage` is the fraction of the observed
+run and fixed cases that reached a conclusive check; it is **not** probability mass or a
+calibrated field-risk estimate. No random seeds are claimed.
+
+A deployment can set
 `requiredScenarioSetDigest` in its evidence requirement. The gateway then
 rejects receipts from any other scenario distribution or adversarial case
 policy, even if the reported run count and coverage are high. A policy asking
@@ -178,9 +186,24 @@ Example `SINT_SIM_MODEL` JSON for the first navigation slice:
     "maxHumanSpeedMps": 1.5,
     "minDecelerationMps2": 2.0,
     "reactionTimeMs": 100
+  },
+  "scenarioPolicy": {
+    "version": "1.0.0",
+    "policyId": "warehouse-nav-stress-v1",
+    "cases": [
+      { "id": "larger-footprint", "extraRobotRadiusMeters": 0.1 },
+      { "id": "slow-reaction", "extraReactionTimeMs": 150 },
+      { "id": "faster-human", "extraHumanSpeedMps": 0.5 }
+    ]
   }
 }
 ```
+
+Compute the approved `requiredScenarioSetDigest` from the exact policy with
+`navigationScenarioPolicyDigest()`, then configure the gateway requirement for
+this effect. A policy requiring all cases sets `minScenarioRuns: 4` and
+`minScenarioCoverage: 1` for the example. Fixed cases remain deterministic
+software checks and cannot satisfy a physics-grade evidence requirement.
 
 These numbers are illustrative, not approved safety limits. A site must
 measure the robot footprint, human reachability assumption, localization and
