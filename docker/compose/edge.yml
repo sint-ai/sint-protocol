@@ -20,6 +20,7 @@ services:
       SINT_TRUSTED_ISSUERS: ${SINT_TRUSTED_ISSUERS:-}
       SINT_LEDGER_SIGNING_KEY: ${SINT_LEDGER_SIGNING_KEY:-}
       SINT_APPROVAL_OPERATOR_KEYS: ${SINT_APPROVAL_OPERATOR_KEYS:-}
+      SINT_SIMULATION_SIGNERS: ${SINT_SIMULATION_SIGNERS:-}
     depends_on:
       postgres:
         condition: service_healthy

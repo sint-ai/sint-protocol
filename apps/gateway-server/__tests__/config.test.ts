@@ -24,6 +24,7 @@ describe("Configuration", () => {
     delete process.env.SINT_TRUSTED_ISSUERS;
     delete process.env.SINT_LEDGER_SIGNING_KEY;
     delete process.env.SINT_APPROVAL_OPERATOR_KEYS;
+    delete process.env.SINT_SIMULATION_SIGNERS;
   });
 
   afterEach(() => {
@@ -108,6 +109,8 @@ describe("Configuration", () => {
     process.env.SINT_LEDGER_SIGNING_KEY = "c".repeat(64);
     expect(() => loadConfig()).toThrow("SINT_APPROVAL_OPERATOR_KEYS is required");
     process.env.SINT_APPROVAL_OPERATOR_KEYS = "d".repeat(64);
+    expect(() => loadConfig()).toThrow("SINT_SIMULATION_SIGNERS is required");
+    process.env.SINT_SIMULATION_SIGNERS = "e".repeat(64);
     expect(loadConfig().trustedIssuers).toEqual(["a".repeat(64)]);
   });
 
@@ -123,6 +126,7 @@ describe("Configuration", () => {
     process.env.SINT_TRUSTED_ISSUERS = "b".repeat(64);
     process.env.SINT_LEDGER_SIGNING_KEY = "c".repeat(64);
     process.env.SINT_APPROVAL_OPERATOR_KEYS = "d".repeat(64);
+    process.env.SINT_SIMULATION_SIGNERS = "e".repeat(64);
 
     const config = loadConfig();
     expect(config.env).toBe("production");
@@ -131,6 +135,12 @@ describe("Configuration", () => {
     expect(config.apiKey).toBe("prod-key");
     expect(config.requireSignatures).toBe(true);
     expect(config.wsAllowQueryApiKey).toBe(false);
+    expect(config.simulationSignerKeys).toEqual(["e".repeat(64)]);
+  });
+
+  it("rejects malformed simulation signer keys", () => {
+    process.env.SINT_SIMULATION_SIGNERS = "not-a-public-key";
+    expect(() => loadConfig()).toThrow("SINT_SIMULATION_SIGNERS must contain comma-separated Ed25519 public keys");
   });
 
   it("accepts postgres config with DATABASE_URL", () => {

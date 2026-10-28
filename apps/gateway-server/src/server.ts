@@ -12,7 +12,7 @@ import { Hono } from "hono";
 import { createPersistedLedgerEmitter, restorePersistedLedger } from "./ledger-emitter.js";
 import { CsmlEscalator } from "@pshkv/avatar";
 import { RevocationStore, generateKeypair, getPublicKey, sign } from "@pshkv/gate-capability-tokens";
-import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { PolicyGateway, ApprovalQueue, DefaultSimulationEvidencePolicy } from "@pshkv/gate-policy-gateway";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type {
   TokenStore,
@@ -35,7 +35,7 @@ import {
   RedisCache,
   RedisRevocationBus,
 } from "@pshkv/persistence";
-import { err, type SintCapabilityToken } from "@pshkv/core";
+import { ApprovalTier, err, type SintCapabilityToken } from "@pshkv/core";
 import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
@@ -156,6 +156,9 @@ export function createContext(): ServerContext {
  * - RedisRevocationBus: Pub/sub for <1s revocation propagation across nodes
  */
 export async function createPersistentContext(config: SintConfig): Promise<ServerContext> {
+  if (config.env === "production" && !config.simulationSignerKeys?.length) {
+    throw new Error("SINT_SIMULATION_SIGNERS is required when SINT_ENV/NODE_ENV=production");
+  }
   const ledgerPrivateKey = config.ledgerSigningKey ?? generateKeypair().privateKey;
   let tokenStore: TokenStore;
   let ledgerStore: LedgerStore;
@@ -241,6 +244,15 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     },
     revocationStore,
     ...(config.trustedIssuers?.length ? { trustedIssuers: config.trustedIssuers } : {}),
+    ...(config.simulationSignerKeys?.length ? {
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: config.simulationSignerKeys,
+        tierRequirements: {
+          [ApprovalTier.T2_ACT]: { minEvidenceGrade: "deterministic" },
+          [ApprovalTier.T3_COMMIT]: { minEvidenceGrade: "deterministic" },
+        },
+      }),
+    } : {}),
     csmlEscalation: createDefaultCsmlEscalator(ledger),
     emitLedgerEvent: restoredLedger.ok
       ? createPersistedLedgerEmitter(ledger, ledgerStore)

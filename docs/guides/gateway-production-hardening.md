@@ -19,10 +19,17 @@ SINT_WS_ALLOW_QUERY_API_KEY=false
 SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
 SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
 SINT_APPROVAL_OPERATOR_KEYS=<64-hex-operator-public-key>
+SINT_SIMULATION_SIGNERS=<64-hex-simulator-public-key>
 SINT_RATE_LIMIT=100
 ```
 
 Production startup fails if any required value is missing or insecure.
+The configured simulator keys must belong to a separately operated simulation
+service. A signed receipt lets the request continue through policy and human
+approval; it does not itself authorize dispatch. The current tier-wide rule
+covers all T2/T3 requests. Physical commands misclassified as T0/T1 and direct
+hardware paths still require the command-gate inventory and bypass proof in
+the [embodied authorization roadmap](../roadmaps/embodied-authorization-whitepaper-2026.md).
 
 ## Boot-Time Contract
 
@@ -36,6 +43,7 @@ Production startup fails if any required value is missing or insecure.
 | `SINT_TRUSTED_ISSUERS` | comma-separated Ed25519 root public keys | Prevents self-issued capability tokens from becoming authority. |
 | `SINT_LEDGER_SIGNING_KEY` | stable Ed25519 private key from a secret manager | Signs ledger proof responses across process restarts. |
 | `SINT_APPROVAL_OPERATOR_KEYS` | comma-separated Ed25519 operator public keys | Production approval votes require a fresh signature from a non-agent allowlisted key. |
+| `SINT_SIMULATION_SIGNERS` | comma-separated Ed25519 simulator public keys | T2/T3 requests require a fresh, exact, signed V2 simulation pass receipt before they can continue to approval or execution. |
 | `SINT_ALLOWED_ORIGINS` | explicit browser origins, if needed | Production browser requests from other origins are refused. |
 
 For `POST /v1/approvals/:requestId/resolve`, sign the canonical JSON object
@@ -104,6 +112,7 @@ Before tagging a production release:
 - `/v1/ready` returns `status=ready`
 - token issuance requires `X-API-Key`
 - `/v1/intercept` rejects unsigned write requests when signatures are enabled
+- `/v1/intercept` denies a T2/T3 request without a signed V2 simulation receipt
 - token revoke causes the same token to fail closed on the next intercept
 - ledger proof endpoint returns `proofValid=true` for the policy decision event
 
