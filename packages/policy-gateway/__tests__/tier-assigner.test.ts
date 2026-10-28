@@ -71,6 +71,19 @@ describe("assignTier", () => {
     expect(result.riskTier).toBe(RiskTier.T1_WRITE_LOW);
   });
 
+  it("floors an unknown ROS 2 publishing command at ACT", () => {
+    const result = assignTier(makeRequest({ resource: "ros2:///nav/segment", action: "publish" }));
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.escalationReasons).toContain("Physical command transport requires ACT tier");
+  });
+
+  it("does not let a site rule downgrade a physical command", () => {
+    const result = assignTier(makeRequest({ resource: "ros2:///cmd_vel", action: "publish" }), {
+      rules: [{ resourcePattern: "ros2:///cmd_vel", actions: ["publish"], baseTier: ApprovalTier.T0_OBSERVE, baseRisk: RiskTier.T0_READ }],
+    });
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+  });
+
   it("maps cmd_vel publish to T2_ACT", () => {
     const result = assignTier(makeRequest({
       resource: "ros2:///cmd_vel",
@@ -137,6 +150,14 @@ describe("assignTier", () => {
 
     expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
     expect(result.riskTier).toBe(RiskTier.T2_STATEFUL);
+  });
+
+  it("does not let a site rule downgrade an MQTT command topic", () => {
+    const resource = "mqtt://broker.example.com/factory/zone1/cmd/valve/open";
+    const result = assignTier(makeRequest({ resource, action: "publish" }), {
+      rules: [{ resourcePattern: resource, actions: ["publish"], baseTier: ApprovalTier.T0_OBSERVE, baseRisk: RiskTier.T0_READ }],
+    });
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
   });
 
   it("maps MQTT estop topics to T3_COMMIT", () => {

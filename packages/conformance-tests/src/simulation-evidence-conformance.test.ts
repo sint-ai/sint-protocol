@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ApprovalTier,
+  RiskTier,
   type SimulationEvidenceReceipt,
   type SintCapabilityToken,
   type SintRequest,
@@ -24,7 +25,7 @@ const issuer = generateKeypair();
 const agent = generateKeypair();
 const simulator = generateKeypair();
 
-function createFixture(escalateToT3 = false) {
+function createFixture(escalateToT3 = false, lowTierRule = false) {
   const now = Date.now();
   const issued = issueCapabilityToken({
     issuer: issuer.publicKey,
@@ -93,6 +94,12 @@ function createFixture(escalateToT3 = false) {
   };
   const gateway = new PolicyGateway({
     resolveToken: () => token,
+    ...(lowTierRule && { tierRules: [{
+      resourcePattern: "ros2:///cmd_vel",
+      actions: ["publish"],
+      baseTier: ApprovalTier.T0_OBSERVE,
+      baseRisk: RiskTier.T0_READ,
+    }] }),
     simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
       trustedSignerKeys: [simulator.publicKey],
       tierRequirements: {
@@ -121,6 +128,12 @@ function createFixture(escalateToT3 = false) {
 }
 
 describe("predictive simulation evidence conformance", () => {
+  it("denies a physical command without evidence despite a low-tier site rule", async () => {
+    const { gateway, request } = createFixture(false, true);
+    const decision = await gateway.intercept(request);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_EVIDENCE_MISSING");
+  });
   it("never treats a passing simulation as authorization for physical actuation", async () => {
     const { gateway, receipt, request } = createFixture();
     const decision = await gateway.intercept({
