@@ -8,6 +8,9 @@ against each subsequent commit, not as instructions to execute verbatim.
 
 The [Sereact comparison and SINT upgrade proposal](../research/sereact-sint-assessment-2026.md)
 adds a concrete VLA planning, recovery, and learning-loop research lane.
+The [live scene command-validation comparison](../research/live-scene-command-validation-2026.md)
+maps MoveIt, Autoware, Nav2, Isaac Sim, Waymo, Realtime Robotics, and Siemens
+to a scan-test-authorize-dispatch implementation plan.
 
 ## Product direction: synthetic probabilistic environment
 
@@ -68,6 +71,14 @@ audited. Simulation estimates residual risk; neither finite sampling nor a
 hard limits and unconditional E-stop below this pipeline.
 
 ### Build sequence for this direction
+
+The first pilot should use a short ROS 2 navigation segment, a synchronized
+lidar/odometry/obstacle scene, and a scene-aware swept-volume and stopping
+distance check. The current bounded-motion model only checks declared effect
+parameters; its world-snapshot argument is not yet used for obstacle rollout.
+Implement this fast checker before adding a richer physics adapter. Maintain
+separate consequence tier and scene-derived hazard findings, with stale or
+unsupported state yielding `indeterminate` and blocking dispatch.
 
 1. **Close the software boundary.** Require a V2 signed receipt for every
    physical T2/T3 dispatch in production, including direct routes and VLA
