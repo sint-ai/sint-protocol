@@ -184,9 +184,10 @@ export class DeterministicEffectSimulator implements EffectSimulator {
         ...(this.options.imageDigest !== undefined && { imageDigest: this.options.imageDigest }),
       },
       scenarios: {
-        scenarioSetDigest: hashSha256(canonicalJsonStringify({ modelId, checks: checks.map((check) => check.check) })),
+        scenarioSetDigest: hashSha256(canonicalJsonStringify({ kind: "single-observed-state", modelId })),
         runCount: 1,
-        coverage: result.outcome === "indeterminate" ? 0 : 1,
+        // A single deterministic state check covers no sampled scenario classes.
+        coverage: 0,
         seeds: [],
       },
       result,

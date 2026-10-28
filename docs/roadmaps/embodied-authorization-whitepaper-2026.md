@@ -79,7 +79,9 @@ odometry/map/obstacle scene, and an opt-in checker for static, moving, and human
 obstacle clearance with explicit position and moving-object speed uncertainty.
 It checks a conservative full-speed stopping corridor using configured braking
 and reaction-time bounds. The default bounded
-motion model still checks declared effect parameters. Before a robot pilot,
+motion model still checks declared effect parameters. Deterministic receipts
+now report zero sampled-scenario coverage until a real scenario runner exists.
+Before a robot pilot,
 extend the scene checker to controller-validated braking profiles, time to
 contact, geofence, and controller dynamics; then add a richer physics adapter.
 Maintain separate consequence tier and scene-derived hazard findings, with

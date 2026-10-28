@@ -126,7 +126,7 @@ describe("DeterministicEffectSimulator", () => {
     expect(simulated.value.effectPlanDigest).toBe(effectPlanDigestFor(RESOURCE, ACTION, safeParams));
     expect(simulated.value.worldSnapshot.stateEpoch).toBe("cell-7:42");
     expect(simulated.value.bindings).toEqual({ robotId: "arm-7", controllerId: "ctrl-7" });
-    expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 1 });
+    expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 0, seeds: [] });
     expect(simulationEvidenceReceiptSchema.safeParse(simulated.value).success).toBe(true);
     expect(verify(
       signer.publicKey,

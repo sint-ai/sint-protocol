@@ -140,6 +140,11 @@ data returns signed `indeterminate` evidence; a failed controller permit or
 insufficient clearance returns signed `fail` evidence. A missing or corrupted
 snapshot artifact prevents receipt issuance. This is a conservative 2D software
 check, not a physics simulation or controller-rate safety mechanism.
+The deterministic backend runs one observed-state check and reports
+`runCount: 1`, `coverage: 0`, and no seeds. A passing deterministic receipt
+does not claim probabilistic or adversarial scenario coverage; a gateway with
+`minScenarioCoverage > 0` rejects it until a real scenario runner supplies
+that evidence.
 
 The standalone worker enables this model only with `SINT_SIM_MODEL.kind` set to
 `scene-aware-navigation`, explicit `scene.robotRadiusMeters`,

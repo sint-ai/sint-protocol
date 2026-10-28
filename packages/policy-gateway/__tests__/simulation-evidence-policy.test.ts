@@ -205,6 +205,21 @@ describe("predictive simulation evidence policy", () => {
     expect(decision.action).toBe("allow");
   });
 
+  it("rejects a signed zero-coverage receipt when scenario coverage is required", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token, (value) => ({
+      ...value,
+      scenarios: { scenarioSetDigest: value.scenarios.scenarioSetDigest, runCount: 100, coverage: 0, seeds: [] },
+    }));
+    const decision = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_COVERAGE_INSUFFICIENT");
+  });
+
   it("fails closed when required simulation evidence is missing", async () => {
     const token = makeToken();
     const decision = await gateway(token).value.intercept(makeRequest(token));
