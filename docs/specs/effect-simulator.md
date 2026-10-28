@@ -281,10 +281,13 @@ from the same receipt.
 It requires a deployment-provided verifier for the trusted gateway decision,
 completed approval, and receipt signature. It also performs local
 defense-in-depth checks for the exact request/effect/resource/action and safe
-receipt outcome, re-reads the current world digest and epoch, rejects expiry or
-drift, and then atomically consumes the receipt nonce before making one adapter
-dispatch attempt. A failed hardware dispatch cannot reuse the receipt; a
-pre-dispatch world-drift rejection does not consume it.
+receipt outcome, reads the current world digest and epoch, rejects expiry or
+drift, and then atomically consumes the receipt nonce. It reads world state a
+second time immediately before the adapter call; drift, expiry, or an
+unavailable sensor then rejects dispatch. A failed hardware dispatch or drift
+after nonce consumption cannot reuse the receipt; drift detected before nonce
+consumption leaves the receipt unused. A VLA chunk configured for safe stop
+invokes that callback on world-read failure, expiry, or drift at either check.
 
 The included nonce store is an in-memory reference implementation. Distributed
 deployments still require the roadmap's Redis/Postgres atomic store before the
