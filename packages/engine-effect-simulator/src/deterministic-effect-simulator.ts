@@ -129,12 +129,15 @@ export class DeterministicEffectSimulator implements EffectSimulator {
         resource: preflight.effectPlan.resource,
         action: preflight.effectPlan.action,
         params: preflight.effectPlan.params,
+        ...(preflight.effectPlan.sceneContractDigest !== undefined && {
+          sceneContractDigest: preflight.effectPlan.sceneContractDigest,
+        }),
       }),
     );
     if (recomputedEffectPlanDigest !== preflight.effectPlan.effectPlanDigest) {
       return error(
         "INVALID_PREFLIGHT",
-        "Preflight effectPlanDigest does not match the submitted resource, action, and params",
+        "Preflight effectPlanDigest does not match the submitted resource, action, params, and scene contract",
         false,
       );
     }

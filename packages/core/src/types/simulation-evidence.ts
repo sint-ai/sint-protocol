@@ -180,7 +180,7 @@ export interface SimulationEvidenceReceipt {
   readonly evidenceGrade: SimulationEvidenceGrade;
   /** Digest of the request with this receipt removed from executionContext. */
   readonly requestDigest: SHA256;
-  /** Digest of resource, action, and params: the exact proposed effect plan. */
+  /** Digest of resource, action, params, and the scene contract when one is bound. */
   readonly effectPlanDigest: SHA256;
   /** Digest of the complete signed capability token evaluated for this request. */
   readonly tokenDigest: SHA256;

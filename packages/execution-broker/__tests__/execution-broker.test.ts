@@ -210,6 +210,35 @@ describe("ExecutionBroker", () => {
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects an effect-plan digest that omits the receipt scene contract", async () => {
+    const sceneContractDigest = digest("9");
+    const contracted = { ...world, sceneContractDigest };
+    const dispatch = vi.fn(async () => ok("sent"));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => contracted },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const input = request();
+    const receipt = input.executionContext!.simulationEvidence!;
+    const omitted: SintRequest = {
+      ...input,
+      executionContext: {
+        simulationEvidence: {
+          ...receipt,
+          worldSnapshot: contracted,
+        },
+      },
+    };
+
+    const denied = await broker.execute(omitted, { decision: decision(), approval: approval() });
+
+    expect(denied.ok ? undefined : denied.error.code).toBe("SIMULATION_CONTEXT_MISMATCH");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it("rejects a scene contract digest mismatch before dispatch", async () => {
     const dispatch = vi.fn(async () => ok("sent"));
     const broker = new ExecutionBroker({
@@ -228,6 +257,7 @@ describe("ExecutionBroker", () => {
       executionContext: {
         simulationEvidence: {
           ...receipt,
+          effectPlanDigest: computeExecutionEffectPlanDigest(input, digest("9")),
           worldSnapshot: { ...world, sceneContractDigest: digest("9") },
         },
       },
@@ -262,6 +292,7 @@ describe("ExecutionBroker", () => {
       executionContext: {
         simulationEvidence: {
           ...receipt,
+          effectPlanDigest: computeExecutionEffectPlanDigest(input, digest("9")),
           worldSnapshot: contracted,
         },
       },

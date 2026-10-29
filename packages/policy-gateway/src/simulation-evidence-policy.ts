@@ -139,12 +139,20 @@ export function computeSimulationRequestDigest(request: SintRequest): string {
   return hashSha256(canonicalJsonStringify({ ...request, executionContext }));
 }
 
-/** Stable digest for the actual external effect proposed by the agent. */
-export function computeSimulationEffectPlanDigest(request: SintRequest): string {
+/**
+ * Stable digest for the actual external effect proposed by the agent.
+ * A bound scene contract is part of that effect; omitting it leaves the
+ * historical resource, action, and params digest unchanged.
+ */
+export function computeSimulationEffectPlanDigest(
+  request: SintRequest,
+  sceneContractDigest?: SHA256,
+): string {
   return hashSha256(canonicalJsonStringify({
     resource: request.resource,
     action: request.action,
     params: request.params,
+    ...(sceneContractDigest !== undefined && { sceneContractDigest }),
   }));
 }
 
@@ -165,7 +173,10 @@ export function createSimulationPreflight(
     assignedTier,
     effectPlan: {
       requestDigest: computeSimulationRequestDigest(request),
-      effectPlanDigest: computeSimulationEffectPlanDigest(request),
+      effectPlanDigest: computeSimulationEffectPlanDigest(
+        request,
+        token.constraints.sceneContractDigest,
+      ),
       tokenDigest: computeSimulationTokenDigest(token),
       resource: request.resource,
       action: request.action,
@@ -275,7 +286,10 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
 
     if (
       receipt.requestDigest !== computeSimulationRequestDigest(request)
-      || receipt.effectPlanDigest !== computeSimulationEffectPlanDigest(request)
+      || receipt.effectPlanDigest !== computeSimulationEffectPlanDigest(
+        request,
+        token.constraints.sceneContractDigest,
+      )
       || receipt.tokenDigest !== computeSimulationTokenDigest(token)
       || receipt.resource !== request.resource
       || receipt.action !== request.action
