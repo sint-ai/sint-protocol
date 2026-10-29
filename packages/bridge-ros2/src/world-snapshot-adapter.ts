@@ -234,6 +234,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (input.stateEpoch.slice(0, epochRobot) !== input.robotId) {
     return "stateEpoch names a different robot than robotId";
   }
+  if (input.stateEpoch.slice(epochRobot + 1).length === 0) {
+    return "stateEpoch counter is empty";
+  }
   if (!isNormalized(input.localizationConfidence)) {
     return "localizationConfidence must be normalized to [0,1]";
   }
