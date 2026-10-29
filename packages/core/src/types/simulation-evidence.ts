@@ -55,6 +55,8 @@ export interface EffectPlan {
   readonly resource: string;
   readonly action: string;
   readonly params: Record<string, unknown>;
+  /** Scene contract copied from the capability token, when the token binds one. */
+  readonly sceneContractDigest?: SHA256;
 }
 
 /** Advisory output only. It cannot authorize or execute an action. */

@@ -87,6 +87,7 @@ export const effectPlanSchema = z.object({
   resource: z.string().min(1).max(512),
   action: z.string().min(1).max(64),
   params: z.record(z.unknown()),
+  sceneContractDigest: sha256Schema.optional(),
 }).strict();
 
 export const simulationPreflightSchema = z.object({

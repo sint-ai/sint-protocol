@@ -170,6 +170,9 @@ export function createSimulationPreflight(
       resource: request.resource,
       action: request.action,
       params: request.params,
+      ...(token.constraints.sceneContractDigest !== undefined && {
+        sceneContractDigest: token.constraints.sceneContractDigest,
+      }),
     },
     ...(requirement !== undefined && { requirement }),
   };
@@ -276,11 +279,12 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
       || receipt.tokenDigest !== computeSimulationTokenDigest(token)
       || receipt.resource !== request.resource
       || receipt.action !== request.action
+      || receipt.worldSnapshot.sceneContractDigest !== token.constraints.sceneContractDigest
     ) {
       return deny(
         context,
         "SIMULATION_CONTEXT_MISMATCH",
-        "Simulation evidence is not bound to this exact request, effect plan, and capability token",
+        "Simulation evidence is not bound to this exact request, effect plan, capability token, and scene contract",
       );
     }
 

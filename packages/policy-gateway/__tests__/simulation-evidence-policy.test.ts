@@ -308,6 +308,38 @@ describe("predictive simulation evidence policy", () => {
     expect(decision.denial?.policyViolated).toBe("SIMULATION_CONTEXT_MISMATCH");
   });
 
+  it("rejects a receipt whose scene contract differs from the token and effect plan", async () => {
+    const sceneContractDigest = "a".repeat(64);
+    const token = makeToken({ sceneContractDigest });
+    const request = makeRequest(token);
+    const preflight = await gateway(token).value.preflightSimulation(request);
+
+    expect(preflight.ok).toBe(true);
+    if (!preflight.ok) return;
+    expect(preflight.value.effectPlan.sceneContractDigest).toBe(sceneContractDigest);
+
+    const matching = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: { ...draft.worldSnapshot, sceneContractDigest },
+    }));
+    const allowed = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: matching },
+    });
+    expect(allowed.action).toBe("allow");
+
+    const swapped = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: { ...draft.worldSnapshot, sceneContractDigest: "b".repeat(64) },
+    }));
+    const denied = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: swapped },
+    });
+    expect(denied.action).toBe("deny");
+    expect(denied.denial?.policyViolated).toBe("SIMULATION_CONTEXT_MISMATCH");
+  });
+
   it("rejects a receipt whose nonce was consumed by the execution broker", async () => {
     const token = makeToken();
     const request = makeRequest(token);
