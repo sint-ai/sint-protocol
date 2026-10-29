@@ -491,6 +491,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects occupancy whose region identity is missing", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "",
+        occupied: true,
+        occlusion: "partial" as const,
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects duplicate occupancy region ids on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
