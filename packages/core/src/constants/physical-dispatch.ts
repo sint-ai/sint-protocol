@@ -111,11 +111,15 @@ export function classifyPhysicalDispatch(
 
   const mcpTool = parseMcpResource(input.resource);
   if (mcpTool) {
+    // A known robot tool is actuating even when a caller attaches readOnlyHint.
+    // Only an actual read-style action stays at observe.
+    if (isMcpPhysicalTool(mcpTool.toolName)) {
+      return READ_ONLY_ACTION.test(input.action)
+        ? classified("observe", "mcp", "Read-only action on an MCP robot tool")
+        : classified("actuate", "mcp", "MCP robot tool requires ACT tier");
+    }
     if (input.mcpAnnotations?.readOnlyHint === true || READ_ONLY_ACTION.test(input.action)) {
       return classified("observe", "mcp", "Read-only MCP tool");
-    }
-    if (isMcpPhysicalTool(mcpTool.toolName)) {
-      return classified("actuate", "mcp", "MCP robot tool requires ACT tier");
     }
   }
 

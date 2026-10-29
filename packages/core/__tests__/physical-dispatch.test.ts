@@ -40,7 +40,10 @@ describe("classifyPhysicalDispatch", () => {
       resource: "mcp://arm/move_gripper",
       action: "call",
       mcpAnnotations: { readOnlyHint: true },
-    }).dispatchClass).toBe("observe");
+    })).toMatchObject({
+      dispatchClass: "actuate",
+      reason: "MCP robot tool requires ACT tier",
+    });
     expect(classifyPhysicalDispatch({
       resource: "mcp://server/tool",
       action: "call",

@@ -131,6 +131,30 @@ function gatewayFor(resource: string, action: string, params: Record<string, unk
 }
 
 describe("inventoried physical dispatch conformance", () => {
+  it("keeps a close_gripper call at ACT when a read-only hint conflicts with the tool name", () => {
+    const resource = "mcp://arm/close_gripper";
+    const action = "call";
+    const assignment = assignTier({
+      requestId: generateUUIDv7(),
+      timestamp: new Date().toISOString(),
+      agentId: agent.publicKey,
+      tokenId: generateUUIDv7(),
+      resource,
+      action,
+      params: { widthM: 0.02 },
+      mcpAnnotations: { readOnlyHint: true },
+    }, {
+      rules: [{
+        resourcePattern: resource,
+        actions: [action],
+        baseTier: ApprovalTier.T0_OBSERVE,
+        baseRisk: RiskTier.T0_READ,
+      }],
+    });
+    expect(assignment.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(assignment.escalationReasons).toContain("MCP robot tool requires ACT tier");
+  });
+
   it.each(actuatingCases)(
     "keeps a $name command at ACT when a site rule labels it observe",
     (entry) => {

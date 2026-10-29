@@ -210,6 +210,8 @@ function sourceTimestamps(input: ROS2WorldStateInput): readonly string[] {
     ...(input.obstacles ?? []).map((obstacle) => obstacle.observedAt),
     input.obstacleScanObservedAt,
     input.safetyController?.observedAt,
+    ...(input.sensors ?? []).map((sensor) => sensor.observedAt),
+    ...(input.occupancy ?? []).map((region) => region.observedAt),
   ].filter((timestamp): timestamp is string => timestamp !== undefined);
 }
 

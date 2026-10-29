@@ -338,6 +338,34 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a fresh snapshot whose sensor provenance time is stale", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "lidar-front",
+        version: "2.4.1",
+        source: "obstacles" as const,
+        observedAt: new Date(now - 5_000).toISOString(),
+      }],
+    }, { now: () => now, maxInputAgeMs: 500 });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("WORLD_STATE_SOURCE_STALE");
+  });
+
+  it("rejects a fresh snapshot whose occupancy time is not a timestamp", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "corridor-a",
+        occupied: true,
+        occlusion: "partial" as const,
+        observedAt: "not-a-time",
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("WORLD_STATE_SOURCE_STALE");
+  });
+
   it("commits a scene contract digest over the versioned task, provenance, and occupancy", () => {
     const task = {
       phase: "transport",

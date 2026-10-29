@@ -230,8 +230,25 @@ describe("scene-aware navigation conformance", () => {
   });
 
   it("projects a moving obstacle from its observation time to the scene time", async () => {
+    // 200ms is inside the 250ms source-clock budget. The start pose is the
+    // old 900ms track advanced by 700ms, so the scene-time position is unchanged.
     const result = await simulate(scene({ obstacles: [{
       id: "older-cart-track",
+      frameId: "map",
+      kind: "dynamic",
+      position: { x: 0.5, y: -1.8, z: 0 },
+      velocityMps: { x: 0, y: 1, z: 0 },
+      velocityUncertaintyMps: 0.1,
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt: new Date(now - 200).toISOString(),
+    }] }));
+    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+  });
+
+  it("rejects an obstacle clock that disagrees with the rest of the scene", async () => {
+    const result = await simulate(scene({ obstacles: [{
+      id: "skewed-cart",
       frameId: "map",
       kind: "dynamic",
       position: { x: 0.5, y: -2.5, z: 0 },
@@ -241,7 +258,7 @@ describe("scene-aware navigation conformance", () => {
       positionUncertaintyMeters: 0.05,
       observedAt: new Date(now - 900).toISOString(),
     }] }));
-    expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("fail");
+    expect(result.ok ? undefined : result.error.code).toBe("INVALID_WORLD_STATE");
   });
 
   it("fails when bounded velocity uncertainty could bring a moving object into the path", async () => {
@@ -301,20 +318,20 @@ describe("scene-aware navigation conformance", () => {
   });
 
   it("rejects a scene for another robot even when its geometry is clear", async () => {
-    const result = await simulate(scene({ robotId: "other-robot" }));
+    const result = await simulate(scene({ robotId: "other-robot", stateEpoch: "other-robot:42" }));
     expect(result.ok && 'result' in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
   });
 
-  it("returns indeterminate for odometry in a different coordinate frame", async () => {
+  it("rejects odometry in a different coordinate frame before the simulator", async () => {
     const input = scene();
     const result = await simulate({ ...input, odometry: { ...input.odometry!, frameId: "odom" } });
-    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+    expect(result.ok ? undefined : result.error.code).toBe("INVALID_WORLD_STATE");
   });
 
-  it("returns indeterminate for an obstacle in a different coordinate frame", async () => {
+  it("rejects an obstacle in a different coordinate frame before the simulator", async () => {
     const input = scene();
     const result = await simulate({ ...input, obstacles: input.obstacles!.map((obstacle) => ({ ...obstacle, frameId: "camera" })) });
-    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+    expect(result.ok ? undefined : result.error.code).toBe("INVALID_WORLD_STATE");
   });
 
   it("rejects a stale obstacle scan before issuing a receipt", async () => {

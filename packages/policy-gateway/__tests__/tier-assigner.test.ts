@@ -304,7 +304,7 @@ describe("assignTier", () => {
     expect(result.escalationReasons).toContain("Bounded VLA action chunk is a physical effect");
   });
 
-  it("floors a named MCP robot tool at ACT and leaves a read-only hint alone", () => {
+  it("floors a named MCP robot tool at ACT even when a read-only hint conflicts", () => {
     const actuating = assignTier(makeRequest({
       resource: "mcp://arm/close_gripper",
       action: "call",
@@ -312,13 +312,20 @@ describe("assignTier", () => {
     expect(actuating.approvalTier).toBe(ApprovalTier.T2_ACT);
     expect(actuating.escalationReasons).toContain("MCP robot tool requires ACT tier");
 
-    const readOnly = assignTier(makeRequest({
+    const hinted = assignTier(makeRequest({
       resource: "mcp://arm/close_gripper",
       action: "call",
       mcpAnnotations: { readOnlyHint: true },
     }));
-    expect(readOnly.approvalTier).toBe(ApprovalTier.T1_PREPARE);
-    expect(readOnly.escalationReasons).not.toContain("MCP robot tool requires ACT tier");
+    expect(hinted.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(hinted.escalationReasons).toContain("MCP robot tool requires ACT tier");
+
+    const generic = assignTier(makeRequest({
+      resource: "mcp://server/tool",
+      action: "call",
+      mcpAnnotations: { readOnlyHint: true },
+    }));
+    expect(generic.approvalTier).not.toBe(ApprovalTier.T2_ACT);
   });
 
   it("floors a Home Assistant lock command at ACT and leaves a sensor read below ACT", () => {
