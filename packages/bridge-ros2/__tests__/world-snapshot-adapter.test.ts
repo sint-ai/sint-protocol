@@ -302,6 +302,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance whose identity is only whitespace", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "   ",
+        version: "2.4.1",
+        source: "obstacles" as const,
+        observedAt,
+      }],
+    } as ROS2WorldStateInput, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance whose version is missing", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
