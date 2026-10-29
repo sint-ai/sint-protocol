@@ -93,6 +93,20 @@ export interface ROS2SensorProvenance {
   readonly sensors: readonly ROS2SensorSource[];
 }
 
+export type ROS2OcclusionState = "clear" | "partial" | "occluded" | "unknown";
+
+export interface ROS2OccupancyRegion {
+  readonly regionId: string;
+  readonly occupied: boolean;
+  readonly occlusion: ROS2OcclusionState;
+  readonly observedAt: string;
+}
+
+export interface ROS2OccupancyOcclusion {
+  readonly schemaVersion: "1.0.0";
+  readonly regions: readonly ROS2OccupancyRegion[];
+}
+
 export interface ROS2WorldStateInput {
   readonly robotId: string;
   readonly frameId: string;
@@ -114,12 +128,15 @@ export interface ROS2WorldStateInput {
   readonly task?: ROS2TaskBinding;
   /** Sensor identities that produced this capture. Versioned onto the canonical snapshot. */
   readonly sensors?: readonly ROS2SensorSource[];
+  /** Region occupancy and occlusion. Versioned onto the canonical snapshot. */
+  readonly occupancy?: readonly ROS2OccupancyRegion[];
 }
 
 /** Canonical state whose digest is placed in SimulationWorldSnapshot. */
-export interface ROS2WorldSnapshotPayload extends Omit<ROS2WorldStateInput, "sensors"> {
+export interface ROS2WorldSnapshotPayload extends Omit<ROS2WorldStateInput, "sensors" | "occupancy"> {
   readonly schemaVersion: "1.0.0";
   readonly sensorProvenance?: ROS2SensorProvenance;
+  readonly occupancyOcclusion?: ROS2OccupancyOcclusion;
 }
 
 export interface ROS2WorldSnapshotCapture {
@@ -296,7 +313,29 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
   }
-  return validateTask(input.task) ?? validateSensors(input.sensors);
+  return validateTask(input.task) ?? validateSensors(input.sensors) ?? validateOccupancy(input.occupancy);
+}
+
+const OCCLUSION_STATES: readonly ROS2OcclusionState[] = [
+  "clear",
+  "partial",
+  "occluded",
+  "unknown",
+];
+
+function validateOccupancy(
+  regions: readonly ROS2OccupancyRegion[] | undefined,
+): string | undefined {
+  if (regions === undefined) return undefined;
+  for (const region of regions) {
+    if (!region.occlusion) {
+      return "occupancy occlusion state is missing";
+    }
+    if (!OCCLUSION_STATES.includes(region.occlusion)) {
+      return "occupancy occlusion state is invalid";
+    }
+  }
+  return undefined;
 }
 
 const WORLD_STATE_SOURCES: readonly ROS2WorldStateSource[] = [
@@ -455,7 +494,7 @@ export function createROS2WorldSnapshot(
     });
   }
 
-  const { sensors, ...canonicalState } = canonicalizeInput(input);
+  const { sensors, occupancy, ...canonicalState } = canonicalizeInput(input);
   const payload: ROS2WorldSnapshotPayload = {
     schemaVersion: "1.0.0",
     ...canonicalState,
@@ -463,6 +502,12 @@ export function createROS2WorldSnapshot(
       sensorProvenance: {
         schemaVersion: "1.0.0" as const,
         sensors,
+      },
+    }),
+    ...(occupancy !== undefined && {
+      occupancyOcclusion: {
+        schemaVersion: "1.0.0" as const,
+        regions: occupancy,
       },
     }),
   };

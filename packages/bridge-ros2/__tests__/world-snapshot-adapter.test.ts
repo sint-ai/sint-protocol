@@ -271,6 +271,64 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("versions occupancy and occlusion on the canonical snapshot", () => {
+    const regions = [{
+      regionId: "corridor-a",
+      occupied: true,
+      occlusion: "partial" as const,
+      observedAt,
+    }];
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: regions,
+    } as ROS2WorldStateInput, { now: () => now });
+
+    expect(captured.ok).toBe(true);
+    if (!captured.ok) return;
+    const payload = captured.value.payload as ROS2WorldStateInput & {
+      occupancyOcclusion?: { schemaVersion: string; regions: typeof regions };
+      occupancy?: typeof regions;
+    };
+    expect(payload.occupancyOcclusion).toEqual({
+      schemaVersion: "1.0.0",
+      regions,
+    });
+    expect(JSON.parse(captured.value.canonicalPayload).occupancyOcclusion).toEqual({
+      schemaVersion: "1.0.0",
+      regions,
+    });
+    expect(JSON.parse(captured.value.canonicalPayload).occupancy).toBeUndefined();
+    expect(captured.value.snapshot.digest).toBe(hashSha256(captured.value.canonicalPayload));
+  });
+
+  it("rejects occupancy whose occlusion state is missing", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "corridor-a",
+        occupied: true,
+        occlusion: undefined as unknown as "partial",
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects occupancy whose occlusion state is invalid", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "corridor-a",
+        occupied: true,
+        occlusion: "blocked" as "partial",
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {
