@@ -522,6 +522,16 @@ export function createROS2WorldSnapshot(
     });
   }
 
+  const sourceTimes = physicalSources.map((timestamp) => Date.parse(timestamp));
+  const earliestSource = Math.min(...sourceTimes);
+  const latestSource = Math.max(...sourceTimes);
+  if (latestSource - earliestSource > maxClockSkewMs) {
+    return err({
+      code: "INVALID_WORLD_STATE",
+      message: "ROS 2 world-state source clocks disagree",
+    });
+  }
+
   const uncertainties = inputUncertainties(input);
   if (uncertainties.some((uncertainty) => !isNormalized(uncertainty))) {
     return err({ code: "INVALID_WORLD_STATE", message: "All uncertainty values must be normalized to [0,1]" });

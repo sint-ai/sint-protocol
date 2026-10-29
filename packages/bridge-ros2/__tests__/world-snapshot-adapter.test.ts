@@ -138,6 +138,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("WORLD_STATE_SOURCE_STALE");
   });
 
+  it("rejects a snapshot whose source clocks disagree", () => {
+    const captured = createROS2WorldSnapshot(state({
+      map: {
+        digest: "a".repeat(64),
+        frameId: "map",
+        observedAt: new Date(now - 400).toISOString(),
+      },
+    }), { now: () => now, maxClockSkewMs: 250, maxInputAgeMs: 1_000 });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects missing policy-required sources", () => {
     const captured = createROS2WorldSnapshot(state({ obstacles: undefined }), {
       now: () => now,
