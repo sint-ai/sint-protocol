@@ -174,6 +174,14 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a snapshot whose state epoch counter is not a canonical integer", () => {
+    const captured = createROS2WorldSnapshot(state({
+      stateEpoch: "mobile-base-1:latest",
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects missing policy-required sources", () => {
     const captured = createROS2WorldSnapshot(state({ obstacles: undefined }), {
       now: () => now,
