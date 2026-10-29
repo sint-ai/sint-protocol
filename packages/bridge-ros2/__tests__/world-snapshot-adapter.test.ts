@@ -448,6 +448,28 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects duplicate occupancy region ids on the canonical snapshot", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [
+        {
+          regionId: "corridor-a",
+          occupied: true,
+          occlusion: "partial" as const,
+          observedAt,
+        },
+        {
+          regionId: "corridor-a",
+          occupied: false,
+          occlusion: "clear" as const,
+          observedAt,
+        },
+      ],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {

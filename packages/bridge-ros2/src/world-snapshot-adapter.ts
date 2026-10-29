@@ -364,6 +364,10 @@ function validateOccupancy(
   regions: readonly ROS2OccupancyRegion[] | undefined,
 ): string | undefined {
   if (regions === undefined) return undefined;
+  const regionIds = regions.map((region) => region.regionId);
+  if (new Set(regionIds).size !== regionIds.length) {
+    return "occupancy region identities must be unique within a snapshot";
+  }
   for (const region of regions) {
     if (!region.occlusion) {
       return "occupancy occlusion state is missing";
