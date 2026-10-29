@@ -110,7 +110,9 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
    rejected. Duplicate occupancy region ids on that snapshot are rejected as
    `INVALID_WORLD_STATE`. Occupancy regions are sorted by region id before
    hashing, so reordering the same regions does not change the snapshot digest
-   or the scene-contract digest. A declared odometry, map, or obstacle frame that disagrees with
+   or the scene-contract digest. Sensor provenance entries are sorted by sensor
+   id before hashing, so reordering the same sensors does not change those
+   digests either. A declared odometry, map, or obstacle frame that disagrees with
    the snapshot frame is rejected as `INVALID_WORLD_STATE`. Duplicate sensor
    ids on that snapshot are rejected as `INVALID_WORLD_STATE`. Source clocks
    that disagree by more than `maxClockSkewMs` are rejected as
@@ -252,7 +254,9 @@ are software evidence; they do not prove actuator non-bypass on hardware.
    invalid occlusion state is rejected. Duplicate occupancy region ids on that
    snapshot are rejected as `INVALID_WORLD_STATE`. Occupancy regions are sorted by
    region id before hashing, so reordering the same regions does not change the
-   snapshot digest or the scene-contract digest. A declared odometry, map, or obstacle
+   snapshot digest or the scene-contract digest. Sensor provenance entries are
+   sorted by sensor id before hashing, so reordering the same sensors does not
+   change those digests either. A declared odometry, map, or obstacle
    frame that disagrees with the snapshot frame is rejected as
    `INVALID_WORLD_STATE`. Duplicate sensor ids on that snapshot are rejected
    as `INVALID_WORLD_STATE`. Source clocks that disagree by more than

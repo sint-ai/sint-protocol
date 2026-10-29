@@ -541,6 +541,34 @@ describe("createROS2WorldSnapshot", () => {
     expect(forward.value.snapshot.sceneContractDigest).toBe(reversed.value.snapshot.sceneContractDigest);
   });
 
+  it("produces the same digest when sensor provenance entries are reordered", () => {
+    const lidar = {
+      sensorId: "lidar-front",
+      version: "2.4.1",
+      source: "obstacles" as const,
+      observedAt,
+    };
+    const mapSensor = {
+      sensorId: "map-lidar",
+      version: "1.0.0",
+      source: "map" as const,
+      observedAt,
+    };
+    const forward = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [lidar, mapSensor],
+    }, { now: () => now });
+    const reversed = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [mapSensor, lidar],
+    }, { now: () => now });
+
+    expect(forward.ok && reversed.ok).toBe(true);
+    if (!forward.ok || !reversed.ok) return;
+    expect(forward.value.snapshot.digest).toBe(reversed.value.snapshot.digest);
+    expect(forward.value.snapshot.sceneContractDigest).toBe(reversed.value.snapshot.sceneContractDigest);
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {
