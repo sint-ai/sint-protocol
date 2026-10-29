@@ -330,7 +330,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     return "safety-controller identity, digest, or uncertainty is invalid";
   }
   return validateTask(input.task)
-    ?? validateSensors(input.sensors)
+    ?? validateSensors(input)
     ?? validateOccupancy(input.occupancy)
     ?? validateCrossSourceFrames(input);
 }
@@ -390,9 +390,8 @@ const WORLD_STATE_SOURCES: readonly ROS2WorldStateSource[] = [
   "safetyController",
 ];
 
-function validateSensors(
-  sensors: readonly ROS2SensorSource[] | undefined,
-): string | undefined {
+function validateSensors(input: ROS2WorldStateInput): string | undefined {
+  const sensors = input.sensors;
   if (sensors === undefined) return undefined;
   const sensorIds = sensors.map((sensor) => sensor.sensorId);
   if (new Set(sensorIds).size !== sensorIds.length) {
@@ -404,6 +403,9 @@ function validateSensors(
     }
     if (!WORLD_STATE_SOURCES.includes(sensor.source)) {
       return "sensor provenance source is invalid";
+    }
+    if (!sourcePresent(input, sensor.source)) {
+      return "sensor provenance names a world-state source that is not present";
     }
   }
   return undefined;
