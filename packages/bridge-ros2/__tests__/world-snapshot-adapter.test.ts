@@ -338,6 +338,21 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance that names a world-state source the snapshot does not contain", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      map: undefined,
+      sensors: [{
+        sensorId: "map-lidar",
+        version: "2.4.1",
+        source: "map" as const,
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a fresh snapshot whose sensor provenance time is stale", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
