@@ -407,6 +407,9 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     if (!sensor.sensorId) {
       return "sensor provenance identity is missing";
     }
+    if (!sensor.version) {
+      return "sensor provenance version is missing";
+    }
     if (!WORLD_STATE_SOURCES.includes(sensor.source)) {
       return "sensor provenance source is invalid";
     }
