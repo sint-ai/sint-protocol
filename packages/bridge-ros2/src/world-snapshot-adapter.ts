@@ -374,6 +374,9 @@ function validateOccupancy(
     if (!region.regionId) {
       return "occupancy region identity is missing";
     }
+    if (typeof region.occupied !== "boolean") {
+      return "occupancy occupied flag is not a boolean";
+    }
     if (!region.occlusion) {
       return "occupancy occlusion state is missing";
     }

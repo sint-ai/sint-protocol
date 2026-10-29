@@ -505,6 +505,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects occupancy whose occupied flag is not a boolean", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "corridor-a",
+        occupied: "yes" as unknown as boolean,
+        occlusion: "partial" as const,
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects duplicate occupancy region ids on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
