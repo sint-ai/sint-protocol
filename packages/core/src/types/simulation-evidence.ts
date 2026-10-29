@@ -128,6 +128,11 @@ export interface SimulationWorldSnapshot {
   readonly stateEpoch?: string;
   /** Aggregate state-estimation uncertainty, normalized to [0, 1]. */
   readonly uncertainty?: number;
+  /**
+   * Digest of the task, sensor provenance, and occupancy bound into this
+   * snapshot. Absent when the capture has none of those fields.
+   */
+  readonly sceneContractDigest?: SHA256;
 }
 
 export interface SimulationRuntimeIdentity {

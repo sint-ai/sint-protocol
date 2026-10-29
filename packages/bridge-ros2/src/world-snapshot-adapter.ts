@@ -393,6 +393,22 @@ function isContentDigest(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{64}$/i.test(value);
 }
 
+/** Hash of the versioned task, sensor provenance, and occupancy. Absent when none are present. */
+function sceneContractDigest(payload: ROS2WorldSnapshotPayload): string | undefined {
+  if (
+    payload.task === undefined
+    && payload.sensorProvenance === undefined
+    && payload.occupancyOcclusion === undefined
+  ) {
+    return undefined;
+  }
+  return hashSha256(canonicalJsonStringify({
+    occupancyOcclusion: payload.occupancyOcclusion ?? null,
+    sensorProvenance: payload.sensorProvenance ?? null,
+    task: payload.task ?? null,
+  }));
+}
+
 function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
   if (task === undefined) return undefined;
   if (
@@ -539,6 +555,7 @@ export function createROS2WorldSnapshot(
     }),
   };
   const canonicalPayload = canonicalJsonStringify(payload);
+  const contractDigest = sceneContractDigest(payload);
   const validityMs = options.validityMs ?? 1_000;
   if (!Number.isFinite(validityMs) || validityMs <= 0) {
     return err({ code: "INVALID_WORLD_STATE", message: "Snapshot validityMs must be positive" });
@@ -556,6 +573,7 @@ export function createROS2WorldSnapshot(
       validUntil: new Date(capturedAt + validityMs).toISOString(),
       stateEpoch: input.stateEpoch,
       ...(uncertainty !== undefined && { uncertainty }),
+      ...(contractDigest !== undefined && { sceneContractDigest: contractDigest }),
     },
   });
 }

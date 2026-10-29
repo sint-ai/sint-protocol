@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { canonicalJsonStringify } from "@pshkv/core";
 import { hashSha256 } from "@pshkv/gate-capability-tokens";
 import {
   createROS2WorldSnapshot,
@@ -291,6 +292,58 @@ describe("createROS2WorldSnapshot", () => {
     }, { now: () => now });
 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("commits a scene contract digest over the versioned task, provenance, and occupancy", () => {
+    const task = {
+      phase: "transport",
+      toolId: "gripper-1",
+      payload: { payloadId: "crate-9", digest: "e".repeat(64), radiusMeters: 0.4 },
+      calibrationDigest: "c".repeat(64),
+      policyDigest: "d".repeat(64),
+    };
+    const sensors = [{
+      sensorId: "lidar-front",
+      version: "2.4.1",
+      source: "obstacles" as const,
+      observedAt,
+    }];
+    const regions = [{
+      regionId: "corridor-a",
+      occupied: true,
+      occlusion: "partial" as const,
+      observedAt,
+    }];
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      task,
+      sensors,
+      occupancy: regions,
+    }, { now: () => now });
+
+    expect(captured.ok).toBe(true);
+    if (!captured.ok) return;
+    const payload = JSON.parse(captured.value.canonicalPayload) as {
+      task?: typeof task;
+      sensorProvenance?: { schemaVersion: string; sensors: typeof sensors };
+      occupancyOcclusion?: { schemaVersion: string; regions: typeof regions };
+    };
+    const contract = canonicalJsonStringify({
+      occupancyOcclusion: payload.occupancyOcclusion ?? null,
+      sensorProvenance: payload.sensorProvenance ?? null,
+      task: payload.task ?? null,
+    });
+    expect(captured.value.snapshot.sceneContractDigest).toBe(hashSha256(contract));
+
+    const swapped = createROS2WorldSnapshot({
+      ...state(),
+      task: { ...task, phase: "place" },
+      sensors,
+      occupancy: regions,
+    }, { now: () => now });
+    expect(swapped.ok).toBe(true);
+    if (!swapped.ok) return;
+    expect(swapped.value.snapshot.sceneContractDigest).not.toBe(captured.value.snapshot.sceneContractDigest);
   });
 
   it("versions occupancy and occlusion on the canonical snapshot", () => {
