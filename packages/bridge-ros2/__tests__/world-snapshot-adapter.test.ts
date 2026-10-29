@@ -159,6 +159,60 @@ describe("createROS2WorldSnapshot", () => {
     expect(stale.ok ? undefined : stale.error.code).toBe("WORLD_STATE_SOURCE_STALE");
   });
 
+  it("rejects a task binding whose payload digest is not a content hash", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      task: {
+        phase: "transport",
+        toolId: "gripper-1",
+        payload: { payloadId: "crate-9", digest: "not-a-hash", radiusMeters: 0.4 },
+        calibrationDigest: "c".repeat(64),
+        policyDigest: "d".repeat(64),
+      },
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("records phase, tool, payload geometry, and calibration and policy digests on the snapshot", () => {
+    const task = {
+      phase: "transport",
+      toolId: "gripper-1",
+      payload: { payloadId: "crate-9", digest: "e".repeat(64), radiusMeters: 0.4 },
+      calibrationDigest: "c".repeat(64),
+      policyDigest: "d".repeat(64),
+    };
+    const captured = createROS2WorldSnapshot({ ...state(), task }, { now: () => now });
+
+    expect(captured.ok).toBe(true);
+    if (!captured.ok) return;
+    expect(captured.value.payload.task).toEqual(task);
+    expect(JSON.parse(captured.value.canonicalPayload).task).toEqual(task);
+    expect(captured.value.snapshot.digest).toBe(hashSha256(captured.value.canonicalPayload));
+  });
+
+  it("changes the snapshot digest when the payload is swapped", () => {
+    const task = {
+      phase: "transport",
+      toolId: "gripper-1",
+      payload: { payloadId: "crate-9", digest: "e".repeat(64), radiusMeters: 0.4 },
+      calibrationDigest: "c".repeat(64),
+      policyDigest: "d".repeat(64),
+    };
+    const original = createROS2WorldSnapshot({ ...state(), task }, { now: () => now });
+    const swapped = createROS2WorldSnapshot({
+      ...state(),
+      task: {
+        ...task,
+        payload: { payloadId: "crate-10", digest: "f".repeat(64), radiusMeters: 0.4 },
+      },
+    }, { now: () => now });
+
+    expect(original.ok && swapped.ok).toBe(true);
+    if (!original.ok || !swapped.ok) return;
+    expect(original.value.snapshot.digest).not.toBe(swapped.value.snapshot.digest);
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {

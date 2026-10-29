@@ -121,8 +121,10 @@ export { createROS2WorldSnapshot, persistROS2WorldSnapshot } from "./world-snaps
 export type {
   ROS2MapState,
   ROS2ObstacleState,
+  ROS2PayloadGeometry,
   ROS2SafetyControllerState,
   ROS2Stamped,
+  ROS2TaskBinding,
   ROS2TransformState,
   ROS2WorldSnapshotCapture,
   ROS2WorldSnapshotError,

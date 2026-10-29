@@ -98,7 +98,13 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
 2. **Define the synthetic scene.** Extend `SimulationWorldSnapshot` with
    versioned sensor provenance, uncertainty distributions/bounds, task phase,
    and robot/tool/payload state. Preserve a digest of exact inputs and reject
-   stale or internally inconsistent scenes.
+   stale or internally inconsistent scenes. The ROS 2 adapter now puts task
+   phase, tool, payload geometry, and calibration and policy digests in the
+   canonical payload addressed by `SimulationWorldSnapshot.digest`. A payload
+   digest that is not 64 hex characters is rejected, and swapping that payload
+   changes the digest. Provenance, occlusion, and frame mismatch are still
+   absent from that artifact, and the shared snapshot type does not grow new
+   fields for them.
 3. **Add scenario generation.** Scene-aware navigation accepts an approved
    fixed-case policy plus a seeded perturbation distribution. Each unique seed
    draws one deterministic sample inside the approved radius, reaction-time,
@@ -132,7 +138,7 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
 | 0C | Proxy transport and credential isolation | Downstream receives only explicitly selected environment; HTTP Origin/Host and gateway CORS are deployment restricted; unsupported network transports reject private targets | Environment isolation and loopback HTTP/production CORS controls implemented. Remote downstream transport remains unsupported. |
 | 0D | Evidence durability | Database refuses UPDATE, DELETE and TRUNCATE; signed proof served over HTTP; retention and authority export documented and enforced | Database guard and signed HTTP proof implemented; retention and authority export pending. |
 | 1 | Simulation-before-dispatch for every physical effect | Every T2/T3 physical command and bounded VLA chunk has an exact, fresh, signed pass receipt; failed/indeterminate/absent evidence cannot dispatch | Production gateway requires trusted simulator signers and signed V2 receipts for T2/T3. Known physical transport commands now have a T2 floor even if a site rule labels them T0/T1; explicit read and staging actions retain lower tiers. An opt-in scene-aware navigation model checks a bounded collinear waypoint path and conservative stop corridor against stored ROS 2 scene geometry, including measured position and moving-object speed-error bounds. Turns and reversals return indeterminate. Production workers reject the default parameter-only ROS 2 model. An optional fixed adversarial case policy runs bounded footprint, reaction, and human-speed stresses; its signed receipt identifies the exact policy and conclusive case coverage. A shared dispatch inventory now classifies known physical transports, explicit staging, VLA action chunks, Home Assistant actuators, direct HTTP actuator routes, and named MCP robot tools. `assignTier()` floors every actuating class at T2, so a site rule cannot leave those commands at observe or prepare. Edge replay is still covered by the broker nonce store rather than this inventory. An approved navigation policy may add a seeded perturbation distribution: unique seeds, bounded radius, reaction-time, and human-speed support, one deterministic sample per seed, and those seeds on the signed receipt. Coverage remains the fraction of conclusive runs, not a collision probability. Distributions for other effect classes, a physical simulator adapter, and a same-graph bypass proof remain pending. |
-| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; the broker now re-reads scene digest and epoch after nonce consumption and rejects drift before adapter dispatch. File-backed edge nonce consumption survives restart when configured. Atomic controller-side scene locking, controller hold, and complete binding remain pending. |
+| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; the broker now re-reads scene digest and epoch after nonce consumption and rejects drift before adapter dispatch. File-backed edge nonce consumption survives restart when configured. The ROS 2 canonical snapshot can include task phase, tool, payload geometry, and calibration and policy digests; a non-hash payload digest is rejected, and a swapped payload changes the snapshot digest. Those fields are not yet bound to the token, plan, receipt, or broker permit. Atomic controller-side scene locking, controller hold, and sensor provenance, occlusion, and frame-mismatch checks remain pending. |
 | 3 | Robot enforcement pilot | SROS2 Enforce mode plus a command-gate node owns action endpoints; direct actuator bypass fails in an actual ROS graph | Docker demonstration exists; product binding pending. |
 | 4 | Continuous safety shield | Controller-rate barrier/QP filter and tested safe-hold behavior, independent of uplink and gateway availability | Research and hardware integration pending. |
 | 5 | Third-party evidence | COSE/SCITT receipts, signed ledger heads, inclusion proof export, field drift measurements | Pending. |
@@ -191,7 +197,7 @@ current code because the audit was taken before PR #271.
 | Boundary | Code to inspect first | Implemented behavior and limit |
 |---|---|---|
 | Authorization | `packages/policy-gateway/src/gateway.ts`, `simulation-evidence-policy.ts`, `packages/capability-tokens/src/validator.ts` | `PolicyGateway.intercept()` verifies configured issuer lineage, assigns the tier, enforces constraints, and evaluates signed V2 simulation evidence. Production gateway requires trusted issuers and simulator signer keys. Library deployments can still omit trust roots. |
-| Scene capture | `packages/bridge-ros2/src/world-snapshot-adapter.ts` | Content-addressed ROS 2 odometry, map, obstacle scan, and safety-controller snapshot with source timestamps, frame checks, uncertainty fields, epoch, and expiry. It is an adapter, not a live ROS node. |
+| Scene capture | `packages/bridge-ros2/src/world-snapshot-adapter.ts` | Content-addressed ROS 2 odometry, map, obstacle scan, and safety-controller snapshot with source timestamps, frame checks, uncertainty fields, epoch, and expiry. An optional task binding (phase, tool, payload identity and geometry, calibration digest, and policy digest) is part of that canonical payload. A payload digest that is not 64 hex characters is rejected, and swapping the payload changes the snapshot digest. Sensor provenance, occlusion, and cross-source frame mismatch are not in the artifact yet. It is an adapter, not a live ROS node. |
 | Effect checks | `packages/engine-effect-simulator/src/scene-aware-navigation-model.ts`, `fixed-case-navigation-model.ts`, `deterministic-effect-simulator.ts` | Planar collinear waypoint and stopping-corridor checks; fixed footprint, reaction-delay, and human-speed stress cases are opt-in. Default receipt has one run and zero sampled coverage. An approved policy may add unique seeds; each seed draws one deterministic perturbation inside the approved bounds, and the receipt stores that seed list. Coverage is the fraction of conclusive observed, fixed, and seeded runs, not a probability. Turns, contact, and controller-rate dynamics remain unsupported. |
 | Worker | `apps/simulation-server/src/config.ts`, `runtime.ts` | Production requires an explicit scene-aware model for known physical protocols, a persistent signer, and bearer authentication. The scenario policy is optional. Fixed cases plus seeds stay within 16 stress runs. It cannot claim physics-grade evidence. |
 | Proof and dispatch | `packages/execution-broker/src/execution-broker.ts`, `packages/sint-edge-agent/src/runner.ts` | Broker checks exact receipt, scene digest/epoch/expiry, consumes one-use nonce, and re-reads scene immediately before adapter dispatch. Edge runner can use durable file-backed replay storage; controller-side atomic scene locking and actual safe hold remain unproven. |
@@ -216,11 +222,14 @@ are software evidence; they do not prove actuator non-bypass on hardware.
    attempts that try to dispatch without a fresh, signed V2 receipt, through a
    lower-tier rule, with a reused nonce, or with a changed effect. Do not claim
    non-bypass until a same-graph robot attack fails.
-2. **Make the live scene contract complete (P0).** Version sensor provenance,
-   transforms, occupancy/occlusion, robot/tool/payload geometry, task phase,
-   calibration and policy digests, and uncertainty bounds in the exact scene
-   artifact. Bind these to token, plan, receipt, and broker permit. Reject
-   missing sources, inconsistent clocks/frames, swapped identities, stale
+2. **Make the live scene contract complete (P0).** The ROS 2 snapshot now
+   stores task phase, tool, payload geometry, and calibration and policy
+   digests in the canonical payload. A payload digest that is not 64 hex
+   characters is rejected, and a swapped payload changes the snapshot digest.
+   Still required: version sensor provenance, occupancy/occlusion, and
+   cross-source frame identity; reject duplicate sensor ids and frame
+   mismatch; bind the task fields to token, plan, receipt, and broker permit.
+   Reject missing sources, inconsistent clocks, swapped identities, stale
    state, and scene changes after nonce consumption. Add controller-side
    atomic scene/permit enforcement; the broker's second read alone cannot
    eliminate a change between read and actuator use.

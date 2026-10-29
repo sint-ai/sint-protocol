@@ -59,6 +59,20 @@ export interface ROS2SafetyControllerState {
   readonly uncertainty?: number;
 }
 
+export interface ROS2PayloadGeometry {
+  readonly payloadId: string;
+  readonly digest: string;
+  readonly radiusMeters: number;
+}
+
+export interface ROS2TaskBinding {
+  readonly phase: string;
+  readonly toolId?: string;
+  readonly payload?: ROS2PayloadGeometry;
+  readonly calibrationDigest: string;
+  readonly policyDigest: string;
+}
+
 export type ROS2WorldStateSource =
   | "odometry"
   | "jointState"
@@ -84,6 +98,8 @@ export interface ROS2WorldStateInput {
   readonly obstacleScanObservedAt?: string;
   readonly safetyController?: ROS2SafetyControllerState;
   readonly localizationConfidence?: number;
+  /** Task phase, tool, payload geometry, and the calibration and policy digests in force. */
+  readonly task?: ROS2TaskBinding;
 }
 
 /** Canonical state whose digest is placed in SimulationWorldSnapshot. */
@@ -264,6 +280,34 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || !isNormalized(input.safetyController.uncertainty))
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
+  }
+  return validateTask(input.task);
+}
+
+function isContentDigest(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-f]{64}$/i.test(value);
+}
+
+function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
+  if (task === undefined) return undefined;
+  if (
+    !task.phase
+    || task.phase.length > 128
+    || (task.toolId !== undefined && task.toolId.length === 0)
+    || !isContentDigest(task.calibrationDigest)
+    || !isContentDigest(task.policyDigest)
+  ) {
+    return "task phase, calibration digest, or policy digest is invalid";
+  }
+  const payload = task.payload;
+  if (
+    payload !== undefined
+    && (!payload.payloadId
+      || !isContentDigest(payload.digest)
+      || !isFiniteNumber(payload.radiusMeters)
+      || payload.radiusMeters < 0)
+  ) {
+    return "task payload identity, digest, or geometry is invalid";
   }
   return undefined;
 }
