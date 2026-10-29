@@ -108,7 +108,9 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
    does not contain is rejected as `INVALID_WORLD_STATE`. Occupancy and occlusion are versioned on that ROS 2
    canonical payload (schema 1.0.0); a missing or invalid occlusion state is
    rejected. Duplicate occupancy region ids on that snapshot are rejected as
-   `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle frame that disagrees with
+   `INVALID_WORLD_STATE`. Occupancy regions are sorted by region id before
+   hashing, so reordering the same regions does not change the snapshot digest
+   or the scene-contract digest. A declared odometry, map, or obstacle frame that disagrees with
    the snapshot frame is rejected as `INVALID_WORLD_STATE`. Duplicate sensor
    ids on that snapshot are rejected as `INVALID_WORLD_STATE`. Source clocks
    that disagree by more than `maxClockSkewMs` are rejected as
@@ -248,7 +250,9 @@ are software evidence; they do not prove actuator non-bypass on hardware.
    identity or a source that is not a world-state channel is rejected. A sensor that names a world-state source the snapshot does not contain is rejected as `INVALID_WORLD_STATE`.
    Occupancy and occlusion are versioned on that same payload; a missing or
    invalid occlusion state is rejected. Duplicate occupancy region ids on that
-   snapshot are rejected as `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle
+   snapshot are rejected as `INVALID_WORLD_STATE`. Occupancy regions are sorted by
+   region id before hashing, so reordering the same regions does not change the
+   snapshot digest or the scene-contract digest. A declared odometry, map, or obstacle
    frame that disagrees with the snapshot frame is rejected as
    `INVALID_WORLD_STATE`. Duplicate sensor ids on that snapshot are rejected
    as `INVALID_WORLD_STATE`. Source clocks that disagree by more than

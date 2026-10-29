@@ -513,6 +513,34 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("produces the same digest when occupancy regions are reordered", () => {
+    const corridor = {
+      regionId: "corridor-a",
+      occupied: true,
+      occlusion: "partial" as const,
+      observedAt,
+    };
+    const dock = {
+      regionId: "dock-b",
+      occupied: false,
+      occlusion: "clear" as const,
+      observedAt,
+    };
+    const forward = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [corridor, dock],
+    }, { now: () => now });
+    const reversed = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [dock, corridor],
+    }, { now: () => now });
+
+    expect(forward.ok && reversed.ok).toBe(true);
+    if (!forward.ok || !reversed.ok) return;
+    expect(forward.value.snapshot.digest).toBe(reversed.value.snapshot.digest);
+    expect(forward.value.snapshot.sceneContractDigest).toBe(reversed.value.snapshot.sceneContractDigest);
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {

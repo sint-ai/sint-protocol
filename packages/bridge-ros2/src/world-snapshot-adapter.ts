@@ -491,6 +491,9 @@ function canonicalizeInput(input: ROS2WorldStateInput): ROS2WorldStateInput {
     ...(input.obstacles !== undefined && {
       obstacles: [...input.obstacles].sort((left, right) => left.id.localeCompare(right.id)),
     }),
+    ...(input.occupancy !== undefined && {
+      occupancy: [...input.occupancy].sort((left, right) => left.regionId.localeCompare(right.regionId)),
+    }),
   };
 }
 
