@@ -65,13 +65,15 @@ SINT has a ROS 2 world-snapshot adapter, V2 signed simulation receipts, an
 `EffectSimulator` boundary, a tier-aware evidence policy, production
 enforcement for T2/T3 requests, and an execution broker that checks world
 digest/epoch and consumes a nonce before dispatch. The opt-in
-`SceneAwareNavigationModel` now checks one short 2D navigation segment against
-the stored scene's static, moving, and human obstacles, including explicit
-position uncertainty and a conservative human reachability bound. The default
-`BoundedMotionEffectModel` still checks declared effect parameters rather than
-scene geometry. The receipt records one deterministic check; the reference
-worker does not yet generate multiple perturbed scenes or calibrated
-probabilities. A real command-gate deployment and bypass proof remain pending.
+`SceneAwareNavigationModel` checks a short collinear 2D waypoint path and
+conservative stopping corridor against the stored scene's static, moving, and
+human obstacles, including position and speed-prediction error bounds. The
+`FixedCaseNavigationModel` can additionally run 1–16 approved footprint,
+reaction-delay, and human-speed stress cases and sign their exact case-policy
+digest. The default `BoundedMotionEffectModel` still checks declared effect
+parameters rather than scene geometry. Fixed cases do not sample a probability
+distribution or calibrate field risk. A real command-gate deployment and bypass
+proof remain pending.
 
 ## Human and simulated robotics data: test before the outcome exists
 
@@ -140,11 +142,12 @@ ledger while preserving reproducible safety evidence.
    physical effect. Normalize ROS 2, MAVLink, OPC-UA, MQTT/IoT, MCP robot tools,
    and VLA action chunks into a bounded `EffectPlan`. A physical action
    classified T0/T1 must deny as a tiering error. Audit direct hardware paths.
-3. **Fast scene-aware validator.** The first slice now checks a straight planar
-   navigation segment, robot footprint, static/moving obstacles, human
-   reachability, explicit position error, velocity, horizon, and controller
-   permit. Extend it to curved trajectories, braking/stopping distance,
-   time-to-contact, geofence, and controller dynamics before a robot pilot.
+3. **Fast scene-aware validator.** The first slice now checks collinear planar
+   waypoints, a conservative full-speed stopping corridor, robot footprint,
+   static/moving obstacles, human reachability, position and motion error,
+   horizon, and controller permit. Extend it to curved trajectories, validated
+   controller braking profiles, time-to-contact, geofence, and controller
+   dynamics before a robot pilot.
    This can precede a full Isaac/Gazebo adapter.
 4. **Uncertainty and counterfactuals.** Reproducibly perturb object pose and
    velocity, sensor error, actuation delay, friction, payload mass, and human

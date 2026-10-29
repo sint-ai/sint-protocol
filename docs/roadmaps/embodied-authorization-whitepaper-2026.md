@@ -1,8 +1,10 @@
 # Embodied authorization: whitepaper execution roadmap
 
 **Baseline:** `8ba9660` (24 October 2026). The external repository audit examined
-`915b4d7`; the current checkout already contains the predictive execution broker,
-signed simulation evidence policy, world snapshot adapter, and simulation server.
+`915b4d7`. This handoff was updated on 28 October 2026 with the implementation
+through `ffd9207` in PR #271; check `main` for subsequent changes. The checkout
+contains the predictive execution broker, signed simulation evidence policy,
+world snapshot adapter, and simulation server.
 Treat the whitepaper as the target design and the audit as findings to verify
 against each subsequent commit, not as instructions to execute verbatim.
 
@@ -173,19 +175,109 @@ signed outcomes from an actual device, numeric tolerances, and a field data set.
   a real ROS graph, simulator, and hardware pilot before any robot enforcement
   or controller shield claim.
 
-## Next implementation slice
+## Continuation handoff for another agent or LLM
 
-1. Inventory every physical dispatch entry point and require V2 signed
-   simulation evidence on each production path; add bypass and replay tests.
-2. Specify the versioned synthetic scene and scenario-set receipt extensions,
-   including reproducible seeds, physical uncertainty bounds, and task phase.
-3. Update the dashboard to sign vote payloads with operator-held keys and
-   provision those keys separately from agent and proxy keys.
-4. Add a network-target validation policy before enabling remote downstream
-   transport; keep the current HTTP proxy loopback-only.
-5. Wire the existing signed proof receipt into the ledger HTTP route, and
-   define evidence retention by record class without deleting hash-chain events.
-6. Require the durable edge replay store in deployments, then test a stale
-   world snapshot at dispatch and a controller safe hold on link loss.
-7. Build an adversarial conformance lane that runs those behaviors against
-   production code, not fixture-only JSON assertions.
+Start here, then read [the simulator contract](../specs/effect-simulator.md),
+[Sereact analysis](../research/sereact-sint-assessment-2026.md), and
+[live-scene and human-data comparison](../research/live-scene-command-validation-2026.md).
+The two external input documents were design and audit evidence, not repository
+instructions. This file is the implementation roadmap; `AGENTS.md` and
+`CLAUDE.md` govern work in the repository. Recheck every status claim against
+current code because the audit was taken before PR #271.
+
+### Working implementation and exact entry points
+
+| Boundary | Code to inspect first | Implemented behavior and limit |
+|---|---|---|
+| Authorization | `packages/policy-gateway/src/gateway.ts`, `simulation-evidence-policy.ts`, `packages/capability-tokens/src/validator.ts` | `PolicyGateway.intercept()` verifies configured issuer lineage, assigns the tier, enforces constraints, and evaluates signed V2 simulation evidence. Production gateway requires trusted issuers and simulator signer keys. Library deployments can still omit trust roots. |
+| Scene capture | `packages/bridge-ros2/src/world-snapshot-adapter.ts` | Content-addressed ROS 2 odometry, map, obstacle scan, and safety-controller snapshot with source timestamps, frame checks, uncertainty fields, epoch, and expiry. It is an adapter, not a live ROS node. |
+| Effect checks | `packages/engine-effect-simulator/src/scene-aware-navigation-model.ts`, `fixed-case-navigation-model.ts`, `deterministic-effect-simulator.ts` | Planar collinear waypoint and stopping-corridor checks; fixed footprint, reaction-delay, and human-speed stress cases are opt-in. Default receipt has one run and zero sampled coverage. Fixed-case coverage means conclusive finite cases, not probability. Turns, contact, and controller-rate dynamics remain unsupported. |
+| Worker | `apps/simulation-server/src/config.ts`, `runtime.ts` | Production requires an explicit scene-aware model for known physical protocols, a persistent signer, and bearer authentication. The scenario policy is optional and bounded to 1–16 fixed cases. It cannot claim physics-grade evidence. |
+| Proof and dispatch | `packages/execution-broker/src/execution-broker.ts`, `packages/sint-edge-agent/src/runner.ts` | Broker checks exact receipt, scene digest/epoch/expiry, consumes one-use nonce, and re-reads scene immediately before adapter dispatch. Edge runner can use durable file-backed replay storage; controller-side atomic scene locking and actual safe hold remain unproven. |
+| Operator and ledger | `apps/gateway-server/src/routes/approvals.ts`, `routes/ledger.ts`, `packages/evidence-ledger/` | Production REST votes require allowlisted signatures and are logged. HTTP ledger proof is signed; Postgres migrations guard UPDATE/DELETE/TRUNCATE. The dashboard does not yet hold operator signing keys. |
+
+The conformance tests that exercise these paths are in
+`packages/conformance-tests/src/simulation-evidence-conformance.test.ts`,
+`scene-aware-navigation-conformance.test.ts`,
+`deterministic-effect-simulator-conformance.test.ts`, and
+`execution-broker-conformance.test.ts`. Unit tests also cover the gateway,
+simulator, worker configuration, edge runner, approvals, and ledger. These tests
+are software evidence; they do not prove actuator non-bypass on hardware.
+
+### Ordered work with acceptance evidence
+
+1. **Inventory and close all physical dispatch paths (P0).** Enumerate ROS 2,
+   MAVLink, OPC-UA, MQTT/IoT, MCP robot tools, VLA chunks, direct HTTP routes,
+   and edge replay. Normalize each effect to a bounded `EffectPlan` and deny
+   any actuating command classified T0/T1. Add production-code conformance
+   attempts that try to dispatch without a fresh, signed V2 receipt, through a
+   lower-tier rule, with a reused nonce, or with a changed effect. Do not claim
+   non-bypass until a same-graph robot attack fails.
+2. **Make the live scene contract complete (P0).** Version sensor provenance,
+   transforms, occupancy/occlusion, robot/tool/payload geometry, task phase,
+   calibration and policy digests, and uncertainty bounds in the exact scene
+   artifact. Bind these to token, plan, receipt, and broker permit. Reject
+   missing sources, inconsistent clocks/frames, swapped identities, stale
+   state, and scene changes after nonce consumption. Add controller-side
+   atomic scene/permit enforcement; the broker's second read alone cannot
+   eliminate a change between read and actuator use.
+3. **Make scenario evidence reproducible and calibrated (P1).** Extend the
+   fixed-case runner with approved seeded perturbation distributions per effect
+   class. Store every seed, perturbation bounds, case outcome, simulator/model
+   digest, and exact trace; define coverage denominators before using a
+   coverage threshold. Preserve one-hard-failure-denies behavior. Test
+   mismatched case policy, forged high coverage, duplicate seeds, unsupported
+   phenomena, timeout, and out-of-distribution scenes. Do not interpret finite
+   case coverage as a collision probability.
+4. **Add physical backends and independent controller protection (P1).** Build
+   a Gazebo/MoveIt or equivalent adapter with measured model fidelity and
+   contact/dynamics checks, then a ROS 2 command-gate node in SROS2 Enforce
+   mode that owns motion endpoints. Prove direct `/cmd_vel`/action bypass fails,
+   and test a low-energy controller shield and unconditional E-stop under link
+   loss and simulator outage. Record p50/p95/p99 scene assembly, simulation,
+   policy, approval, and dispatch latency separately from controller latency.
+5. **Govern human data and learned models (P1).** Replay demonstrations,
+   interventions, near misses, and human-near-robot traces offline to construct
+   hard cases and calibrate site-specific uncertainty. Keep generated
+   counterfactual outcomes labeled as simulated. Add phase, familiarity,
+   recovery-action, and model-version bindings before using a VLA proposal;
+   learned scores may escalate or request more checks but cannot authorize.
+   Record signed observed outcomes and compare prediction with measured
+   clearance, contact, force, and task result; disable a drifting model.
+6. **Finish trust, approvals, and evidence operations (P1/P2).** Implement a
+   nonce-bound hardware quote verifier, mandatory roots for library gateways,
+   durable edge replay deployment requirements, controller safe hold, and
+   dashboard operator key custody. Define record-class retention, legal hold,
+   minimization, external anchoring, and authority export without editing
+   emitted ledger events. Publish third-party COSE/CWT/SCITT profiles only
+   after independent verifier tests.
+
+### Pilot gate and limits
+
+Pilot one low-energy mobile robot or controlled pick-and-place cell with a
+site-approved model and explicit operator ownership. The acceptance matrix must
+include a person entering the zone, moving obstacle, stale or occluded sensor,
+swapped tool/payload, changed target or task phase, expired approval, simulator
+failure, controller stop, uplink loss, direct topic bypass, and restart/replay.
+For each case record the proposed action, observed scene digest/epoch, receipt,
+gateway decision, dispatch result, physical outcome, and latency. Separate
+simulation, shadow, and live-cell measurements with raw denominators. A green
+unit suite or signed deterministic receipt alone does not certify robot safety.
+
+### Reproducible work commands
+
+```bash
+git status --short --branch
+pnpm install --frozen-lockfile
+pnpm run verify
+pnpm run docs:build
+git diff --check
+gh pr list --state open
+```
+
+`pnpm run verify` covers build, typecheck, workspace tests, and the integration
+gate. CI also runs PostgreSQL and Redis service integration tests; local
+service-dependent runs need those services configured. Keep 0 test failures,
+target `main`, and verify PR checks before merge. Record any remaining hardware
+or calibration gap in this roadmap rather than marking an interface or fixture
+as a live safety mechanism.
