@@ -329,6 +329,27 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
+    const captured = createROS2WorldSnapshot(state({
+      odometry: {
+        observedAt,
+        frameId: "odom",
+        value: {
+          pose: {
+            position: { x: 1, y: 2, z: 0 },
+            orientation: { x: 0, y: 0, z: 0, w: 1 },
+          },
+          twist: {
+            linear: { x: 0.1, y: 0, z: 0 },
+            angular: { x: 0, y: 0, z: 0.05 },
+          },
+        },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {

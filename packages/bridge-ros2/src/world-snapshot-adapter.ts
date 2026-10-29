@@ -313,7 +313,30 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
   }
-  return validateTask(input.task) ?? validateSensors(input.sensors) ?? validateOccupancy(input.occupancy);
+  return validateTask(input.task)
+    ?? validateSensors(input.sensors)
+    ?? validateOccupancy(input.occupancy)
+    ?? validateCrossSourceFrames(input);
+}
+
+function sourceFrameDisagrees(snapshotFrame: string, frameId: string | undefined): boolean {
+  return frameId !== undefined && frameId !== snapshotFrame;
+}
+
+/** A declared odometry, map, or obstacle frame must be the snapshot frame. */
+function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefined {
+  if (sourceFrameDisagrees(input.frameId, input.odometry?.frameId)) {
+    return "odometry frame does not match the snapshot frame";
+  }
+  if (input.map !== undefined && input.map.frameId !== input.frameId) {
+    return "map frame does not match the snapshot frame";
+  }
+  for (const obstacle of input.obstacles ?? []) {
+    if (sourceFrameDisagrees(input.frameId, obstacle.frameId)) {
+      return "obstacle frame does not match the snapshot frame";
+    }
+  }
+  return undefined;
 }
 
 const OCCLUSION_STATES: readonly ROS2OcclusionState[] = [
