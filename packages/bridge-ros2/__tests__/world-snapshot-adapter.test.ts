@@ -150,6 +150,14 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a snapshot whose state epoch names a different robot", () => {
+    const captured = createROS2WorldSnapshot(state({
+      stateEpoch: "other-robot:100",
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects missing policy-required sources", () => {
     const captured = createROS2WorldSnapshot(state({ obstacles: undefined }), {
       now: () => now,

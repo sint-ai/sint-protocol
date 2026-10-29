@@ -227,6 +227,10 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (!input.robotId || !input.frameId || !input.stateEpoch) {
     return "robotId, frameId, and stateEpoch are required";
   }
+  const epochRobot = input.stateEpoch.indexOf(":");
+  if (epochRobot >= 0 && input.stateEpoch.slice(0, epochRobot) !== input.robotId) {
+    return "stateEpoch names a different robot than robotId";
+  }
   if (!isNormalized(input.localizationConfidence)) {
     return "localizationConfidence must be normalized to [0,1]";
   }
