@@ -261,6 +261,7 @@ export class ExecutionBroker<T> {
     if (
       currentWorld.digest !== receipt.worldSnapshot.digest
       || currentWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
+      || currentWorld.sceneContractDigest !== receipt.worldSnapshot.sceneContractDigest
     ) {
       if (chunk?.safeStopOnFailure) {
         await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before nonce consumption");
@@ -309,6 +310,7 @@ export class ExecutionBroker<T> {
     if (
       dispatchWorld.digest !== receipt.worldSnapshot.digest
       || dispatchWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
+      || dispatchWorld.sceneContractDigest !== receipt.worldSnapshot.sceneContractDigest
     ) {
       if (chunk?.safeStopOnFailure) {
         await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before dispatch");

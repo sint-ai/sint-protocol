@@ -210,6 +210,69 @@ describe("ExecutionBroker", () => {
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects a scene contract digest mismatch before dispatch", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: {
+        readCurrent: async () => ({ ...world, sceneContractDigest: digest("8") }),
+      },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const input = request();
+    const receipt = input.executionContext!.simulationEvidence!;
+    const bound: SintRequest = {
+      ...input,
+      executionContext: {
+        simulationEvidence: {
+          ...receipt,
+          worldSnapshot: { ...world, sceneContractDigest: digest("9") },
+        },
+      },
+    };
+
+    const drifted = await broker.execute(bound, { decision: decision(), approval: approval() });
+
+    expect(drifted.ok ? undefined : drifted.error.code).toBe("WORLD_STATE_DRIFTED");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("rejects a scene contract change during nonce consumption", async () => {
+    const contracted = { ...world, sceneContractDigest: digest("9") };
+    let currentWorld = contracted;
+    const dispatch = vi.fn(async () => ok("sent"));
+    const nonceStore = new InMemorySimulationReceiptNonceStore();
+    const consume = vi.fn(async (receiptId: string, nonce: string) => {
+      currentWorld = { ...contracted, sceneContractDigest: digest("8") };
+      return nonceStore.consume(receiptId, nonce);
+    });
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume },
+      worldStateProvider: { readCurrent: async () => currentWorld },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const input = request();
+    const receipt = input.executionContext!.simulationEvidence!;
+    const bound: SintRequest = {
+      ...input,
+      executionContext: {
+        simulationEvidence: {
+          ...receipt,
+          worldSnapshot: contracted,
+        },
+      },
+    };
+
+    const drifted = await broker.execute(bound, { decision: decision(), approval: approval() });
+
+    expect(drifted.ok ? undefined : drifted.error.code).toBe("WORLD_STATE_DRIFTED");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it("rejects world drift that occurs during nonce consumption", async () => {
     let currentWorld = world;
     const dispatch = vi.fn(async () => ok("sent"));
