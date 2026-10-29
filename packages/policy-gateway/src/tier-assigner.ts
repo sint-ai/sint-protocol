@@ -17,6 +17,7 @@ import {
   type TierAssignmentRule,
   DEFAULT_TIER_RULES,
   classifyMcpPolicy,
+  classifyPhysicalDispatch,
   parseMcpResource,
   selectTierRule,
 } from "@pshkv/core";
@@ -103,26 +104,17 @@ export function assignTier(
     }
   }
 
-  // A site rule or unknown topic must not classify a physical command as an
-  // observe/prepare operation. Read-only actions and the two explicit ROS 2
-  // staging topics retain their lower tiers; all other mutating operations on
-  // known physical transports require at least ACT and therefore simulation.
-  const physicalTransport = /^(ros2|mavlink|opcua|iot|modbus|plc|open-rmf|humanoid):\/\//i.test(request.resource)
-    || (/^mqtt(-sparkplug)?:\/\//i.test(request.resource)
-      && /\/(cmd|command|dcmd|setpoint|actuator)(\/|$)/i.test(request.resource));
-  const readOnlyAction = /^(subscribe|read|observe|get|list|query|status)$/i.test(request.action);
-  const stagingTopic = (/^ros2:\/\/\/(plan|waypoints)$/i.test(request.resource)
-    && request.action === "publish")
-    || (/^humanoid:\/\/[^/]+\/[^/]+\/robot\/[^/]+\/plan$/i.test(request.resource)
-      && request.action === "prepare")
-    || (/^open-rmf:\/\/fleet\/[^/]+\/dispatch$/i.test(request.resource)
-      && request.action === "prepare")
-    || (/^mavlink:\/\/[^/]+\/cmd\/camera$/i.test(request.resource)
-      && request.action === "call");
-  if (physicalTransport && !readOnlyAction && !stagingTopic && TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T2_ACT]) {
+  // Inventoried physical effects cannot stay at observe/prepare, even when a
+  // site rule says so. Read-only and explicit staging actions keep their tier.
+  // A VLA chunk, Home Assistant actuator, direct actuator route, or named MCP
+  // robot tool is actuating even when the resource name is otherwise generic.
+  const dispatch = classifyPhysicalDispatch(request);
+  const currentRank = TIER_ORDER[tier] ?? 0;
+  const actRank = TIER_ORDER[ApprovalTier.T2_ACT] ?? 2;
+  if (dispatch.dispatchClass === "actuate" && currentRank < actRank) {
     tier = ApprovalTier.T2_ACT;
     riskTier = "T2_stateful" as RiskTier;
-    escalationReasons.push("Physical command transport requires ACT tier");
+    escalationReasons.push(dispatch.reason);
   }
 
   // Escalate on human presence

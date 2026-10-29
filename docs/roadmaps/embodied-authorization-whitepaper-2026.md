@@ -98,18 +98,42 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
 2. **Define the synthetic scene.** Extend `SimulationWorldSnapshot` with
    versioned sensor provenance, uncertainty distributions/bounds, task phase,
    and robot/tool/payload state. Preserve a digest of exact inputs and reject
-   stale or internally inconsistent scenes.
-3. **Add scenario generation.** The first bounded fixed adversarial case
-   runner exists for scene-aware navigation, with an exact digest the gateway
-   can require. Extend it to seeded perturbation distributions and other
-   effect classes; calibrate coverage semantics before interpreting it as
-   probability. Log seeds and distributions;
-   prohibit a model-generated "safe" label from becoming a policy decision.
-4. **Add a physical simulator adapter.** Run the same effect against a real
-   Gazebo/MoveIt or equivalent backend and deterministic envelope checker.
-   Record pass, fail, indeterminate, unsupported phenomena, latency, and traces
-   in the signed receipt. The existing deterministic simulator remains a
-   narrower software check until this adapter is measured.
+   stale or internally inconsistent scenes. The ROS 2 adapter now puts task
+   phase, tool, payload geometry, and calibration and policy digests in the
+   canonical payload addressed by `SimulationWorldSnapshot.digest`. A payload
+   digest that is not 64 hex characters is rejected, and swapping that payload
+   changes the digest. Sensor provenance is versioned on that ROS 2 canonical
+   payload; a missing sensor identity or a source that is not a world-state
+   channel is rejected. Occupancy and occlusion are versioned on that ROS 2
+   canonical payload (schema 1.0.0); a missing or invalid occlusion state is
+   rejected. Duplicate occupancy region ids on that snapshot are rejected as
+   `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle frame that disagrees with
+   the snapshot frame is rejected as `INVALID_WORLD_STATE`. Duplicate sensor
+   ids on that snapshot are rejected as `INVALID_WORLD_STATE`. Source clocks
+   that disagree by more than `maxClockSkewMs` are rejected as
+   `INVALID_WORLD_STATE`. A `stateEpoch` whose text before the first `:` names
+   a different robot than `robotId` is rejected as `INVALID_WORLD_STATE`.
+   A `stateEpoch` that does not name `robotId` is rejected as
+   `INVALID_WORLD_STATE`. A `stateEpoch` of `robotId:` with an empty counter
+   is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose counter is not
+   a canonical integer is rejected as `INVALID_WORLD_STATE`.
+   The shared snapshot type does not grow new fields
+   for these scene facts.
+3. **Add scenario generation.** Scene-aware navigation accepts an approved
+   fixed-case policy plus a seeded perturbation distribution. Each unique seed
+   draws one deterministic sample inside the approved radius, reaction-time,
+   and human-speed bounds. The signed receipt stores those seeds. Coverage is
+   the fraction of conclusive runs, not a collision probability. Bounded motion
+   accepts the same shape for extra force, extra velocity, and reduced
+   clearance: unique seeds, one deterministic sample per seed, and those seeds
+   on the signed receipt. A duplicate seed is rejected before issuance. Field
+   calibration, and distributions beyond navigation and bounded motion, remain
+   open. A model-generated "safe" label is not a policy decision.
+4. **Add a physical simulator adapter.** A software-only adapter records pass,
+   fail, and indeterminate from the deterministic bounded-motion worker. The
+   receipt backend stays `sint-deterministic` and the evidence grade stays
+   `deterministic`. The record does not claim Gazebo ran. Unsupported
+   phenomena, latency, and a measured Gazebo/MoveIt backend remain open.
 5. **Calibrate and compare.** Capture signed device outcomes and near misses,
    compare predicted with observed contact, clearance and task outcome, and
    measure risk calibration by site and effect class. Replay held-out human
@@ -130,8 +154,8 @@ stale or unsupported state yielding `indeterminate` and blocking dispatch.
 | 0B | Close MCP self-approval and process-spawn path | Agent cannot call approval, token minting, delegation or server-management tools; all built-ins traverse `intercept()` | Implemented in proxy with per-server tokens. Production dashboard votes now require allowlisted operator signatures. |
 | 0C | Proxy transport and credential isolation | Downstream receives only explicitly selected environment; HTTP Origin/Host and gateway CORS are deployment restricted; unsupported network transports reject private targets | Environment isolation and loopback HTTP/production CORS controls implemented. Remote downstream transport remains unsupported. |
 | 0D | Evidence durability | Database refuses UPDATE, DELETE and TRUNCATE; signed proof served over HTTP; retention and authority export documented and enforced | Database guard and signed HTTP proof implemented; retention and authority export pending. |
-| 1 | Simulation-before-dispatch for every physical effect | Every T2/T3 physical command and bounded VLA chunk has an exact, fresh, signed pass receipt; failed/indeterminate/absent evidence cannot dispatch | Production gateway requires trusted simulator signers and signed V2 receipts for T2/T3. Known physical transport commands now have a T2 floor even if a site rule labels them T0/T1; explicit read and staging actions retain lower tiers. An opt-in scene-aware navigation model checks a bounded collinear waypoint path and conservative stop corridor against stored ROS 2 scene geometry, including measured position and moving-object speed-error bounds. Turns and reversals return indeterminate. Production workers reject the default parameter-only ROS 2 model. An optional fixed adversarial case policy runs bounded footprint, reaction, and human-speed stresses; its signed receipt identifies the exact policy and conclusive case coverage. Probabilistic distributions, physical simulator adapter, generic-tool effect classification, complete dispatch inventory and bypass proof remain pending. |
-| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; the broker now re-reads scene digest and epoch after nonce consumption and rejects drift before adapter dispatch. File-backed edge nonce consumption survives restart when configured. Atomic controller-side scene locking, controller hold, and complete binding remain pending. |
+| 1 | Simulation-before-dispatch for every physical effect | Every T2/T3 physical command and bounded VLA chunk has an exact, fresh, signed pass receipt; failed/indeterminate/absent evidence cannot dispatch | Production gateway requires trusted simulator signers and signed V2 receipts for T2/T3. Known physical transport commands now have a T2 floor even if a site rule labels them T0/T1; explicit read and staging actions retain lower tiers. An opt-in scene-aware navigation model checks a bounded collinear waypoint path and conservative stop corridor against stored ROS 2 scene geometry, including measured position and moving-object speed-error bounds. Turns and reversals return indeterminate. Production workers reject the default parameter-only ROS 2 model. An optional fixed adversarial case policy runs bounded footprint, reaction, and human-speed stresses; its signed receipt identifies the exact policy and conclusive case coverage. A shared dispatch inventory now classifies known physical transports, explicit staging, VLA action chunks, Home Assistant actuators, direct HTTP actuator routes, and named MCP robot tools. `assignTier()` floors every actuating class at T2, so a site rule cannot leave those commands at observe or prepare. Edge replay is still covered by the broker nonce store rather than this inventory. An approved navigation policy may add a seeded perturbation distribution: unique seeds, bounded radius, reaction-time, and human-speed support, one deterministic sample per seed, and those seeds on the signed receipt. Coverage remains the fraction of conclusive runs, not a collision probability. Bounded motion now accepts the same seeded distribution for extra force, extra velocity, and reduced clearance: unique seeds, one deterministic sample per seed, and those seeds on the signed receipt. A duplicate seed is rejected before issuance. A software-only adapter records pass, fail, and indeterminate from the deterministic worker. The receipt backend stays sint-deterministic and the evidence grade stays deterministic. It does not claim Gazebo ran. Field calibration, distributions beyond navigation and bounded motion, a measured Gazebo/MoveIt backend, and a same-graph bypass proof remain pending. |
+| 2 | Scene-bound permits and edge continuity | Scene, robot, payload, policy and simulator digests bound; state change invalidates permit; nonce survives restart; offline runner holds a safe state | Snapshot binding exists in predictive path; the broker now re-reads scene digest and epoch after nonce consumption and rejects drift before adapter dispatch. File-backed edge nonce consumption survives restart when configured. The ROS 2 canonical snapshot can include task phase, tool, payload geometry, and calibration and policy digests; a non-hash payload digest is rejected, and a swapped payload changes the snapshot digest. Sensor provenance is versioned on that canonical payload (schema 1.0.0); a missing sensor identity or a source that is not a world-state channel is rejected. Occupancy and occlusion are versioned on that canonical payload (schema 1.0.0); a missing or invalid occlusion state is rejected. Duplicate occupancy region ids on that snapshot are rejected as `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle frame that disagrees with the snapshot frame is rejected as `INVALID_WORLD_STATE`. Duplicate sensor ids on that snapshot are rejected as `INVALID_WORLD_STATE`. Source clocks that disagree by more than `maxClockSkewMs` are rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose text before the first `:` names a different robot than `robotId` is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` that does not name `robotId` is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` of `robotId:` with an empty counter is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose counter is not a canonical integer is rejected as `INVALID_WORLD_STATE`. When task, sensor provenance, or occupancy is present, the snapshot carries a `sceneContractDigest` over those versioned fields, and changing one of them changes that digest. The broker permit rejects dispatch when the live world's `sceneContractDigest` differs from the receipt, including a change during nonce consumption. A capability token may carry that digest; the advisory effect plan copies it, and the gateway rejects a receipt whose snapshot digest differs (`SIMULATION_CONTEXT_MISMATCH`). The effect-plan hash covers resource, action, params, and the scene-contract digest when one is bound. Delegation that supplies tightened constraints keeps the parent's scene-contract digest. Atomic controller-side scene locking and controller hold remain pending. |
 | 3 | Robot enforcement pilot | SROS2 Enforce mode plus a command-gate node owns action endpoints; direct actuator bypass fails in an actual ROS graph | Docker demonstration exists; product binding pending. |
 | 4 | Continuous safety shield | Controller-rate barrier/QP filter and tested safe-hold behavior, independent of uplink and gateway availability | Research and hardware integration pending. |
 | 5 | Third-party evidence | COSE/SCITT receipts, signed ledger heads, inclusion proof export, field drift measurements | Pending. |
@@ -190,15 +214,17 @@ current code because the audit was taken before PR #271.
 | Boundary | Code to inspect first | Implemented behavior and limit |
 |---|---|---|
 | Authorization | `packages/policy-gateway/src/gateway.ts`, `simulation-evidence-policy.ts`, `packages/capability-tokens/src/validator.ts` | `PolicyGateway.intercept()` verifies configured issuer lineage, assigns the tier, enforces constraints, and evaluates signed V2 simulation evidence. Production gateway requires trusted issuers and simulator signer keys. Library deployments can still omit trust roots. |
-| Scene capture | `packages/bridge-ros2/src/world-snapshot-adapter.ts` | Content-addressed ROS 2 odometry, map, obstacle scan, and safety-controller snapshot with source timestamps, frame checks, uncertainty fields, epoch, and expiry. It is an adapter, not a live ROS node. |
-| Effect checks | `packages/engine-effect-simulator/src/scene-aware-navigation-model.ts`, `fixed-case-navigation-model.ts`, `deterministic-effect-simulator.ts` | Planar collinear waypoint and stopping-corridor checks; fixed footprint, reaction-delay, and human-speed stress cases are opt-in. Default receipt has one run and zero sampled coverage. Fixed-case coverage means conclusive finite cases, not probability. Turns, contact, and controller-rate dynamics remain unsupported. |
-| Worker | `apps/simulation-server/src/config.ts`, `runtime.ts` | Production requires an explicit scene-aware model for known physical protocols, a persistent signer, and bearer authentication. The scenario policy is optional and bounded to 1–16 fixed cases. It cannot claim physics-grade evidence. |
-| Proof and dispatch | `packages/execution-broker/src/execution-broker.ts`, `packages/sint-edge-agent/src/runner.ts` | Broker checks exact receipt, scene digest/epoch/expiry, consumes one-use nonce, and re-reads scene immediately before adapter dispatch. Edge runner can use durable file-backed replay storage; controller-side atomic scene locking and actual safe hold remain unproven. |
+| Scene capture | `packages/bridge-ros2/src/world-snapshot-adapter.ts` | Content-addressed ROS 2 odometry, map, obstacle scan, and safety-controller snapshot with source timestamps, frame checks, uncertainty fields, epoch, and expiry. An optional task binding (phase, tool, payload identity and geometry, calibration digest, and policy digest) is part of that canonical payload. A payload digest that is not 64 hex characters is rejected, and swapping the payload changes the snapshot digest. Sensor provenance is versioned onto that canonical payload (schema 1.0.0). A missing sensor identity or a source that is not a world-state channel is rejected. Occupancy and occlusion are versioned onto that canonical payload (schema 1.0.0). A missing or invalid occlusion state is rejected. Duplicate occupancy region ids on that snapshot are rejected as `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle frame that disagrees with the snapshot frame is rejected as `INVALID_WORLD_STATE`. Duplicate sensor ids on that snapshot are rejected as `INVALID_WORLD_STATE`. Source clocks that disagree by more than `maxClockSkewMs` are rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose text before the first `:` names a different robot than `robotId` is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` that does not name `robotId` is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` of `robotId:` with an empty counter is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose counter is not a canonical integer is rejected as `INVALID_WORLD_STATE`. When task, sensor provenance, or occupancy is present, the snapshot carries a `sceneContractDigest` over those versioned fields, and changing one of them changes that digest. The broker permit rejects dispatch when the live world's `sceneContractDigest` differs from the receipt, including a change during nonce consumption. A capability token may carry that digest. The advisory effect plan copies it, and the gateway rejects a receipt whose snapshot digest differs. The effect-plan hash covers resource, action, params, and the scene-contract digest when one is bound, and delegation that supplies tightened constraints keeps the parent's scene-contract digest. It is an adapter, not a live ROS node. |
+| Effect checks | `packages/engine-effect-simulator/src/scene-aware-navigation-model.ts`, `fixed-case-navigation-model.ts`, `fixed-case-bounded-motion-model.ts`, `deterministic-effect-simulator.ts`, `software-only-simulator-adapter.ts` | Planar collinear waypoint and stopping-corridor checks; fixed footprint, reaction-delay, and human-speed stress cases are opt-in. Default receipt has one run and zero sampled coverage. An approved navigation policy may add unique seeds; each seed draws one deterministic perturbation inside the approved bounds, and the receipt stores that seed list. Bounded motion accepts the same seeded distribution for extra force, extra velocity, and reduced clearance: unique seeds, one deterministic sample per seed, and those seeds on the signed receipt. A duplicate seed is rejected before issuance. Coverage is the fraction of conclusive observed, fixed, and seeded runs, not a probability. A software-only adapter records pass, fail, and indeterminate from that deterministic worker. The recorded backend stays `sint-deterministic` and the evidence grade stays `deterministic`. It does not claim Gazebo ran. Turns, contact, and controller-rate dynamics remain unsupported. |
+| Worker | `apps/simulation-server/src/config.ts`, `runtime.ts` | Production requires an explicit scene-aware model for known physical protocols, a persistent signer, and bearer authentication. The scenario policy is optional. Fixed cases plus seeds stay within 16 stress runs. It cannot claim physics-grade evidence. |
+| Proof and dispatch | `packages/execution-broker/src/execution-broker.ts`, `packages/sint-edge-agent/src/runner.ts` | Broker checks exact receipt, scene digest, epoch, scene-contract digest, and expiry, consumes one-use nonce, and re-reads those fields immediately before adapter dispatch. Edge runner can use durable file-backed replay storage; controller-side atomic scene locking and actual safe hold remain unproven. |
 | Operator and ledger | `apps/gateway-server/src/routes/approvals.ts`, `routes/ledger.ts`, `packages/evidence-ledger/` | Production REST votes require allowlisted signatures and are logged. HTTP ledger proof is signed; Postgres migrations guard UPDATE/DELETE/TRUNCATE. The dashboard does not yet hold operator signing keys. |
 
 The conformance tests that exercise these paths are in
 `packages/conformance-tests/src/simulation-evidence-conformance.test.ts`,
+`physical-dispatch-conformance.test.ts`,
 `scene-aware-navigation-conformance.test.ts`,
+`seeded-navigation-distribution-conformance.test.ts`,
 `deterministic-effect-simulator-conformance.test.ts`, and
 `execution-broker-conformance.test.ts`. Unit tests also cover the gateway,
 simulator, worker configuration, edge runner, approvals, and ledger. These tests
@@ -213,25 +239,59 @@ are software evidence; they do not prove actuator non-bypass on hardware.
    attempts that try to dispatch without a fresh, signed V2 receipt, through a
    lower-tier rule, with a reused nonce, or with a changed effect. Do not claim
    non-bypass until a same-graph robot attack fails.
-2. **Make the live scene contract complete (P0).** Version sensor provenance,
-   transforms, occupancy/occlusion, robot/tool/payload geometry, task phase,
-   calibration and policy digests, and uncertainty bounds in the exact scene
-   artifact. Bind these to token, plan, receipt, and broker permit. Reject
-   missing sources, inconsistent clocks/frames, swapped identities, stale
-   state, and scene changes after nonce consumption. Add controller-side
-   atomic scene/permit enforcement; the broker's second read alone cannot
-   eliminate a change between read and actuator use.
-3. **Make scenario evidence reproducible and calibrated (P1).** Extend the
-   fixed-case runner with approved seeded perturbation distributions per effect
-   class. Store every seed, perturbation bounds, case outcome, simulator/model
-   digest, and exact trace; define coverage denominators before using a
-   coverage threshold. Preserve one-hard-failure-denies behavior. Test
-   mismatched case policy, forged high coverage, duplicate seeds, unsupported
-   phenomena, timeout, and out-of-distribution scenes. Do not interpret finite
-   case coverage as a collision probability.
-4. **Add physical backends and independent controller protection (P1).** Build
-   a Gazebo/MoveIt or equivalent adapter with measured model fidelity and
-   contact/dynamics checks, then a ROS 2 command-gate node in SROS2 Enforce
+2. **Make the live scene contract complete (P0).** The ROS 2 snapshot now
+   stores task phase, tool, payload geometry, and calibration and policy
+   digests in the canonical payload. A payload digest that is not 64 hex
+   characters is rejected, and a swapped payload changes the snapshot digest.
+   Sensor provenance is versioned on that same payload; a missing sensor
+   identity or a source that is not a world-state channel is rejected.
+   Occupancy and occlusion are versioned on that same payload; a missing or
+   invalid occlusion state is rejected. Duplicate occupancy region ids on that
+   snapshot are rejected as `INVALID_WORLD_STATE`. A declared odometry, map, or obstacle
+   frame that disagrees with the snapshot frame is rejected as
+   `INVALID_WORLD_STATE`. Duplicate sensor ids on that snapshot are rejected
+   as `INVALID_WORLD_STATE`. Source clocks that disagree by more than
+   `maxClockSkewMs` are rejected as `INVALID_WORLD_STATE`. A `stateEpoch`
+   whose text before the first `:` names a different robot than `robotId` is
+   rejected as `INVALID_WORLD_STATE`. A `stateEpoch` that does not name
+   `robotId` is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` of
+   `robotId:` with an empty counter is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose counter is not a canonical integer is rejected as `INVALID_WORLD_STATE`.
+   When task, sensor provenance, or occupancy is present, the snapshot carries
+   a `sceneContractDigest` over those versioned fields, and changing one of
+   them changes that digest.
+   The broker permit rejects a mismatch between the live world and the receipt
+   `sceneContractDigest`, including a change during nonce consumption. A
+   capability token may carry that digest. The advisory effect plan copies it,
+   and the gateway rejects a receipt whose snapshot digest differs. The
+   effect-plan hash covers resource, action, params, and the scene-contract digest when one is bound. Delegation
+   that supplies tightened constraints keeps the parent's scene-contract digest.
+   Missing sources, stale state, and scene-contract drift after nonce
+   consumption are already rejected. A `stateEpoch` that names a different
+   robot than `robotId` is rejected. A `stateEpoch` that does not name the
+   robot is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` of `robotId:`
+   with an empty counter is rejected as `INVALID_WORLD_STATE`. A `stateEpoch` whose counter is not a canonical integer is rejected as `INVALID_WORLD_STATE`. Duplicate occupancy region ids are rejected as `INVALID_WORLD_STATE`. Other identity
+   substitutions remain open. Add
+   controller-side atomic scene/permit enforcement; the broker's second read
+   alone cannot eliminate a change between read and actuator use.
+3. **Make scenario evidence reproducible and calibrated (P1).** Navigation
+   now stores an approved seeded distribution: unique seeds, perturbation
+   bounds, one deterministic sample per seed, and the seed list on the signed
+   receipt. One hard failure still denies the aggregate, and a duplicate seed
+   is rejected before issuance. Coverage is conclusive runs over the observed
+   scene, fixed cases, and seeds. Bounded motion stores the same distribution
+   for extra force, extra velocity, and reduced clearance: unique seeds, one
+   deterministic sample per seed, and those seeds on the signed receipt. A
+   duplicate seed is rejected before issuance. Field calibration, distributions
+   beyond those two classes, forged high coverage, unsupported phenomena,
+   timeout, and out-of-distribution scenes remain open. Do not interpret finite
+   coverage as a collision probability.
+4. **Add physical backends and independent controller protection (P1).** A
+   software-only adapter records pass, fail, and indeterminate for a
+   bounded-motion check. The receipt backend remains `sint-deterministic` and
+   the evidence grade remains `deterministic`. It does not run Gazebo or
+   MoveIt. Build a Gazebo/MoveIt or equivalent adapter with measured model
+   fidelity and contact/dynamics checks, then a ROS 2 command-gate node in
+   SROS2 Enforce
    mode that owns motion endpoints. Prove direct `/cmd_vel`/action bypass fails,
    and test a low-energy controller shield and unconditional E-stop under link
    loss and simulator outage. Record p50/p95/p99 scene assembly, simulation,

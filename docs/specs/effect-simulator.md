@@ -143,14 +143,21 @@ check, not a physics simulation or controller-rate safety mechanism.
 Without a configured case policy, the deterministic backend runs one
 observed-state check and reports `runCount: 1`, `coverage: 0`, and no seeds.
 An optional `scenarioPolicy` on the scene-aware navigation worker runs the
-observed scene plus 1–16 fixed adversarial cases. Each case increases the
-robot footprint, reaction delay, or human reach speed by a bounded amount;
-all cases use the same digest-verified sensor scene. A failed case fails the
-aggregate result. An indeterminate case lowers coverage and makes the result
-indeterminate unless another case failed. The signed trace retains the exact
-case policy and each case's checks. `coverage` is the fraction of the observed
-run and fixed cases that reached a conclusive check; it is **not** probability mass or a
-calibrated field-risk estimate. No random seeds are claimed.
+observed scene plus fixed adversarial cases. Each case increases the robot
+footprint, reaction delay, or human reach speed by a bounded amount. The same
+policy may add a `distribution`: unique seeds in `[0, 2^32)`, and approved
+bounds for radius, reaction time, and human speed. Each seed draws one
+deterministic sample inside those bounds. The same seed always redraws the
+same sample. Fixed cases plus seeds stay within 16 stress runs, and every run
+uses the same digest-verified sensor scene. A failed case fails the aggregate.
+An indeterminate case lowers coverage and makes the result indeterminate
+unless another case failed. A duplicate seed, an out-of-range bound, or a seed
+list that disagrees with the retained policy is rejected before a receipt is
+issued. The signed trace retains the exact policy, including the distribution,
+and each run's checks. The receipt stores the approved seed list. `coverage`
+is the fraction of the observed run, fixed cases, and seeded samples that
+reached a conclusive check. It is **not** probability mass or a calibrated
+field-risk estimate.
 
 A deployment can set
 `requiredScenarioSetDigest` in its evidence requirement. The gateway then

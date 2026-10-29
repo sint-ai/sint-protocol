@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   type SimulationEvidenceRequirement,
   type SimulationEvidenceReceipt,
   type SintCapabilityToken,
@@ -10,6 +11,7 @@ import {
 import {
   generateKeypair,
   generateUUIDv7,
+  hashSha256,
   issueCapabilityToken,
   sign,
 } from "@pshkv/gate-capability-tokens";
@@ -108,7 +110,10 @@ function signedReceipt(
     receiptId: generateUUIDv7(),
     evidenceGrade: "deterministic",
     requestDigest: computeSimulationRequestDigest(request),
-    effectPlanDigest: computeSimulationEffectPlanDigest(request),
+    effectPlanDigest: computeSimulationEffectPlanDigest(
+      request,
+      token.constraints.sceneContractDigest,
+    ),
     tokenDigest: computeSimulationTokenDigest(token),
     resource: request.resource,
     action: request.action,
@@ -306,6 +311,62 @@ describe("predictive simulation evidence policy", () => {
     });
 
     expect(decision.denial?.policyViolated).toBe("SIMULATION_CONTEXT_MISMATCH");
+  });
+
+  it("rejects a receipt whose scene contract differs from the token and effect plan", async () => {
+    const sceneContractDigest = "a".repeat(64);
+    const token = makeToken({ sceneContractDigest });
+    const request = makeRequest(token);
+    const preflight = await gateway(token).value.preflightSimulation(request);
+
+    expect(preflight.ok).toBe(true);
+    if (!preflight.ok) return;
+    expect(preflight.value.effectPlan.sceneContractDigest).toBe(sceneContractDigest);
+
+    const matching = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: { ...draft.worldSnapshot, sceneContractDigest },
+    }));
+    const allowed = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: matching },
+    });
+    expect(allowed.action).toBe("allow");
+
+    const swapped = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: { ...draft.worldSnapshot, sceneContractDigest: "b".repeat(64) },
+    }));
+    const denied = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: swapped },
+    });
+    expect(denied.action).toBe("deny");
+    expect(denied.denial?.policyViolated).toBe("SIMULATION_CONTEXT_MISMATCH");
+  });
+
+  it("includes the scene contract in the effect-plan digest", async () => {
+    const sceneContractDigest = "c".repeat(64);
+    const token = makeToken({ sceneContractDigest });
+    const request = makeRequest(token);
+    const preflight = await gateway(token).value.preflightSimulation(request);
+
+    expect(preflight.ok).toBe(true);
+    if (!preflight.ok) return;
+
+    const bound = hashSha256(canonicalJsonStringify({
+      resource: request.resource,
+      action: request.action,
+      params: request.params,
+      sceneContractDigest,
+    }));
+    const unbound = hashSha256(canonicalJsonStringify({
+      resource: request.resource,
+      action: request.action,
+      params: request.params,
+    }));
+    expect(preflight.value.effectPlan.effectPlanDigest).toBe(bound);
+    expect(preflight.value.effectPlan.effectPlanDigest).not.toBe(unbound);
   });
 
   it("rejects a receipt whose nonce was consumed by the execution broker", async () => {

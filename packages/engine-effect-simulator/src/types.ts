@@ -39,7 +39,7 @@ export interface DeterministicCheckResult {
   /** Present only when a model actually ran an approved fixed case policy. */
   readonly scenarios?: SimulationScenarioEvidence;
   /** The case policy retained in the signed trace for exact replay. */
-  readonly scenarioPolicy?: NavigationScenarioPolicy;
+  readonly scenarioPolicy?: NavigationScenarioPolicy | BoundedMotionScenarioPolicy;
 }
 
 export interface DeterministicCheckRecord {
@@ -102,11 +102,28 @@ export interface SceneAwareNavigationModelOptions {
   readonly reactionTimeMs: number;
 }
 
-/** Fixed conservative stress cases; coverage is over these cases, not a probability estimate. */
+/**
+ * Fixed cases plus an optional seeded perturbation distribution.
+ * Coverage is the fraction of conclusive runs, not a probability estimate.
+ */
 export interface NavigationScenarioPolicy {
   readonly version: "1.0.0";
   readonly policyId: string;
   readonly cases: readonly NavigationStressCase[];
+  /** Unique seeds draw one sample each. Fixed cases plus seeds stay within 16 runs. */
+  readonly distribution?: SeededNavigationDistribution;
+}
+
+/** Approved support for deterministic navigation perturbations. */
+export interface SeededNavigationDistribution {
+  readonly version: "1.0.0";
+  /** Unique integers in [0, 2^32). Order is part of the approved policy. */
+  readonly seeds: readonly number[];
+  readonly bounds: {
+    readonly extraRobotRadiusMeters: NumericRange;
+    readonly extraReactionTimeMs: NumericRange;
+    readonly extraHumanSpeedMps: NumericRange;
+  };
 }
 
 export interface NavigationStressCase {
@@ -114,4 +131,35 @@ export interface NavigationStressCase {
   readonly extraRobotRadiusMeters?: number;
   readonly extraReactionTimeMs?: number;
   readonly extraHumanSpeedMps?: number;
+}
+
+/** Approved support for deterministic bounded-motion perturbations. */
+export interface SeededBoundedMotionDistribution {
+  readonly version: "1.0.0";
+  /** Unique integers in [0, 2^32). Order is part of the approved policy. */
+  readonly seeds: readonly number[];
+  readonly bounds: {
+    readonly extraForceNewtons: NumericRange;
+    readonly extraVelocityMps: NumericRange;
+    readonly reducedClearanceMeters: NumericRange;
+  };
+}
+
+export interface BoundedMotionStressCase {
+  readonly id: string;
+  readonly extraForceNewtons?: number;
+  readonly extraVelocityMps?: number;
+  readonly reducedClearanceMeters?: number;
+}
+
+/**
+ * Fixed cases plus an optional seeded perturbation distribution.
+ * Coverage is the fraction of conclusive runs, not a probability estimate.
+ */
+export interface BoundedMotionScenarioPolicy {
+  readonly version: "1.0.0";
+  readonly policyId: string;
+  readonly cases: readonly BoundedMotionStressCase[];
+  /** Unique seeds draw one sample each. Fixed cases plus seeds stay within 16 runs. */
+  readonly distribution?: SeededBoundedMotionDistribution;
 }

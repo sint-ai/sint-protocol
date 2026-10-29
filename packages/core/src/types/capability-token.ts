@@ -19,6 +19,7 @@ import type {
   ISO8601,
   MetersPerSecond,
   Newtons,
+  SHA256,
   UUIDv7,
 } from "./primitives.js";
 import type { VlaAdaptationPermit } from "./vla.js";
@@ -120,6 +121,12 @@ export interface SintPhysicalConstraints {
     /** Maximum number of downstream systems or agents to which the effect may propagate. */
     readonly maxPropagationDepth?: number;
   };
+
+  /**
+   * Scene contract this capability may act under.
+   * Simulation evidence for the same effect must carry this digest.
+   */
+  readonly sceneContractDigest?: SHA256;
 }
 
 /**

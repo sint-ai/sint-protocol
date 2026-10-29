@@ -204,6 +204,26 @@ describe("DeterministicEffectSimulator", () => {
     expect(simulated.error.code).toBe("INVALID_PREFLIGHT");
   });
 
+  it("rejects a preflight whose effect-plan digest omits a bound scene contract", async () => {
+    const sceneContractDigest = digest("e");
+    const omitted = preflight(safeParams, {
+      effectPlan: {
+        requestDigest: digest("1"),
+        tokenDigest: digest("3"),
+        resource: RESOURCE,
+        action: ACTION,
+        params: safeParams,
+        sceneContractDigest,
+        effectPlanDigest: effectPlanDigestFor(RESOURCE, ACTION, safeParams),
+      },
+    });
+    const rejected = await simulator().simulate(omitted, world());
+
+    expect(rejected.ok).toBe(false);
+    if (rejected.ok) return;
+    expect(rejected.error.code).toBe("INVALID_PREFLIGHT");
+  });
+
   it("rejects an evidence grade this backend cannot produce", async () => {
     const simulated = await simulator().simulate(preflight(safeParams, {
       assignedTier: ApprovalTier.T3_COMMIT,

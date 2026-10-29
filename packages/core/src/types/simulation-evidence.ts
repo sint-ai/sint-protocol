@@ -55,6 +55,8 @@ export interface EffectPlan {
   readonly resource: string;
   readonly action: string;
   readonly params: Record<string, unknown>;
+  /** Scene contract copied from the capability token, when the token binds one. */
+  readonly sceneContractDigest?: SHA256;
 }
 
 /** Advisory output only. It cannot authorize or execute an action. */
@@ -128,6 +130,11 @@ export interface SimulationWorldSnapshot {
   readonly stateEpoch?: string;
   /** Aggregate state-estimation uncertainty, normalized to [0, 1]. */
   readonly uncertainty?: number;
+  /**
+   * Digest of the task, sensor provenance, and occupancy bound into this
+   * snapshot. Absent when the capture has none of those fields.
+   */
+  readonly sceneContractDigest?: SHA256;
 }
 
 export interface SimulationRuntimeIdentity {
@@ -173,7 +180,7 @@ export interface SimulationEvidenceReceipt {
   readonly evidenceGrade: SimulationEvidenceGrade;
   /** Digest of the request with this receipt removed from executionContext. */
   readonly requestDigest: SHA256;
-  /** Digest of resource, action, and params: the exact proposed effect plan. */
+  /** Digest of resource, action, params, and the scene contract when one is bound. */
   readonly effectPlanDigest: SHA256;
   /** Digest of the complete signed capability token evaluated for this request. */
   readonly tokenDigest: SHA256;

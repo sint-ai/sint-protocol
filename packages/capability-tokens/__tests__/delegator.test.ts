@@ -290,4 +290,40 @@ describe("Capability Token Delegator", () => {
     if (delegated.ok) return;
     expect(delegated.error).toBe("INSUFFICIENT_PERMISSIONS");
   });
+
+  it("keeps the scene-contract digest when constraints are tightened", () => {
+    const sceneContractDigest = "a".repeat(64);
+    const issued = issueCapabilityToken(
+      {
+        issuer: root.publicKey,
+        subject: agent1.publicKey,
+        resource: "ros2:///cmd_vel",
+        actions: ["publish"],
+        constraints: {
+          maxVelocityMps: 1.0,
+          sceneContractDigest,
+        },
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: futureISO(24),
+        revocable: true,
+      },
+      root.privateKey,
+    );
+    expect(issued.ok).toBe(true);
+    if (!issued.ok) return;
+    expect(issued.value.constraints.sceneContractDigest).toBe(sceneContractDigest);
+
+    const delegated = delegateCapabilityToken(
+      issued.value,
+      {
+        newSubject: agent2.publicKey,
+        tightenConstraints: { maxVelocityMps: 0.3 },
+      },
+      agent1.privateKey,
+    );
+    expect(delegated.ok).toBe(true);
+    if (!delegated.ok) return;
+    expect(delegated.value.constraints.maxVelocityMps).toBe(0.3);
+    expect(delegated.value.constraints.sceneContractDigest).toBe(sceneContractDigest);
+  });
 });

@@ -14,6 +14,7 @@ export const simulationWorldSnapshotSchema = z.object({
   validUntil: iso8601Schema,
   stateEpoch: z.string().min(1).max(128).optional(),
   uncertainty: z.number().min(0).max(1).optional(),
+  sceneContractDigest: sha256Schema.optional(),
 }).strict();
 
 export const simulationRuntimeIdentitySchema = z.object({
@@ -86,6 +87,7 @@ export const effectPlanSchema = z.object({
   resource: z.string().min(1).max(512),
   action: z.string().min(1).max(64),
   params: z.record(z.unknown()),
+  sceneContractDigest: sha256Schema.optional(),
 }).strict();
 
 export const simulationPreflightSchema = z.object({

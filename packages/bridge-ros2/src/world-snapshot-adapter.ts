@@ -59,6 +59,20 @@ export interface ROS2SafetyControllerState {
   readonly uncertainty?: number;
 }
 
+export interface ROS2PayloadGeometry {
+  readonly payloadId: string;
+  readonly digest: string;
+  readonly radiusMeters: number;
+}
+
+export interface ROS2TaskBinding {
+  readonly phase: string;
+  readonly toolId?: string;
+  readonly payload?: ROS2PayloadGeometry;
+  readonly calibrationDigest: string;
+  readonly policyDigest: string;
+}
+
 export type ROS2WorldStateSource =
   | "odometry"
   | "jointState"
@@ -66,6 +80,32 @@ export type ROS2WorldStateSource =
   | "map"
   | "obstacles"
   | "safetyController";
+
+export interface ROS2SensorSource {
+  readonly sensorId: string;
+  readonly version: string;
+  readonly source: ROS2WorldStateSource;
+  readonly observedAt: string;
+}
+
+export interface ROS2SensorProvenance {
+  readonly schemaVersion: "1.0.0";
+  readonly sensors: readonly ROS2SensorSource[];
+}
+
+export type ROS2OcclusionState = "clear" | "partial" | "occluded" | "unknown";
+
+export interface ROS2OccupancyRegion {
+  readonly regionId: string;
+  readonly occupied: boolean;
+  readonly occlusion: ROS2OcclusionState;
+  readonly observedAt: string;
+}
+
+export interface ROS2OccupancyOcclusion {
+  readonly schemaVersion: "1.0.0";
+  readonly regions: readonly ROS2OccupancyRegion[];
+}
 
 export interface ROS2WorldStateInput {
   readonly robotId: string;
@@ -84,11 +124,19 @@ export interface ROS2WorldStateInput {
   readonly obstacleScanObservedAt?: string;
   readonly safetyController?: ROS2SafetyControllerState;
   readonly localizationConfidence?: number;
+  /** Task phase, tool, payload geometry, and the calibration and policy digests in force. */
+  readonly task?: ROS2TaskBinding;
+  /** Sensor identities that produced this capture. Versioned onto the canonical snapshot. */
+  readonly sensors?: readonly ROS2SensorSource[];
+  /** Region occupancy and occlusion. Versioned onto the canonical snapshot. */
+  readonly occupancy?: readonly ROS2OccupancyRegion[];
 }
 
 /** Canonical state whose digest is placed in SimulationWorldSnapshot. */
-export interface ROS2WorldSnapshotPayload extends ROS2WorldStateInput {
+export interface ROS2WorldSnapshotPayload extends Omit<ROS2WorldStateInput, "sensors" | "occupancy"> {
   readonly schemaVersion: "1.0.0";
+  readonly sensorProvenance?: ROS2SensorProvenance;
+  readonly occupancyOcclusion?: ROS2OccupancyOcclusion;
 }
 
 export interface ROS2WorldSnapshotCapture {
@@ -162,6 +210,8 @@ function sourceTimestamps(input: ROS2WorldStateInput): readonly string[] {
     ...(input.obstacles ?? []).map((obstacle) => obstacle.observedAt),
     input.obstacleScanObservedAt,
     input.safetyController?.observedAt,
+    ...(input.sensors ?? []).map((sensor) => sensor.observedAt),
+    ...(input.occupancy ?? []).map((region) => region.observedAt),
   ].filter((timestamp): timestamp is string => timestamp !== undefined);
 }
 
@@ -178,6 +228,20 @@ function inputUncertainties(input: ROS2WorldStateInput): readonly number[] {
 function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (!input.robotId || !input.frameId || !input.stateEpoch) {
     return "robotId, frameId, and stateEpoch are required";
+  }
+  const epochRobot = input.stateEpoch.indexOf(":");
+  if (epochRobot < 0) {
+    return "stateEpoch does not name robotId";
+  }
+  if (input.stateEpoch.slice(0, epochRobot) !== input.robotId) {
+    return "stateEpoch names a different robot than robotId";
+  }
+  const epochCounter = input.stateEpoch.slice(epochRobot + 1);
+  if (epochCounter.length === 0) {
+    return "stateEpoch counter is empty";
+  }
+  if (!/^(0|[1-9][0-9]*)$/.test(epochCounter)) {
+    return "stateEpoch counter is not a canonical integer";
   }
   if (!isNormalized(input.localizationConfidence)) {
     return "localizationConfidence must be normalized to [0,1]";
@@ -264,6 +328,127 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || !isNormalized(input.safetyController.uncertainty))
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
+  }
+  return validateTask(input.task)
+    ?? validateSensors(input.sensors)
+    ?? validateOccupancy(input.occupancy)
+    ?? validateCrossSourceFrames(input);
+}
+
+function sourceFrameDisagrees(snapshotFrame: string, frameId: string | undefined): boolean {
+  return frameId !== undefined && frameId !== snapshotFrame;
+}
+
+/** A declared odometry, map, or obstacle frame must be the snapshot frame. */
+function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefined {
+  if (sourceFrameDisagrees(input.frameId, input.odometry?.frameId)) {
+    return "odometry frame does not match the snapshot frame";
+  }
+  if (input.map !== undefined && input.map.frameId !== input.frameId) {
+    return "map frame does not match the snapshot frame";
+  }
+  for (const obstacle of input.obstacles ?? []) {
+    if (sourceFrameDisagrees(input.frameId, obstacle.frameId)) {
+      return "obstacle frame does not match the snapshot frame";
+    }
+  }
+  return undefined;
+}
+
+const OCCLUSION_STATES: readonly ROS2OcclusionState[] = [
+  "clear",
+  "partial",
+  "occluded",
+  "unknown",
+];
+
+function validateOccupancy(
+  regions: readonly ROS2OccupancyRegion[] | undefined,
+): string | undefined {
+  if (regions === undefined) return undefined;
+  const regionIds = regions.map((region) => region.regionId);
+  if (new Set(regionIds).size !== regionIds.length) {
+    return "occupancy region identities must be unique within a snapshot";
+  }
+  for (const region of regions) {
+    if (!region.occlusion) {
+      return "occupancy occlusion state is missing";
+    }
+    if (!OCCLUSION_STATES.includes(region.occlusion)) {
+      return "occupancy occlusion state is invalid";
+    }
+  }
+  return undefined;
+}
+
+const WORLD_STATE_SOURCES: readonly ROS2WorldStateSource[] = [
+  "odometry",
+  "jointState",
+  "transforms",
+  "map",
+  "obstacles",
+  "safetyController",
+];
+
+function validateSensors(
+  sensors: readonly ROS2SensorSource[] | undefined,
+): string | undefined {
+  if (sensors === undefined) return undefined;
+  const sensorIds = sensors.map((sensor) => sensor.sensorId);
+  if (new Set(sensorIds).size !== sensorIds.length) {
+    return "sensor identities must be unique within a snapshot";
+  }
+  for (const sensor of sensors) {
+    if (!sensor.sensorId) {
+      return "sensor provenance identity is missing";
+    }
+    if (!WORLD_STATE_SOURCES.includes(sensor.source)) {
+      return "sensor provenance source is invalid";
+    }
+  }
+  return undefined;
+}
+
+function isContentDigest(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-f]{64}$/i.test(value);
+}
+
+/** Hash of the versioned task, sensor provenance, and occupancy. Absent when none are present. */
+function sceneContractDigest(payload: ROS2WorldSnapshotPayload): string | undefined {
+  if (
+    payload.task === undefined
+    && payload.sensorProvenance === undefined
+    && payload.occupancyOcclusion === undefined
+  ) {
+    return undefined;
+  }
+  return hashSha256(canonicalJsonStringify({
+    occupancyOcclusion: payload.occupancyOcclusion ?? null,
+    sensorProvenance: payload.sensorProvenance ?? null,
+    task: payload.task ?? null,
+  }));
+}
+
+function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
+  if (task === undefined) return undefined;
+  if (
+    !task.phase
+    || task.phase.length > 128
+    || (task.toolId !== undefined && task.toolId.length === 0)
+    || !isContentDigest(task.calibrationDigest)
+    || !isContentDigest(task.policyDigest)
+  ) {
+    return "task phase, calibration digest, or policy digest is invalid";
+  }
+  const payload = task.payload;
+  if (
+    payload !== undefined
+    && (!payload.payloadId
+      || !isContentDigest(payload.digest)
+      || !isFiniteNumber(payload.radiusMeters)
+      || payload.radiusMeters < 0)
+  ) {
+    return "task payload identity, digest, or geometry is invalid";
   }
   return undefined;
 }
@@ -357,6 +542,16 @@ export function createROS2WorldSnapshot(
     });
   }
 
+  const sourceTimes = physicalSources.map((timestamp) => Date.parse(timestamp));
+  const earliestSource = Math.min(...sourceTimes);
+  const latestSource = Math.max(...sourceTimes);
+  if (latestSource - earliestSource > maxClockSkewMs) {
+    return err({
+      code: "INVALID_WORLD_STATE",
+      message: "ROS 2 world-state source clocks disagree",
+    });
+  }
+
   const uncertainties = inputUncertainties(input);
   if (uncertainties.some((uncertainty) => !isNormalized(uncertainty))) {
     return err({ code: "INVALID_WORLD_STATE", message: "All uncertainty values must be normalized to [0,1]" });
@@ -372,11 +567,25 @@ export function createROS2WorldSnapshot(
     });
   }
 
+  const { sensors, occupancy, ...canonicalState } = canonicalizeInput(input);
   const payload: ROS2WorldSnapshotPayload = {
     schemaVersion: "1.0.0",
-    ...canonicalizeInput(input),
+    ...canonicalState,
+    ...(sensors !== undefined && {
+      sensorProvenance: {
+        schemaVersion: "1.0.0" as const,
+        sensors,
+      },
+    }),
+    ...(occupancy !== undefined && {
+      occupancyOcclusion: {
+        schemaVersion: "1.0.0" as const,
+        regions: occupancy,
+      },
+    }),
   };
   const canonicalPayload = canonicalJsonStringify(payload);
+  const contractDigest = sceneContractDigest(payload);
   const validityMs = options.validityMs ?? 1_000;
   if (!Number.isFinite(validityMs) || validityMs <= 0) {
     return err({ code: "INVALID_WORLD_STATE", message: "Snapshot validityMs must be positive" });
@@ -394,6 +603,7 @@ export function createROS2WorldSnapshot(
       validUntil: new Date(capturedAt + validityMs).toISOString(),
       stateEpoch: input.stateEpoch,
       ...(uncertainty !== undefined && { uncertainty }),
+      ...(contractDigest !== undefined && { sceneContractDigest: contractDigest }),
     },
   });
 }

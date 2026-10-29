@@ -70,6 +70,9 @@ function attenuateConstraints(
       parent.consequenceConstraints,
       tighten.consequenceConstraints,
     ),
+    // Scene binding is an identity, not a numeric limit. Tightening other
+    // constraints must not drop or replace the parent's contract.
+    sceneContractDigest: parent.sceneContractDigest,
   };
 }
 

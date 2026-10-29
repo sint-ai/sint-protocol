@@ -89,6 +89,41 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("scenarioPolicy must contain");
   });
 
+  it("accepts a seeded navigation distribution and rejects a duplicated seed", () => {
+    const model = {
+      id: "nav-seeded-v1", kind: "scene-aware-navigation",
+      resources: ["ros2:///nav/segment"], actions: ["publish"],
+      envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
+      scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
+      scenarioPolicy: {
+        version: "1.0.0",
+        policyId: "warehouse-seeded-v1",
+        cases: [{ id: "human-speed", extraHumanSpeedMps: 0.5 }],
+        distribution: {
+          version: "1.0.0",
+          seeds: [7, 11],
+          bounds: {
+            extraRobotRadiusMeters: { min: 0, max: 0.2 },
+            extraReactionTimeMs: { min: 0, max: 50 },
+            extraHumanSpeedMps: { min: 0, max: 0.2 },
+          },
+        },
+      },
+    };
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test", SINT_SIM_MODEL: JSON.stringify(model) }).model)
+      .toMatchObject(model);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MODEL: JSON.stringify({
+        ...model,
+        scenarioPolicy: {
+          ...model.scenarioPolicy,
+          distribution: { ...model.scenarioPolicy.distribution, seeds: [7, 7] },
+        },
+      }),
+    })).toThrow("unique seeds");
+  });
+
   it("rejects the parameter-only ROS 2 worker in production", () => {
     const signer = generateKeypair();
     const base = {

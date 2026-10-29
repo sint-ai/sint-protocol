@@ -78,6 +78,8 @@ export const physicalConstraintsSchema = z.object({
   maxAngularVelocityRps: z.number().positive().optional(),
   /** Contact force detection threshold in Newtons. */
   contactForceThresholdN: z.number().positive().optional(),
+  /** Scene contract this capability may act under. */
+  sceneContractDigest: sha256Schema.optional(),
   consequenceConstraints: z.object({
     maxReversibility: z.enum(["reversible", "compensatable", "irreversible"]).optional(),
     maxAffectedEntities: z.number().int().positive().optional(),

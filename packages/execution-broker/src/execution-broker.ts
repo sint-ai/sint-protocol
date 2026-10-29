@@ -118,11 +118,20 @@ export function computeExecutionRequestDigest(request: SintRequest): string {
   return hashSha256(canonicalJsonStringify({ ...request, executionContext }));
 }
 
-export function computeExecutionEffectPlanDigest(request: SintRequest): string {
+/**
+ * Stable digest for the effect about to be dispatched.
+ * A bound scene contract is part of that effect; omitting it leaves the
+ * historical resource, action, and params digest unchanged.
+ */
+export function computeExecutionEffectPlanDigest(
+  request: SintRequest,
+  sceneContractDigest?: string,
+): string {
   return hashSha256(canonicalJsonStringify({
     resource: request.resource,
     action: request.action,
     params: request.params,
+    ...(sceneContractDigest !== undefined && { sceneContractDigest }),
   }));
 }
 
@@ -220,7 +229,10 @@ export class ExecutionBroker<T> {
     }
     if (
       receipt.requestDigest !== computeExecutionRequestDigest(request)
-      || receipt.effectPlanDigest !== computeExecutionEffectPlanDigest(request)
+      || receipt.effectPlanDigest !== computeExecutionEffectPlanDigest(
+        request,
+        receipt.worldSnapshot.sceneContractDigest,
+      )
       || receipt.resource !== request.resource
       || receipt.action !== request.action
     ) {
@@ -261,6 +273,7 @@ export class ExecutionBroker<T> {
     if (
       currentWorld.digest !== receipt.worldSnapshot.digest
       || currentWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
+      || currentWorld.sceneContractDigest !== receipt.worldSnapshot.sceneContractDigest
     ) {
       if (chunk?.safeStopOnFailure) {
         await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before nonce consumption");
@@ -309,6 +322,7 @@ export class ExecutionBroker<T> {
     if (
       dispatchWorld.digest !== receipt.worldSnapshot.digest
       || dispatchWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
+      || dispatchWorld.sceneContractDigest !== receipt.worldSnapshot.sceneContractDigest
     ) {
       if (chunk?.safeStopOnFailure) {
         await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before dispatch");

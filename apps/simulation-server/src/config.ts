@@ -147,7 +147,7 @@ function parseModel(raw: string | undefined): SimulationWorkerModelConfig {
       throw new Error("SINT_SIM_MODEL scene-aware-navigation requires explicit radius, horizon, human speed, braking, reaction time, velocity and clearance bounds");
     }
     if (model.scenarioPolicy !== undefined && !isValidNavigationScenarioPolicy(model.scenarioPolicy)) {
-      throw new Error("SINT_SIM_MODEL scenarioPolicy must contain 1–16 distinct, nonzero fixed navigation stress cases");
+      throw new Error("SINT_SIM_MODEL scenarioPolicy must contain 1–16 distinct, nonzero stress runs; seeded distributions need unique seeds inside the approved bounds");
     }
   } else if (model.scene !== undefined) {
     throw new Error("SINT_SIM_MODEL scene settings require scene-aware-navigation kind");

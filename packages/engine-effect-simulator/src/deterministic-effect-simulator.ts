@@ -17,11 +17,13 @@ import {
   sign,
 } from "@pshkv/gate-capability-tokens";
 import type {
+  BoundedMotionScenarioPolicy,
   DeterministicCheckRecord,
   DeterministicEffectSimulatorOptions,
   NavigationScenarioPolicy,
 } from "./types.js";
 import { isValidNavigationScenarioPolicy, navigationScenarioPolicyDigest } from "./fixed-case-navigation-model.js";
+import { boundedMotionScenarioPolicyDigest, isValidBoundedMotionScenarioPolicy } from "./fixed-case-bounded-motion-model.js";
 
 const GRADE_ORDER: Record<SimulationEvidenceGrade, number> = {
   deterministic: 0,
@@ -36,7 +38,7 @@ interface DeterministicArtifact {
   readonly effectPlanDigest: string;
   readonly worldSnapshotDigest: string;
   readonly checks: readonly DeterministicCheckRecord[];
-  readonly scenarioPolicy?: NavigationScenarioPolicy;
+  readonly scenarioPolicy?: NavigationScenarioPolicy | BoundedMotionScenarioPolicy;
   readonly result: SimulationSafetyResult;
 }
 
@@ -51,6 +53,26 @@ function error(
   retryable: boolean,
 ): Result<never, EffectSimulationError> {
   return err({ code, message, retryable });
+}
+
+function acceptedScenarioPolicy(
+  policy: NavigationScenarioPolicy | BoundedMotionScenarioPolicy | undefined,
+): { digest: string; caseCount: number; seeds: readonly number[] } | undefined {
+  if (isValidNavigationScenarioPolicy(policy)) {
+    return {
+      digest: navigationScenarioPolicyDigest(policy),
+      caseCount: policy.cases.length,
+      seeds: policy.distribution?.seeds ?? [],
+    };
+  }
+  if (isValidBoundedMotionScenarioPolicy(policy)) {
+    return {
+      digest: boundedMotionScenarioPolicyDigest(policy),
+      caseCount: policy.cases.length,
+      seeds: policy.distribution?.seeds ?? [],
+    };
+  }
+  return undefined;
 }
 
 /**
@@ -107,12 +129,15 @@ export class DeterministicEffectSimulator implements EffectSimulator {
         resource: preflight.effectPlan.resource,
         action: preflight.effectPlan.action,
         params: preflight.effectPlan.params,
+        ...(preflight.effectPlan.sceneContractDigest !== undefined && {
+          sceneContractDigest: preflight.effectPlan.sceneContractDigest,
+        }),
       }),
     );
     if (recomputedEffectPlanDigest !== preflight.effectPlan.effectPlanDigest) {
       return error(
         "INVALID_PREFLIGHT",
-        "Preflight effectPlanDigest does not match the submitted resource, action, and params",
+        "Preflight effectPlanDigest does not match the submitted resource, action, params, and scene contract",
         false,
       );
     }
@@ -122,7 +147,7 @@ export class DeterministicEffectSimulator implements EffectSimulator {
     let checks: readonly DeterministicCheckRecord[] = [];
     let result: SimulationSafetyResult;
     let scenarioEvidence: SimulationEvidenceReceipt["scenarios"] | undefined;
-    let scenarioPolicy: NavigationScenarioPolicy | undefined;
+    let scenarioPolicy: NavigationScenarioPolicy | BoundedMotionScenarioPolicy | undefined;
     if (!model) {
       result = {
         outcome: "indeterminate",
@@ -142,15 +167,17 @@ export class DeterministicEffectSimulator implements EffectSimulator {
     }
 
     if (scenarioEvidence !== undefined || scenarioPolicy !== undefined) {
-      if (!isValidNavigationScenarioPolicy(scenarioPolicy)
+      const accepted = acceptedScenarioPolicy(scenarioPolicy);
+      if (accepted === undefined
         || scenarioEvidence === undefined
-        || scenarioEvidence.scenarioSetDigest !== navigationScenarioPolicyDigest(scenarioPolicy)
-        || scenarioEvidence.runCount !== scenarioPolicy.cases.length + 1
+        || scenarioEvidence.scenarioSetDigest !== accepted.digest
+        || scenarioEvidence.runCount !== accepted.caseCount + 1 + accepted.seeds.length
         || scenarioEvidence.coverage === undefined
         || !Number.isFinite(scenarioEvidence.coverage)
         || scenarioEvidence.coverage < 0 || scenarioEvidence.coverage > 1
-        || (scenarioEvidence.seeds?.length ?? 0) !== 0) {
-        return error("SIMULATOR_MISCONFIGURED", "Scenario evidence does not match its retained fixed-case policy", false);
+        || (scenarioEvidence.seeds ?? []).length !== accepted.seeds.length
+        || (scenarioEvidence.seeds ?? []).some((seed, index) => seed !== accepted.seeds[index])) {
+        return error("SIMULATOR_MISCONFIGURED", "Scenario evidence does not match its retained scenario policy", false);
       }
     }
 
