@@ -81,6 +81,18 @@ export type ROS2WorldStateSource =
   | "obstacles"
   | "safetyController";
 
+export interface ROS2SensorSource {
+  readonly sensorId: string;
+  readonly version: string;
+  readonly source: ROS2WorldStateSource;
+  readonly observedAt: string;
+}
+
+export interface ROS2SensorProvenance {
+  readonly schemaVersion: "1.0.0";
+  readonly sensors: readonly ROS2SensorSource[];
+}
+
 export interface ROS2WorldStateInput {
   readonly robotId: string;
   readonly frameId: string;
@@ -100,11 +112,14 @@ export interface ROS2WorldStateInput {
   readonly localizationConfidence?: number;
   /** Task phase, tool, payload geometry, and the calibration and policy digests in force. */
   readonly task?: ROS2TaskBinding;
+  /** Sensor identities that produced this capture. Versioned onto the canonical snapshot. */
+  readonly sensors?: readonly ROS2SensorSource[];
 }
 
 /** Canonical state whose digest is placed in SimulationWorldSnapshot. */
-export interface ROS2WorldSnapshotPayload extends ROS2WorldStateInput {
+export interface ROS2WorldSnapshotPayload extends Omit<ROS2WorldStateInput, "sensors"> {
   readonly schemaVersion: "1.0.0";
+  readonly sensorProvenance?: ROS2SensorProvenance;
 }
 
 export interface ROS2WorldSnapshotCapture {
@@ -281,7 +296,31 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
   }
-  return validateTask(input.task);
+  return validateTask(input.task) ?? validateSensors(input.sensors);
+}
+
+const WORLD_STATE_SOURCES: readonly ROS2WorldStateSource[] = [
+  "odometry",
+  "jointState",
+  "transforms",
+  "map",
+  "obstacles",
+  "safetyController",
+];
+
+function validateSensors(
+  sensors: readonly ROS2SensorSource[] | undefined,
+): string | undefined {
+  if (sensors === undefined) return undefined;
+  for (const sensor of sensors) {
+    if (!sensor.sensorId) {
+      return "sensor provenance identity is missing";
+    }
+    if (!WORLD_STATE_SOURCES.includes(sensor.source)) {
+      return "sensor provenance source is invalid";
+    }
+  }
+  return undefined;
 }
 
 function isContentDigest(value: unknown): value is string {
@@ -416,9 +455,16 @@ export function createROS2WorldSnapshot(
     });
   }
 
+  const { sensors, ...canonicalState } = canonicalizeInput(input);
   const payload: ROS2WorldSnapshotPayload = {
     schemaVersion: "1.0.0",
-    ...canonicalizeInput(input),
+    ...canonicalState,
+    ...(sensors !== undefined && {
+      sensorProvenance: {
+        schemaVersion: "1.0.0" as const,
+        sensors,
+      },
+    }),
   };
   const canonicalPayload = canonicalJsonStringify(payload);
   const validityMs = options.validityMs ?? 1_000;

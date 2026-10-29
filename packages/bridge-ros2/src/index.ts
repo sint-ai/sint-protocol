@@ -123,6 +123,8 @@ export type {
   ROS2ObstacleState,
   ROS2PayloadGeometry,
   ROS2SafetyControllerState,
+  ROS2SensorProvenance,
+  ROS2SensorSource,
   ROS2Stamped,
   ROS2TaskBinding,
   ROS2TransformState,

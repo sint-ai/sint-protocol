@@ -213,6 +213,64 @@ describe("createROS2WorldSnapshot", () => {
     expect(original.value.snapshot.digest).not.toBe(swapped.value.snapshot.digest);
   });
 
+  it("versions sensor provenance on the canonical snapshot", () => {
+    const sensors = [{
+      sensorId: "lidar-front",
+      version: "2.4.1",
+      source: "obstacles" as const,
+      observedAt,
+    }];
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors,
+    } as ROS2WorldStateInput, { now: () => now });
+
+    expect(captured.ok).toBe(true);
+    if (!captured.ok) return;
+    const payload = captured.value.payload as ROS2WorldStateInput & {
+      sensorProvenance?: { schemaVersion: string; sensors: typeof sensors };
+      sensors?: typeof sensors;
+    };
+    expect(payload.sensorProvenance).toEqual({
+      schemaVersion: "1.0.0",
+      sensors,
+    });
+    expect(JSON.parse(captured.value.canonicalPayload).sensorProvenance).toEqual({
+      schemaVersion: "1.0.0",
+      sensors,
+    });
+    expect(JSON.parse(captured.value.canonicalPayload).sensors).toBeUndefined();
+    expect(captured.value.snapshot.digest).toBe(hashSha256(captured.value.canonicalPayload));
+  });
+
+  it("rejects sensor provenance with a missing source identity", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "",
+        version: "2.4.1",
+        source: "obstacles" as const,
+        observedAt,
+      }],
+    } as ROS2WorldStateInput, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects sensor provenance whose source is not a world-state channel", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "lidar-front",
+        version: "2.4.1",
+        source: "camera" as "obstacles",
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {
