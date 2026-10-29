@@ -145,12 +145,13 @@ export class DeterministicEffectSimulator implements EffectSimulator {
       if (!isValidNavigationScenarioPolicy(scenarioPolicy)
         || scenarioEvidence === undefined
         || scenarioEvidence.scenarioSetDigest !== navigationScenarioPolicyDigest(scenarioPolicy)
-        || scenarioEvidence.runCount !== scenarioPolicy.cases.length + 1
+        || scenarioEvidence.runCount !== scenarioPolicy.cases.length + 1 + (scenarioPolicy.distribution?.seeds?.length ?? 0)
         || scenarioEvidence.coverage === undefined
         || !Number.isFinite(scenarioEvidence.coverage)
         || scenarioEvidence.coverage < 0 || scenarioEvidence.coverage > 1
-        || (scenarioEvidence.seeds?.length ?? 0) !== 0) {
-        return error("SIMULATOR_MISCONFIGURED", "Scenario evidence does not match its retained fixed-case policy", false);
+        || (scenarioEvidence.seeds ?? []).length !== (scenarioPolicy.distribution?.seeds?.length ?? 0)
+        || (scenarioEvidence.seeds ?? []).some((seed, index) => seed !== scenarioPolicy.distribution?.seeds?.[index])) {
+        return error("SIMULATOR_MISCONFIGURED", "Scenario evidence does not match its retained scenario policy", false);
       }
     }
 

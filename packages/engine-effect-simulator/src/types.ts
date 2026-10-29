@@ -102,11 +102,28 @@ export interface SceneAwareNavigationModelOptions {
   readonly reactionTimeMs: number;
 }
 
-/** Fixed conservative stress cases; coverage is over these cases, not a probability estimate. */
+/**
+ * Fixed cases plus an optional seeded perturbation distribution.
+ * Coverage is the fraction of conclusive runs, not a probability estimate.
+ */
 export interface NavigationScenarioPolicy {
   readonly version: "1.0.0";
   readonly policyId: string;
   readonly cases: readonly NavigationStressCase[];
+  /** Unique seeds draw one sample each. Fixed cases plus seeds stay within 16 runs. */
+  readonly distribution?: SeededNavigationDistribution;
+}
+
+/** Approved support for deterministic navigation perturbations. */
+export interface SeededNavigationDistribution {
+  readonly version: "1.0.0";
+  /** Unique integers in [0, 2^32). Order is part of the approved policy. */
+  readonly seeds: readonly number[];
+  readonly bounds: {
+    readonly extraRobotRadiusMeters: NumericRange;
+    readonly extraReactionTimeMs: NumericRange;
+    readonly extraHumanSpeedMps: NumericRange;
+  };
 }
 
 export interface NavigationStressCase {
