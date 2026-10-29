@@ -374,6 +374,10 @@ function validateSensors(
   sensors: readonly ROS2SensorSource[] | undefined,
 ): string | undefined {
   if (sensors === undefined) return undefined;
+  const sensorIds = sensors.map((sensor) => sensor.sensorId);
+  if (new Set(sensorIds).size !== sensorIds.length) {
+    return "sensor identities must be unique within a snapshot";
+  }
   for (const sensor of sensors) {
     if (!sensor.sensorId) {
       return "sensor provenance identity is missing";
