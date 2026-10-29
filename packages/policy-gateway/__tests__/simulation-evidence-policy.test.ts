@@ -151,7 +151,11 @@ function signedReceipt(
   };
 }
 
-function gateway(token: SintCapabilityToken, replayStore = new InMemorySimulationReceiptReplayStore()) {
+function gateway(
+  token: SintCapabilityToken,
+  replayStore = new InMemorySimulationReceiptReplayStore(),
+  requiredScenarioSetDigest?: string,
+) {
   return {
     replayStore,
     value: new PolicyGateway({
@@ -161,6 +165,7 @@ function gateway(token: SintCapabilityToken, replayStore = new InMemorySimulatio
         allowedBackends: ["gazebo-harmonic"],
         minScenarioRuns: 100,
         minScenarioCoverage: 0.95,
+        requiredScenarioSetDigest: requiredScenarioSetDigest ?? "4".repeat(64),
         maxWorldUncertainty: 0.05,
         replayStore,
         now: () => now,
@@ -174,6 +179,7 @@ const tierRequirements: Partial<Record<ApprovalTier, SimulationEvidenceRequireme
   [ApprovalTier.T3_COMMIT]: {
     minEvidenceGrade: "physics",
     minScenarioRuns: 100,
+    requiredScenarioSetDigest: "4".repeat(64),
     requiredBindings: ["robotId", "controllerId"],
     expectedBindings: { robotId: "robot-7", controllerId: "plc-4" },
     minApprovalQuorum: 2,
@@ -203,6 +209,53 @@ describe("predictive simulation evidence policy", () => {
     });
 
     expect(decision.action).toBe("allow");
+  });
+
+  it("rejects a signed zero-coverage receipt when scenario coverage is required", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token, (value) => ({
+      ...value,
+      scenarios: { scenarioSetDigest: value.scenarios.scenarioSetDigest, runCount: 100, coverage: 0, seeds: [] },
+    }));
+    const decision = await gateway(token).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_COVERAGE_INSUFFICIENT");
+  });
+
+  it("rejects high coverage from a different scenario policy", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token);
+    const decision = await gateway(token, undefined, "9".repeat(64)).value.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_SCENARIO_SET_MISMATCH");
+  });
+
+  it("denies a coverage threshold without an approved scenario policy", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token);
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        minScenarioCoverage: 0.9,
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_SCENARIO_POLICY_UNBOUND");
   });
 
   it("fails closed when required simulation evidence is missing", async () => {

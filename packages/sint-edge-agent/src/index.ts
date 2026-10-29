@@ -12,6 +12,8 @@ export {
   verifySignedDispatchEnvelope,
 } from "./signing.js";
 export { EdgeJournal } from "./journal.js";
+export { FileEdgeReplayStore, InMemoryEdgeReplayStore } from "./replay-store.js";
+export type { EdgeReplayStore } from "./replay-store.js";
 export { SintEdgeRunner } from "./runner.js";
 export type { EdgeRunnerOptions } from "./runner.js";
 export type {

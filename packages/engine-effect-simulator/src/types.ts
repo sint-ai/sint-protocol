@@ -5,6 +5,7 @@ import type {
   Result,
   SHA256,
   SimulationSafetyResult,
+  SimulationScenarioEvidence,
   SimulationArtifactStore,
   SimulationReceiptRecorder,
   SimulationSubjectBindings,
@@ -35,6 +36,10 @@ export interface DeterministicSafetyEnvelope {
 export interface DeterministicCheckResult {
   readonly result: SimulationSafetyResult;
   readonly checks: readonly DeterministicCheckRecord[];
+  /** Present only when a model actually ran an approved fixed case policy. */
+  readonly scenarios?: SimulationScenarioEvidence;
+  /** The case policy retained in the signed trace for exact replay. */
+  readonly scenarioPolicy?: NavigationScenarioPolicy;
 }
 
 export interface DeterministicCheckRecord {
@@ -51,7 +56,7 @@ export interface DeterministicEffectModel {
   evaluate(
     effectPlan: EffectPlan,
     worldSnapshot: SimulationWorldSnapshot,
-  ): Result<DeterministicCheckResult, EffectSimulationError>;
+  ): Promise<Result<DeterministicCheckResult, EffectSimulationError>> | Result<DeterministicCheckResult, EffectSimulationError>;
 }
 
 export interface DeterministicEffectSimulatorOptions {
@@ -77,4 +82,36 @@ export interface BoundedMotionEffectModelOptions {
   readonly resources: readonly (string | RegExp)[];
   readonly actions: readonly string[];
   readonly envelope: DeterministicSafetyEnvelope;
+}
+
+/** Conservative 2D checker for a short ROS 2 waypoint path. */
+export interface SceneAwareNavigationModelOptions {
+  readonly id?: string;
+  readonly resources: readonly (string | RegExp)[];
+  readonly actions: readonly string[];
+  readonly artifactStore: SimulationArtifactStore;
+  readonly robotRadiusMeters: number;
+  readonly minClearanceMeters: number;
+  readonly maxVelocityMps: number;
+  readonly maxHorizonMs: number;
+  /** Worst-case human displacement rate during the bounded action. */
+  readonly maxHumanSpeedMps: number;
+  /** Minimum validated braking capability for the robot/controller pair. */
+  readonly minDecelerationMps2: number;
+  /** Worst-case delay before braking begins. */
+  readonly reactionTimeMs: number;
+}
+
+/** Fixed conservative stress cases; coverage is over these cases, not a probability estimate. */
+export interface NavigationScenarioPolicy {
+  readonly version: "1.0.0";
+  readonly policyId: string;
+  readonly cases: readonly NavigationStressCase[];
+}
+
+export interface NavigationStressCase {
+  readonly id: string;
+  readonly extraRobotRadiusMeters?: number;
+  readonly extraReactionTimeMs?: number;
+  readonly extraHumanSpeedMps?: number;
 }

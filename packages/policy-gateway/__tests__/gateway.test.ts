@@ -13,7 +13,7 @@ import {
 } from "@pshkv/gate-capability-tokens";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier, err, ok } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);
@@ -83,6 +83,43 @@ describe("PolicyGateway", () => {
     tokenStore.set(result.value.tokenId, result.value);
     return result.value;
   }
+
+  it("does not treat caller attestation grade as verified device evidence", async () => {
+    const token = issueAndStore({
+      resource: "mcp://server/tool",
+      actions: ["call"],
+      constraints: {},
+      attestationRequirements: {
+        minAttestationGrade: 2,
+        allowedTeeBackends: ["tpm2"],
+        requireForTiers: [ApprovalTier.T1_PREPARE],
+      },
+    });
+    const request = makeRequest({
+      tokenId: token.tokenId,
+      agentId: agent.publicKey,
+      resource: "mcp://server/tool",
+      action: "call",
+      executionContext: { attestation: { grade: 3, teeBackend: "tpm2", quoteRef: "unverified-quote" } },
+    });
+    const unverified = await gateway.intercept(request);
+    expect(unverified.action).toBe("deny");
+    expect(unverified.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+
+    const verifiedGateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      resolveVerifiedAttestation: (candidate) => candidate.executionContext?.attestation?.quoteRef === "verified-quote"
+        ? ok({ grade: 2, teeBackend: "tpm2", quoteRef: "verified-quote" })
+        : err("QUOTE_NOT_VERIFIED"),
+    });
+    const rejectedQuote = await verifiedGateway.intercept(request);
+    expect(rejectedQuote.action).toBe("deny");
+    const accepted = await verifiedGateway.intercept({
+      ...request,
+      executionContext: { attestation: { grade: 3, teeBackend: "tpm2", quoteRef: "verified-quote" } },
+    });
+    expect(accepted.action).toBe("allow");
+  });
 
   // ── T0: Sensor subscribe → auto-allow ──
 

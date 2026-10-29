@@ -72,6 +72,7 @@ export type ExecutionBrokerErrorCode =
   | "SIMULATION_OUTCOME_UNSAFE"
   | "WORLD_STATE_EXPIRED"
   | "WORLD_STATE_DRIFTED"
+  | "WORLD_STATE_UNAVAILABLE"
   | "SIMULATION_RECEIPT_REPLAYED"
   | "VLA_CHUNK_STALE"
   | "VLA_CHUNK_SEQUENCE_INVALID"
@@ -235,19 +236,38 @@ export class ExecutionBroker<T> {
     ) {
       return reject("SIMULATION_OUTCOME_UNSAFE", "Simulation receipt does not carry a safe outcome");
     }
-    const currentWorld = await this.options.worldStateProvider.readCurrent(request);
+    const chunk = request.executionContext?.vlaActionChunk;
+    let currentWorld: SimulationWorldSnapshot;
+    try {
+      currentWorld = await this.options.worldStateProvider.readCurrent(request);
+    } catch {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state unavailable before nonce consumption");
+      }
+      return reject("WORLD_STATE_UNAVAILABLE", "Current world state could not be read", true);
+    }
     const now = this.now();
-    if (Date.parse(receipt.expiresAt) <= now || Date.parse(currentWorld.validUntil) <= now) {
+    const receiptExpiry = Date.parse(receipt.expiresAt);
+    const firstWorldExpiry = Date.parse(currentWorld.validUntil);
+    if (
+      !Number.isFinite(receiptExpiry) || receiptExpiry <= now
+      || !Number.isFinite(firstWorldExpiry) || firstWorldExpiry <= now
+    ) {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state expired before nonce consumption");
+      }
       return reject("WORLD_STATE_EXPIRED", "Simulation receipt or current world state has expired", true);
     }
     if (
       currentWorld.digest !== receipt.worldSnapshot.digest
       || currentWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
     ) {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before nonce consumption");
+      }
       return reject("WORLD_STATE_DRIFTED", "World state changed after simulation; re-simulation is required", true);
     }
 
-    const chunk = request.executionContext?.vlaActionChunk;
     if (chunk) {
       const vlaError = this.validateVlaChunk(chunk, currentWorld.digest);
       if (vlaError) {
@@ -263,11 +283,37 @@ export class ExecutionBroker<T> {
       return reject("SIMULATION_RECEIPT_REPLAYED", "Simulation receipt was already consumed");
     }
 
-    // Nonce consumption may be an async/remote round-trip; re-check freshness so
-    // evidence that expired while consuming is never dispatched against.
+    // Nonce consumption may be an async/remote round-trip. Read the world
+    // again immediately before dispatch; the first observation is no longer
+    // authoritative after that round-trip.
+    let dispatchWorld: SimulationWorldSnapshot;
+    try {
+      dispatchWorld = await this.options.worldStateProvider.readCurrent(request);
+    } catch {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state unavailable before dispatch");
+      }
+      return reject("WORLD_STATE_UNAVAILABLE", "Current world state could not be re-read before dispatch", true);
+    }
     const nowAfterConsume = this.now();
-    if (Date.parse(receipt.expiresAt) <= nowAfterConsume || Date.parse(currentWorld.validUntil) <= nowAfterConsume) {
+    const dispatchWorldExpiry = Date.parse(dispatchWorld.validUntil);
+    if (
+      receiptExpiry <= nowAfterConsume
+      || !Number.isFinite(dispatchWorldExpiry) || dispatchWorldExpiry <= nowAfterConsume
+    ) {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state expired before dispatch");
+      }
       return reject("WORLD_STATE_EXPIRED", "Simulation receipt or current world state expired before dispatch", true);
+    }
+    if (
+      dispatchWorld.digest !== receipt.worldSnapshot.digest
+      || dispatchWorld.stateEpoch !== receipt.worldSnapshot.stateEpoch
+    ) {
+      if (chunk?.safeStopOnFailure) {
+        await this.options.vlaContinuity?.safeStop?.(request, "World state drifted before dispatch");
+      }
+      return reject("WORLD_STATE_DRIFTED", "World state changed before dispatch; re-simulation is required", true);
     }
 
     if (chunk && Date.parse(chunk.executeBy) <= nowAfterConsume) {
@@ -304,8 +350,8 @@ export class ExecutionBroker<T> {
       requestId: request.requestId,
       receiptId: receipt.receiptId,
       payload: {
-        worldStateDigest: currentWorld.digest,
-        stateEpoch: currentWorld.stateEpoch,
+        worldStateDigest: dispatchWorld.digest,
+        stateEpoch: dispatchWorld.stateEpoch,
         approvers: authorization.approval?.approvers ?? [],
       },
     });

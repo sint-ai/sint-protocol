@@ -126,7 +126,7 @@ describe("DeterministicEffectSimulator", () => {
     expect(simulated.value.effectPlanDigest).toBe(effectPlanDigestFor(RESOURCE, ACTION, safeParams));
     expect(simulated.value.worldSnapshot.stateEpoch).toBe("cell-7:42");
     expect(simulated.value.bindings).toEqual({ robotId: "arm-7", controllerId: "ctrl-7" });
-    expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 1 });
+    expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 0, seeds: [] });
     expect(simulationEvidenceReceiptSchema.safeParse(simulated.value).success).toBe(true);
     expect(verify(
       signer.publicKey,
@@ -257,6 +257,37 @@ describe("DeterministicEffectSimulator", () => {
     const simulated = await invalid.simulate(preflight(safeParams), world());
 
     expect(simulated.ok ? undefined : simulated.error.code).toBe("SIMULATOR_MISCONFIGURED");
+  });
+
+  it("refuses to sign inflated scenario counts that disagree with the retained policy", async () => {
+    let recorded = false;
+    const policy = {
+      version: "1.0.0" as const,
+      policyId: "adversarial-v1",
+      cases: [{ id: "slow-reaction", extraReactionTimeMs: 100 }],
+    };
+    const worker = new DeterministicEffectSimulator({
+      signerPublicKey: signer.publicKey,
+      signerPrivateKey: signer.privateKey,
+      version: "0.1.0",
+      modelDigest: digest("b"),
+      now: () => now,
+      artifactStore: new InMemorySimulationArtifactStore(),
+      receiptRecorder: { recordIssued: async () => { recorded = true; return ok(undefined); } },
+      models: [{
+        id: "dishonest-case-model",
+        supports: () => true,
+        evaluate: () => ok({
+          result: { outcome: "pass", collisions: 0, safetyZoneViolations: 0 },
+          checks: [],
+          scenarioPolicy: policy,
+          scenarios: { scenarioSetDigest: digest("9"), runCount: 100, coverage: 1, seeds: [] },
+        }),
+      }],
+    });
+    const simulated = await worker.simulate(preflight(safeParams), world());
+    expect(simulated.ok ? undefined : simulated.error.code).toBe("SIMULATOR_MISCONFIGURED");
+    expect(recorded).toBe(false);
   });
 
   it("round-trips and integrity-checks artifacts in the durable filesystem store", async () => {

@@ -120,6 +120,103 @@ skew, and aggregate uncertainty are deployment policy. The separate
 the digest carried by the receipt; neither helper can authorize or dispatch a
 ROS 2 command.
 
+The opt-in `SceneAwareNavigationModel` reads that stored ROS 2 snapshot by
+digest and checks a straight, planar `target`/`velocityMps` command or 1–32
+collinear waypoint segments. Turns and reversals return `indeterminate` until
+a validated controller dynamics model is available. It checks static and
+moving circular obstacles along the complete path and stop corridor.
+It expands a human obstacle's reachable region over the full path and stop
+duration and includes explicit robot and obstacle position-error bounds.
+Moving objects also require a speed-prediction error bound. Their reachable
+region expands using observed speed plus this bound over the whole horizon,
+including the time from observation to scene capture. This avoids assuming a
+single obstacle trajectory while robot braking timing is uncertain. The model
+requires a fresh obstacle-scan
+timestamp even when no obstacles were detected, an odometry pose, a matching
+map/odometry/obstacle coordinate frame, matching `robotId`/`frameId` effect
+parameters, and a clear
+safety-controller permit. Missing or unclassified scene
+data returns signed `indeterminate` evidence; a failed controller permit or
+insufficient clearance returns signed `fail` evidence. A missing or corrupted
+snapshot artifact prevents receipt issuance. This is a conservative 2D software
+check, not a physics simulation or controller-rate safety mechanism.
+Without a configured case policy, the deterministic backend runs one
+observed-state check and reports `runCount: 1`, `coverage: 0`, and no seeds.
+An optional `scenarioPolicy` on the scene-aware navigation worker runs the
+observed scene plus 1–16 fixed adversarial cases. Each case increases the
+robot footprint, reaction delay, or human reach speed by a bounded amount;
+all cases use the same digest-verified sensor scene. A failed case fails the
+aggregate result. An indeterminate case lowers coverage and makes the result
+indeterminate unless another case failed. The signed trace retains the exact
+case policy and each case's checks. `coverage` is the fraction of the observed
+run and fixed cases that reached a conclusive check; it is **not** probability mass or a
+calibrated field-risk estimate. No random seeds are claimed.
+
+A deployment can set
+`requiredScenarioSetDigest` in its evidence requirement. The gateway then
+rejects receipts from any other scenario distribution or adversarial case
+policy, even if the reported run count and coverage are high. A policy asking
+for more than one run or positive scenario coverage without this approved
+digest fails closed as `SIMULATION_SCENARIO_POLICY_UNBOUND`.
+
+The standalone worker enables this model only with `SINT_SIM_MODEL.kind` set to
+`scene-aware-navigation`, explicit `scene.robotRadiusMeters`,
+`scene.maxHorizonMs`, `scene.maxHumanSpeedMps`,
+`scene.minDecelerationMps2`, `scene.reactionTimeMs`, and envelope
+`maxVelocityMps`/`minClearanceMeters`. The ROS 2 bridge and worker must use a
+shared trusted content-addressed artifact store for the exact scene payload.
+The default worker model remains the original bounded parameter checker.
+Production workers require an explicit `SINT_SIM_MODEL`; known physical
+protocol resources cannot use the parameter-only model there. Other physical
+effects hidden behind generic tool URLs still need the command inventory and
+classification work in the roadmap.
+
+Example `SINT_SIM_MODEL` JSON for the first navigation slice:
+
+```json
+{
+  "id": "warehouse-nav-scene-v1",
+  "kind": "scene-aware-navigation",
+  "resources": ["ros2:///nav/segment"],
+  "actions": ["publish"],
+  "envelope": { "maxVelocityMps": 0.5, "minClearanceMeters": 0.1 },
+  "scene": {
+    "robotRadiusMeters": 0.25,
+    "maxHorizonMs": 3000,
+    "maxHumanSpeedMps": 1.5,
+    "minDecelerationMps2": 2.0,
+    "reactionTimeMs": 100
+  },
+  "scenarioPolicy": {
+    "version": "1.0.0",
+    "policyId": "warehouse-nav-stress-v1",
+    "cases": [
+      { "id": "larger-footprint", "extraRobotRadiusMeters": 0.1 },
+      { "id": "slow-reaction", "extraReactionTimeMs": 150 },
+      { "id": "faster-human", "extraHumanSpeedMps": 0.5 }
+    ]
+  }
+}
+```
+
+Compute the approved `requiredScenarioSetDigest` from the exact policy with
+`navigationScenarioPolicyDigest()`, then configure the gateway requirement for
+this effect. A policy requiring all cases sets `minScenarioRuns: 4` and
+`minScenarioCoverage: 1` for the example. Fixed cases remain deterministic
+software checks and cannot satisfy a physics-grade evidence requirement.
+
+These numbers are illustrative, not approved safety limits. A site must
+measure the robot footprint, human reachability assumption, localization and
+obstacle uncertainty, minimum braking capability, and worst-case controller
+reaction time before using this check on
+hardware. The model expands moving obstacle reachability from observation
+through the whole horizon and expands the robot position bound by the
+age of odometry. The final waypoint is followed by a conservative full-speed
+stop corridor for reaction time plus `velocityMps/minDecelerationMps2`. This
+over-approximates actual braking travel and may reject feasible routes. It does
+not simulate acceleration, turning dynamics, controller-rate behavior, or
+occluded humans.
+
 ## Isolated Worker HTTP Contract
 
 `@pshkv/simulation-server` exposes the backend-neutral worker boundary:
@@ -212,10 +309,13 @@ from the same receipt.
 It requires a deployment-provided verifier for the trusted gateway decision,
 completed approval, and receipt signature. It also performs local
 defense-in-depth checks for the exact request/effect/resource/action and safe
-receipt outcome, re-reads the current world digest and epoch, rejects expiry or
-drift, and then atomically consumes the receipt nonce before making one adapter
-dispatch attempt. A failed hardware dispatch cannot reuse the receipt; a
-pre-dispatch world-drift rejection does not consume it.
+receipt outcome, reads the current world digest and epoch, rejects expiry or
+drift, and then atomically consumes the receipt nonce. It reads world state a
+second time immediately before the adapter call; drift, expiry, or an
+unavailable sensor then rejects dispatch. A failed hardware dispatch or drift
+after nonce consumption cannot reuse the receipt; drift detected before nonce
+consumption leaves the receipt unused. A VLA chunk configured for safe stop
+invokes that callback on world-read failure, expiry, or drift at either check.
 
 The included nonce store is an in-memory reference implementation. Distributed
 deployments still require the roadmap's Redis/Postgres atomic store before the

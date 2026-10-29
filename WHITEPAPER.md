@@ -132,7 +132,7 @@ The MCP bridge and ROS 2 bridge translate protocol-specific actions into a unifi
 - ROS 2 service calls (mode changes, calibration)
 - ROS 2 action goals (navigation, manipulation)
 
-This enables policies like "if the robot is moving (ROS 2 cmd_vel active), deny file system writes (MCP)" — cross-system invariants that no single-protocol safety system can enforce.
+The shared request format can support cross-system rules. The current default forbidden-combination set does not include a ROS 2 motion-to-MCP filesystem rule; such a rule must be configured and tested before deployment.
 
 ## 4. Integration Points
 

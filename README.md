@@ -159,6 +159,9 @@ REDIS_URL=redis://...
 SINT_API_KEY=...
 SINT_REQUIRE_SIGNATURES=true
 SINT_WS_ALLOW_QUERY_API_KEY=false
+SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
+SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
+SINT_APPROVAL_OPERATOR_KEYS=<64-hex-operator-public-key>
 ```
 
 Use `/v1/ready` as the orchestration health gate; it verifies the configured
@@ -616,7 +619,7 @@ For portable verification across bridges and external tooling, SINT now routes r
 
 For strong-tier flows, SINT can emit a linked bilateral receipt pair: a gate receipt before execution is allowed to proceed and a completion receipt once execution settles. The pair shares a stable `actionRef` and `linkageHash` so auditors can verify both authorization and outcome as one governed action.
 
-**Retention policy:**
+**Illustrative retention tiers:** These constants are defined in `@pshkv/core` but are not enforced by the ledger store. Deployments must configure their own retention and legal-hold process; deleting chain events would break verification.
 
 | Tier | Retention |
 |------|-----------|

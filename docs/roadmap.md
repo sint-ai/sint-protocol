@@ -2,6 +2,13 @@
 
 This is the active public roadmap for the protocol repo.
 
+The current security and physical execution order, including the cross-agent
+continuation handoff and acceptance gates, is the
+[embodied authorization whitepaper execution roadmap](./roadmaps/embodied-authorization-whitepaper-2026.md).
+It reconciles the October 2026 external audit with the implementation through
+PR #271. The dated May–June priorities below are historical context; use the
+linked roadmap's ordered work for current physical authorization tasks.
+
 The short version: SINT is moving from a broad reference stack into a
 production-ready protocol surface with sharper release gates, clearer evidence,
 and more credible external collaboration.

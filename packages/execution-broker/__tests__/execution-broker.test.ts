@@ -210,6 +210,54 @@ describe("ExecutionBroker", () => {
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects world drift that occurs during nonce consumption", async () => {
+    let currentWorld = world;
+    const dispatch = vi.fn(async () => ok("sent"));
+    const nonceStore = new InMemorySimulationReceiptNonceStore();
+    const consume = vi.fn(async (receiptId: string, nonce: string) => {
+      currentWorld = { ...world, stateEpoch: "epoch-after-consume" };
+      return nonceStore.consume(receiptId, nonce);
+    });
+    const readCurrent = vi.fn(async () => currentWorld);
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume },
+      worldStateProvider: { readCurrent },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const input = request();
+    const authorization = { decision: decision(), approval: approval() };
+
+    const drifted = await broker.execute(input, authorization);
+    expect(drifted.ok ? undefined : drifted.error.code).toBe("WORLD_STATE_DRIFTED");
+    expect(readCurrent).toHaveBeenCalledTimes(2);
+    expect(consume).toHaveBeenCalledTimes(1);
+    expect(dispatch).not.toHaveBeenCalled();
+    currentWorld = world;
+    const replay = await broker.execute(input, authorization);
+    expect(replay.ok ? undefined : replay.error.code).toBe("SIMULATION_RECEIPT_REPLAYED");
+  });
+
+  it("returns a typed denial if the dispatch-time world read fails", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    let reads = 0;
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => {
+        reads += 1;
+        if (reads === 2) throw new Error("sensor disconnected");
+        return world;
+      } },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const rejected = await broker.execute(request(), { decision: decision(), approval: approval() });
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("WORLD_STATE_UNAVAILABLE");
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
   it("consumes the nonce before dispatch so failed hardware calls cannot replay", async () => {
     const dispatch = vi.fn(async () => err({ code: "OFFLINE", message: "controller offline", retryable: true }));
     const broker = new ExecutionBroker({

@@ -146,6 +146,19 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("WORLD_STATE_SOURCE_MISSING");
   });
 
+  it("accepts a fresh empty obstacle scan and rejects a stale one", () => {
+    const clear = createROS2WorldSnapshot(state({ obstacles: [], obstacleScanObservedAt: observedAt }), {
+      now: () => now,
+      requiredSources: ["obstacles"],
+    });
+    expect(clear.ok).toBe(true);
+    const stale = createROS2WorldSnapshot(state({
+      obstacles: [],
+      obstacleScanObservedAt: new Date(now - 5_000).toISOString(),
+    }), { now: () => now, requiredSources: ["obstacles"] });
+    expect(stale.ok ? undefined : stale.error.code).toBe("WORLD_STATE_SOURCE_STALE");
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {

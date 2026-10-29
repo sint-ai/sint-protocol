@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ApprovalTier,
+  canonicalJsonStringify,
   type SintRequest,
   type SimulationWorldSnapshot,
 } from "@pshkv/core";
 import {
   generateKeypair,
   generateUUIDv7,
+  hashSha256,
   issueCapabilityToken,
 } from "@pshkv/gate-capability-tokens";
 import {
@@ -88,7 +90,7 @@ function request(velocityMps: number): SintRequest {
   };
 }
 
-function setup() {
+function setup(minScenarioCoverage?: number) {
   const events = vi.fn();
   const simulationLedger = new LedgerWriter();
   const policy = new DefaultSimulationEvidencePolicy({
@@ -98,7 +100,13 @@ function setup() {
       [ApprovalTier.T2_ACT]: {
         minEvidenceGrade: "deterministic",
         minScenarioRuns: 1,
-        minScenarioCoverage: 1,
+        ...(minScenarioCoverage !== undefined && { minScenarioCoverage }),
+        ...(minScenarioCoverage !== undefined && {
+          requiredScenarioSetDigest: hashSha256(canonicalJsonStringify({
+            kind: "single-observed-state",
+            modelId: "bounded-motion-v1",
+          })),
+        }),
         requiredBindings: ["robotId", "controllerId"],
         expectedBindings: { robotId: "mobile-base-1", controllerId: "nav-controller-1" },
       },
@@ -143,6 +151,7 @@ describe("deterministic EffectSimulator conformance", () => {
     const simulated = await simulator.simulate(preflight.value, worldSnapshot);
     expect(simulated.ok).toBe(true);
     if (!simulated.ok) return;
+    expect(simulated.value.scenarios).toMatchObject({ runCount: 1, coverage: 0, seeds: [] });
 
     const decision = await gateway.intercept({
       ...original,
@@ -180,5 +189,22 @@ describe("deterministic EffectSimulator conformance", () => {
     });
     expect(decision.action).toBe("deny");
     expect(decision.denial?.policyViolated).toBe("SIMULATION_UNSAFE");
+  });
+
+  it("denies deterministic evidence when policy requires sampled scenario coverage", async () => {
+    const { gateway, simulator } = setup(0.5);
+    const original = request(0.3);
+    const preflight = await gateway.preflightSimulation(original);
+    expect(preflight.ok).toBe(true);
+    if (!preflight.ok) return;
+    const simulated = await simulator.simulate(preflight.value, worldSnapshot);
+    expect(simulated.ok).toBe(true);
+    if (!simulated.ok) return;
+    const decision = await gateway.intercept({
+      ...original,
+      executionContext: { simulationEvidence: simulated.value },
+    });
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_COVERAGE_INSUFFICIENT");
   });
 });

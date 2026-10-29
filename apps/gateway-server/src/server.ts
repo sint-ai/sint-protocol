@@ -11,8 +11,8 @@
 import { Hono } from "hono";
 import { createPersistedLedgerEmitter, restorePersistedLedger } from "./ledger-emitter.js";
 import { CsmlEscalator } from "@pshkv/avatar";
-import { RevocationStore } from "@pshkv/gate-capability-tokens";
-import { PolicyGateway, ApprovalQueue } from "@pshkv/gate-policy-gateway";
+import { RevocationStore, generateKeypair, getPublicKey, sign } from "@pshkv/gate-capability-tokens";
+import { PolicyGateway, ApprovalQueue, DefaultSimulationEvidencePolicy } from "@pshkv/gate-policy-gateway";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type {
   TokenStore,
@@ -35,7 +35,7 @@ import {
   RedisCache,
   RedisRevocationBus,
 } from "@pshkv/persistence";
-import { err, type SintCapabilityToken } from "@pshkv/core";
+import { ApprovalTier, err, type SintCapabilityToken } from "@pshkv/core";
 import { createRedisClient } from "./redis-factory.js";
 import { applyMiddleware } from "./middleware.js";
 import { ed25519Auth, apiKeyAuth, rateLimit } from "./middleware/auth.js";
@@ -70,6 +70,9 @@ export interface ServerContext {
   readonly revocationBus: RevocationBus;
   readonly registryStore: InMemoryRegistryStore;
   readonly missionManifestStore: MissionManifestStore;
+  readonly ledgerSigner: { readonly publicKey: string; readonly sign: (message: string) => string };
+  readonly requireSignedApprovals?: boolean;
+  readonly approvalOperatorKeys?: readonly string[];
   readonly backend: {
     readonly store: "memory" | "postgres";
     readonly cache: "memory" | "redis";
@@ -94,6 +97,7 @@ function createDefaultCsmlEscalator(ledger: LedgerWriter): CsmlEscalator {
 
 /** Create a default server context with in-memory stores (testing/dev). */
 export function createContext(): ServerContext {
+  const ledgerKey = generateKeypair();
   const tokenStore = new InMemoryTokenStore();
   const revocationStore = new RevocationStore();
   const ledgerStore = new InMemoryLedgerStore();
@@ -106,6 +110,9 @@ export function createContext(): ServerContext {
 
   const gateway = new PolicyGateway({
     resolveToken: async (id) => tokenStore.get(id),
+    ...(process.env.SINT_TRUSTED_ISSUERS
+      ? { trustedIssuers: process.env.SINT_TRUSTED_ISSUERS.split(",").map(value => value.trim()).filter(Boolean) }
+      : {}),
     revocationStore,
     csmlEscalation: createDefaultCsmlEscalator(ledger),
     emitLedgerEvent: createPersistedLedgerEmitter(ledger, ledgerStore),
@@ -127,6 +134,8 @@ export function createContext(): ServerContext {
     revocationBus,
     registryStore,
     missionManifestStore,
+    ledgerSigner: { publicKey: ledgerKey.publicKey, sign: message => sign(ledgerKey.privateKey, message) },
+    requireSignedApprovals: false,
     backend: { store: "memory", cache: "memory" },
     readinessProbe: async () => ({
       ok: true,
@@ -147,6 +156,10 @@ export function createContext(): ServerContext {
  * - RedisRevocationBus: Pub/sub for <1s revocation propagation across nodes
  */
 export async function createPersistentContext(config: SintConfig): Promise<ServerContext> {
+  if (config.env === "production" && !config.simulationSignerKeys?.length) {
+    throw new Error("SINT_SIMULATION_SIGNERS is required when SINT_ENV/NODE_ENV=production");
+  }
+  const ledgerPrivateKey = config.ledgerSigningKey ?? generateKeypair().privateKey;
   let tokenStore: TokenStore;
   let ledgerStore: LedgerStore;
   let cache: CacheStore;
@@ -230,6 +243,16 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
       return token;
     },
     revocationStore,
+    ...(config.trustedIssuers?.length ? { trustedIssuers: config.trustedIssuers } : {}),
+    ...(config.simulationSignerKeys?.length ? {
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: config.simulationSignerKeys,
+        tierRequirements: {
+          [ApprovalTier.T2_ACT]: { minEvidenceGrade: "deterministic" },
+          [ApprovalTier.T3_COMMIT]: { minEvidenceGrade: "deterministic" },
+        },
+      }),
+    } : {}),
     csmlEscalation: createDefaultCsmlEscalator(ledger),
     emitLedgerEvent: restoredLedger.ok
       ? createPersistedLedgerEmitter(ledger, ledgerStore)
@@ -255,6 +278,9 @@ export async function createPersistentContext(config: SintConfig): Promise<Serve
     revocationBus,
     registryStore,
     missionManifestStore,
+    ledgerSigner: { publicKey: getPublicKey(ledgerPrivateKey), sign: message => sign(ledgerPrivateKey, message) },
+    requireSignedApprovals: config.env === "production",
+    approvalOperatorKeys: config.approvalOperatorKeys,
     backend: { store: config.store, cache: config.cache },
     readinessProbe: async () => {
       const [storeCheck, cacheCheck] = await Promise.all([storeProbe(), cacheProbe()]);

@@ -101,5 +101,30 @@ describe("Proof-carrying execution broker conformance", () => {
     expect(dispatches).toBe(1);
     expect(results.filter((result) => result.ok)).toHaveLength(1);
     expect(results.filter((result) => !result.ok)).toHaveLength(1);
+
+    // The scene can change while a durable nonce store is doing I/O. The
+    // broker must re-read it after consumption and never reach the adapter.
+    let observedWorld = world;
+    let driftDispatches = 0;
+    let safeStops = 0;
+    const driftBroker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume: async () => {
+        observedWorld = { ...world, stateEpoch: "epoch-after-nonce" };
+        return true;
+      } },
+      worldStateProvider: { readCurrent: async () => observedWorld as never },
+      adapter: { dispatch: async () => { driftDispatches += 1; return ok("sent"); } },
+      vlaContinuity: {
+        maxPositionDelta: 0.1,
+        maxVelocityDelta: 0.1,
+        safeStop: async () => { safeStops += 1; },
+      },
+      now: () => Date.parse("2026-08-07T16:00:00.000Z"),
+    });
+    const drifted = await driftBroker.execute(request, { decision, approval });
+    expect(drifted.ok ? undefined : drifted.error.code).toBe("WORLD_STATE_DRIFTED");
+    expect(driftDispatches).toBe(0);
+    expect(safeStops).toBe(1);
   });
 });

@@ -81,4 +81,47 @@ describe("configured simulation worker runtime", () => {
       await rm(directory, { recursive: true, force: true });
     }
   });
+
+  it("selects the scene-aware model for an explicitly configured navigation worker", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "sint-scene-worker-"));
+    try {
+      const config = loadSimulationWorkerConfig({
+        NODE_ENV: "test",
+        SINT_SIM_ARTIFACT_DIR: directory,
+        SINT_SIM_MODEL: JSON.stringify({
+          id: "nav-scene-v1",
+          kind: "scene-aware-navigation",
+          resources: ["ros2:///nav/segment"],
+          actions: ["publish"],
+          envelope: { maxVelocityMps: 0.5, minClearanceMeters: 0.1 },
+          scene: { robotRadiusMeters: 0.2, maxHorizonMs: 3_000, maxHumanSpeedMps: 0.3, minDecelerationMps2: 2, reactionTimeMs: 100 },
+        }),
+      });
+      const runtime = createConfiguredSimulationRuntime(config);
+      const params = { target: { x: 1, y: 0, z: 0 }, velocityMps: 0.3 };
+      const simulated = await runtime.simulator.simulate({
+        kind: "simulation-preflight",
+        authorizesExecution: false,
+        assignedTier: ApprovalTier.T2_ACT,
+        effectPlan: {
+          requestDigest: digest("1"),
+          effectPlanDigest: hashSha256(canonicalJsonStringify({ resource: "ros2:///nav/segment", action: "publish", params })),
+          tokenDigest: digest("3"),
+          resource: "ros2:///nav/segment",
+          action: "publish",
+          params,
+        },
+        requirement: { minEvidenceGrade: "deterministic" },
+      }, {
+        digest: digest("4"),
+        observedAt: new Date(Date.now() - 10).toISOString(),
+        validUntil: new Date(Date.now() + 5_000).toISOString(),
+        stateEpoch: "robot:7",
+      });
+      expect(simulated.ok ? undefined : simulated.error.code).toBe("SIMULATION_FAILED");
+      expect(runtime.evidenceLedger.getAll()).toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
 });

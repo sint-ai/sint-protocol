@@ -17,6 +17,7 @@ import {
   type Result,
   type SimulationPreflight,
   type SintCapabilityToken,
+  type SintAttestationContext,
   type SintRequest,
   type TierAssignmentRule,
   sintRequestSchema,
@@ -53,6 +54,7 @@ import type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } fr
 import { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
 import type { SimulationEvidencePolicyPlugin } from "./simulation-evidence-policy.js";
 import { createSimulationPreflight } from "./simulation-evidence-policy.js";
+import { verifyTokenTrustChain } from "./token-trust.js";
 import {
   decisionForCodeAsPolicyViolation,
   type CodeAsPolicyGuardPlugin,
@@ -237,9 +239,16 @@ export interface VerifiableComputePlugin {
 
 export interface PolicyGatewayConfig extends PluginFailureOptions {
   readonly resolveToken: TokenResolver;
+  /** Trusted root issuer keys. Configure this at every deployable gateway boundary. */
+  readonly trustedIssuers?: readonly string[];
   readonly revocationStore?: RevocationStore;
+  /** Trusted, pure quote resolver. Raw request attestation fields are never authority. */
+  readonly resolveVerifiedAttestation?: (
+    request: SintRequest,
+    token: SintCapabilityToken,
+  ) => Result<SintAttestationContext, string>;
   readonly emitLedgerEvent?: LedgerEmitter;
-  /** Custom resource rules cannot lower the built-in MCP consequence floor. */
+  /** Custom resource rules cannot lower built-in MCP or physical-command floors. */
   readonly tierRules?: readonly TierAssignmentRule[];
   readonly getAgentTrustLevel?: (agentId: string) => AgentTrustLevel;
   /** Optional economy plugin for budget/balance/trust enforcement. */
@@ -457,6 +466,12 @@ export class PolicyGateway {
       return err({ code: "TOKEN_REVOKED", reason: "Capability token has been revoked" });
     }
 
+    if (this.config.trustedIssuers) {
+      const trust = await verifyTokenTrustChain(token, this.config.resolveToken,
+        this.config.trustedIssuers, this.config.revocationStore);
+      if (!trust.ok) return err({ code: "TOKEN_INVALID", reason: `Token trust chain failed: ${trust.error}` });
+    }
+
     const tokenValidation = this.validateTokenForRequest(token, request);
     if (!tokenValidation.ok) {
       return err({
@@ -624,6 +639,17 @@ export class PolicyGateway {
         "TOKEN_SUBJECT_MISMATCH",
         "Capability token subject does not match requesting agent identity",
       );
+    }
+
+    if (this.config.trustedIssuers) {
+      const trustCheck = await failures.run("token.trustChain", async () => ({ trust:
+        await verifyTokenTrustChain(token, this.config.resolveToken,
+          this.config.trustedIssuers!, this.config.revocationStore) }));
+      if (!trustCheck.ok) return failures.deny(trustCheck.error);
+      if (!trustCheck.value.trust.ok) {
+        return this.deny(requestId, timestamp, trustCheck.value.trust.error,
+          `Token trust chain failed: ${trustCheck.value.trust.error}`);
+      }
     }
 
     // 3. Check revocation status
@@ -1119,12 +1145,13 @@ export class PolicyGateway {
     // 5d. Tier-gated attestation requirement checks.
     const requiredTiers = token.attestationRequirements?.requireForTiers;
     if (requiredTiers && requiredTiers.includes(tierAssignment.approvalTier)) {
-      if (request.executionContext?.attestation?.grade === undefined) {
+      const verified = this.config.resolveVerifiedAttestation?.(request, token);
+      if (!verified?.ok || verified.value.grade === undefined) {
         return this.deny(
           requestId,
           timestamp,
           "CONSTRAINT_VIOLATION",
-          `Attestation grade is required for tier ${tierAssignment.approvalTier}`,
+          `Verified attestation is required for tier ${tierAssignment.approvalTier}`,
         );
       }
     }
@@ -1421,6 +1448,10 @@ export class PolicyGateway {
     token: SintCapabilityToken,
     request: SintRequest,
   ): ReturnType<typeof validateCapabilityToken> {
+    const attestation = token.attestationRequirements && this.config.resolveVerifiedAttestation
+      ? this.config.resolveVerifiedAttestation(request, token)
+      : undefined;
+    if (attestation && !attestation.ok) return err("CONSTRAINT_VIOLATION");
     return validateCapabilityToken(token, {
       resource: request.resource,
       action: request.action,
@@ -1440,8 +1471,8 @@ export class PolicyGateway {
         trainingRecipeDigest: request.executionContext?.model?.trainingRecipeDigest,
         promotionEvidenceDigest: request.executionContext?.model?.promotionEvidenceDigest,
         rollbackCheckpointDigest: request.executionContext?.model?.rollbackCheckpointDigest,
-        attestationGrade: request.executionContext?.attestation?.grade,
-        teeBackend: request.executionContext?.attestation?.teeBackend,
+        attestationGrade: attestation?.ok ? attestation.value.grade : undefined,
+        teeBackend: attestation?.ok ? attestation.value.teeBackend : undefined,
         verifiableComputeProofType: request.executionContext?.verifiableCompute?.proofType,
         verifiableComputeProofRef: request.executionContext?.verifiableCompute?.proofRef,
         verifiableComputeProofHash: request.executionContext?.verifiableCompute?.proofHash,

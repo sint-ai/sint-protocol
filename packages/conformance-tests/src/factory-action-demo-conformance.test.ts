@@ -397,7 +397,7 @@ describe("Factory Action Pack demo fixture v1", () => {
       roboGuideReceipt,
       kukaSimReceipt,
     ]) {
-      expect(receipt.simulation_receipt.approved_for_execution).toBe(true);
+      expect(receipt.simulation_receipt.approved_for_execution).toBe(false);
       expect(receipt.simulation_receipt.safety_zone_violations).toBe(0);
       expect(receipt.simulation_receipt.metadata.decision_digest).toMatch(SHA256_REF);
       expect(receipt.simulation_receipt.metadata.source_action_type).toBe(

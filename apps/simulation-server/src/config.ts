@@ -1,12 +1,21 @@
-import type { DeterministicSafetyEnvelope } from "@pshkv/engine-effect-simulator";
+import { isValidNavigationScenarioPolicy, type DeterministicSafetyEnvelope, type NavigationScenarioPolicy } from "@pshkv/engine-effect-simulator";
 import { canonicalJsonStringify } from "@pshkv/core";
 import { generateKeypair, getPublicKey, hashSha256 } from "@pshkv/gate-capability-tokens";
 
 export interface SimulationWorkerModelConfig {
   readonly id: string;
+  readonly kind?: "bounded-motion" | "scene-aware-navigation";
   readonly resources: readonly string[];
   readonly actions: readonly string[];
   readonly envelope: DeterministicSafetyEnvelope;
+  readonly scene?: {
+    readonly robotRadiusMeters: number;
+    readonly maxHorizonMs: number;
+    readonly maxHumanSpeedMps: number;
+    readonly minDecelerationMps2: number;
+    readonly reactionTimeMs: number;
+  };
+  readonly scenarioPolicy?: NavigationScenarioPolicy;
 }
 
 export interface SimulationWorkerConfig {
@@ -112,6 +121,39 @@ function parseModel(raw: string | undefined): SimulationWorkerModelConfig {
   ) {
     throw new Error("SINT_SIM_MODEL must define id, resources, actions, and envelope");
   }
+  if (model.kind !== undefined && model.kind !== "bounded-motion" && model.kind !== "scene-aware-navigation") {
+    throw new Error("SINT_SIM_MODEL kind must be bounded-motion or scene-aware-navigation");
+  }
+  if (model.kind === "scene-aware-navigation") {
+    const envelope = model.envelope as Record<string, unknown>;
+    const scene = model.scene as Record<string, unknown> | undefined;
+    if (
+      !scene
+      || !nonNegativeNumber(scene.robotRadiusMeters)
+      || scene.robotRadiusMeters === 0
+      || !nonNegativeNumber(scene.maxHumanSpeedMps)
+      || scene.maxHumanSpeedMps === 0
+      || !nonNegativeNumber(scene.minDecelerationMps2)
+      || scene.minDecelerationMps2 === 0
+      || !nonNegativeNumber(scene.reactionTimeMs)
+      || !nonNegativeNumber(scene.maxHorizonMs)
+      || scene.maxHorizonMs === 0
+      || !nonNegativeNumber(envelope.maxVelocityMps)
+      || envelope.maxVelocityMps === 0
+      || !nonNegativeNumber(envelope.minClearanceMeters)
+      || envelope.minClearanceMeters === 0
+      || Object.keys(envelope).some((key) => !["maxVelocityMps", "minClearanceMeters"].includes(key))
+    ) {
+      throw new Error("SINT_SIM_MODEL scene-aware-navigation requires explicit radius, horizon, human speed, braking, reaction time, velocity and clearance bounds");
+    }
+    if (model.scenarioPolicy !== undefined && !isValidNavigationScenarioPolicy(model.scenarioPolicy)) {
+      throw new Error("SINT_SIM_MODEL scenarioPolicy must contain 1–16 distinct, nonzero fixed navigation stress cases");
+    }
+  } else if (model.scene !== undefined) {
+    throw new Error("SINT_SIM_MODEL scene settings require scene-aware-navigation kind");
+  } else if (model.scenarioPolicy !== undefined) {
+    throw new Error("SINT_SIM_MODEL scenarioPolicy requires scene-aware-navigation kind");
+  }
   return value as SimulationWorkerModelConfig;
 }
 
@@ -148,6 +190,16 @@ export function loadSimulationWorkerConfig(
   }
 
   const model = parseModel(environment.SINT_SIM_MODEL);
+  if (env === "production" && !environment.SINT_SIM_MODEL) {
+    throw new Error("SINT_SIM_MODEL is required in production; the default parameter-only ROS 2 model is not scene-aware");
+  }
+  if (
+    env === "production"
+    && model.kind !== "scene-aware-navigation"
+    && model.resources.some((resource) => /^(ros2|mavlink|opcua|iot|mqtt|modbus|plc):\/\//i.test(resource))
+  ) {
+    throw new Error("Physical protocol resources require a scene-aware simulation model in production");
+  }
   const configuredModelDigest = environment.SINT_SIM_MODEL_DIGEST;
   if (configuredModelDigest !== undefined && !/^[0-9a-f]{64}$/.test(configuredModelDigest)) {
     throw new Error("SINT_SIM_MODEL_DIGEST must be a lowercase SHA-256 hex digest");

@@ -63,6 +63,7 @@ export const simulationEvidenceRequirementSchema = z.object({
   minEvidenceGrade: simulationEvidenceGradeSchema,
   minScenarioRuns: z.number().int().positive().max(1_000_000).optional(),
   minScenarioCoverage: z.number().min(0).max(1).optional(),
+  requiredScenarioSetDigest: sha256Schema.optional(),
   maxWorldUncertainty: z.number().min(0).max(1).optional(),
   allowedBackends: z.array(z.string().min(1).max(128)).max(128).optional(),
   requiredBindings: z.array(z.enum([

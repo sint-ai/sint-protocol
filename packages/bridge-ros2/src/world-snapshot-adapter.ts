@@ -13,6 +13,7 @@ import type { JointState, Odometry, Pose } from "./ros2-message-types.js";
 
 export interface ROS2Stamped<T> {
   readonly observedAt: string;
+  readonly frameId?: string;
   readonly value: T;
 }
 
@@ -33,7 +34,15 @@ export interface ROS2MapState {
 
 export interface ROS2ObstacleState {
   readonly id: string;
+  readonly frameId?: string;
+  /** A missing classification is unsupported by scene-aware validation. */
+  readonly kind?: "static" | "dynamic" | "human";
   readonly position: { readonly x: number; readonly y: number; readonly z: number };
+  readonly velocityMps?: { readonly x: number; readonly y: number; readonly z: number };
+  /** Absolute speed prediction error bound in metres per second for moving objects. */
+  readonly velocityUncertaintyMps?: number;
+  /** Absolute position bound in metres, including sensor and tracking error. */
+  readonly positionUncertaintyMeters?: number;
   readonly radiusMeters: number;
   readonly observedAt: string;
   readonly uncertainty?: number;
@@ -64,11 +73,15 @@ export interface ROS2WorldStateInput {
   readonly stateEpoch: string;
   /** Time this multi-source aggregation completed. */
   readonly capturedAt: string;
+  /** Absolute localization error bound in metres for scene-aware checks. */
+  readonly robotPositionUncertaintyMeters?: number;
   readonly odometry?: ROS2Stamped<Odometry>;
   readonly jointState?: ROS2Stamped<JointState>;
   readonly transforms?: readonly ROS2TransformState[];
   readonly map?: ROS2MapState;
   readonly obstacles?: readonly ROS2ObstacleState[];
+  /** Sensor fusion completion time, including a scan that found zero obstacles. */
+  readonly obstacleScanObservedAt?: string;
   readonly safetyController?: ROS2SafetyControllerState;
   readonly localizationConfidence?: number;
 }
@@ -132,6 +145,10 @@ function isFinitePose(pose: Pose): boolean {
 }
 
 function sourcePresent(input: ROS2WorldStateInput, source: ROS2WorldStateSource): boolean {
+  if (source === "obstacles") {
+    return Array.isArray(input.obstacles)
+      && (input.obstacles.length > 0 || input.obstacleScanObservedAt !== undefined);
+  }
   const value = input[source];
   return Array.isArray(value) ? value.length > 0 : value !== undefined;
 }
@@ -143,6 +160,7 @@ function sourceTimestamps(input: ROS2WorldStateInput): readonly string[] {
     ...(input.transforms ?? []).map((transform) => transform.observedAt),
     input.map?.observedAt,
     ...(input.obstacles ?? []).map((obstacle) => obstacle.observedAt),
+    input.obstacleScanObservedAt,
     input.safetyController?.observedAt,
   ].filter((timestamp): timestamp is string => timestamp !== undefined);
 }
@@ -164,6 +182,10 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (!isNormalized(input.localizationConfidence)) {
     return "localizationConfidence must be normalized to [0,1]";
   }
+  if (input.robotPositionUncertaintyMeters !== undefined
+    && (!isFiniteNumber(input.robotPositionUncertaintyMeters) || input.robotPositionUncertaintyMeters < 0)) {
+    return "robotPositionUncertaintyMeters must be finite and nonnegative";
+  }
   const jointState = input.jointState?.value;
   if (jointState) {
     const count = jointState.name.length;
@@ -180,7 +202,8 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   if (
     input.odometry
-    && (!isFinitePose(input.odometry.value.pose)
+    && ((input.odometry.frameId !== undefined && input.odometry.frameId.length === 0)
+      || !isFinitePose(input.odometry.value.pose)
       || [
         input.odometry.value.twist.linear.x,
         input.odometry.value.twist.linear.y,
@@ -216,11 +239,19 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   for (const obstacle of input.obstacles ?? []) {
     if (
       !obstacle.id
+      || (obstacle.frameId !== undefined && obstacle.frameId.length === 0)
       || !isFiniteNumber(obstacle.position.x)
       || !isFiniteNumber(obstacle.position.y)
       || !isFiniteNumber(obstacle.position.z)
       || !isFiniteNumber(obstacle.radiusMeters)
       || obstacle.radiusMeters < 0
+      || (obstacle.positionUncertaintyMeters !== undefined
+        && (!isFiniteNumber(obstacle.positionUncertaintyMeters) || obstacle.positionUncertaintyMeters < 0))
+      || (obstacle.velocityMps !== undefined
+        && ![obstacle.velocityMps.x, obstacle.velocityMps.y, obstacle.velocityMps.z].every(isFiniteNumber))
+      || (obstacle.velocityUncertaintyMps !== undefined
+        && (!isFiniteNumber(obstacle.velocityUncertaintyMps) || obstacle.velocityUncertaintyMps < 0))
+      || (obstacle.kind !== undefined && !["static", "dynamic", "human"].includes(obstacle.kind))
       || !isNormalized(obstacle.uncertainty)
     ) {
       return "obstacles require finite geometry and normalized uncertainty";

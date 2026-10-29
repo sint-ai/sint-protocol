@@ -17,10 +17,10 @@ import {
   ListPromptsRequestSchema,
   ListResourceTemplatesRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { SintCapabilityToken } from "@pshkv/core";
+import { ApprovalTier, RiskTier, DEFAULT_TIER_RULES, type SintCapabilityToken, type SintRequest } from "@pshkv/core";
 import { PolicyGateway } from "@pshkv/gate-policy-gateway";
 import { ApprovalQueue } from "@pshkv/gate-policy-gateway";
-import { RevocationStore } from "@pshkv/gate-capability-tokens";
+import { RevocationStore, generateUUIDv7, nowISO8601, issueCapabilityToken } from "@pshkv/gate-capability-tokens";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import { DownstreamManager } from "./downstream.js";
 import { ToolAggregator, parseNamespace } from "./aggregator.js";
@@ -57,6 +57,12 @@ import {
 } from "./trajectory.js";
 
 /** SINT MCP Server — the security-first multi-MCP proxy. */
+const OPERATOR_ONLY_TOOLS = new Set([
+  "sint__approve", "sint__deny", "sint__add_server", "sint__remove_server",
+  "sint__issue_token", "sint__revoke_token", "sint__revoke_delegation_tree",
+  "sint__delegate_to_agent", "sint__interface_mode",
+]);
+
 export class SintMCPServer {
   readonly server: Server;
   readonly downstream: DownstreamManager;
@@ -73,6 +79,8 @@ export class SintMCPServer {
   private identity: AgentIdentity | null = null;
   private enforcer: PolicyEnforcer | null = null;
   private readonly config: SintMCPConfig;
+  private readonly trustedIssuers: string[] = [];
+  private readonly serverTokenIds = new Map<string, string>();
 
   constructor(config: SintMCPConfig) {
     this.config = config;
@@ -106,7 +114,17 @@ export class SintMCPServer {
 
     this.gateway = new PolicyGateway({
       resolveToken: (id) => this.tokenStore.get(id),
+      trustedIssuers: this.trustedIssuers,
       revocationStore: this.revocationStore,
+      tierRules: [
+        ...[...OPERATOR_ONLY_TOOLS].map(name => ({
+          resourcePattern: `mcp://sint/${name}`,
+          actions: ["call"],
+          baseTier: ApprovalTier.T3_COMMIT,
+          baseRisk: RiskTier.T3_IRREVERSIBLE,
+        })),
+        ...DEFAULT_TIER_RULES,
+      ],
       emitLedgerEvent: (event) => {
         this.ledger.append({
           eventType: event.eventType as any,
@@ -138,7 +156,8 @@ export class SintMCPServer {
    */
   async initialize(): Promise<void> {
     // Create agent identity
-    this.identity = createAgentIdentity(this.config.agentPrivateKey);
+    this.identity = createAgentIdentity(this.config.agentPrivateKey, "mcp://sint/*");
+    this.trustedIssuers.push(this.identity.publicKey);
 
     // Store the default token
     this.tokenStore.set(
@@ -146,13 +165,30 @@ export class SintMCPServer {
       this.identity.defaultToken,
     );
 
+    // Give each configured downstream a separate capability. A compromised
+    // server token cannot name tools on another server or proxy control tools.
+    for (const name of Object.keys(this.config.servers)) {
+      const result = issueCapabilityToken({
+        issuer: this.identity.publicKey, subject: this.identity.publicKey,
+        resource: `mcp://${name}/*`, actions: ["call"], constraints: {},
+        delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+        expiresAt: this.identity.defaultToken.expiresAt, revocable: true,
+      }, this.identity.privateKey);
+      if (!result.ok) {
+        console.error(`Cannot issue configured server capability for ${name}: ${result.error}`);
+        continue;
+      }
+      this.tokenStore.set(result.value.tokenId, result.value);
+      this.serverTokenIds.set(name, result.value.tokenId);
+    }
+
     // Create enforcer
     this.enforcer = new PolicyEnforcer(
       this.gateway,
       this.approvalQueue,
       this.downstream,
       this.identity.publicKey,
-      this.identity.defaultToken.tokenId,
+      serverName => this.serverTokenIds.get(serverName) ?? this.identity!.defaultToken.tokenId,
       this.trajectory,
     );
 
@@ -198,7 +234,8 @@ export class SintMCPServer {
       const sintTools = getSintToolDefinitions();
       const interfaceTools = getInterfaceToolDefinitions();
       const delegationTools = getDelegationToolDefinitions();
-      return { tools: [...downstreamTools, ...sintTools, ...interfaceTools, ...delegationTools] };
+      return { tools: [...downstreamTools, ...sintTools, ...interfaceTools, ...delegationTools]
+        .filter(tool => !OPERATOR_ONLY_TOOLS.has(tool.name)) };
     });
 
     // prompts/list — SINT currently exposes no prompt templates
@@ -211,18 +248,20 @@ export class SintMCPServer {
       const { name, arguments: args } = request.params;
       const toolArgs = (args ?? {}) as Record<string, unknown>;
 
-      // Handle multi-agent delegation tools (no policy enforcement)
-      if (isDelegationTool(name)) {
-        return handleDelegationTool(name, toolArgs, this.getDelegationToolContext());
-      }
-
-      // Handle operator interface tools (no policy enforcement)
-      if (isInterfaceTool(name)) {
-        return handleInterfaceTool(name, toolArgs, this.getInterfaceToolContext());
-      }
-
-      // Handle built-in SINT tools (no policy enforcement)
-      if (isSintTool(name)) {
+      if (isDelegationTool(name) || isInterfaceTool(name) || isSintTool(name)) {
+        if (!this.identity) return { content: [{ type: "text", text: "Server not initialized" }], isError: true };
+        const sintRequest: SintRequest = {
+          requestId: generateUUIDv7(), timestamp: nowISO8601(),
+          agentId: this.identity.publicKey, tokenId: this.identity.defaultToken.tokenId,
+          resource: `mcp://sint/${name}`, action: "call", params: toolArgs,
+          ...(OPERATOR_ONLY_TOOLS.has(name) ? { mcpPolicy: { maxTier: ApprovalTier.T0_OBSERVE } } : {}),
+        };
+        const decision = await this.gateway.intercept(sintRequest);
+        if (decision.action !== "allow") {
+          return { content: [{ type: "text", text: `SINT policy ${decision.action}: ${name}` }], isError: true };
+        }
+        if (isDelegationTool(name)) return handleDelegationTool(name, toolArgs, this.getDelegationToolContext());
+        if (isInterfaceTool(name)) return handleInterfaceTool(name, toolArgs, this.getInterfaceToolContext());
         return handleSintTool(name, toolArgs, this.getToolContext());
       }
 
@@ -293,7 +332,8 @@ export class SintMCPServer {
    * Get the count of built-in SINT tools (including interface and delegation tools).
    */
   getSintToolCount(): number {
-    return getSintToolDefinitions().length + getInterfaceToolDefinitions().length + getDelegationToolDefinitions().length;
+    return getSintToolDefinitions().filter(tool => !OPERATOR_ONLY_TOOLS.has(tool.name)).length
+      + getInterfaceToolDefinitions().length + getDelegationToolDefinitions().filter(tool => !OPERATOR_ONLY_TOOLS.has(tool.name)).length;
   }
 
   async finalizeTrajectory(outcome: TrajectoryOutcome): Promise<string> {
