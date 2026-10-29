@@ -10,6 +10,8 @@ export { SceneAwareNavigationModel } from "./scene-aware-navigation-model.js";
 export { FixedCaseNavigationModel, isValidNavigationScenarioPolicy, navigationScenarioPolicyDigest, sampleNavigationPerturbations } from "./fixed-case-navigation-model.js";
 export { FixedCaseBoundedMotionModel, boundedMotionScenarioPolicyDigest, isValidBoundedMotionScenarioPolicy, sampleBoundedMotionPerturbations } from "./fixed-case-bounded-motion-model.js";
 export { DeterministicEffectSimulator } from "./deterministic-effect-simulator.js";
+export { SoftwareOnlySimulatorAdapter } from "./software-only-simulator-adapter.js";
+export type { SoftwareOnlySimulationRecord } from "./software-only-simulator-adapter.js";
 export {
   FileSystemSimulationArtifactStore,
   InMemorySimulationArtifactStore,
