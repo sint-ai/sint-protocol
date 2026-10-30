@@ -309,8 +309,15 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       return "transforms require an observation time, frame identities, and normalized uncertainty";
     }
   }
-  if (input.map && (input.map.frameId.trim().length === 0 || !isContentDigest(input.map.digest) || !isNormalized(input.map.uncertainty))) {
-    return "map digest or uncertainty is invalid";
+  if (
+    input.map
+    && (typeof input.map.observedAt !== "string"
+      || input.map.observedAt.trim().length === 0
+      || input.map.frameId.trim().length === 0
+      || !isContentDigest(input.map.digest)
+      || !isNormalized(input.map.uncertainty))
+  ) {
+    return "map observation time, digest, or uncertainty is invalid";
   }
   const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id.trim());
   if (new Set(obstacleIds).size !== obstacleIds.length) {
