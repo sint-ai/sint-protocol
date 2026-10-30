@@ -269,7 +269,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   if (
     input.odometry
-    && ((input.odometry.frameId !== undefined && input.odometry.frameId.trim().length === 0)
+    && (typeof input.odometry.observedAt !== "string"
+      || input.odometry.observedAt.trim().length === 0
+      || (input.odometry.frameId !== undefined && input.odometry.frameId.trim().length === 0)
       || !isFinitePose(input.odometry.value.pose)
       || [
         input.odometry.value.twist.linear.x,
@@ -280,7 +282,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
         input.odometry.value.twist.angular.z,
       ].some((value) => !isFiniteNumber(value)))
   ) {
-    return "odometry pose and twist values must be finite";
+    return "odometry observation time, pose, or twist is invalid";
   }
   const childFrames = (input.transforms ?? []).map((transform) => transform.childFrame.trim());
   if (new Set(childFrames).size !== childFrames.length) {
