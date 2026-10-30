@@ -113,22 +113,53 @@ describe("checkConstraints — edge cases", () => {
   });
 
   describe("negative values", () => {
-    it("allows negative commanded velocity — scalar comparison, not magnitude", () => {
-      // Documents current behavior: `commanded > limit` is false when commanded is negative.
-      // If signed reverse motion needs capping, the caller must pass the absolute value
-      // or the constraint layer must be extended to check magnitude.
+    it("denies reverse motion whose magnitude exceeds the limit", () => {
       const token = makeToken({ maxVelocityMps: 2.0 });
       const req = makeRequest({ velocity: -5.0 });
       const result = checkConstraints(token, req);
-      expect(result.ok).toBe(true);
+      expect(result.ok).toBe(false);
     });
 
-    it("allows negative commanded force — same scalar semantics as velocity", () => {
+    it("denies negative commanded force whose magnitude exceeds the limit", () => {
       const token = makeToken({ maxForceNewtons: 10 });
       const req = makeRequest({ force: -50 });
       const result = checkConstraints(token, req);
-      expect(result.ok).toBe(true);
+      expect(result.ok).toBe(false);
     });
+  });
+
+  it("checks the magnitude of a ROS 2 Twist vector", () => {
+    const token = makeToken({ maxVelocityMps: 0.5, maxAngularVelocityRps: 1 });
+    const req = makeRequest({
+      linear: { x: 0.4, y: 0.4, z: 0 },
+      angular: { x: 0, y: 0, z: -1.2 },
+    });
+    const result = checkConstraints(token, req);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.map((v) => v.constraint)).toEqual([
+      "maxVelocityMps", "maxAngularVelocityRps",
+    ]);
+  });
+
+  it("denies malformed values instead of coercing them below signed limits", () => {
+    const result = checkConstraints(makeToken({ maxVelocityMps: 0.5 }),
+      makeRequest({ linear: { x: "fast", y: 0, z: 0 } }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error[0]?.actual).toBe("invalid");
+  });
+
+  it("checks torque, jerk, and measured contact force", () => {
+    const req = {
+      ...makeRequest({ torque: -8, jerk: 5 }),
+      physicalContext: { currentContactForceNewtons: 12 },
+    } as SintRequest;
+    const result = checkConstraints(makeToken({
+      maxTorqueNm: 7, maxJerkMps3: 4, contactForceThresholdN: 10,
+    }), req);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.map((v) => v.constraint)).toEqual([
+      "maxTorqueNm", "maxJerkMps3", "contactForceThresholdN",
+    ]);
   });
 
   describe("empty constraint set", () => {

@@ -36,6 +36,10 @@ import {
 export interface PhysicalActionContext {
   readonly commandedForceNewtons?: number;
   readonly commandedVelocityMps?: number;
+  readonly commandedTorqueNm?: number;
+  readonly commandedJerkMps3?: number;
+  readonly commandedAngularVelocityRps?: number;
+  readonly currentContactForceNewtons?: number;
   readonly position?: { readonly x: number; readonly y: number };
   readonly humanPresenceDetected?: boolean;
   readonly repetitionCount?: number;
@@ -202,7 +206,8 @@ export function validatePhysicalConstraints(
   if (
     constraints.maxForceNewtons !== undefined &&
     context.commandedForceNewtons !== undefined &&
-    context.commandedForceNewtons > constraints.maxForceNewtons
+    (!Number.isFinite(context.commandedForceNewtons)
+      || Math.abs(context.commandedForceNewtons) > constraints.maxForceNewtons)
   ) {
     return err("CONSTRAINT_VIOLATION");
   }
@@ -211,8 +216,21 @@ export function validatePhysicalConstraints(
   if (
     constraints.maxVelocityMps !== undefined &&
     context.commandedVelocityMps !== undefined &&
-    context.commandedVelocityMps > constraints.maxVelocityMps
+    (!Number.isFinite(context.commandedVelocityMps)
+      || Math.abs(context.commandedVelocityMps) > constraints.maxVelocityMps)
   ) {
+    return err("CONSTRAINT_VIOLATION");
+  }
+
+  const additionalLimits = [
+    [constraints.maxTorqueNm, context.commandedTorqueNm],
+    [constraints.maxJerkMps3, context.commandedJerkMps3],
+    [constraints.maxAngularVelocityRps, context.commandedAngularVelocityRps],
+    [constraints.contactForceThresholdN, context.currentContactForceNewtons],
+  ] as const;
+  if (additionalLimits.some(([limit, actual]) =>
+    limit !== undefined && actual !== undefined
+      && (!Number.isFinite(actual) || Math.abs(actual) > limit))) {
     return err("CONSTRAINT_VIOLATION");
   }
 
