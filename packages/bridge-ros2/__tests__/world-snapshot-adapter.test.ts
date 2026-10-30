@@ -729,6 +729,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a map frame that is only whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      frameId: "   ",
+      map: {
+        digest: "a".repeat(64),
+        frameId: "   ",
+        observedAt,
+        uncertainty: 0.01,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {
