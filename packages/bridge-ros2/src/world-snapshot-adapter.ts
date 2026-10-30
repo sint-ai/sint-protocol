@@ -302,7 +302,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   for (const obstacle of input.obstacles ?? []) {
     if (
-      !obstacle.id
+      obstacle.id.trim().length === 0
       || (obstacle.frameId !== undefined && obstacle.frameId.trim().length === 0)
       || !isFiniteNumber(obstacle.position.x)
       || !isFiniteNumber(obstacle.position.y)
