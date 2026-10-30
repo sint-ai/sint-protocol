@@ -883,6 +883,22 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects transform child frames that collide after trimming", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [
+        base.transforms![0]!,
+        {
+          ...base.transforms![0]!,
+          parentFrame: "odom",
+          childFrame: " base_link",
+        },
+      ],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {
