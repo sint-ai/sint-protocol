@@ -252,6 +252,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     && (!isFiniteNumber(input.robotPositionUncertaintyMeters) || input.robotPositionUncertaintyMeters < 0)) {
     return "robotPositionUncertaintyMeters must be finite and nonnegative";
   }
+  if (
+    input.jointState
+    && (typeof input.jointState.observedAt !== "string"
+      || input.jointState.observedAt.trim().length === 0)
+  ) {
+    return "joint state observation time is missing";
+  }
   const jointState = input.jointState?.value;
   if (jointState) {
     const count = jointState.name.length;
