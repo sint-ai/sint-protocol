@@ -255,6 +255,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (typeof input.capturedAt !== "string" || input.capturedAt.trim().length === 0) {
     return "capture time is missing";
   }
+  if (input.capturedAt !== input.capturedAt.trim()) {
+    return "capture time has leading or trailing whitespace";
+  }
   if (
     input.obstacleScanObservedAt !== undefined
     && (typeof input.obstacleScanObservedAt !== "string"
