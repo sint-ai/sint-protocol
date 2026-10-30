@@ -699,6 +699,28 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects occupancy region ids that collide after trimming", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [
+        {
+          regionId: "corridor-a",
+          occupied: true,
+          occlusion: "partial" as const,
+          observedAt,
+        },
+        {
+          regionId: " corridor-a",
+          occupied: false,
+          occlusion: "clear" as const,
+          observedAt,
+        },
+      ],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("produces the same digest when occupancy regions are reordered", () => {
     const corridor = {
       regionId: "corridor-a",
