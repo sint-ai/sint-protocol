@@ -415,7 +415,7 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     if (sensor.sensorId.trim().length === 0 || sensor.sensorId !== sensor.sensorId.trim()) {
       return "sensor provenance identity is missing";
     }
-    if (sensor.version.trim().length === 0) {
+    if (sensor.version.trim().length === 0 || sensor.version !== sensor.version.trim()) {
       return "sensor provenance version is missing";
     }
     if (!WORLD_STATE_SOURCES.includes(sensor.source)) {
