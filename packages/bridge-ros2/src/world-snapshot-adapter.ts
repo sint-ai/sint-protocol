@@ -176,10 +176,6 @@ function isNormalized(value: number | undefined): boolean {
   return value === undefined || (isFiniteNumber(value) && value >= 0 && value <= 1);
 }
 
-function isDigest(value: string | undefined): boolean {
-  return value === undefined || /^[0-9a-f]{64}$/.test(value);
-}
-
 function isFinitePose(pose: Pose): boolean {
   return [
     pose.position.x,
@@ -302,7 +298,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       return "transforms require frame identities and normalized uncertainty";
     }
   }
-  if (input.map && (input.map.frameId.trim().length === 0 || !isDigest(input.map.digest) || !isNormalized(input.map.uncertainty))) {
+  if (input.map && (input.map.frameId.trim().length === 0 || !isContentDigest(input.map.digest) || !isNormalized(input.map.uncertainty))) {
     return "map digest or uncertainty is invalid";
   }
   const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id.trim());
