@@ -297,14 +297,16 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   for (const transform of input.transforms ?? []) {
     if (
-      transform.parentFrame.trim().length === 0
+      typeof transform.observedAt !== "string"
+      || transform.observedAt.trim().length === 0
+      || transform.parentFrame.trim().length === 0
       || transform.parentFrame !== transform.parentFrame.trim()
       || transform.childFrame.trim().length === 0
       || transform.childFrame !== transform.childFrame.trim()
       || !isFinitePose(transform.pose)
       || !isNormalized(transform.uncertainty)
     ) {
-      return "transforms require frame identities and normalized uncertainty";
+      return "transforms require an observation time, frame identities, and normalized uncertainty";
     }
   }
   if (input.map && (input.map.frameId.trim().length === 0 || !isContentDigest(input.map.digest) || !isNormalized(input.map.uncertainty))) {
