@@ -314,6 +314,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (
       typeof transform.observedAt !== "string"
       || transform.observedAt.trim().length === 0
+      || transform.observedAt !== transform.observedAt.trim()
       || transform.parentFrame.trim().length === 0
       || transform.parentFrame !== transform.parentFrame.trim()
       || transform.childFrame.trim().length === 0
