@@ -735,6 +735,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance whose observation time is missing", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "lidar-front",
+        version: "2.4.1",
+        source: "obstacles" as const,
+        observedAt: undefined as unknown as string,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance whose source is not a world-state channel", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
