@@ -67,6 +67,7 @@ const worldCapture = createROS2WorldSnapshot({
     estopEngaged: false,
     protectiveStopEngaged: false,
     safetyZoneClear: true,
+    stateDigest: "b".repeat(64),
     uncertainty: 0.01,
   },
 }, { now: () => now, validityMs: 5_000, requiredSources: ["odometry", "safetyController"] });

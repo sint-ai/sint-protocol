@@ -51,6 +51,7 @@ function scene(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
       estopEngaged: false,
       protectiveStopEngaged: false,
       safetyZoneClear: true,
+      stateDigest: "b".repeat(64),
     },
     ...overrides,
   };
