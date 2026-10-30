@@ -249,6 +249,21 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a task binding whose payload identity is only whitespace", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      task: {
+        phase: "transport",
+        toolId: "gripper-1",
+        payload: { payloadId: "   ", digest: "e".repeat(64), radiusMeters: 0.4 },
+        calibrationDigest: "c".repeat(64),
+        policyDigest: "d".repeat(64),
+      },
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("records phase, tool, payload geometry, and calibration and policy digests on the snapshot", () => {
     const task = {
       phase: "transport",
