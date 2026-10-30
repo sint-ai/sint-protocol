@@ -460,6 +460,28 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor ids that collide after trimming", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [
+        {
+          sensorId: "lidar-front",
+          version: "2.4.1",
+          source: "obstacles" as const,
+          observedAt,
+        },
+        {
+          sensorId: " lidar-front",
+          version: "2.4.2",
+          source: "map" as const,
+          observedAt,
+        },
+      ],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance that names a world-state source the snapshot does not contain", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
