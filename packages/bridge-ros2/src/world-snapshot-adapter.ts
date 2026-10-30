@@ -252,10 +252,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     && (!isFiniteNumber(input.robotPositionUncertaintyMeters) || input.robotPositionUncertaintyMeters < 0)) {
     return "robotPositionUncertaintyMeters must be finite and nonnegative";
   }
-  if (
-    input.capturedAt !== undefined
-    && (typeof input.capturedAt !== "string" || input.capturedAt.trim().length === 0)
-  ) {
+  if (typeof input.capturedAt !== "string" || input.capturedAt.trim().length === 0) {
     return "capture time is missing";
   }
   if (
