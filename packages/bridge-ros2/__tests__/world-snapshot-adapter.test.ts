@@ -159,6 +159,24 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a robot identity with leading or trailing whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      robotId: " mobile-base-1",
+      stateEpoch: " mobile-base-1:100",
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects a robot identity that is empty", () => {
+    const captured = createROS2WorldSnapshot(state({
+      robotId: "",
+      stateEpoch: ":100",
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot frame that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       frameId: "   ",
