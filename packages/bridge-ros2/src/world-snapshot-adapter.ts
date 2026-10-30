@@ -379,7 +379,7 @@ function validateOccupancy(
     return "occupancy region identities must be unique within a snapshot";
   }
   for (const region of regions) {
-    if (region.regionId.trim().length === 0) {
+    if (region.regionId.trim().length === 0 || region.regionId !== region.regionId.trim()) {
       return "occupancy region identity is missing";
     }
     if (typeof region.occupied !== "boolean") {
