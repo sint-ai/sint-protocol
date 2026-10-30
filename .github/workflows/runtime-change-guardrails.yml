@@ -37,9 +37,9 @@ jobs:
             exit 0
           fi
 
-          # Metadata-only changes in runtime packages (README/LICENSE/package metadata)
-          # should not require conformance fixture updates.
-          NON_SUBSTANTIVE_REGEX='(^|/)(README\.md|LICENSE|package\.json|CHANGELOG\.md)$'
+          # Metadata and tests under guarded packages do not change runtime behavior.
+          # They do not need a separate docs edit to pass this guardrail.
+          NON_SUBSTANTIVE_REGEX='(^|/)(README\.md|LICENSE|package\.json|CHANGELOG\.md)$|/__tests__/|\.test\.[cm]?[jt]sx?$'
           SUBSTANTIVE_RUNTIME_FILES="$(echo "$RUNTIME_FILES" | grep -Ev "$NON_SUBSTANTIVE_REGEX" || true)"
           if [[ -z "$SUBSTANTIVE_RUNTIME_FILES" ]]; then
             echo "Only metadata/runtime-doc files changed in guarded paths. Guardrail passed."
