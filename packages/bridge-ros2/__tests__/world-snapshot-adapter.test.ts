@@ -1031,6 +1031,17 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a joint name with leading or trailing whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      jointState: {
+        observedAt,
+        value: { name: [" elbow"], position: [1.2], velocity: [0.1], effort: [] },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects joint names that collide after trimming", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {
