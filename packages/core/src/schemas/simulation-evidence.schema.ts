@@ -86,7 +86,7 @@ export const effectPlanSchema = z.object({
   tokenDigest: sha256Schema,
   resource: z.string().min(1).max(512),
   action: z.string().min(1).max(64),
-  params: z.record(z.unknown()),
+  params: z.record(z.string(), z.unknown()),
   sceneContractDigest: sha256Schema.optional(),
 }).strict();
 

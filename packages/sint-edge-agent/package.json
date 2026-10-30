@@ -22,7 +22,7 @@
     "@pshkv/core": "workspace:*",
     "@pshkv/gate-capability-tokens": "workspace:*",
     "@noble/hashes": "^1.7.0",
-    "zod": "^3.24.0"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
