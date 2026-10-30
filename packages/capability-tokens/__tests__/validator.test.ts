@@ -351,6 +351,15 @@ describe("Capability Token Validator", () => {
 });
 
 describe("Physical Constraint Validation", () => {
+  it.each([
+    [{ maxTorqueNm: 5 }, { commandedTorqueNm: -6 }],
+    [{ maxJerkMps3: 3 }, { commandedJerkMps3: 4 }],
+    [{ maxAngularVelocityRps: 1 }, { commandedAngularVelocityRps: 1.1 }],
+    [{ contactForceThresholdN: 10 }, { currentContactForceNewtons: 11 }],
+  ] as const)("blocks an additional signed physical limit", (constraints, context) => {
+    expect(validatePhysicalConstraints(constraints, context).ok).toBe(false);
+  });
+
   it("should block force limit violations", () => {
     const result = validatePhysicalConstraints(
       { maxForceNewtons: 50 },
