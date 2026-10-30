@@ -454,6 +454,7 @@ function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
   if (
     !task.phase
     || task.phase.trim().length === 0
+    || task.phase !== task.phase.trim()
     || task.phase.length > 128
     || (task.toolId !== undefined && (task.toolId.trim().length === 0 || task.toolId !== task.toolId.trim()))
     || !isContentDigest(task.calibrationDigest)
