@@ -159,6 +159,15 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a snapshot frame that is only whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      frameId: "   ",
+      map: undefined,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",
