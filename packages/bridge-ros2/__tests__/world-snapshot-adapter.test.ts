@@ -471,6 +471,15 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an empty obstacle scan whose observation time is not a string", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [],
+      obstacleScanObservedAt: 1 as unknown as string,
+    }), { now: () => now, requiredSources: ["obstacles"] });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a task binding whose payload digest is not a content hash", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
