@@ -246,6 +246,23 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a safety-controller permit state that is not granted, denied, or unknown", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt,
+        permitState: "allow" as unknown as "granted",
+        estopEngaged: false,
+        protectiveStopEngaged: false,
+        safetyZoneClear: true,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",

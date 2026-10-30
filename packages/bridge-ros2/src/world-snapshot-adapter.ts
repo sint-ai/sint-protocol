@@ -332,9 +332,10 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     && (input.safetyController.controllerId.trim().length === 0
       || input.safetyController.controllerId !== input.safetyController.controllerId.trim()
       || !isContentDigest(input.safetyController.stateDigest)
+      || !isPermitState(input.safetyController.permitState)
       || !isNormalized(input.safetyController.uncertainty))
   ) {
-    return "safety-controller identity, digest, or uncertainty is invalid";
+    return "safety-controller identity, digest, permit state, or uncertainty is invalid";
   }
   return validateTask(input.task)
     ?? validateSensors(input)
@@ -425,6 +426,10 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     }
   }
   return undefined;
+}
+
+function isPermitState(value: unknown): boolean {
+  return value === "granted" || value === "denied" || value === "unknown";
 }
 
 function isContentDigest(value: unknown): value is string {
