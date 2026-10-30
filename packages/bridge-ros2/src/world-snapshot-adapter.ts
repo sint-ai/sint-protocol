@@ -256,7 +256,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (
       count === 0
       || jointState.name.some((name) => name.trim().length === 0)
-      || new Set(jointState.name).size !== count
+      || new Set(jointState.name.map((name) => name.trim())).size !== count
       || jointState.position.length !== count
       || ![0, count].includes(jointState.velocity.length)
       || ![0, count].includes(jointState.effort.length)
