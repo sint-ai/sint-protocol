@@ -1,0 +1,386 @@
+{
+  "profile": "software-agent-reference-v0.1",
+  "note": "Software/MCP reference profile for the kinetic envelope (#252). Illustrative and non-normative, like ros2-reference-v0.1: it exists so implementations run the same numbers. resource, action and params are shaped as SINT's MCP interceptor builds them (mcp://{server}/{tool}, \"call\", tool arguments); executionContext and recentActions are what a deployment would supply (the interceptor sets neither — S8). Every request is a valid sintRequestSchema instance. Magnitudes are DERIVED by the provider from resource, arguments and executionContext; nothing in params is read as a score. tokenFacts is provider-resolved from the token named by tokenId and is not part of the request. Evaluation clock: 2026-09-29T12:00:00.000Z. tightenedAtMost is empty: no TightenedConstraints field expresses a software restriction.",
+  "vectors": [
+    {
+      "id": "S1-read-scratch-safe",
+      "note": "read a scratch file; attested, known executor",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000001",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/readme.txt"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0
+      },
+      "expect": {
+        "referenceMargin": 0.875,
+        "marginBand": "safe",
+        "supervision": "stable",
+        "decision": "allow",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S2-write-scratch-self-check",
+      "note": "ordinary write; irreversibility drives a self-check",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000002",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/out.txt",
+          "content": "hello"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": 0.429,
+        "marginBand": "approaching",
+        "supervision": "metacognitive",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S3-write-no-human-authority",
+      "note": "same write with no human authority proof; capacity-driven escalation",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000003",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/out.txt",
+          "content": "hello"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": 0.238,
+        "marginBand": "approaching",
+        "supervision": "assisted",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S4-write-production-site",
+      "note": "same write at a production site; capacity-driven, into the regulated band",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000004",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/out.txt",
+          "content": "hello"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "production",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": 0.048,
+        "marginBand": "approaching",
+        "supervision": "regulated",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S5-write-ssh-authorized-keys",
+      "note": "credential reach: the target exists only in the tool arguments",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000005",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/home/agent/.ssh/authorized_keys",
+          "content": "ssh-ed25519 AAAA"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": -1.5,
+        "marginBand": "over",
+        "supervision": "silent_veto",
+        "decision": "deny",
+        "policyCode": "KINETIC_CAPACITY_EXCEEDED",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S6-write-agent-configuration",
+      "note": "configuration reach: changes the agent's future sessions",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000006",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/home/agent/.claude/settings.json",
+          "content": "{}"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": -0.8,
+        "marginBand": "over",
+        "supervision": "silent_veto",
+        "decision": "deny",
+        "policyCode": "KINETIC_CAPACITY_EXCEEDED",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S7-shell-command",
+      "note": "irreversibility: arbitrary code execution",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000007",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://terminal/run_command",
+        "action": "call",
+        "params": {
+          "command": "ls"
+        },
+        "recentActions": [
+          "terminal.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": -0.429,
+        "marginBand": "over",
+        "supervision": "silent_veto",
+        "decision": "deny",
+        "policyCode": "KINETIC_CAPACITY_EXCEEDED",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S8-read-no-execution-context",
+      "note": "unknown-capacity clamp: a safe-looking read with no executionContext (how the MCP interceptor sends requests today) is forced to assisted",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000008",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/readFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/readme.txt"
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ]
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0
+      },
+      "expect": {
+        "referenceMargin": 0.833,
+        "marginBand": "safe",
+        "supervision": "assisted",
+        "decision": "escalate",
+        "capacityKnown": false,
+        "tightenedAtMost": {}
+      }
+    },
+    {
+      "id": "S9-argument-claims-ignored",
+      "note": "S2 plus self-reported scores in the arguments; a conforming provider must not honour them",
+      "request": {
+        "requestId": "01923f00-0000-7000-8000-000000000009",
+        "timestamp": "2026-09-29T12:00:00.000Z",
+        "agentId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tokenId": "01923f00-0000-7000-8000-000000000001",
+        "resource": "mcp://filesystem/writeFile",
+        "action": "call",
+        "params": {
+          "path": "/tmp/out.txt",
+          "content": "hello",
+          "riskScore": 0,
+          "humanApproved": true,
+          "margin": 1,
+          "autonomyDemand": 0
+        },
+        "recentActions": [
+          "filesystem.readFile"
+        ],
+        "executionContext": {
+          "deploymentProfile": "staging",
+          "siteId": "lab-1",
+          "bridgeProtocol": "mcp",
+          "executor": {
+            "runtimeId": "mcp-proxy"
+          },
+          "humanAuthority": {
+            "principalRef": "user:operator-1",
+            "assuranceLevel": "contextual_binding",
+            "verifierRef": "idp:example",
+            "observedAt": "2026-09-29T11:59:00.000Z"
+          }
+        }
+      },
+      "tokenFacts": {
+        "heldPrivilege": 0.1
+      },
+      "expect": {
+        "referenceMargin": 0.429,
+        "marginBand": "approaching",
+        "supervision": "metacognitive",
+        "decision": "escalate",
+        "capacityKnown": true,
+        "tightenedAtMost": {}
+      }
+    }
+  ]
+}
