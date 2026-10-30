@@ -698,6 +698,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(forward.value.snapshot.sceneContractDigest).toBe(reversed.value.snapshot.sceneContractDigest);
   });
 
+  it("rejects an odometry frame that is only whitespace", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      frameId: "   ",
+      map: undefined,
+      odometry: {
+        ...base.odometry!,
+        frameId: "   ",
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a cross-source frame mismatch on the canonical snapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       odometry: {
