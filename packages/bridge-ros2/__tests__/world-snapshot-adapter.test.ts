@@ -263,6 +263,57 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a safety-controller estop flag that is not a boolean", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt,
+        permitState: "granted",
+        estopEngaged: "no" as unknown as boolean,
+        protectiveStopEngaged: false,
+        safetyZoneClear: true,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects a safety-controller protective-stop flag that is not a boolean", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt,
+        permitState: "granted",
+        estopEngaged: false,
+        protectiveStopEngaged: "no" as unknown as boolean,
+        safetyZoneClear: true,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects a safety-controller safety-zone flag that is not a boolean", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt,
+        permitState: "granted",
+        estopEngaged: false,
+        protectiveStopEngaged: false,
+        safetyZoneClear: "no" as unknown as boolean,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",
