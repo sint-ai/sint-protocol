@@ -266,7 +266,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   if (
     input.odometry
-    && ((input.odometry.frameId !== undefined && input.odometry.frameId.length === 0)
+    && ((input.odometry.frameId !== undefined && input.odometry.frameId.trim().length === 0)
       || !isFinitePose(input.odometry.value.pose)
       || [
         input.odometry.value.twist.linear.x,
