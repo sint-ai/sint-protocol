@@ -177,7 +177,7 @@ function isNormalized(value: number | undefined): boolean {
 }
 
 function isDigest(value: string | undefined): boolean {
-  return value === undefined || /^[0-9a-f]{64}$/i.test(value);
+  return value === undefined || /^[0-9a-f]{64}$/.test(value);
 }
 
 function isFinitePose(pose: Pose): boolean {

@@ -1004,6 +1004,19 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a map digest that is not lowercase hex", () => {
+    const captured = createROS2WorldSnapshot(state({
+      map: {
+        digest: "A".repeat(64),
+        frameId: "map",
+        observedAt,
+        uncertainty: 0.01,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform parent frame that is only whitespace", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
