@@ -19,6 +19,11 @@ pnpm run build
 pnpm run verify
 ```
 
+For dependency changes, commit the updated lockfile and run
+`pnpm install --frozen-lockfile`, `pnpm run verify`, and
+`pnpm audit --audit-level high`. Workspace schemas use Zod 4; record schemas
+must declare both their key and value types.
+
 ## Development Workflow
 
 1. **Create a branch** from `main`:

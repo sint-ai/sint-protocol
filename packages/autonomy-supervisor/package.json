@@ -22,7 +22,7 @@
   "dependencies": {
     "@pshkv/core": "workspace:*",
     "@pshkv/gate-evidence-ledger": "workspace:*",
-    "zod": "^3.24.0"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@pshkv/gate-capability-tokens": "workspace:*",

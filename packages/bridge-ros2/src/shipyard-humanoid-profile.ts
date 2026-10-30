@@ -53,7 +53,7 @@ export const shipyardHumanoidWeldStartProfileSchema = z.object({
   guarded_message: z.object({
     topicName: z.string().min(1),
     messageType: z.literal(FACTORY_ROBOT_ACTION_MESSAGE_TYPE),
-    data: z.record(z.unknown()),
+    data: z.record(z.string(), z.unknown()),
     timestamp: z.string().datetime(),
   }),
   required_preconditions: z.array(shipyardHumanoidPreconditionSchema),

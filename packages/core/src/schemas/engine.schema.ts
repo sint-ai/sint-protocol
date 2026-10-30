@@ -138,7 +138,7 @@ export const worldStateSchema = z.object({
 export const planStepSchema = z.object({
   action: z.string().min(1).max(128),
   resource: z.string().min(1).max(512),
-  params: z.record(z.unknown()),
+  params: z.record(z.string(), z.unknown()),
   requiredTier: z.enum(["T0_observe", "T1_prepare", "T2_act", "T3_commit"]),
   preconditions: z.array(z.string().min(1).max(256)),
   postconditions: z.array(z.string().min(1).max(256)).optional(),

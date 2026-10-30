@@ -153,7 +153,7 @@ export const sintRequestSchema = z.object({
   tokenId: uuidV7Schema,
   resource: z.string().min(1).max(512),
   action: z.string().min(1).max(64),
-  params: z.record(z.unknown()),
+  params: z.record(z.string(), z.unknown()),
   physicalContext: physicalContextSchema.optional(),
   consequenceContext: consequenceContextSchema.optional(),
   recentActions: z.array(z.string()).optional(),
