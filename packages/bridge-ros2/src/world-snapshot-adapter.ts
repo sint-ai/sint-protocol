@@ -285,7 +285,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   for (const transform of input.transforms ?? []) {
     if (
-      !transform.parentFrame
+      transform.parentFrame.trim().length === 0
       || !transform.childFrame
       || !isFinitePose(transform.pose)
       || !isNormalized(transform.uncertainty)
