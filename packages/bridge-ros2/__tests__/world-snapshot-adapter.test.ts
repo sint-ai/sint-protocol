@@ -314,6 +314,23 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a safety-controller observation time that is missing", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt: undefined as unknown as string,
+        permitState: "granted",
+        estopEngaged: false,
+        protectiveStopEngaged: false,
+        safetyZoneClear: true,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",
