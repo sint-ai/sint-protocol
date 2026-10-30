@@ -1016,6 +1016,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a transform parent frame with leading or trailing whitespace", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [{
+        ...base.transforms![0]!,
+        parentFrame: " map",
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform child frame that is only whitespace", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
