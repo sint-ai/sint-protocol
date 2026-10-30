@@ -437,6 +437,9 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     return "sensor identities must be unique within a snapshot";
   }
   for (const sensor of sensors) {
+    if (typeof sensor.observedAt !== "string" || sensor.observedAt.trim().length === 0) {
+      return "sensor provenance observation time is missing";
+    }
     if (sensor.sensorId.trim().length === 0 || sensor.sensorId !== sensor.sensorId.trim()) {
       return "sensor provenance identity is missing";
     }
