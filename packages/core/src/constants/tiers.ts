@@ -28,6 +28,63 @@ export const MAX_APPROVAL_TIMEOUT_MS = 300_000;
  * ```
  */
 export const DEFAULT_TIER_RULES: readonly TierAssignmentRule[] = [
+  // Consumer media privacy profile. These rules are intentionally strict:
+  // a TV's sensors and egress are data actions, not ordinary app telemetry.
+  {
+    resourcePattern: "tv://*/status",
+    actions: ["observe"],
+    baseTier: ApprovalTier.T0_OBSERVE,
+    baseRisk: RiskTier.T0_READ,
+  },
+  {
+    resourcePattern: "tv://*/display/acr-fingerprint",
+    actions: ["fingerprint", "retain", "upload"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "tv://*/sensor/*",
+    actions: ["collect", "activate", "retain", "upload", "share"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+  {
+    resourcePattern: "tv://*/network/discovery",
+    actions: ["discover"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "tv://*/effect/*",
+    actions: ["renew"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "tv://*/effect/*",
+    actions: ["stop"],
+    baseTier: ApprovalTier.T1_PREPARE,
+    baseRisk: RiskTier.T1_WRITE_LOW,
+  },
+  {
+    resourcePattern: "tv://*/egress/*",
+    actions: ["upload", "share"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "tv://*/management/*",
+    actions: ["update"],
+    baseTier: ApprovalTier.T2_ACT,
+    baseRisk: RiskTier.T2_STATEFUL,
+  },
+  {
+    resourcePattern: "tv://*/management/*",
+    actions: ["remote-admin"],
+    baseTier: ApprovalTier.T3_COMMIT,
+    baseRisk: RiskTier.T3_IRREVERSIBLE,
+  },
+
   // Sensor reads — always OBSERVE
   {
     resourcePattern: "ros2:///camera/*",

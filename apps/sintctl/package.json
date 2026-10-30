@@ -28,6 +28,11 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "@pshkv/core": "workspace:*",
+    "@pshkv/gate-capability-tokens": "workspace:*",
+    "@pshkv/gate-evidence-ledger": "workspace:*"
+  },
   "devDependencies": {
     "esbuild": "^0.25.0",
     "typescript": "^5.7.0",

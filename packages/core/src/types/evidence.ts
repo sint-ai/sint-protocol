@@ -28,7 +28,10 @@ export type SintEventType =
   // Request/response
   | "request.received"
   | "policy.evaluated"
+  | "policy.plugin.failed"
+  | "policy.decision.corrected"
   | "approval.requested"
+  | "approval.vote.recorded"
   | "approval.granted"
   | "approval.denied"
   | "approval.timeout"
@@ -48,6 +51,22 @@ export type SintEventType =
   | "safety.hardware.state.stale"
   // Verifiable compute / provable execution
   | "verifiable.compute.verified"
+  // Proof-carrying effects / predictive safety
+  | "simulation.preflight.created"
+  | "simulation.preflight.rejected"
+  | "simulation.receipt.issued"
+  | "simulation.receipt.verified"
+  | "simulation.receipt.rejected"
+  | "simulation.receipt.consumed"
+  | "simulation.execution.drift_detected"
+  // VLA / training lineage — immutable authorization evidence, never raw biometric data
+  | "vla.lineage.verified"
+  | "vla.demonstration.admitted"
+  | "vla.dataset.assembled"
+  | "vla.checkpoint.promotion.requested"
+  | "vla.checkpoint.promoted"
+  | "vla.checkpoint.rollback.requested"
+  | "vla.demonstration.training_eligibility.revoked"
   // Token management
   | "token.issued"
   | "token.revoked"

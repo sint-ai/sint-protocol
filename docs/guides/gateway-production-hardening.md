@@ -16,10 +16,20 @@ REDIS_URL=redis://redis:6379
 SINT_API_KEY=REDACTED
 SINT_REQUIRE_SIGNATURES=true
 SINT_WS_ALLOW_QUERY_API_KEY=false
+SINT_TRUSTED_ISSUERS=<64-hex-root-public-key>
+SINT_LEDGER_SIGNING_KEY=<64-hex-ledger-private-key>
+SINT_APPROVAL_OPERATOR_KEYS=<64-hex-operator-public-key>
+SINT_SIMULATION_SIGNERS=<64-hex-simulator-public-key>
 SINT_RATE_LIMIT=100
 ```
 
 Production startup fails if any required value is missing or insecure.
+The configured simulator keys must belong to a separately operated simulation
+service. A signed receipt lets the request continue through policy and human
+approval; it does not itself authorize dispatch. The current tier-wide rule
+covers all T2/T3 requests. Physical commands misclassified as T0/T1 and direct
+hardware paths still require the command-gate inventory and bypass proof in
+the [embodied authorization roadmap](../roadmaps/embodied-authorization-whitepaper-2026.md).
 
 ## Boot-Time Contract
 
@@ -30,6 +40,19 @@ Production startup fails if any required value is missing or insecure.
 | `SINT_API_KEY` | non-empty | Admin routes such as token issuance and ledger reads must be authenticated. |
 | `SINT_REQUIRE_SIGNATURES` | `true` | Agent write requests must be signed with Ed25519 keys. |
 | `SINT_WS_ALLOW_QUERY_API_KEY` | `false` | API keys must not appear in URLs, logs, browser history, or proxy traces. |
+| `SINT_TRUSTED_ISSUERS` | comma-separated Ed25519 root public keys | Prevents self-issued capability tokens from becoming authority. |
+| `SINT_LEDGER_SIGNING_KEY` | stable Ed25519 private key from a secret manager | Signs ledger proof responses across process restarts. |
+| `SINT_APPROVAL_OPERATOR_KEYS` | comma-separated Ed25519 operator public keys | Production approval votes require a fresh signature from a non-agent allowlisted key. |
+| `SINT_SIMULATION_SIGNERS` | comma-separated Ed25519 simulator public keys | T2/T3 requests require a fresh, exact, signed V2 simulation pass receipt before they can continue to approval or execution. |
+| `SINT_ALLOWED_ORIGINS` | explicit browser origins, if needed | Production browser requests from other origins are refused. |
+
+For `POST /v1/approvals/:requestId/resolve`, sign the canonical JSON object
+`{requestId,status,by,signedAt,reason}` with the operator private key. Use
+`reason: null` when omitted. Send `status`, `by` (the public key), `signedAt`,
+`reason` (if any), and the hex Ed25519 `signature` in the request body. Votes
+older than five minutes or from the requesting agent are rejected. The current
+dashboard does not yet produce these signatures; production operators can use
+the signed REST endpoint until the dashboard gains key custody integration.
 
 Development and tests can still use in-memory backends by leaving
 `SINT_ENV`/`NODE_ENV` unset or setting `SINT_ENV=development`.
@@ -48,6 +71,37 @@ deployment can safely enforce policy.
 
 ## Release Checklist
 
+### Required service integration gate
+
+After building the workspace, run `pnpm run test:integration` with both
+`DATABASE_URL` and `REDIS_URL` exported. CI provisions PostgreSQL 16 and Redis 7
+and runs this command directly, outside Turbo's filtered environment.
+Missing/invalid connection URLs, service failures, failed processes, empty
+files, missing files, or any skipped/pending/todo case fail the gate. Unit-only
+developer runs can still omit services; their optional skips do not count as
+integration validation.
+
+The explicit inventory in `scripts/lib/integration-gate.mjs` includes the
+PostgreSQL stores, Redis cache/revocation bus, gateway restart, and signed-token
+SQL matrix. Add new service integration files to this inventory. Each run writes
+fresh JSON reports and a success summary under `coverage/integrations/run-*`;
+CI uploads the reports as evidence, including available reports after a failure.
+
+PostgreSQL fixtures require permission to create schemas and use random schemas
+for every store case; cleanup only drops schemas owned by that case. Redis
+fixtures use random namespaces for cache keys and revocation channels, with
+subscription acknowledgement before delivery assertions. They do not clear
+the default cache namespace or flush the database.
+
+`RedisCache(redis, namespace?)` and
+`RedisRevocationBus(publisher, subscriberFactory?, namespace?)` support these
+isolated namespaces. Existing callers use `sint:cache:` and `sint:revocations`;
+namespaced participants must select the same namespace to communicate. These
+options partition keys/channels, not credentials or access control. The cache
+clear pattern escapes glob characters in namespaces.
+
+### Production release checks
+
 Before tagging a production release:
 
 - `pnpm run build`
@@ -58,11 +112,31 @@ Before tagging a production release:
 - `/v1/ready` returns `status=ready`
 - token issuance requires `X-API-Key`
 - `/v1/intercept` rejects unsigned write requests when signatures are enabled
+- `/v1/intercept` denies a T2/T3 request without a signed V2 simulation receipt
 - token revoke causes the same token to fail closed on the next intercept
 - ledger proof endpoint returns `proofValid=true` for the policy decision event
 
 ## Migration And Rollback Notes
 
+- Token policies `autonomyPolicy`, `humanAuthorityRequirements`, and
+  `regulatedDataPolicy` are signed data. The PostgreSQL adapter preserves them
+  as JSONB in both insert/update and read-by-ID/read-by-subject paths.
+  `ensurePgSchema` adds these columns for existing installations; deployments
+  applying SQL migrations directly should run
+  `packages/persistence/migrations/007_token_policy_fields.sql` before the new
+  adapter serves requests. Both upgrade paths are additive and idempotent.
+- Missing policy columns on an older stored token cannot be reconstructed from
+  its signature. Recover the original signed token from a trusted source or
+  reissue through the authorized issuer; do not infer or backfill policy values.
+- Keep the new columns and their data during an application rollback. Older
+  adapters that omit these signed fields can reject affected tokens with
+  `INVALID_SIGNATURE`. Test the target version against the actual token shapes
+  before shifting traffic; a plain token round trip is insufficient.
+- CI's required PostgreSQL persistence gate checks legacy-schema upgrades,
+  repeated migration/bootstrap, all three policy combinations, all optional
+  signed metadata, SQL tampering, signed replacements, and restart continuity.
+  It runs outside Turbo's filtered environment so a missing database connection
+  cannot silently turn this release gate into skipped tests.
 - Database schema bootstrap is idempotent through `ensurePgSchema`.
 - Apply migrations before shifting traffic to a new gateway image.
 - Do not roll back to an image that cannot read the current signed token shape.

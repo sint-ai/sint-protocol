@@ -13,7 +13,7 @@ import {
 } from "@pshkv/gate-capability-tokens";
 import { LedgerWriter } from "@pshkv/gate-evidence-ledger";
 import type { SintCapabilityToken, SintCapabilityTokenRequest, SintRequest } from "@pshkv/core";
-import { ApprovalTier } from "@pshkv/core";
+import { ApprovalTier, err, ok } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);
@@ -84,6 +84,43 @@ describe("PolicyGateway", () => {
     return result.value;
   }
 
+  it("does not treat caller attestation grade as verified device evidence", async () => {
+    const token = issueAndStore({
+      resource: "mcp://server/tool",
+      actions: ["call"],
+      constraints: {},
+      attestationRequirements: {
+        minAttestationGrade: 2,
+        allowedTeeBackends: ["tpm2"],
+        requireForTiers: [ApprovalTier.T1_PREPARE],
+      },
+    });
+    const request = makeRequest({
+      tokenId: token.tokenId,
+      agentId: agent.publicKey,
+      resource: "mcp://server/tool",
+      action: "call",
+      executionContext: { attestation: { grade: 3, teeBackend: "tpm2", quoteRef: "unverified-quote" } },
+    });
+    const unverified = await gateway.intercept(request);
+    expect(unverified.action).toBe("deny");
+    expect(unverified.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
+
+    const verifiedGateway = new PolicyGateway({
+      resolveToken: (id) => tokenStore.get(id),
+      resolveVerifiedAttestation: (candidate) => candidate.executionContext?.attestation?.quoteRef === "verified-quote"
+        ? ok({ grade: 2, teeBackend: "tpm2", quoteRef: "verified-quote" })
+        : err("QUOTE_NOT_VERIFIED"),
+    });
+    const rejectedQuote = await verifiedGateway.intercept(request);
+    expect(rejectedQuote.action).toBe("deny");
+    const accepted = await verifiedGateway.intercept({
+      ...request,
+      executionContext: { attestation: { grade: 3, teeBackend: "tpm2", quoteRef: "verified-quote" } },
+    });
+    expect(accepted.action).toBe("allow");
+  });
+
   // ── T0: Sensor subscribe → auto-allow ──
 
   it("allows T0 sensor subscribe requests", async () => {
@@ -141,6 +178,110 @@ describe("PolicyGateway", () => {
     expect(decision.action).toBe("escalate");
     expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
     expect(decision.escalation?.fallbackAction).toBe("deny");
+  });
+
+  it("denies VLA chunks that exceed the token-bound control horizon", async () => {
+    const hash = (character: string) => character.repeat(64);
+    const token = issueAndStore({
+      modelConstraints: {
+        actionSpaceDigest: hash("a"),
+        embodimentId: "arm-1",
+      },
+      executionEnvelope: {
+        maxChunkHorizonMs: 500,
+        maxControlHz: 50,
+        requireSafeStopOnFailure: true,
+      },
+    });
+    const decision = await gateway.intercept(makeRequest({
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      executionContext: {
+        model: { actionSpaceDigest: hash("a"), embodimentId: "arm-1" },
+        simulationEvidence: {
+          schemaVersion: "2.0.0",
+          receiptId: "019fdd12-cc01-70d4-8174-208d070bbace",
+          evidenceGrade: "deterministic",
+          requestDigest: hash("b"),
+          effectPlanDigest: hash("c"),
+          tokenDigest: hash("d"),
+          resource: "ros2:///cmd_vel",
+          action: "publish",
+          worldSnapshot: {
+            digest: hash("e"), observedAt: futureISO(-1), validUntil: futureISO(1), stateEpoch: "epoch-1",
+          },
+          simulator: { backend: "test", version: "1", modelDigest: hash("f") },
+          scenarios: { scenarioSetDigest: hash("1"), runCount: 1 },
+          result: { outcome: "pass", collisions: 0, safetyZoneViolations: 0 },
+          generatedAt: futureISO(-1), expiresAt: futureISO(1), nonce: "vla:test:unique-nonce",
+          artifactDigest: hash("2"), signerPublicKey: hash("3"), signature: "4".repeat(128),
+        },
+        vlaActionChunk: {
+          chunkId: "019fdd12-cc01-70d4-8174-208d070bbacf",
+          streamId: "arm-1", sequence: 0, issuedAt: futureISO(-1), executeBy: futureISO(1),
+          horizonMs: 1_000, controlHz: 50, actionCount: 50,
+          actionSpaceDigest: hash("a"), embodimentId: "arm-1", worldSnapshotDigest: hash("e"),
+          safeStopOnFailure: true,
+        },
+      },
+    }));
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("VLA_CHUNK_CONSTRAINT_VIOLATION");
+  });
+
+  it("denies VLA chunks whose action space is not the active runtime action space", async () => {
+    const hash = (character: string) => character.repeat(64);
+    const token = issueAndStore();
+    const decision = await gateway.intercept(makeRequest({
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      executionContext: {
+        model: { actionSpaceDigest: hash("a"), embodimentId: "arm-1" },
+        vlaActionChunk: {
+          chunkId: "019fdd12-cc01-70d4-8174-208d070bbacf",
+          streamId: "arm-1", sequence: 0, issuedAt: futureISO(-1), executeBy: futureISO(1),
+          horizonMs: 1_000, controlHz: 50, actionCount: 50,
+          actionSpaceDigest: hash("b"), embodimentId: "arm-1", worldSnapshotDigest: hash("e"),
+          safeStopOnFailure: true,
+        },
+      },
+    }));
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("VLA_ACTION_SPACE_MISMATCH");
+  });
+
+  it("denies execution when a signed dataset lineage is substituted at runtime", async () => {
+    const hash = (character: string) => character.repeat(64);
+    const token = issueAndStore({
+      modelConstraints: {
+        datasetDigest: hash("a"), trainingRecipeDigest: hash("b"),
+        promotionEvidenceDigest: hash("c"), rollbackCheckpointDigest: hash("d"),
+      },
+    });
+    expect(token.modelConstraints?.datasetDigest).toBe(hash("a"));
+    const decision = await gateway.intercept(makeRequest({
+      agentId: agent.publicKey, tokenId: token.tokenId,
+      executionContext: { model: {
+        datasetDigest: hash("e"), trainingRecipeDigest: hash("b"),
+        promotionEvidenceDigest: hash("c"), rollbackCheckpointDigest: hash("d"),
+      } },
+    }));
+    expect(decision.action).toBe("deny");
+  });
+
+  it("writes a digest-only lineage verification event before governed execution", async () => {
+    const hash = (character: string) => character.repeat(64);
+    const token = issueAndStore({ modelConstraints: { datasetDigest: hash("a"), checkpointDigest: hash("b") } });
+    await gateway.intercept(makeRequest({
+      agentId: agent.publicKey, tokenId: token.tokenId,
+      executionContext: { model: { datasetDigest: hash("a"), checkpointDigest: hash("b") } },
+    }));
+    expect(emitSpy).toHaveBeenCalledWith(expect.objectContaining({
+      eventType: "vla.lineage.verified",
+      payload: expect.objectContaining({ datasetDigest: hash("a"), checkpointDigest: hash("b") }),
+    }));
   });
 
   // ── T3: mode_change → escalate with safe-stop ──

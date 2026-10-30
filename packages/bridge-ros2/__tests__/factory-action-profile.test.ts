@@ -354,7 +354,7 @@ describe("Factory Action Profile ROS2 mapping", () => {
       roboGuideReceipt,
       kukaSimReceipt,
     ]) {
-      expect(receipt.simulation_receipt.approved_for_execution).toBe(true);
+      expect(receipt.simulation_receipt.approved_for_execution).toBe(false);
       expect(receipt.simulation_receipt.max_force_newtons).toBe(62);
       expect(receipt.simulation_receipt.metadata.decision_digest).toMatch(
         /^sha256:[a-f0-9]{64}$/,

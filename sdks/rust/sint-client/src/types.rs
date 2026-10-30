@@ -42,6 +42,19 @@ pub struct PhysicalContext {
     pub obstacle_distance_m: Option<f64>,
 }
 
+/// Declared non-physical impact used for consequence-aware tier assignment.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsequenceContext {
+    pub reversibility: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub affected_entities: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub operational_duration_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub propagation_depth: Option<u32>,
+}
+
 /// PolicyGateway intercept request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -56,6 +69,8 @@ pub struct SintRequest {
     pub params: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub physical_context: Option<PhysicalContext>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub consequence_context: Option<ConsequenceContext>,
 }
 
 /// PolicyGateway decision.

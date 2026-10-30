@@ -16,6 +16,10 @@ services:
       SINT_API_KEY: ${SINT_API_KEY}
       SINT_REQUIRE_SIGNATURES: ${SINT_REQUIRE_SIGNATURES:-true}
       SINT_WS_ALLOW_QUERY_API_KEY: ${SINT_WS_ALLOW_QUERY_API_KEY:-false}
+      SINT_TRUSTED_ISSUERS: ${SINT_TRUSTED_ISSUERS:?set trusted root issuer public keys}
+      SINT_LEDGER_SIGNING_KEY: ${SINT_LEDGER_SIGNING_KEY:?set ledger signing private key}
+      SINT_APPROVAL_OPERATOR_KEYS: ${SINT_APPROVAL_OPERATOR_KEYS:?set approval operator public keys}
+      SINT_SIMULATION_SIGNERS: ${SINT_SIMULATION_SIGNERS:?set simulation signer public keys}
     depends_on:
       postgres:
         condition: service_healthy

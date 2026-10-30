@@ -20,13 +20,14 @@
  *     2. IBalancePort.withdraw(userId, tokens, description, "sint_protocol")
  *     3. Emit "economy.action.billed" to ledger
  *
- * Error handling: fail-open. If any economy service is unreachable,
- * the request proceeds through normal PolicyGateway logic.
+ * Unavailable configured economy services deny preflight or return a billing
+ * error result for the gateway to enforce and audit.
  *
  * @module @sint/bridge-economy/economy-plugin
  */
 
 import type { PolicyDecision, SintRequest, ApprovalTier, RiskTier } from "@pshkv/core";
+import { err, type Result } from "@pshkv/core";
 import type { LedgerEmitter } from "@pshkv/gate-policy-gateway";
 import type {
   IBalancePort,
@@ -122,7 +123,7 @@ export class EconomyPlugin {
    * Checks budget, balance, and trust. Returns a PolicyDecision
    * to short-circuit, or undefined to let the gateway proceed.
    *
-   * On any port error, returns undefined (fail-open).
+   * On any port error, returns a safe dependency-unavailable denial.
    */
   async preIntercept(request: SintRequest): Promise<PolicyDecision | undefined> {
     try {
@@ -135,6 +136,7 @@ export class EconomyPlugin {
           actionType: request.action,
           resource: request.resource,
         });
+        if (!priceResult.ok) return this.denyDecision(request, "ECONOMY_UNAVAILABLE", "Configured pricing service unavailable");
         if (priceResult.ok) {
           costMultiplier = priceResult.value.costMultiplier;
         }
@@ -148,6 +150,7 @@ export class EconomyPlugin {
         resource: request.resource,
         estimatedCost: pricing.totalCost,
       });
+      if (!budgetResult.ok) return this.denyDecision(request, "ECONOMY_UNAVAILABLE", "Budget service unavailable");
 
       if (budgetResult.ok) {
         this.ledger?.budgetChecked(request.agentId, request.tokenId, {
@@ -183,10 +186,10 @@ export class EconomyPlugin {
           });
         }
       }
-      // Budget port error → fail-open
 
       // 3. Balance check
       const balanceResult = await this.config.balancePort.getBalance(userId);
+      if (!balanceResult.ok) return this.denyDecision(request, "ECONOMY_UNAVAILABLE", "Balance service unavailable");
       if (balanceResult.ok) {
         this.ledger?.balanceChecked(request.agentId, request.tokenId, {
           userId,
@@ -211,7 +214,6 @@ export class EconomyPlugin {
           );
         }
       }
-      // Balance port error → fail-open
 
       // 4. Trust evaluation
       let trustEscalation: ApprovalTier | undefined;
@@ -221,6 +223,7 @@ export class EconomyPlugin {
         action: request.action,
         resource: request.resource,
       });
+      if (!trustResult.ok) return this.denyDecision(request, "ECONOMY_UNAVAILABLE", "Trust service unavailable");
 
       if (trustResult.ok) {
         const mappedTier = mapTrustLevelToApprovalTier(trustResult.value.trustLevel);
@@ -253,7 +256,6 @@ export class EconomyPlugin {
         // Store escalation for gateway to apply
         trustEscalation = mappedTier;
       }
-      // Trust port error → fail-open
 
       // Cache result for postIntercept
       this.preInterceptCache.set(request.requestId, {
@@ -265,8 +267,7 @@ export class EconomyPlugin {
       // No short-circuit — let the gateway proceed
       return undefined;
     } catch {
-      // Any unexpected error → fail-open
-      return undefined;
+      return this.denyDecision(request, "ECONOMY_UNAVAILABLE", "Economy preflight unavailable");
     }
   }
 
@@ -276,12 +277,12 @@ export class EconomyPlugin {
    * If the decision is "allow", bills the action by withdrawing
    * tokens from the user's balance.
    *
-   * On any error, silently fails (the allow decision stands).
+   * Reports withdrawal errors to the gateway; no raw port errors are exposed.
    */
   async postIntercept(
     request: SintRequest,
     decision: PolicyDecision,
-  ): Promise<void> {
+  ): Promise<void | Result<void, string>> {
     // Only bill on allow
     if (decision.action !== "allow") {
       this.preInterceptCache.delete(request.requestId);
@@ -292,8 +293,7 @@ export class EconomyPlugin {
     this.preInterceptCache.delete(request.requestId);
 
     if (!cached) {
-      // preIntercept didn't run or failed — skip billing
-      return;
+      return err("ECONOMY_PREFLIGHT_MISSING");
     }
 
     try {
@@ -306,6 +306,7 @@ export class EconomyPlugin {
         description,
         "sint_protocol",
       );
+      if (!withdrawResult.ok) return err("ECONOMY_BILLING_UNAVAILABLE");
 
       if (withdrawResult.ok) {
         this.ledger?.balanceDeducted(request.agentId, request.tokenId, {
@@ -326,7 +327,7 @@ export class EconomyPlugin {
         });
       }
     } catch {
-      // Billing failure → fail-open (action already allowed)
+      return err("ECONOMY_BILLING_UNAVAILABLE");
     }
   }
 

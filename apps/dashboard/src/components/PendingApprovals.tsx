@@ -112,6 +112,34 @@ export function PendingApprovals({ requests, onResolved }: PendingApprovalsProps
                   <span className="field-value">{req.reason}</span>
                 </div>
               )}
+              {req.consequenceContext && (
+                <div className="approval-field">
+                  <span className="field-label">Consequence</span>
+                  <span className="field-value">
+                    {req.consequenceContext.reversibility}
+                    {req.consequenceContext.affectedEntities !== undefined
+                      ? ` · ${req.consequenceContext.affectedEntities} affected`
+                      : ""}
+                  </span>
+                </div>
+              )}
+              {req.reviewerEvidence && (
+                <details className="approval-evidence">
+                  <summary>Independent review evidence</summary>
+                  <div className="approval-field">
+                    <span className="field-label">Token expires</span>
+                    <span className="field-value">{req.reviewerEvidence.authority.expiresAt}</span>
+                  </div>
+                  <div className="approval-field">
+                    <span className="field-label">Parameters</span>
+                    <code className="field-value">{req.reviewerEvidence.requestedEffect.paramsDigest}</code>
+                  </div>
+                  <div className="approval-field">
+                    <span className="field-label">Evidence bundle</span>
+                    <code className="field-value">{req.reviewerEvidence.bundleHash}</code>
+                  </div>
+                </details>
+              )}
             </div>
 
             <div className="approval-actions">

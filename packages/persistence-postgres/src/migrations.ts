@@ -50,6 +50,32 @@ export async function runMigrations(pool: PgPool): Promise<void> {
       ON sint_ledger_events (sequence_number)
   `);
 
+  // The application writer only INSERTs. Enforce that property at the database
+  // boundary as well, including TRUNCATE (which does not fire row triggers).
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION sint_reject_ledger_mutation()
+    RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      RAISE EXCEPTION 'sint_ledger_events is append-only';
+    END;
+    $$
+  `);
+  await pool.query(`
+    DROP TRIGGER IF EXISTS sint_ledger_no_update_delete ON sint_ledger_events;
+    CREATE TRIGGER sint_ledger_no_update_delete
+      BEFORE UPDATE OR DELETE ON sint_ledger_events
+      FOR EACH ROW EXECUTE FUNCTION sint_reject_ledger_mutation()
+  `);
+  await pool.query(`
+    DROP TRIGGER IF EXISTS sint_ledger_no_truncate ON sint_ledger_events;
+    CREATE TRIGGER sint_ledger_no_truncate
+      BEFORE TRUNCATE ON sint_ledger_events
+      FOR EACH STATEMENT EXECUTE FUNCTION sint_reject_ledger_mutation()
+  `);
+  await pool.query(`
+    REVOKE UPDATE, DELETE, TRUNCATE ON sint_ledger_events FROM PUBLIC
+  `);
+
   // -------------------------------------------------------------------------
   // 2. Token revocations — permanent, keyed by token_id
   // -------------------------------------------------------------------------

@@ -151,6 +151,13 @@ export interface RobotProgramExportStubOptions {
   readonly approvalId?: string;
 }
 
+/**
+ * @deprecated Fixture-only legacy receipt shape.
+ *
+ * `approved_for_execution` and `signed_by` are not authorization or
+ * cryptographic evidence. Production adapters must emit core
+ * `SimulationEvidenceReceipt` V2 and pass it through PolicyGateway.intercept().
+ */
 const simulationReceiptSchema = z.object({
   simulation_receipt_id: z.string().regex(/^simr_[A-Za-z0-9._-]+$/),
   cell_id: z.string().min(1),
@@ -171,6 +178,7 @@ const simulationReceiptSchema = z.object({
   }),
 });
 
+/** @deprecated Fixture-only adapter preview; use SimulationEvidenceReceipt V2. */
 export const industrialSimulationReceiptStubSchema = z.object({
   profile_id: z.enum([
     "isaac-sim-simulation-receipt-stub",
@@ -520,11 +528,11 @@ function buildIndustrialSimulationReceiptStub(
   const measuredMaxForceNewtons =
     options.measuredMaxForceNewtons ?? parsed.motion.max_force_newtons;
   const safetyZoneViolations = options.safetyZoneViolations ?? 0;
-  const collisionFree = options.collisionFree ?? true;
-  const approvedForExecution =
-    collisionFree &&
-    safetyZoneViolations === 0 &&
-    measuredMaxForceNewtons <= parsed.motion.max_force_newtons;
+  // A fixture without simulator observations is never evidence of a safe run.
+  const collisionFree = options.collisionFree ?? false;
+  // This legacy adapter returns a fixture, never a verified simulator result.
+  // Authorization requires the signed V2 receipt path in PolicyGateway.
+  const approvedForExecution = false;
   const simulationArtifactUri =
     options.artifactUri ?? config.defaultArtifactUri(options.cellId, robotAssetId);
   const decisionPayload = {

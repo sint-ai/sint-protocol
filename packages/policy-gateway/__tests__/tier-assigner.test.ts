@@ -23,6 +23,25 @@ function makeRequest(overrides: Partial<SintRequest>): SintRequest {
 }
 
 describe("assignTier", () => {
+  it("promotes an otherwise low-risk irreversible action to T3", () => {
+    const result = assignTier(makeRequest({
+      resource: "mcp://server/draft",
+      action: "call",
+      consequenceContext: { reversibility: "irreversible", affectedEntities: 1 },
+    }));
+    expect(result.approvalTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(result.escalationReasons).toContain("Declared consequence is irreversible");
+  });
+
+  it("promotes a multi-entity reversible action to T2", () => {
+    const result = assignTier(makeRequest({
+      resource: "mcp://server/draft",
+      action: "call",
+      consequenceContext: { reversibility: "reversible", affectedEntities: 20 },
+    }));
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+  });
+
   it("maps camera subscribe to T0_OBSERVE", () => {
     const result = assignTier(makeRequest({
       resource: "ros2:///camera/front",
@@ -50,6 +69,19 @@ describe("assignTier", () => {
 
     expect(result.approvalTier).toBe(ApprovalTier.T1_PREPARE);
     expect(result.riskTier).toBe(RiskTier.T1_WRITE_LOW);
+  });
+
+  it("floors an unknown ROS 2 publishing command at ACT", () => {
+    const result = assignTier(makeRequest({ resource: "ros2:///nav/segment", action: "publish" }));
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.escalationReasons).toContain("Physical command transport requires ACT tier");
+  });
+
+  it("does not let a site rule downgrade a physical command", () => {
+    const result = assignTier(makeRequest({ resource: "ros2:///cmd_vel", action: "publish" }), {
+      rules: [{ resourcePattern: "ros2:///cmd_vel", actions: ["publish"], baseTier: ApprovalTier.T0_OBSERVE, baseRisk: RiskTier.T0_READ }],
+    });
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
   });
 
   it("maps cmd_vel publish to T2_ACT", () => {
@@ -118,6 +150,14 @@ describe("assignTier", () => {
 
     expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
     expect(result.riskTier).toBe(RiskTier.T2_STATEFUL);
+  });
+
+  it("does not let a site rule downgrade an MQTT command topic", () => {
+    const resource = "mqtt://broker.example.com/factory/zone1/cmd/valve/open";
+    const result = assignTier(makeRequest({ resource, action: "publish" }), {
+      rules: [{ resourcePattern: resource, actions: ["publish"], baseTier: ApprovalTier.T0_OBSERVE, baseRisk: RiskTier.T0_READ }],
+    });
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
   });
 
   it("maps MQTT estop topics to T3_COMMIT", () => {
@@ -252,5 +292,70 @@ describe("assignTier", () => {
     );
 
     expect(result.approvalTier).toBe(ApprovalTier.T0_OBSERVE);
+  });
+
+  it("floors a generic tool that carries a VLA action chunk at ACT", () => {
+    const result = assignTier(makeRequest({
+      resource: "mcp://server/tool",
+      action: "call",
+      executionContext: { vlaActionChunk: { chunkId: "chunk-1" } },
+    }));
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.escalationReasons).toContain("Bounded VLA action chunk is a physical effect");
+  });
+
+  it("floors a named MCP robot tool at ACT even when a read-only hint conflicts", () => {
+    const actuating = assignTier(makeRequest({
+      resource: "mcp://arm/close_gripper",
+      action: "call",
+    }));
+    expect(actuating.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(actuating.escalationReasons).toContain("MCP robot tool requires ACT tier");
+
+    const hinted = assignTier(makeRequest({
+      resource: "mcp://arm/close_gripper",
+      action: "call",
+      mcpAnnotations: { readOnlyHint: true },
+    }));
+    expect(hinted.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(hinted.escalationReasons).toContain("MCP robot tool requires ACT tier");
+
+    const generic = assignTier(makeRequest({
+      resource: "mcp://server/tool",
+      action: "call",
+      mcpAnnotations: { readOnlyHint: true },
+    }));
+    expect(generic.approvalTier).not.toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("floors a Home Assistant lock command at ACT and leaves a sensor read below ACT", () => {
+    const lock = assignTier(makeRequest({
+      resource: "ha://home/lock.front_door",
+      action: "call",
+    }));
+    expect(lock.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(lock.escalationReasons).toContain("Home Assistant actuator command requires ACT tier");
+
+    const sensor = assignTier(makeRequest({
+      resource: "ha://home/sensor.temperature",
+      action: "read",
+    }));
+    expect(sensor.approvalTier).not.toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("floors a direct HTTP actuator route at ACT", () => {
+    const result = assignTier(makeRequest({
+      resource: "https://cell.local/cmd/valve",
+      action: "call",
+    }), {
+      rules: [{
+        resourcePattern: "https://cell.local/cmd/valve",
+        actions: ["call"],
+        baseTier: ApprovalTier.T0_OBSERVE,
+        baseRisk: RiskTier.T0_READ,
+      }],
+    });
+    expect(result.approvalTier).toBe(ApprovalTier.T2_ACT);
+    expect(result.escalationReasons).toContain("Direct actuator route requires ACT tier");
   });
 });

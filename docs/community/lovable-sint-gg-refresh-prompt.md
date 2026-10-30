@@ -38,9 +38,11 @@ Source of truth for content:
 - docs/roadmap.md
 - docs/roadmaps/end-of-year-2026-execution-plan.md
 - docs/roadmaps/factory-action-pack-upgrade-sprints.md
+- docs/community/openssf-best-practices-profile.md
 - docs/community/website-sync-checklist.md
 - docs/guides/gateway-production-hardening.md
 - docs/guides/production-slice-verification.md
+- docs/reports/aaif-release-gate-2026-08-01.md
 - docs/community/aaif-evidence-dossier.md
 - docs/community/openssf-gap-tracker.md
 - docs/community/robotics-collaboration-outreach-schedule.md

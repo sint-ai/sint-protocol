@@ -66,6 +66,41 @@ function attenuateConstraints(
       parent.requiresHumanPresence === true ? true : tighten.requiresHumanPresence,
     rateLimit: parent.rateLimit,
     quorum: parent.quorum,
+    consequenceConstraints: attenuateConsequenceConstraints(
+      parent.consequenceConstraints,
+      tighten.consequenceConstraints,
+    ),
+    // Scene binding is an identity, not a numeric limit. Tightening other
+    // constraints must not drop or replace the parent's contract.
+    sceneContractDigest: parent.sceneContractDigest,
+  };
+}
+
+function attenuateConsequenceConstraints(
+  parent: SintPhysicalConstraints["consequenceConstraints"],
+  tighten: SintPhysicalConstraints["consequenceConstraints"],
+): SintPhysicalConstraints["consequenceConstraints"] {
+  if (!parent) return tighten;
+  if (!tighten) return parent;
+  const order = { reversible: 0, compensatable: 1, irreversible: 2 } as const;
+  const parentReversibility = parent.maxReversibility;
+  const childReversibility = tighten.maxReversibility;
+  const maxReversibility = parentReversibility && childReversibility
+    ? (order[parentReversibility] <= order[childReversibility] ? parentReversibility : childReversibility)
+    : (childReversibility ?? parentReversibility);
+  const parentMoney = parent.maxMonetaryValue;
+  const childMoney = tighten.maxMonetaryValue;
+  const maxMonetaryValue = parentMoney && childMoney
+    ? (parentMoney.currency === childMoney.currency
+        ? { amount: Math.min(parentMoney.amount, childMoney.amount), currency: parentMoney.currency }
+        : parentMoney)
+    : (childMoney ?? parentMoney);
+  return {
+    maxReversibility,
+    maxAffectedEntities: minOptional(parent.maxAffectedEntities, tighten.maxAffectedEntities),
+    maxMonetaryValue,
+    maxOperationalDurationMs: minOptional(parent.maxOperationalDurationMs, tighten.maxOperationalDurationMs),
+    maxPropagationDepth: minOptional(parent.maxPropagationDepth, tighten.maxPropagationDepth),
   };
 }
 
@@ -255,9 +290,13 @@ export function delegateCapabilityToken(
       attestationRequirements: parentToken.attestationRequirements,
       verifiableComputeRequirements: parentToken.verifiableComputeRequirements,
       executionEnvelope: parentToken.executionEnvelope,
+      adaptationPermit: parentToken.adaptationPermit,
       behavioralConstraints: parentToken.behavioralConstraints,
       autonomyPolicy: parentToken.autonomyPolicy,
       humanAuthorityRequirements: parentToken.humanAuthorityRequirements,
+      deploymentEnvelope: parentToken.deploymentEnvelope,
+      manufacturingEnvelope: parentToken.manufacturingEnvelope,
+      hazardousEnergyEnvelope: parentToken.hazardousEnergyEnvelope,
       delegationChain: {
         parentTokenId: parentToken.tokenId,
         depth: newDepth,

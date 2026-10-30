@@ -6,7 +6,7 @@
 
 ## What This Repo Does
 
-SINT Protocol is a security enforcement layer that sits between AI agents and physical systems (robots, PLCs, drones, tool calls), ensuring every action is authorized via capability tokens, constrained to safe physical limits, and recorded in a tamper-evident audit log. It is a pnpm monorepo with 30 workspace members built on TypeScript 5.7 + Node.js 22.
+SINT Protocol is a security enforcement layer that sits between AI agents and physical systems (robots, PLCs, drones, tool calls), ensuring every action is authorized via capability tokens, constrained to safe physical limits, and recorded in a tamper-evident audit log. It is a pnpm monorepo built on TypeScript 5.7+ and Node.js 22+.
 
 ## Key Invariants (Never Violate These)
 
@@ -22,19 +22,19 @@ SINT Protocol is a security enforcement layer that sits between AI agents and ph
 ### Package Dependency Graph
 
 ```
-@sint/core
+@pshkv/core
   ↓
-@sint/gate-capability-tokens   @sint/persistence
+@pshkv/gate-capability-tokens   @pshkv/persistence
   ↓                               ↓
-@sint/gate-evidence-ledger
+@pshkv/gate-evidence-ledger
   ↓
-@sint/gate-policy-gateway
+@pshkv/gate-policy-gateway
   ↓
-@sint/bridge-*   @sint/engine-*   @sint/avatar
+@pshkv/bridge-*   @pshkv/engine-*   @pshkv/avatar
   ↓
-@sint/gateway-server   @sint/mcp
+@pshkv/gateway-server   sint-mcp
   ↓
-@sint/conformance-tests   @sint/dashboard
+@pshkv/conformance-tests   @pshkv/dashboard
 ```
 
 ### Workspace Layout
@@ -44,6 +44,7 @@ packages/core/              → Shared types, Zod schemas, tier constants, DFA s
 packages/capability-tokens/ → Ed25519 token issuance, delegation, revocation
 packages/policy-gateway/    → THE choke point: tiers, constraints, rate limiting, M-of-N
 packages/evidence-ledger/   → SHA-256 hash-chained append-only audit log
+packages/execution-broker/  → Proof-carrying, single-dispatch execution boundary
 packages/bridge-*/          → Protocol adapters (MCP, ROS2, A2A, IoT, OPC-UA, MAVLink, ...)
 packages/engine-*/          → AI execution layer (System1, System2, HAL, capsule sandbox)
 packages/avatar/            → Behavioral identity profiles, CSML-driven tier escalation
@@ -63,28 +64,30 @@ capsules/pick-and-place/    → Reference capsule: gripper control
 ### How to Run Tests
 
 ```bash
-pnpm run test                                       # all 815 tests, whole workspace
-pnpm --filter @sint/gate-policy-gateway test        # single package
-pnpm --filter @sint/bridge-mcp test                 # single bridge
-pnpm run build && pnpm run test                     # full clean run
+pnpm run test                                        # full workspace
+pnpm --filter @pshkv/gate-policy-gateway test        # single package
+pnpm --filter @pshkv/bridge-mcp test                 # single bridge
+pnpm run verify                                      # build + typecheck + test
 ```
 
 ### Before Starting Work
 
 ```bash
+git status --short --branch
+# Only pull/rebase when the worktree is clean and the task allows it.
 git pull --rebase
-pnpm run build
-pnpm run test   # must be 0 failures before you begin
+pnpm install --frozen-lockfile
+pnpm run verify
 ```
 
 ## Multi-Agent Collaboration Rules
 
 Several agents may work on this repo concurrently. Follow these rules:
 
-1. **Before starting**: `git pull --rebase && pnpm run build && pnpm run test` — must be 0 failures
+1. **Before starting**: inspect `git status`; preserve unrelated changes, then sync only from a clean worktree and run `pnpm run verify`
 2. **Package ownership**: see CLAUDE.md for the package ownership table
 3. **Never amend published commits** — always create new commits
-4. **Test gate**: your PR/commit must maintain 0 failures on the full workspace suite (currently 1100+ tests)
+4. **Test gate**: your PR/commit must maintain 0 failures on the full workspace suite
 5. **Base branch policy**: new PRs should target `main` unless an active release train explicitly says otherwise
 6. **Branch naming**: `feat/<topic>` or `fix/<topic>` — describe what changes, not who made it
 7. **No force-push to main/master** — create a PR instead

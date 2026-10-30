@@ -1,7 +1,7 @@
 /**
  * SINT Protocol — Security Regression Test Suite.
  *
- * These 10 tests MUST pass on every PR that touches the
+ * These tests MUST pass on every PR that touches the
  * Policy Gateway or Bridge adapters. They encode the specific
  * attack patterns that SINT is designed to prevent.
  *
@@ -320,5 +320,23 @@ describe("SINT Security Regression Tests", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error).toBe("INVALID_SIGNATURE");
+  });
+
+  it("Caller-supplied TEE grade cannot satisfy an attestation-bound token", async () => {
+    const token = issueAndStore({
+      resource: "mcp://server/tool",
+      actions: ["call"],
+      constraints: {},
+      attestationRequirements: { minAttestationGrade: 2, allowedTeeBackends: ["tpm2"] },
+    });
+    const decision = await gateway.intercept(makeRequest({
+      tokenId: token.tokenId,
+      agentId: agent.publicKey,
+      resource: "mcp://server/tool",
+      action: "call",
+      executionContext: { attestation: { grade: 3, teeBackend: "tpm2", quoteRef: "caller-asserted" } },
+    }));
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("CONSTRAINT_VIOLATION");
   });
 });

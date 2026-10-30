@@ -32,6 +32,13 @@ export interface ApprovalRequest {
   agentId: string;
   params?: Record<string, unknown>;
   physicalContext?: Record<string, unknown>;
+  consequenceContext?: {
+    reversibility: "reversible" | "compensatable" | "irreversible";
+    affectedEntities?: number;
+    monetaryValue?: { amount: number; currency: string };
+    operationalDurationMs?: number;
+    propagationDepth?: number;
+  };
   executionContext?: Record<string, unknown> & {
     factoryReceiptChain?: FactoryReceiptChainEntry[];
   };
@@ -41,6 +48,19 @@ export interface ApprovalRequest {
     authorized: string[];
   };
   approvalCount?: number;
+  reviewerEvidence?: {
+    bundleHash: string;
+    authority: {
+      tokenId: string;
+      expiresAt: string;
+      resource: string;
+      actions: string[];
+      constraints: Record<string, unknown>;
+    };
+    requestedEffect: { paramsDigest: string };
+    independentEvidence: Record<string, unknown>;
+    evaluatedBy: string;
+  };
   createdAt: string;
   expiresAt: string;
 }

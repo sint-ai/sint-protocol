@@ -1,0 +1,13 @@
+{
+  "name": "@pshkv/bridge-consumer-media",
+  "version": "0.1.0",
+  "description": "SINT Bridge — default-private authorization for connected-TV sensing and data egress",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "scripts": { "build": "tsc --build", "typecheck": "tsc --noEmit", "clean": "rm -rf dist *.tsbuildinfo", "test": "vitest run" },
+  "dependencies": { "@pshkv/core": "workspace:*", "@pshkv/gate-capability-tokens": "workspace:*" },
+  "devDependencies": { "typescript": "^5.7.0", "vitest": "^3.0.0" },
+  "publishConfig": { "access": "public" }
+}

@@ -7,7 +7,7 @@
  */
 
 import { Hono } from "hono";
-import { queryLedger, generateProof } from "@pshkv/gate-evidence-ledger";
+import { queryLedger, generateProof, generateProofReceipt } from "@pshkv/gate-evidence-ledger";
 import type { ServerContext } from "../server.js";
 
 export function ledgerRoutes(ctx: ServerContext): Hono {
@@ -124,8 +124,14 @@ export function ledgerRoutes(ctx: ServerContext): Hono {
     if (!proof) {
       return c.json({ error: "Event not found", eventId }, 404);
     }
-
-    return c.json(proof);
+    if (!ctx.ledger.verifyChain().ok) {
+      return c.json({ error: "Ledger chain integrity failure" }, 409);
+    }
+    const eventIndex = allEvents.findIndex(event => event.eventId === eventId);
+    const target = allEvents[eventIndex]!;
+    const signedReceipt = generateProofReceipt(target, allEvents.slice(0, eventIndex + 1),
+      ctx.ledgerSigner.publicKey, ctx.ledgerSigner.sign);
+    return c.json({ ...proof, signedReceipt });
   });
 
   return app;

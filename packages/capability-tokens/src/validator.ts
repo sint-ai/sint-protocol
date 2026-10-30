@@ -48,6 +48,18 @@ export interface ModelRuntimeContext {
   readonly modelId?: string;
   readonly modelVersion?: string;
   readonly modelFingerprintHash?: string;
+  readonly checkpointDigest?: string;
+  readonly policyConfigDigest?: string;
+  readonly normalizationDigest?: string;
+  readonly actionTransformDigest?: string;
+  readonly actionSpaceDigest?: string;
+  readonly embodimentId?: string;
+  readonly calibrationDigest?: string;
+  readonly sensorLayoutDigest?: string;
+  readonly datasetDigest?: string;
+  readonly trainingRecipeDigest?: string;
+  readonly promotionEvidenceDigest?: string;
+  readonly rollbackCheckpointDigest?: string;
   readonly attestationGrade?: 0 | 1 | 2 | 3;
   readonly teeBackend?: "intel-sgx" | "arm-trustzone" | "amd-sev" | "tpm2" | "none";
   readonly verifiableComputeProofType?: SintVerifiableComputeProofType;
@@ -322,6 +334,26 @@ export function validateModelAndAttestation(
 
   if (mc?.modelFingerprintHash) {
     if (!runtime?.modelFingerprintHash || runtime.modelFingerprintHash !== mc.modelFingerprintHash) {
+      return err("CONSTRAINT_VIOLATION");
+    }
+  }
+
+  const artifactBindings = [
+    ["checkpointDigest", mc?.checkpointDigest, runtime?.checkpointDigest],
+    ["policyConfigDigest", mc?.policyConfigDigest, runtime?.policyConfigDigest],
+    ["normalizationDigest", mc?.normalizationDigest, runtime?.normalizationDigest],
+    ["actionTransformDigest", mc?.actionTransformDigest, runtime?.actionTransformDigest],
+    ["actionSpaceDigest", mc?.actionSpaceDigest, runtime?.actionSpaceDigest],
+    ["embodimentId", mc?.embodimentId, runtime?.embodimentId],
+    ["calibrationDigest", mc?.calibrationDigest, runtime?.calibrationDigest],
+    ["sensorLayoutDigest", mc?.sensorLayoutDigest, runtime?.sensorLayoutDigest],
+    ["datasetDigest", mc?.datasetDigest, runtime?.datasetDigest],
+    ["trainingRecipeDigest", mc?.trainingRecipeDigest, runtime?.trainingRecipeDigest],
+    ["promotionEvidenceDigest", mc?.promotionEvidenceDigest, runtime?.promotionEvidenceDigest],
+    ["rollbackCheckpointDigest", mc?.rollbackCheckpointDigest, runtime?.rollbackCheckpointDigest],
+  ] as const;
+  for (const [, expected, actual] of artifactBindings) {
+    if (expected !== undefined && actual !== expected) {
       return err("CONSTRAINT_VIOLATION");
     }
   }

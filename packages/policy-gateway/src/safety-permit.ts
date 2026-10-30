@@ -7,11 +7,11 @@
  *
  * When provided via PolicyGatewayConfig.safetyPermit, the gateway calls
  * resolvePermit() before evaluateHardwareSafetyHandshake(). The result is
- * merged into request.executionContext.hardwareSafety (plugin wins only if
- * no hardwareSafety context already present in the request).
+ * merged into request.executionContext.hardwareSafety and is authoritative.
+ * An asserted request e-stop cannot be cleared by the resolver.
  *
- * Fail-open: if resolvePermit() throws, the error is logged and the built-in
- * hardware safety check proceeds using request.executionContext only.
+ * A configured resolver must return a valid permit. Exceptions, timeouts, and
+ * undefined/malformed results deny with request-correlated failure diagnostics.
  *
  * @module @sint/gate-policy-gateway/safety-permit
  */
@@ -37,15 +37,15 @@ export interface SafetyPermitResult {
 export interface SafetyPermitPlugin {
   /**
    * Resolve current hardware safety permit state for a request.
-   * Return undefined to skip (fall through to request.executionContext.hardwareSafety).
-   * Throw to trigger fail-open behavior.
+   * Undefined means unavailable and is denied by the gateway.
+   * Async failures and settlement timeouts fail closed.
    */
   resolvePermit(request: SintRequest): Promise<SafetyPermitResult | undefined>;
 }
 
 /**
- * Default no-op implementation — always returns undefined (pass-through).
- * Use this as a placeholder or in tests where hardware state comes from the request.
+ * Legacy no-op implementation — always returns undefined (unavailable).
+ * @deprecated Omit the resolver when unused; configuring this placeholder denies requests.
  */
 export class NoopSafetyPermitPlugin implements SafetyPermitPlugin {
   async resolvePermit(_request: SintRequest): Promise<undefined> {

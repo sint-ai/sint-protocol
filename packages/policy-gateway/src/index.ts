@@ -7,9 +7,11 @@ export type {
   AutonomySupervisorPlugin,
   CsmlEscalationPlugin,
   DynamicEnvelopePlugin,
+  DynamicEnvelopeFailureMode,
   SpatialCorridorVerifierPlugin,
   EdgeControlPlanePlugin,
   VerifiableComputePlugin,
+  SimulationPreflightError,
 } from "./gateway.js";
 export { StaticSpatialCorridorVerifier } from "./spatial-corridor.js";
 export type {
@@ -43,6 +45,8 @@ export type { EscalationAlert, EventSource, ProactiveEscalationEngineOptions } f
 export { assignTier } from "./tier-assigner.js";
 export type { TierAssignment } from "./tier-assigner.js";
 export { checkConstraints, extractPhysicalContext } from "./constraint-checker.js";
+export { buildReviewerEvidenceBundle } from "./reviewer-evidence.js";
+export type { ReviewerEvidenceBundle } from "./reviewer-evidence.js";
 export type { ConstraintViolation } from "./constraint-checker.js";
 export { checkForbiddenCombos } from "./forbidden-combos.js";
 export type { ComboCheckResult } from "./forbidden-combos.js";
@@ -59,7 +63,26 @@ export type {
   RegulatedDataRequestMetadata,
 } from "./regulated-data-policy.js";
 export { DefaultHumanAuthorityPolicy } from "./human-authority-policy.js";
-export type { HumanAuthorityPolicyPlugin } from "./human-authority-policy.js";
+export type { HumanAuthorityPolicyPlugin, HumanAuthorityProofResolver } from "./human-authority-policy.js";
+export { DefaultDeploymentEnvelopePolicy } from "./deployment-envelope-policy.js";
+export type { DeploymentEnvelopePolicyPlugin, DeploymentEvidenceResolver } from "./deployment-envelope-policy.js";
+export { DefaultManufacturingExecutionPolicy } from "./manufacturing-execution-policy.js";
+export type { ManufacturingExecutionPolicyPlugin, InspectionReceiptResolver } from "./manufacturing-execution-policy.js";
+export {
+  DefaultSimulationEvidencePolicy,
+  InMemorySimulationReceiptReplayStore,
+  computeSimulationEvidenceSigningPayload,
+  computeSimulationRequestDigest,
+  computeSimulationEffectPlanDigest,
+  computeSimulationTokenDigest,
+  createSimulationPreflight,
+} from "./simulation-evidence-policy.js";
+export type {
+  DefaultSimulationEvidencePolicyOptions,
+  SimulationEvidenceEnforcementMode,
+  SimulationEvidencePolicyPlugin,
+  SimulationReceiptReplayStore,
+} from "./simulation-evidence-policy.js";
 export {
   DefaultCodeAsPolicyGuard,
   decisionForCodeAsPolicyViolation,
@@ -95,3 +118,4 @@ export type {
 // commonly imports them from the gateway package.
 export type { SintRequest as PolicyContext, PolicyDecision } from "@pshkv/core";
 export type { TimedComboAction } from "./forbidden-combos.js";
+export type { AdvisoryPluginSeat, PluginFailurePolicy, PluginFailureKind, PluginFailure, PluginFailureOptions } from "./plugin-failures.js";

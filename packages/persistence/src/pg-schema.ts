@@ -39,6 +39,30 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
       ON sint_ledger_events (event_type, sequence_number);
   `);
 
+  // Production gateway uses this schema bootstrap. Protect its ledger from
+  // UPDATE, DELETE, and TRUNCATE as well as enforcing INSERT-only application code.
+  await pool.query(`
+    CREATE OR REPLACE FUNCTION sint_reject_ledger_mutation()
+    RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      RAISE EXCEPTION 'sint_ledger_events is append-only';
+    END;
+    $$;
+  `);
+  await pool.query(`
+    DROP TRIGGER IF EXISTS sint_ledger_no_update_delete ON sint_ledger_events;
+    CREATE TRIGGER sint_ledger_no_update_delete
+      BEFORE UPDATE OR DELETE ON sint_ledger_events
+      FOR EACH ROW EXECUTE FUNCTION sint_reject_ledger_mutation();
+  `);
+  await pool.query(`
+    DROP TRIGGER IF EXISTS sint_ledger_no_truncate ON sint_ledger_events;
+    CREATE TRIGGER sint_ledger_no_truncate
+      BEFORE TRUNCATE ON sint_ledger_events
+      FOR EACH STATEMENT EXECUTE FUNCTION sint_reject_ledger_mutation();
+  `);
+  await pool.query(`REVOKE UPDATE, DELETE, TRUNCATE ON sint_ledger_events FROM PUBLIC;`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sint_tokens (
       token_id TEXT PRIMARY KEY,
@@ -59,6 +83,15 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
       expires_at TEXT NOT NULL,
       revocable BOOLEAN NOT NULL DEFAULT true,
       revocation_endpoint TEXT,
+      crypto_profile TEXT,
+      post_quantum_signatures JSONB,
+      autonomy_policy JSONB,
+      human_authority_requirements JSONB,
+      regulated_data_policy JSONB,
+      deployment_envelope JSONB,
+      manufacturing_envelope JSONB,
+      hazardous_energy_envelope JSONB,
+      adaptation_permit JSONB,
       signature TEXT NOT NULL
     );
   `);
@@ -72,7 +105,16 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
       ADD COLUMN IF NOT EXISTS behavioral_constraints JSONB,
       ADD COLUMN IF NOT EXISTS passport_id TEXT,
       ADD COLUMN IF NOT EXISTS delegation_depth INTEGER,
-      ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT;
+      ADD COLUMN IF NOT EXISTS revocation_endpoint TEXT,
+      ADD COLUMN IF NOT EXISTS crypto_profile TEXT,
+      ADD COLUMN IF NOT EXISTS post_quantum_signatures JSONB,
+      ADD COLUMN IF NOT EXISTS autonomy_policy JSONB,
+      ADD COLUMN IF NOT EXISTS human_authority_requirements JSONB,
+      ADD COLUMN IF NOT EXISTS regulated_data_policy JSONB,
+      ADD COLUMN IF NOT EXISTS deployment_envelope JSONB,
+      ADD COLUMN IF NOT EXISTS manufacturing_envelope JSONB,
+      ADD COLUMN IF NOT EXISTS hazardous_energy_envelope JSONB,
+      ADD COLUMN IF NOT EXISTS adaptation_permit JSONB;
   `);
 
   await pool.query(`

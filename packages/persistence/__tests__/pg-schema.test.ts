@@ -12,6 +12,8 @@ describe("ensurePgSchema", () => {
     const sql = query.mock.calls.map(([statement]) => String(statement)).join("\n");
 
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_ledger_events");
+    expect(sql).toContain("BEFORE UPDATE OR DELETE ON sint_ledger_events");
+    expect(sql).toContain("BEFORE TRUNCATE ON sint_ledger_events");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_tokens");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_revocations");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_rate_limit_counters");

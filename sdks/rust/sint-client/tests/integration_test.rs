@@ -68,6 +68,7 @@ mod tests {
             action: "publish".to_string(),
             params: None,
             physical_context: None,
+            consequence_context: None,
         };
 
         let json = serde_json::to_string(&req).expect("serialization failed");

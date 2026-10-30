@@ -440,12 +440,12 @@ describe("Mission Authority API", () => {
 
   it("derives effect use from atomic server claims instead of caller input", async () => {
     const effectManifest = manifest({
-      resources: ["ros2:///payload/release"],
+      resources: ["mission:///effect/release"],
       actions: ["execute"],
       effectConstraints: [{
         effectId: "release-1",
         effectType: "non_kinetic",
-        resource: "ros2:///payload/release",
+        resource: "mission:///effect/release",
         actions: ["execute"],
         maxUses: 1,
         operatorAuthorizationRequired: false,
@@ -458,7 +458,7 @@ describe("Mission Authority API", () => {
       const request = await requestAndToken(requestId);
       const effectRequest = {
         ...request,
-        resource: "ros2:///payload/release",
+        resource: "mission:///effect/release",
         action: "execute",
       };
       const tokenRequest: SintCapabilityTokenRequest = {

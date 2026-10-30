@@ -136,6 +136,27 @@ export const SINT_BRIDGE_PROFILES: readonly BridgeProfile[] = [
     },
     notes: "Matter-certified smart home devices. Phase 2 physical AI governance. Cross-vendor interoperability.",
   },
+  {
+    bridgeId: "consumer-media",
+    protocol: "consumer-media-v1",
+    version: "1.0",
+    resourcePattern: "tv://*/**",
+    defaultTierByAction: {
+      observe: ApprovalTier.T0_OBSERVE,
+      collect: ApprovalTier.T2_ACT,
+      fingerprint: ApprovalTier.T2_ACT,
+      retain: ApprovalTier.T2_ACT,
+      upload: ApprovalTier.T2_ACT,
+      share: ApprovalTier.T3_COMMIT,
+      discover: ApprovalTier.T2_ACT,
+      activate: ApprovalTier.T3_COMMIT,
+      renew: ApprovalTier.T2_ACT,
+      stop: ApprovalTier.T1_PREPARE,
+      update: ApprovalTier.T2_ACT,
+      "remote-admin": ApprovalTier.T3_COMMIT,
+    },
+    notes: "Consumer media sensing and egress ingress. Collection and recipient-specific egress are independently authorized.",
+  },
 ] as const;
 
 /** First-class site profiles for 2026 industrial wedge deployments. */
@@ -167,5 +188,12 @@ export const SINT_SITE_PROFILES: readonly SiteProfile[] = [
     bridges: ["homeassistant", "matter", "mcp", "a2a"],
     defaultEscalationTheta: 0.15,
     notes: "Consumer smart home with family occupancy awareness. Phase 1-2 consumer deployment profile.",
+  },
+  {
+    siteId: "home-media-private",
+    deploymentProfile: "home-media-private",
+    bridges: ["consumer-media", "homeassistant", "matter"],
+    defaultEscalationTheta: 0.1,
+    notes: "Default-private consumer media profile: sensitive sensing and data egress require explicit household authority.",
   },
 ] as const;

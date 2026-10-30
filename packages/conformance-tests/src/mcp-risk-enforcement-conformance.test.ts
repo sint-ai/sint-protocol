@@ -151,7 +151,9 @@ describe("MCP enforcement boundaries", () => {
     expect(await gateway.intercept(request("mcp://terminal/run_command"))).toMatchObject({ action: "deny", denial: { policyViolated: "COMBO_HISTORY_CAPACITY" } });
     vi.setSystemTime(Date.now() + 120_001);
     expect((await gateway.intercept(request("mcp://filesystem/writeFile"))).action).toBe("allow");
-  });
+    // This verifies capacity/retention with 1,026 real signature checks, not a
+    // latency SLA. Allow shared CI runners to finish all boundary assertions.
+  }, 15_000);
   it("checks history after asynchronous envelope evaluation without losing concurrent actions", async () => {
     const { token, request } = setup();
     let releaseWrite!: () => void;

@@ -71,10 +71,13 @@ SQL migration files in `packages/persistence/migrations/` are applied automatica
 | `SINT_REQUIRE_SIGNATURES` | `false`         | Require Ed25519-signed requests                           |
 | `SINT_RATE_LIMIT`         | `100`           | Max requests per minute per client                        |
 | `SINT_WS_ALLOW_QUERY_API_KEY` | `true` (dev) / `false` (prod recommended) | Allow `?apiKey=` auth on `/v1/approvals/ws` |
+| `SINT_SIMULATION_SIGNERS` | _(unset)_ | Comma-separated Ed25519 public keys trusted to sign V2 simulation receipts |
 
 When `SINT_ENV=production` or `NODE_ENV=production`, the gateway requires
 `SINT_STORE=postgres`, `SINT_CACHE=redis`, a non-empty `SINT_API_KEY`,
-`SINT_REQUIRE_SIGNATURES=true`, and `SINT_WS_ALLOW_QUERY_API_KEY=false`.
+`SINT_REQUIRE_SIGNATURES=true`, `SINT_WS_ALLOW_QUERY_API_KEY=false`, trusted
+root issuers, a ledger signing key, approval operator keys, and trusted
+simulation signer keys. T2/T3 requests without signed simulation evidence deny.
 
 ### Dashboard (`dashboard` service)
 

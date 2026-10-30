@@ -17,6 +17,7 @@ import {
   type TierAssignmentRule,
   DEFAULT_TIER_RULES,
   classifyMcpPolicy,
+  classifyPhysicalDispatch,
   parseMcpResource,
   selectTierRule,
 } from "@pshkv/core";
@@ -103,6 +104,19 @@ export function assignTier(
     }
   }
 
+  // Inventoried physical effects cannot stay at observe/prepare, even when a
+  // site rule says so. Read-only and explicit staging actions keep their tier.
+  // A VLA chunk, Home Assistant actuator, direct actuator route, or named MCP
+  // robot tool is actuating even when the resource name is otherwise generic.
+  const dispatch = classifyPhysicalDispatch(request);
+  const currentRank = TIER_ORDER[tier] ?? 0;
+  const actRank = TIER_ORDER[ApprovalTier.T2_ACT] ?? 2;
+  if (dispatch.dispatchClass === "actuate" && currentRank < actRank) {
+    tier = ApprovalTier.T2_ACT;
+    riskTier = "T2_stateful" as RiskTier;
+    escalationReasons.push(dispatch.reason);
+  }
+
   // Escalate on human presence
   if (
     bestRule?.escalateOnHumanPresence &&
@@ -128,6 +142,26 @@ export function assignTier(
     if (TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T2_ACT]) {
       tier = ApprovalTier.T2_ACT;
       escalationReasons.push("Physical force context present");
+    }
+  }
+
+  // Consequence declarations are independent of resource naming. An irreversible
+  // effect is always T3; any declared propagation or affected scope is at least T2.
+  const consequence = request.consequenceContext;
+  if (consequence?.reversibility === "irreversible") {
+    if (TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T3_COMMIT]) {
+      tier = ApprovalTier.T3_COMMIT;
+      escalationReasons.push("Declared consequence is irreversible");
+    }
+  } else if (
+    consequence?.reversibility === "compensatable" ||
+    (consequence?.affectedEntities ?? 0) > 1 ||
+    (consequence?.propagationDepth ?? 0) > 0 ||
+    (consequence?.monetaryValue?.amount ?? 0) > 0
+  ) {
+    if (TIER_ORDER[tier] < TIER_ORDER[ApprovalTier.T2_ACT]) {
+      tier = ApprovalTier.T2_ACT;
+      escalationReasons.push("Declared action has non-trivial blast radius");
     }
   }
 

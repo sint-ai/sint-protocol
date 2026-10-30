@@ -9,6 +9,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createApp, createContext, type ServerContext } from "../src/server.js";
 import type { Hono } from "hono";
+import { verify } from "@pshkv/gate-capability-tokens";
+import { verifyProofReceipt } from "@pshkv/gate-evidence-ledger";
 
 describe("Ledger Query & Proof Routes", () => {
   let ctx: ServerContext;
@@ -92,6 +94,8 @@ describe("Ledger Query & Proof Routes", () => {
     expect(proof.proofValid).toBe(true);
     expect(Array.isArray(proof.verificationSteps)).toBe(true);
     expect(typeof proof.chainPosition).toBe("number");
+    expect(verifyProofReceipt(proof.signedReceipt, verify)).toBe(true);
+    expect(proof.signedReceipt.signerPublicKey).toBe(ctx.ledgerSigner.publicKey);
   });
 
   it("GET /v1/ledger/:eventId/proof returns 404 for unknown eventId", async () => {

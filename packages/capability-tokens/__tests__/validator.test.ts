@@ -462,3 +462,69 @@ describe("Point in Polygon (Geofencing)", () => {
     expect(isPointInPolygon({ x: -1, y: -1 }, square)).toBe(false);
   });
 });
+
+describe("VLA runtime artifact binding", () => {
+  it("fails closed when action normalization or embodiment differs from the signed token", () => {
+    const token = createValidToken({
+      modelConstraints: {
+        actionSpaceDigest: "a".repeat(64),
+        normalizationDigest: "b".repeat(64),
+        embodimentId: "arm-1",
+      },
+    });
+    const valid = validateCapabilityToken(token, {
+      resource: token.resource,
+      action: "publish",
+      modelContext: {
+        actionSpaceDigest: "a".repeat(64),
+        normalizationDigest: "b".repeat(64),
+        embodimentId: "arm-1",
+      },
+    });
+    const mismatched = validateCapabilityToken(token, {
+      resource: token.resource,
+      action: "publish",
+      modelContext: {
+        actionSpaceDigest: "a".repeat(64),
+        normalizationDigest: "c".repeat(64),
+        embodimentId: "arm-2",
+      },
+    });
+
+    expect(valid.ok).toBe(true);
+    expect(mismatched).toEqual({ ok: false, error: "CONSTRAINT_VIOLATION" });
+  });
+
+  it("fails closed when approved dataset or promotion lineage is substituted", () => {
+    const token = createValidToken({
+      modelConstraints: {
+        datasetDigest: "a".repeat(64),
+        trainingRecipeDigest: "b".repeat(64),
+        promotionEvidenceDigest: "c".repeat(64),
+        rollbackCheckpointDigest: "d".repeat(64),
+      },
+    });
+    const valid = validateCapabilityToken(token, {
+      resource: token.resource,
+      action: "publish",
+      modelContext: {
+        datasetDigest: "a".repeat(64),
+        trainingRecipeDigest: "b".repeat(64),
+        promotionEvidenceDigest: "c".repeat(64),
+        rollbackCheckpointDigest: "d".repeat(64),
+      },
+    });
+    const substituted = validateCapabilityToken(token, {
+      resource: token.resource,
+      action: "publish",
+      modelContext: {
+        datasetDigest: "e".repeat(64),
+        trainingRecipeDigest: "b".repeat(64),
+        promotionEvidenceDigest: "c".repeat(64),
+        rollbackCheckpointDigest: "d".repeat(64),
+      },
+    });
+    expect(valid.ok).toBe(true);
+    expect(substituted).toEqual({ ok: false, error: "CONSTRAINT_VIOLATION" });
+  });
+});

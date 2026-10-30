@@ -14,6 +14,8 @@ export const SINT_EVENTS = {
   // Request/Response
   REQUEST_RECEIVED: "request.received",
   POLICY_EVALUATED: "policy.evaluated",
+  POLICY_PLUGIN_FAILED: "policy.plugin.failed",
+  POLICY_DECISION_CORRECTED: "policy.decision.corrected",
   APPROVAL_REQUESTED: "approval.requested",
   APPROVAL_GRANTED: "approval.granted",
   APPROVAL_DENIED: "approval.denied",
@@ -35,6 +37,14 @@ export const SINT_EVENTS = {
   HARDWARE_INTERLOCK_OPEN: "safety.hardware.interlock.open",
   HARDWARE_STATE_STALE: "safety.hardware.state.stale",
   VERIFIABLE_COMPUTE_VERIFIED: "verifiable.compute.verified",
+  DEPLOYMENT_PROOF_VERIFIED: "deployment.proof.verified",
+  DEPLOYMENT_PROOF_MISSING: "deployment.proof.missing",
+  DEPLOYMENT_CONTEXT_MISMATCH: "deployment.context.mismatch",
+  DEPLOYMENT_ENVELOPE_VIOLATION: "deployment.envelope.violation",
+  FACTORY_PROOF_MISSING: "factory.proof.missing",
+  FACTORY_CONTEXT_MISMATCH: "factory.context.mismatch",
+  FACTORY_SEQUENCE_VIOLATION: "factory.sequence.violation",
+  FACTORY_ENVELOPE_VIOLATION: "factory.envelope.violation",
 
   // Engine — System 1
   SYSTEM1_INFERENCE: "engine.system1.inference",

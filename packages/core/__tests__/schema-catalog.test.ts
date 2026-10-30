@@ -12,6 +12,7 @@ describe("schema catalog request contract", () => {
     expect(executionContextProperties.verifiableCompute).toBeDefined();
     expect(executionContextProperties.hardwareSafety).toBeDefined();
     expect(executionContextProperties.preapprovedCorridor).toBeDefined();
+    expect(executionContextProperties.simulationEvidence).toBeDefined();
   });
 
   it("exposes constraint language v1 envelope groups with legacy aliases", () => {
@@ -36,5 +37,21 @@ describe("schema catalog request contract", () => {
     expect(SINT_SCHEMA_CATALOG["mission-manifest"]).toBeDefined();
     expect(SINT_SCHEMA_CATALOG["authority-decision"]).toBeDefined();
     expect(SINT_SCHEMA_CATALOG["mission-evidence-bundle"]).toBeDefined();
+  });
+
+  it("publishes the shared trace bundle base schema", () => {
+    expect(SINT_SCHEMA_CATALOG["trace-bundle"]).toBeDefined();
+  });
+
+  it("publishes the factory part trace bundle schema", () => {
+    expect(SINT_SCHEMA_CATALOG["factory-part-trace-bundle"]).toBeDefined();
+  });
+
+  it("publishes the manufacturing execution envelope schema", () => {
+    expect(SINT_SCHEMA_CATALOG["manufacturing-execution-envelope"]).toBeDefined();
+  });
+
+  it("publishes the inspection receipt schema", () => {
+    expect(SINT_SCHEMA_CATALOG["inspection-receipt"]).toBeDefined();
   });
 });

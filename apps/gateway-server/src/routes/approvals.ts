@@ -9,6 +9,7 @@
 
 import { Hono } from "hono";
 import type { ServerContext } from "../server.js";
+import { verifyOperatorVote } from "../approval-signature.js";
 
 export function approvalRoutes(ctx: ServerContext): Hono {
   const app = new Hono();
@@ -90,7 +91,9 @@ export function approvalRoutes(ctx: ServerContext): Hono {
         agentId: r.request.agentId,
         params: r.request.params,
         physicalContext: r.request.physicalContext,
+        consequenceContext: r.request.consequenceContext,
         executionContext: r.request.executionContext,
+        reviewerEvidence: r.reviewerEvidence,
         fallbackAction: r.fallbackAction,
         approvalQuorum: r.quorum,
         approvalCount: ctx.approvalQueue.getApprovalCount(r.requestId),
@@ -118,7 +121,9 @@ export function approvalRoutes(ctx: ServerContext): Hono {
       agentId: request.request.agentId,
       params: request.request.params,
       physicalContext: request.request.physicalContext,
+      consequenceContext: request.request.consequenceContext,
       executionContext: request.request.executionContext,
+      reviewerEvidence: request.reviewerEvidence,
       fallbackAction: request.fallbackAction,
       approvalQuorum: request.quorum,
       approvalCount: ctx.approvalQueue.getApprovalCount(request.requestId),
@@ -148,6 +153,15 @@ export function approvalRoutes(ctx: ServerContext): Hono {
     if (!existing) {
       return c.json({ error: "Approval request not found or already resolved" }, 404);
     }
+    if (ctx.requireSignedApprovals && !verifyOperatorVote(
+      requestId, body, existing.request.agentId, ctx.approvalOperatorKeys ?? [],
+    )) {
+      return c.json({ error: "Signed authorization by a trusted non-agent operator is required" }, 403);
+    }
+    if (ctx.requireSignedApprovals && existing.quorum?.authorized.length
+      && !existing.quorum.authorized.includes(body.by)) {
+      return c.json({ error: "Operator is not in this request's quorum" }, 403);
+    }
 
     // Fail closed: never allow stale approvals if token was revoked/expired while queued.
     const tokenId = existing.request.tokenId;
@@ -175,6 +189,19 @@ export function approvalRoutes(ctx: ServerContext): Hono {
         requestId,
         reason,
       }, 409);
+    }
+
+    if (ctx.requireSignedApprovals) {
+      ctx.ledger.append({
+        eventType: "approval.vote.recorded",
+        agentId: existing.request.agentId,
+        tokenId: existing.request.tokenId,
+        payload: {
+          requestId, status: body.status, by: body.by,
+          signedAt: body.signedAt, signature: body.signature,
+          reason: body.reason ?? null,
+        },
+      });
     }
 
     const resolution = ctx.approvalQueue.resolve(requestId, {

@@ -215,7 +215,7 @@ describe("CircuitBreakerPlugin — InMemoryCircuitBreaker", () => {
     expect(d2.action).toBe("allow");
   });
 
-  it("plugin error → fail-open (treat as CLOSED, request proceeds)", async () => {
+  it("plugin state read error → fail-closed without assuming CLOSED", async () => {
     const token = makeToken();
     const brokenCb: CircuitBreakerPlugin = {
       getState: vi.fn().mockRejectedValue(new Error("redis down")),
@@ -226,7 +226,8 @@ describe("CircuitBreakerPlugin — InMemoryCircuitBreaker", () => {
     };
     const gw = new PolicyGateway({ resolveToken: () => token, circuitBreaker: brokenCb });
     const decision = await gw.intercept(makeRequest(token));
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "circuitBreaker.getState", policy: "deny" }));
   });
 
   it("agent.circuit.opened event emitted when circuit trips via denials", async () => {

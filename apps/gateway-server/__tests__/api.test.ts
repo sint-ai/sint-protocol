@@ -10,8 +10,9 @@ import type { Hono } from "hono";
 import {
   generateKeypair,
   issueCapabilityToken,
+  sign,
 } from "@pshkv/gate-capability-tokens";
-import type { SintCapabilityTokenRequest } from "@pshkv/core";
+import { canonicalJsonStringify, type SintCapabilityTokenRequest } from "@pshkv/core";
 
 function futureISO(hoursFromNow: number): string {
   const d = new Date(Date.now() + hoursFromNow * 3600_000);
@@ -133,6 +134,35 @@ describe("Gateway Server API", () => {
   });
 
   // ── Intercept ──
+
+  it("POST /v1/simulation/preflight returns a non-authorizing exact effect plan", async () => {
+    const token = await issueAndStoreToken({
+      resource: "ros2:///cmd_vel",
+      actions: ["publish"],
+    });
+    const request = {
+      requestId: "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7",
+      timestamp: new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000Z"),
+      agentId: agent.publicKey,
+      tokenId: token.tokenId,
+      resource: "ros2:///cmd_vel",
+      action: "publish",
+      params: { linear: { x: 0.2 } },
+    };
+
+    const res = await app.request("/v1/simulation/preflight", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.authorizesExecution).toBe(false);
+    expect(body.assignedTier).toBe("T2_act");
+    expect(body.effectPlan.resource).toBe(request.resource);
+    expect(body.effectPlan.params).toEqual(request.params);
+  });
 
   it("POST /v1/intercept with valid request", async () => {
     const token = await issueAndStoreToken();
@@ -450,6 +480,11 @@ describe("Gateway Server API", () => {
     expect(body.count).toBe(1);
     expect(body.requests[0].resource).toBe("ros2:///cmd_vel");
     expect(body.requests[0].action).toBe("publish");
+    expect(body.requests[0].reviewerEvidence.evaluatedBy).toBe("PolicyGateway.intercept");
+    expect(body.requests[0].reviewerEvidence.requestedEffect.paramsDigest).toMatch(
+      /^sha256:[a-f0-9]{64}$/,
+    );
+    expect(body.requests[0].reviewerEvidence.bundleHash).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 
   it("GET /v1/approvals/pending includes factory-action evidence context", async () => {
@@ -522,6 +557,35 @@ describe("Gateway Server API", () => {
     const body = await res.json();
     expect(body.resolution.status).toBe("approved");
     expect(body.resolution.by).toBe("operator-1");
+  });
+
+  it("requires a fresh signature from a non-agent operator in production mode", async () => {
+    const operator = generateKeypair();
+    const signedApp = createApp({ ...ctx, requireSignedApprovals: true,
+      approvalOperatorKeys: [operator.publicKey] });
+    const token = await issueT2Token();
+    const interceptRes = await app.request("/v1/intercept", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(makeT2Request(token.tokenId)),
+    });
+    const { approvalRequestId } = await interceptRes.json();
+    const endpoint = `/v1/approvals/${approvalRequestId}/resolve`;
+    const unsigned = await signedApp.request(endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: operator.publicKey }),
+    });
+    expect(unsigned.status).toBe(403);
+    const signedAt = new Date().toISOString();
+    const vote = { requestId: approvalRequestId, status: "approved", by: operator.publicKey,
+      signedAt, reason: null };
+    const signature = sign(operator.privateKey, canonicalJsonStringify(vote));
+    const approved = await signedApp.request(endpoint, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "approved", by: operator.publicKey, signedAt, signature }),
+    });
+    expect(approved.status).toBe(200);
+    expect(ctx.ledger.getAll().some(event =>
+      event.eventType === "approval.vote.recorded" && event.payload["signature"] === signature)).toBe(true);
   });
 
   it("POST /v1/approvals/:requestId/resolve fail-closes revoked token approvals", async () => {

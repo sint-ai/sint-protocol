@@ -56,6 +56,33 @@ function makeRequest(params: Record<string, unknown> = {}): SintRequest {
 }
 
 describe("checkConstraints — edge cases", () => {
+  it("denies a blast radius above the signed consequence limit", () => {
+    const token = makeToken({
+      consequenceConstraints: { maxAffectedEntities: 10, maxReversibility: "compensatable" },
+    });
+    const req = {
+      ...makeRequest(),
+      consequenceContext: { reversibility: "irreversible", affectedEntities: 11 },
+    } as SintRequest;
+    const result = checkConstraints(token, req);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.map((violation) => violation.constraint)).toEqual([
+        "maxReversibility",
+        "maxAffectedEntities",
+      ]);
+    }
+  });
+
+  it("fails closed when signed consequence constraints lack a declaration", () => {
+    const result = checkConstraints(
+      makeToken({ consequenceConstraints: { maxAffectedEntities: 10 } }),
+      makeRequest(),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error[0]?.constraint).toBe("consequenceContext");
+  });
+
   describe("velocity boundary", () => {
     it("allows velocity exactly equal to maxVelocityMps (strict > boundary)", () => {
       const token = makeToken({ maxVelocityMps: 2.0 });

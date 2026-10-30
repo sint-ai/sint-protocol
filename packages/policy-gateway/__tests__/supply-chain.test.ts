@@ -205,7 +205,7 @@ describe("SupplyChainVerifier — Gateway integration", () => {
     expect(warningEvent).toBeDefined();
   });
 
-  it("9. plugin error → fail-open (request proceeds normally)", async () => {
+  it("9. plugin error → fail-closed (request is denied normally)", async () => {
     const token = makeToken({
       resource: "ros2:///camera/front",
       actions: ["subscribe"],
@@ -227,8 +227,8 @@ describe("SupplyChainVerifier — Gateway integration", () => {
     });
     const decision = await gateway.intercept(request);
 
-    // Fail-open: should not deny due to verifier error
-    expect(decision.action).not.toBe("deny");
+    expect(decision.action).toBe("deny");
+    expect(decision.transformations?.additionalAuditFields?.["pluginFailures"]).toContainEqual(expect.objectContaining({ seat: "supplyChain.verify", policy: "deny" }));
   });
 
   it("10. 'agent.supply_chain.warning' event emitted for medium severity", async () => {

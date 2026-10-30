@@ -1,10 +1,19 @@
 import {
   ApprovalTier,
   RiskTier,
+  canonicalJsonStringify,
+  type HumanAuthorityProof,
+  type Result,
   type PolicyDecision,
   type SintCapabilityToken,
   type SintRequest,
 } from "@pshkv/core";
+
+/** Load a current, authenticated proof from an operator-controlled provider. */
+export type HumanAuthorityProofResolver = (
+  proofRef: string,
+) => Result<HumanAuthorityProof, { readonly message: string }>
+  | Promise<Result<HumanAuthorityProof, { readonly message: string }>>;
 
 export interface HumanAuthorityPolicyPlugin {
   evaluate(
@@ -22,11 +31,13 @@ const ASSURANCE_RANK: Record<"humanhood" | "uniqueness" | "delegation" | "contex
 };
 
 export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
-  evaluate(
+  constructor(private readonly resolveProof?: HumanAuthorityProofResolver) {}
+
+  async evaluate(
     request: SintRequest,
     token: SintCapabilityToken,
     context: { readonly requestId: string; readonly timestamp: string },
-  ): PolicyDecision | undefined {
+  ): Promise<PolicyDecision | undefined> {
     const requirements = token.humanAuthorityRequirements;
     if (!requirements) {
       return undefined;
@@ -78,7 +89,7 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
         );
       }
       const observedAt = Date.parse(proof.observedAt);
-      if (!Number.isFinite(observedAt) || Date.now() - observedAt > requirements.maxProofAgeMs) {
+      if (!Number.isFinite(observedAt) || observedAt - Date.now() > 5_000 || Date.now() - observedAt > requirements.maxProofAgeMs) {
         return this.deny(
           context,
           "HUMAN_AUTHORITY_PROOF_STALE",
@@ -115,6 +126,33 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
       }
     }
 
+    if (proof.binding) {
+      const scope = this.checkBinding(proof.binding, proof.binding, request);
+      if (!scope.ok) return this.deny(context, "HUMAN_AUTHORITY_BINDING_MISMATCH", scope.reason);
+    }
+
+    if (!this.resolveProof) {
+      return this.deny(context, "HUMAN_AUTHORITY_UNVERIFIED", "Human authority requires a trusted proof resolver");
+    }
+    const resolved = await this.resolveProof(proof.proofRef);
+    if (!resolved.ok || canonicalJsonStringify(resolved.value) !== canonicalJsonStringify(proof)) {
+      return this.deny(context, "HUMAN_AUTHORITY_UNVERIFIED", "Human authority proof does not match the authenticated provider record");
+    }
+    const now = Date.now();
+    const observedAt = proof.observedAt === undefined ? undefined : Date.parse(proof.observedAt);
+    if (observedAt !== undefined && (!Number.isFinite(observedAt) || observedAt > now + 5_000
+      || (requirements.maxProofAgeMs !== undefined && now - observedAt > requirements.maxProofAgeMs))) {
+      return this.deny(context, "HUMAN_AUTHORITY_PROOF_STALE", "Authenticated human authority proof is invalid, stale, or future-dated");
+    }
+    for (const window of [requirements.requiredBinding, proof.binding]) {
+      if (window?.validFrom !== undefined && (!Number.isFinite(Date.parse(window.validFrom)) || Date.parse(window.validFrom) > now)) {
+        return this.deny(context, "HUMAN_AUTHORITY_BINDING_MISMATCH", "Human authority binding is not yet valid");
+      }
+      if (window?.validUntil !== undefined && (!Number.isFinite(Date.parse(window.validUntil)) || Date.parse(window.validUntil) <= now)) {
+        return this.deny(context, "HUMAN_AUTHORITY_BINDING_MISMATCH", "Human authority binding has expired");
+      }
+    }
+
     return undefined;
   }
 
@@ -129,7 +167,7 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
 
     if (required.applicationId !== undefined) {
       const applicationId = request.executionContext?.executor?.runtimeId ?? request.executionContext?.bridgeId;
-      if (!applicationId || applicationId !== required.applicationId) {
+      if (!applicationId || applicationId !== required.applicationId || proofBinding.applicationId !== required.applicationId) {
         return { ok: false, reason: "Application identity does not match required binding" };
       }
     }
@@ -147,11 +185,11 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
       }
     }
 
-    if (required.resource !== undefined && request.resource !== required.resource) {
+    if (required.resource !== undefined && (request.resource !== required.resource || proofBinding.resource !== required.resource)) {
       return { ok: false, reason: "Resource does not match required binding" };
     }
 
-    if (required.action !== undefined && request.action !== required.action) {
+    if (required.action !== undefined && (request.action !== required.action || proofBinding.action !== required.action)) {
       return { ok: false, reason: "Action does not match required binding" };
     }
 
@@ -167,7 +205,7 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
       if (proofBinding.minValue === undefined || proofBinding.minValue < required.minValue) {
         return { ok: false, reason: "Minimum value binding is weaker than required" };
       }
-      if (requestValue !== undefined && requestValue < required.minValue) {
+      if (requestValue === undefined || requestValue < required.minValue) {
         return { ok: false, reason: "Request value is below the required minimum" };
       }
     }
@@ -175,7 +213,7 @@ export class DefaultHumanAuthorityPolicy implements HumanAuthorityPolicyPlugin {
       if (proofBinding.maxValue === undefined || proofBinding.maxValue > required.maxValue) {
         return { ok: false, reason: "Maximum value binding is weaker than required" };
       }
-      if (requestValue !== undefined && requestValue > required.maxValue) {
+      if (requestValue === undefined || requestValue > required.maxValue) {
         return { ok: false, reason: "Request value exceeds the required maximum" };
       }
     }

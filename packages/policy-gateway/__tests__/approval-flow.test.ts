@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApprovalQueue } from "../src/approval-flow.js";
 import type { ApprovalEvent } from "../src/approval-flow.js";
 import { ApprovalTier, RiskTier } from "@pshkv/core";
-import type { PolicyDecision, SintRequest } from "@pshkv/core";
+import type { PolicyDecision, SintCapabilityToken, SintRequest } from "@pshkv/core";
 
 function makeRequest(id = "01905f7c-4e8a-7b3d-9a1e-f2c3d4e5f6a7"): SintRequest {
   return {
@@ -64,6 +64,28 @@ describe("ApprovalQueue", () => {
     expect(approval.request).toBe(request);
     expect(approval.decision).toBe(decision);
     expect(queue.size).toBe(1);
+  });
+
+  it("creates a gateway-owned hash-bound reviewer evidence bundle", () => {
+    const request = { ...makeRequest(), params: { amount: 25 } };
+    const token = {
+      tokenId: request.tokenId,
+      issuer: "b".repeat(64),
+      subject: request.agentId,
+      resource: request.resource,
+      actions: [request.action],
+      constraints: { consequenceConstraints: { maxAffectedEntities: 2 } },
+      delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+      issuedAt: request.timestamp,
+      expiresAt: "2027-01-01T00:00:00.000000Z",
+      revocable: true,
+      signature: "00".repeat(64),
+    } as SintCapabilityToken;
+    const approval = queue.enqueue(request, makeDecision(), undefined, token);
+    expect(approval.reviewerEvidence?.evaluatedBy).toBe("PolicyGateway.intercept");
+    expect(approval.reviewerEvidence?.requestedEffect.paramsDigest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(approval.reviewerEvidence?.bundleHash).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(approval.reviewerEvidence?.authority.constraints).toEqual(token.constraints);
   });
 
   it("get() returns pending request by ID", () => {
