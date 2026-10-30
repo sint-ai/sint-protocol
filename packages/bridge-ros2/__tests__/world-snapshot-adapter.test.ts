@@ -1040,6 +1040,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a transform child frame with leading or trailing whitespace", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [{
+        ...base.transforms![0]!,
+        childFrame: " base_link",
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects transform child frames that collide after trimming", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
