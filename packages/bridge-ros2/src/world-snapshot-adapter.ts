@@ -335,7 +335,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     input.safetyController
     && (input.safetyController.controllerId.trim().length === 0
       || input.safetyController.controllerId !== input.safetyController.controllerId.trim()
-      || !isDigest(input.safetyController.stateDigest)
+      || !isContentDigest(input.safetyController.stateDigest)
       || !isNormalized(input.safetyController.uncertainty))
   ) {
     return "safety-controller identity, digest, or uncertainty is invalid";
