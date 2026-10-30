@@ -333,9 +333,12 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || input.safetyController.controllerId !== input.safetyController.controllerId.trim()
       || !isContentDigest(input.safetyController.stateDigest)
       || !isPermitState(input.safetyController.permitState)
+      || typeof input.safetyController.estopEngaged !== "boolean"
+      || typeof input.safetyController.protectiveStopEngaged !== "boolean"
+      || typeof input.safetyController.safetyZoneClear !== "boolean"
       || !isNormalized(input.safetyController.uncertainty))
   ) {
-    return "safety-controller identity, digest, permit state, or uncertainty is invalid";
+    return "safety-controller identity, digest, permit state, flag, or uncertainty is invalid";
   }
   return validateTask(input.task)
     ?? validateSensors(input)
