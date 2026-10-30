@@ -391,6 +391,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a transform observation time with leading or trailing whitespace", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [{
+        ...base.transforms![0]!,
+        observedAt: ` ${observedAt}`,
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a map observation time that is missing", () => {
     const captured = createROS2WorldSnapshot(state({
       map: {
