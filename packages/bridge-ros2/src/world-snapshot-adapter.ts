@@ -230,6 +230,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     input.robotId.trim().length === 0
     || input.robotId !== input.robotId.trim()
     || input.frameId.trim().length === 0
+    || input.frameId !== input.frameId.trim()
     || !input.stateEpoch
   ) {
     return "robotId, frameId, and stateEpoch are required";

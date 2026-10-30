@@ -186,6 +186,15 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a snapshot frame with leading or trailing whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      frameId: " map",
+      map: undefined,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a safety-controller identity that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       safetyController: {
