@@ -848,6 +848,17 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects joint names that collide after trimming", () => {
+    const captured = createROS2WorldSnapshot(state({
+      jointState: {
+        observedAt,
+        value: { name: ["elbow", " elbow"], position: [1.2, 0.4], velocity: [], effort: [] },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects misaligned joint arrays", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {
