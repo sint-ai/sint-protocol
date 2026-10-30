@@ -73,7 +73,11 @@ they do not authorize them. New security invariants require conformance tests.
 | Gateway, bridge, or policy | affected package tests | conformance test + `pnpm run cert:fixtures` |
 | Schema or public SDK | producer and consumer tests | contract/fixture tests + `pnpm run verify` |
 | Persistence | in-memory tests | Postgres/Redis tests when behavior depends on those services |
-| Release or dependency change | affected build/tests | the corresponding GitHub Actions release gate |
+| Release or dependency change | affected build/tests | `pnpm audit --audit-level high` and the corresponding GitHub Actions release gate |
+
+For dependency updates, regenerate and commit `pnpm-lock.yaml`, then verify
+that a frozen install succeeds. The workspace uses Zod 4; record schemas need
+both a key schema and a value schema.
 
 ## 4. Work in a Tight Test Loop
 

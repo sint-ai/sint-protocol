@@ -126,8 +126,8 @@ export const dispatchEnvelopePayloadSchema = z.object({
   packId: z.string().min(1).max(160),
   packDigest: z.string().regex(/^[0-9a-f]{64}$/),
   effectId: z.string().min(1).max(160),
-  params: z.record(z.unknown()),
-  capabilityToken: z.record(z.unknown()),
+  params: z.record(z.string(), z.unknown()),
+  capabilityToken: z.record(z.string(), z.unknown()),
   authorization: z.object({
     decision: z.enum(["allow", "transform"]),
     assignedTier: z.enum(approvalTiers),

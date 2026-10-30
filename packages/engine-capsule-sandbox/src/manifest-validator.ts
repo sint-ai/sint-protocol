@@ -53,7 +53,7 @@ export function validateManifest(
 
   if (!parsed.success) {
     const issues = parsed.error.issues
-      .map((i) => `${i.path.join(".")}: ${i.message}`)
+      .map((i: { path: readonly PropertyKey[]; message: string }) => `${i.path.join(".")}: ${i.message}`)
       .join("; ");
 
     return err({
