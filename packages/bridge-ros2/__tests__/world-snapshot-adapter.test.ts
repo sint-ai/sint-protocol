@@ -367,6 +367,19 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a map observation time that is missing", () => {
+    const captured = createROS2WorldSnapshot(state({
+      map: {
+        digest: "a".repeat(64),
+        frameId: "map",
+        observedAt: undefined as unknown as string,
+        uncertainty: 0.01,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",
