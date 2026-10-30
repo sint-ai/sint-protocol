@@ -268,7 +268,8 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (
     input.jointState
     && (typeof input.jointState.observedAt !== "string"
-      || input.jointState.observedAt.trim().length === 0)
+      || input.jointState.observedAt.trim().length === 0
+      || input.jointState.observedAt !== input.jointState.observedAt.trim())
   ) {
     return "joint state observation time is missing";
   }
