@@ -908,6 +908,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an obstacle identity with leading or trailing whitespace", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        id: " human-7",
+        position: { x: 1.8, y: 2.2, z: 0 },
+        radiusMeters: 0.35,
+        observedAt,
+        uncertainty: 0.08,
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects obstacle ids that collide after trimming", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [
