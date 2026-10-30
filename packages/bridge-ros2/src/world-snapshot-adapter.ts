@@ -226,7 +226,7 @@ function inputUncertainties(input: ROS2WorldStateInput): readonly number[] {
 }
 
 function validateStructure(input: ROS2WorldStateInput): string | undefined {
-  if (!input.robotId || !input.frameId || !input.stateEpoch) {
+  if (input.robotId.trim().length === 0 || !input.frameId || !input.stateEpoch) {
     return "robotId, frameId, and stateEpoch are required";
   }
   const epochRobot = input.stateEpoch.indexOf(":");
