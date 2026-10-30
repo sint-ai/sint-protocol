@@ -297,7 +297,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (input.map && (input.map.frameId.trim().length === 0 || !isDigest(input.map.digest) || !isNormalized(input.map.uncertainty))) {
     return "map digest or uncertainty is invalid";
   }
-  const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id);
+  const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id.trim());
   if (new Set(obstacleIds).size !== obstacleIds.length) {
     return "obstacle identities must be unique within a snapshot";
   }
