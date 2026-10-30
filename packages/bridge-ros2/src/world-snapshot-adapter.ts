@@ -253,8 +253,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     return "robotPositionUncertaintyMeters must be finite and nonnegative";
   }
   if (
-    typeof input.obstacleScanObservedAt === "string"
-    && input.obstacleScanObservedAt.trim().length === 0
+    input.obstacleScanObservedAt !== undefined
+    && (typeof input.obstacleScanObservedAt !== "string"
+      || input.obstacleScanObservedAt.trim().length === 0)
   ) {
     return "obstacle scan observation time is missing";
   }
