@@ -735,6 +735,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an occupancy region id with leading or trailing whitespace", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: " corridor-a",
+        occupied: true,
+        occlusion: "partial" as const,
+        observedAt,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects occupancy whose occupied flag is not a boolean", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
