@@ -376,6 +376,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || typeof input.safetyController.safetyZoneClear !== "boolean"
       || typeof input.safetyController.observedAt !== "string"
       || input.safetyController.observedAt.trim().length === 0
+      || input.safetyController.observedAt !== input.safetyController.observedAt.trim()
       || !isNormalized(input.safetyController.uncertainty))
   ) {
     return "safety-controller identity, digest, permit state, flag, observation time, or uncertainty is invalid";
