@@ -343,6 +343,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an odometry observation time with leading or trailing whitespace", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      odometry: {
+        ...base.odometry!,
+        observedAt: ` ${observedAt}`,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a joint-state observation time that is missing", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
