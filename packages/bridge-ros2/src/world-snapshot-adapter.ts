@@ -432,7 +432,7 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
 }
 
 function isContentDigest(value: unknown): value is string {
-  return typeof value === "string" && /^[0-9a-f]{64}$/i.test(value);
+  return typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
 }
 
 /** Hash of the versioned task, sensor provenance, and occupancy. Absent when none are present. */
