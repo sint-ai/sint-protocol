@@ -325,7 +325,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   for (const obstacle of input.obstacles ?? []) {
     if (
-      obstacle.id.trim().length === 0
+      typeof obstacle.observedAt !== "string"
+      || obstacle.observedAt.trim().length === 0
+      || obstacle.id.trim().length === 0
       || obstacle.id !== obstacle.id.trim()
       || (obstacle.frameId !== undefined && obstacle.frameId.trim().length === 0)
       || !isFiniteNumber(obstacle.position.x)
@@ -342,7 +344,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || (obstacle.kind !== undefined && !["static", "dynamic", "human"].includes(obstacle.kind))
       || !isNormalized(obstacle.uncertainty)
     ) {
-      return "obstacles require finite geometry and normalized uncertainty";
+      return "obstacles require an observation time, finite geometry, and normalized uncertainty";
     }
   }
   if (
