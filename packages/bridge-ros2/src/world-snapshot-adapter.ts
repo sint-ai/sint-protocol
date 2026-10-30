@@ -455,7 +455,7 @@ function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
   const payload = task.payload;
   if (
     payload !== undefined
-    && (!payload.payloadId
+    && (payload.payloadId.trim().length === 0
       || !isContentDigest(payload.digest)
       || !isFiniteNumber(payload.radiusMeters)
       || payload.radiusMeters < 0)
