@@ -473,6 +473,9 @@ function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefin
   if (sourceFrameDisagrees(input.frameId, input.odometry?.frameId)) {
     return "odometry frame does not match the snapshot frame";
   }
+  if (sourceFrameDisagrees(input.frameId, input.jointState?.frameId)) {
+    return "joint-state frame does not match the snapshot frame";
+  }
   if (input.map !== undefined && input.map.frameId !== input.frameId) {
     return "map frame does not match the snapshot frame";
   }
