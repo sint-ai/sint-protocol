@@ -352,6 +352,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (input.odometry && input.odometry.value.pose.position.z !== 0) {
     return "odometry vertical position is not zero";
   }
+  if (input.odometry && input.odometry.value.twist.linear.z !== 0) {
+    return "odometry vertical velocity is not zero";
+  }
   const childFrames = (input.transforms ?? []).map((transform) => transform.childFrame.trim());
   if (new Set(childFrames).size !== childFrames.length) {
     return "transform child frames must be unique within a snapshot";
