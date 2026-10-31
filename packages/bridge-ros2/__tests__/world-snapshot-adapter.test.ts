@@ -1727,6 +1727,20 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a human obstacle with a nonzero vertical position", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        ...base.obstacles![0]!,
+        kind: "human",
+        position: { x: 1.8, y: 2.2, z: 0.4 },
+        velocityMps: { x: 0, y: 0.4, z: 0 },
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an obstacle frame that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       frameId: "   ",

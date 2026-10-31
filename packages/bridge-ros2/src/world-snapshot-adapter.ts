@@ -476,6 +476,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (obstacle.kind === "dynamic" && obstacle.position.z !== 0) {
       return "dynamic obstacle vertical position is not zero";
     }
+    if (obstacle.kind === "human" && obstacle.position.z !== 0) {
+      return "human obstacle vertical position is not zero";
+    }
   }
   if (
     input.obstacleScanObservedAt !== undefined
