@@ -480,6 +480,9 @@ function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefin
     if (transform.parentFrame !== input.frameId) {
       return "transform parent frame does not match the snapshot frame";
     }
+    if (transform.childFrame === transform.parentFrame) {
+      return "transform child frame matches the parent frame";
+    }
   }
   if (input.map !== undefined && input.map.frameId !== input.frameId) {
     return "map frame does not match the snapshot frame";
