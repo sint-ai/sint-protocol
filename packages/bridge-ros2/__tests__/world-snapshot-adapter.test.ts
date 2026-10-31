@@ -568,6 +568,21 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an obstacle observation time that does not match the obstacle scan", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        id: "human-7",
+        position: { x: 1.8, y: 2.2, z: 0 },
+        radiusMeters: 0.35,
+        observedAt: new Date(now - 50).toISOString(),
+        uncertainty: 0.08,
+      }],
+      obstacleScanObservedAt: observedAt,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose state epoch names a different robot", () => {
     const captured = createROS2WorldSnapshot(state({
       stateEpoch: "other-robot:100",
