@@ -485,6 +485,13 @@ function validateOccupancy(
     ) {
       return "occupancy observation time is missing";
     }
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(region.observedAt)
+      || !Number.isFinite(Date.parse(region.observedAt))
+      || new Date(region.observedAt).toISOString() !== region.observedAt
+    ) {
+      return "occupancy observation time is not canonical UTC";
+    }
     if (region.regionId.trim().length === 0 || region.regionId !== region.regionId.trim()) {
       return "occupancy region identity is missing";
     }
