@@ -1094,7 +1094,7 @@ describe("createROS2WorldSnapshot", () => {
       }],
     }, { now: () => now });
 
-    expect(captured.ok ? undefined : captured.error.code).toBe("WORLD_STATE_SOURCE_STALE");
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
   it("commits a scene contract digest over the versioned task, provenance, and occupancy", () => {
@@ -1243,6 +1243,20 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         occupied: true,
         occlusion: "partial" as const,
         observedAt: ` ${observedAt}`,
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects an occupancy observation time that is not canonical UTC", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      occupancy: [{
+        regionId: "corridor-a",
+        occupied: true,
+        occlusion: "partial" as const,
+        observedAt: observedAt.replace("Z", "+00:00"),
       }],
     }, { now: () => now });
 
