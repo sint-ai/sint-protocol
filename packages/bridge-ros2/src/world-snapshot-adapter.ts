@@ -284,6 +284,12 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     return "obstacle scan observation time is not canonical UTC";
   }
   if (
+    input.obstacleScanObservedAt !== undefined
+    && !Array.isArray(input.obstacles)
+  ) {
+    return "obstacle scan observation time has no obstacle list";
+  }
+  if (
     input.jointState
     && (typeof input.jointState.observedAt !== "string"
       || input.jointState.observedAt.trim().length === 0
