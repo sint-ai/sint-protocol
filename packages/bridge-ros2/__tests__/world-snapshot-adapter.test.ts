@@ -1711,6 +1711,18 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a transform parent frame that disagrees with the snapshot frame", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [{
+        ...base.transforms![0]!,
+        parentFrame: "odom",
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform parent frame that is only whitespace", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
