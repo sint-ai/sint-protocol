@@ -482,6 +482,19 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a map observation time that is not canonical UTC", () => {
+    const captured = createROS2WorldSnapshot(state({
+      map: {
+        digest: "a".repeat(64),
+        frameId: "map",
+        observedAt: observedAt.replace("Z", "+00:00"),
+        uncertainty: 0.01,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an obstacle observation time that is missing", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{

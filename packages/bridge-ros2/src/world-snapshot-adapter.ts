@@ -364,6 +364,16 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "map observation time, digest, or uncertainty is invalid";
   }
+  if (
+    input.map
+    && (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.map.observedAt)
+      || !Number.isFinite(Date.parse(input.map.observedAt))
+      || new Date(input.map.observedAt).toISOString() !== input.map.observedAt
+    )
+  ) {
+    return "map observation time is not canonical UTC";
+  }
   const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id.trim());
   if (new Set(obstacleIds).size !== obstacleIds.length) {
     return "obstacle identities must be unique within a snapshot";
