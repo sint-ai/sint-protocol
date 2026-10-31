@@ -423,7 +423,11 @@ function validateOccupancy(
     return "occupancy region identities must be unique within a snapshot";
   }
   for (const region of regions) {
-    if (typeof region.observedAt !== "string" || region.observedAt.trim().length === 0) {
+    if (
+      typeof region.observedAt !== "string"
+      || region.observedAt.trim().length === 0
+      || region.observedAt !== region.observedAt.trim()
+    ) {
       return "occupancy observation time is missing";
     }
     if (region.regionId.trim().length === 0 || region.regionId !== region.regionId.trim()) {
