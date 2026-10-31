@@ -1083,6 +1083,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance whose observation time does not match the safety controller", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "safety-plc",
+        version: "1.0.0",
+        source: "safetyController" as const,
+        observedAt: new Date(now - 50).toISOString(),
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance whose source is not a world-state channel", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
@@ -1157,13 +1171,19 @@ describe("createROS2WorldSnapshot", () => {
   });
 
   it("rejects a fresh snapshot whose sensor provenance time is stale", () => {
+    const staleAt = new Date(now - 5_000).toISOString();
+    const base = state();
     const captured = createROS2WorldSnapshot({
-      ...state(),
+      ...base,
+      safetyController: {
+        ...base.safetyController!,
+        observedAt: staleAt,
+      },
       sensors: [{
         sensorId: "lidar-front",
         version: "2.4.1",
         source: "safetyController" as const,
-        observedAt: new Date(now - 5_000).toISOString(),
+        observedAt: staleAt,
       }],
     }, { now: () => now, maxInputAgeMs: 500 });
 
