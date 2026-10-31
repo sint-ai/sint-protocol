@@ -274,6 +274,16 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     return "obstacle scan observation time is missing";
   }
   if (
+    input.obstacleScanObservedAt !== undefined
+    && (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.obstacleScanObservedAt)
+      || !Number.isFinite(Date.parse(input.obstacleScanObservedAt))
+      || new Date(input.obstacleScanObservedAt).toISOString() !== input.obstacleScanObservedAt
+    )
+  ) {
+    return "obstacle scan observation time is not canonical UTC";
+  }
+  if (
     input.jointState
     && (typeof input.jointState.observedAt !== "string"
       || input.jointState.observedAt.trim().length === 0
