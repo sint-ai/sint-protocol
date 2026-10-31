@@ -456,6 +456,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "human obstacle velocity uncertainty is not zero";
     }
+    if (
+      obstacle.kind === "dynamic"
+      && obstacle.velocityMps !== undefined
+      && obstacle.velocityMps.z !== 0
+    ) {
+      return "dynamic obstacle vertical velocity is not zero";
+    }
   }
   if (
     input.obstacleScanObservedAt !== undefined
