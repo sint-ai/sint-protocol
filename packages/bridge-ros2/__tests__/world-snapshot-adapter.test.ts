@@ -1041,6 +1041,20 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance whose observation time does not match transforms", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      sensors: [{
+        sensorId: "tf-base",
+        version: "1.0.0",
+        source: "transforms" as const,
+        observedAt: new Date(now - 50).toISOString(),
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance whose source is not a world-state channel", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),

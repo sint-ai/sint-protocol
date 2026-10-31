@@ -567,6 +567,12 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     if (sensor.source === "jointState" && sensor.observedAt !== input.jointState?.observedAt) {
       return "sensor provenance observation time does not match joint state";
     }
+    if (
+      sensor.source === "transforms"
+      && (input.transforms ?? []).some((transform) => transform.observedAt !== sensor.observedAt)
+    ) {
+      return "sensor provenance observation time does not match transforms";
+    }
   }
   return undefined;
 }
