@@ -348,6 +348,23 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a safety-controller observation time that is not canonical UTC", () => {
+    const captured = createROS2WorldSnapshot(state({
+      safetyController: {
+        controllerId: "safety-plc-1",
+        observedAt: observedAt.replace("Z", "+00:00"),
+        permitState: "granted",
+        estopEngaged: false,
+        protectiveStopEngaged: false,
+        safetyZoneClear: true,
+        stateDigest: "b".repeat(64),
+        uncertainty: 0,
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an odometry observation time that is missing", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
