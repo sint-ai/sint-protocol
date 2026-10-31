@@ -1083,6 +1083,22 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects sensor provenance whose observation time does not match an empty obstacle scan", () => {
+    const captured = createROS2WorldSnapshot({
+      ...state(),
+      obstacles: [],
+      obstacleScanObservedAt: observedAt,
+      sensors: [{
+        sensorId: "scan-lidar",
+        version: "1.0.0",
+        source: "obstacles" as const,
+        observedAt: new Date(now - 50).toISOString(),
+      }],
+    }, { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects sensor provenance whose observation time does not match the safety controller", () => {
     const captured = createROS2WorldSnapshot({
       ...state(),
