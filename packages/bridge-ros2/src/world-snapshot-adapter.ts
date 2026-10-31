@@ -564,6 +564,9 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     if (sensor.source === "odometry" && sensor.observedAt !== input.odometry?.observedAt) {
       return "sensor provenance observation time does not match odometry";
     }
+    if (sensor.source === "jointState" && sensor.observedAt !== input.jointState?.observedAt) {
+      return "sensor provenance observation time does not match joint state";
+    }
   }
   return undefined;
 }
