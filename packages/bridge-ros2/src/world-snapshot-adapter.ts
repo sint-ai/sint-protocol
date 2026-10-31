@@ -281,6 +281,16 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "joint state observation time is missing";
   }
+  if (
+    input.jointState
+    && (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.jointState.observedAt)
+      || !Number.isFinite(Date.parse(input.jointState.observedAt))
+      || new Date(input.jointState.observedAt).toISOString() !== input.jointState.observedAt
+    )
+  ) {
+    return "joint state observation time is not canonical UTC";
+  }
   const jointState = input.jointState?.value;
   if (jointState) {
     const count = jointState.name.length;
