@@ -363,6 +363,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || transform.childFrame.trim().length === 0
       || transform.childFrame !== transform.childFrame.trim()
       || !isFinitePose(transform.pose)
+      || !isUnitQuaternion(transform.pose.orientation)
       || !isNormalized(transform.uncertainty)
     ) {
       return "transforms require an observation time, frame identities, and normalized uncertainty";

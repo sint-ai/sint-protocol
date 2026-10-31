@@ -1778,6 +1778,21 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a transform orientation that is not a unit quaternion", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      transforms: [{
+        ...base.transforms![0]!,
+        pose: {
+          ...base.transforms![0]!.pose,
+          orientation: { x: 0, y: 0, z: 0, w: 0 },
+        },
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform child frame that is only whitespace", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
