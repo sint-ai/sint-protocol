@@ -436,6 +436,16 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "safety-controller identity, digest, permit state, flag, observation time, or uncertainty is invalid";
   }
+  if (
+    input.safetyController
+    && (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.safetyController.observedAt)
+      || !Number.isFinite(Date.parse(input.safetyController.observedAt))
+      || new Date(input.safetyController.observedAt).toISOString() !== input.safetyController.observedAt
+    )
+  ) {
+    return "safety-controller observation time is not canonical UTC";
+  }
   return validateTask(input.task)
     ?? validateSensors(input)
     ?? validateOccupancy(input.occupancy)
