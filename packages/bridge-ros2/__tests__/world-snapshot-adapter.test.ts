@@ -1589,6 +1589,24 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(forward.value.snapshot.sceneContractDigest).toBe(reversed.value.snapshot.sceneContractDigest);
   });
 
+  it("rejects an odometry orientation that is not a unit quaternion", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      odometry: {
+        ...base.odometry!,
+        value: {
+          ...base.odometry!.value,
+          pose: {
+            ...base.odometry!.value.pose,
+            orientation: { x: 0, y: 0, z: 0, w: 0 },
+          },
+        },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an odometry frame that is only whitespace", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({

@@ -188,6 +188,11 @@ function isFinitePose(pose: Pose): boolean {
   ].every(isFiniteNumber);
 }
 
+function isUnitQuaternion(orientation: Pose["orientation"]): boolean {
+  const normSquared = orientation.x ** 2 + orientation.y ** 2 + orientation.z ** 2 + orientation.w ** 2;
+  return Math.abs(normSquared - 1) <= 1e-6;
+}
+
 function sourcePresent(input: ROS2WorldStateInput, source: ROS2WorldStateSource): boolean {
   if (source === "obstacles") {
     return Array.isArray(input.obstacles)
@@ -332,6 +337,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || new Date(input.odometry.observedAt).toISOString() !== input.odometry.observedAt
       || (input.odometry.frameId !== undefined && input.odometry.frameId.trim().length === 0)
       || !isFinitePose(input.odometry.value.pose)
+      || !isUnitQuaternion(input.odometry.value.pose.orientation)
       || [
         input.odometry.value.twist.linear.x,
         input.odometry.value.twist.linear.y,
