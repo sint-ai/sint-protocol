@@ -261,7 +261,8 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (
     input.obstacleScanObservedAt !== undefined
     && (typeof input.obstacleScanObservedAt !== "string"
-      || input.obstacleScanObservedAt.trim().length === 0)
+      || input.obstacleScanObservedAt.trim().length === 0
+      || input.obstacleScanObservedAt !== input.obstacleScanObservedAt.trim())
   ) {
     return "obstacle scan observation time is missing";
   }
