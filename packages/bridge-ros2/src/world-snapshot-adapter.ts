@@ -259,6 +259,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     return "capture time has leading or trailing whitespace";
   }
   if (
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.capturedAt)
+    || !Number.isFinite(Date.parse(input.capturedAt))
+    || new Date(input.capturedAt).toISOString() !== input.capturedAt
+  ) {
+    return "capture time is not canonical UTC";
+  }
+  if (
     input.obstacleScanObservedAt !== undefined
     && (typeof input.obstacleScanObservedAt !== "string"
       || input.obstacleScanObservedAt.trim().length === 0
