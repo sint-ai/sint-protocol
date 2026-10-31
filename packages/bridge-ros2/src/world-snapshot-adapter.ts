@@ -345,6 +345,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "transforms require an observation time, frame identities, and normalized uncertainty";
     }
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(transform.observedAt)
+      || !Number.isFinite(Date.parse(transform.observedAt))
+      || new Date(transform.observedAt).toISOString() !== transform.observedAt
+    ) {
+      return "transform observation time is not canonical UTC";
+    }
   }
   if (
     input.map
