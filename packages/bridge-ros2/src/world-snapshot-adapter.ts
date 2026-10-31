@@ -525,6 +525,13 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "sensor provenance observation time is missing";
     }
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(sensor.observedAt)
+      || !Number.isFinite(Date.parse(sensor.observedAt))
+      || new Date(sensor.observedAt).toISOString() !== sensor.observedAt
+    ) {
+      return "sensor provenance observation time is not canonical UTC";
+    }
     if (sensor.sensorId.trim().length === 0 || sensor.sensorId !== sensor.sensorId.trim()) {
       return "sensor provenance identity is missing";
     }
