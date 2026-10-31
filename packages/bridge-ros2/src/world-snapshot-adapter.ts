@@ -432,6 +432,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "obstacle observation time is not canonical UTC";
     }
+    if (
+      obstacle.kind === "static"
+      && obstacle.velocityMps !== undefined
+      && (obstacle.velocityMps.x !== 0 || obstacle.velocityMps.y !== 0 || obstacle.velocityMps.z !== 0)
+    ) {
+      return "static obstacle velocity is not zero";
+    }
   }
   if (
     input.obstacleScanObservedAt !== undefined
