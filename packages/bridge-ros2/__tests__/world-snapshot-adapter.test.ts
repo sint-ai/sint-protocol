@@ -673,6 +673,15 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an obstacle scan observation time without an obstacle list", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: undefined,
+      obstacleScanObservedAt: observedAt,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot whose capture time is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       capturedAt: "  ",
