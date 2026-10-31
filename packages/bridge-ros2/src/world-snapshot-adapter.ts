@@ -402,6 +402,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "obstacles require an observation time, finite geometry, and normalized uncertainty";
     }
+    if (
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(obstacle.observedAt)
+      || !Number.isFinite(Date.parse(obstacle.observedAt))
+      || new Date(obstacle.observedAt).toISOString() !== obstacle.observedAt
+    ) {
+      return "obstacle observation time is not canonical UTC";
+    }
   }
   if (
     input.safetyController
