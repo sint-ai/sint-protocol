@@ -442,6 +442,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (obstacle.kind === "dynamic" && obstacle.velocityMps === undefined) {
       return "dynamic obstacle requires a velocity";
     }
+    if (
+      obstacle.kind === "static"
+      && obstacle.velocityUncertaintyMps !== undefined
+      && obstacle.velocityUncertaintyMps > 0
+    ) {
+      return "static obstacle velocity uncertainty is not zero";
+    }
   }
   if (
     input.obstacleScanObservedAt !== undefined
