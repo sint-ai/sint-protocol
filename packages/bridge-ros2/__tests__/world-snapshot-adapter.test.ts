@@ -372,6 +372,18 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an odometry observation time that is not canonical UTC", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      odometry: {
+        ...base.odometry!,
+        observedAt: observedAt.replace("Z", "+00:00"),
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a joint-state observation time that is missing", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
