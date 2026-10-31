@@ -576,6 +576,12 @@ function validateSensors(input: ROS2WorldStateInput): string | undefined {
     if (sensor.source === "map" && sensor.observedAt !== input.map?.observedAt) {
       return "sensor provenance observation time does not match the map";
     }
+    if (
+      sensor.source === "obstacles"
+      && (input.obstacles ?? []).some((obstacle) => obstacle.observedAt !== sensor.observedAt)
+    ) {
+      return "sensor provenance observation time does not match obstacles";
+    }
   }
   return undefined;
 }
