@@ -421,6 +421,12 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     }
   }
   if (
+    input.obstacleScanObservedAt !== undefined
+    && (input.obstacles ?? []).some((obstacle) => obstacle.observedAt !== input.obstacleScanObservedAt)
+  ) {
+    return "obstacle observation time does not match the obstacle scan";
+  }
+  if (
     input.safetyController
     && (input.safetyController.controllerId.trim().length === 0
       || input.safetyController.controllerId !== input.safetyController.controllerId.trim()
