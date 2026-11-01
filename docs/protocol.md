@@ -27,6 +27,14 @@ when an action crosses from "planned" to "can actually happen."
 - physical constraints embedded in the token
 - revocable in real time
 
+The gateway checks the magnitude of supplied force, velocity, torque, jerk,
+angular velocity, and contact force against signed token limits. ROS 2 Twist
+linear and angular vectors are checked by vector magnitude; negative scalar
+commands are checked by absolute value. Malformed supplied values fail the
+corresponding signed check. A missing reading cannot be inferred by the direct
+checker, so physical deployments must provide trusted measurements and the
+required simulation evidence before dispatch.
+
 ### Policy Gateway
 
 - single choke point for every authorization decision

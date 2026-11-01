@@ -29,6 +29,20 @@ export interface ConstraintViolation {
   readonly message: string;
 }
 
+function magnitude(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.abs(value) : Number.NaN;
+}
+
+function vectorMagnitude(value: unknown): number {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return Number.NaN;
+  const vector = value as Record<string, unknown>;
+  const coordinates = [vector["x"], vector["y"], vector["z"]];
+  if (coordinates.every((coordinate) => coordinate === undefined)) return Number.NaN;
+  if (coordinates.some((coordinate) => coordinate !== undefined
+    && (typeof coordinate !== "number" || !Number.isFinite(coordinate)))) return Number.NaN;
+  return Math.hypot(...coordinates.map((coordinate) => (coordinate as number | undefined) ?? 0));
+}
+
 /**
  * Extract physical action context from a SINT request.
  * Maps request params and physical context to the format
@@ -37,14 +51,25 @@ export interface ConstraintViolation {
 export function extractPhysicalContext(
   request: SintRequest,
 ): PhysicalActionContext {
+  const params = request.params;
+  const scalarVelocity = params["velocity"] ?? params["linear_velocity"];
+  const scalarAngularVelocity = params["angular_velocity"];
   return {
     commandedForceNewtons:
-      (request.params["force"] as number | undefined) ??
-      request.physicalContext?.currentForceNewtons,
+      params["force"] !== undefined ? magnitude(params["force"])
+        : request.physicalContext?.currentForceNewtons,
     commandedVelocityMps:
-      (request.params["velocity"] as number | undefined) ??
-      (request.params["linear_velocity"] as number | undefined) ??
-      request.physicalContext?.currentVelocityMps,
+      scalarVelocity !== undefined ? magnitude(scalarVelocity)
+        : params["linear"] !== undefined ? vectorMagnitude(params["linear"])
+          : request.physicalContext?.currentVelocityMps,
+    commandedTorqueNm: params["torque"] !== undefined ? magnitude(params["torque"])
+      : request.physicalContext?.currentTorqueNm,
+    commandedJerkMps3: params["jerk"] !== undefined ? magnitude(params["jerk"])
+      : request.physicalContext?.currentJerkMps3,
+    commandedAngularVelocityRps: scalarAngularVelocity !== undefined ? magnitude(scalarAngularVelocity)
+      : params["angular"] !== undefined ? vectorMagnitude(params["angular"])
+        : request.physicalContext?.currentAngularVelocityRps,
+    currentContactForceNewtons: request.physicalContext?.currentContactForceNewtons,
     position: request.physicalContext?.currentPosition
       ? {
           x: request.physicalContext.currentPosition.x,
@@ -99,33 +124,36 @@ export function checkConstraints(
       ? Math.min(token.constraints.maxVelocityMps, overrides.maxVelocityMps)
       : (overrides?.maxVelocityMps ?? token.constraints.maxVelocityMps);
 
-  // Force check
-  if (
-    effectiveMaxForce !== undefined &&
-    context.commandedForceNewtons !== undefined &&
-    context.commandedForceNewtons > effectiveMaxForce
-  ) {
-    violations.push({
-      constraint: "maxForceNewtons",
-      limit: effectiveMaxForce,
-      actual: context.commandedForceNewtons,
-      message: `Force ${context.commandedForceNewtons}N exceeds limit ${effectiveMaxForce}N${overrides?.maxForceNewtons !== undefined ? " (dynamic envelope)" : ""}`,
-    });
-  }
+  const checkLimit = (
+    constraint: string,
+    limit: number | undefined,
+    actual: number | undefined,
+    unit: string,
+    suffix = "",
+  ): void => {
+    if (limit === undefined || actual === undefined) return;
+    if (!Number.isFinite(actual) || Math.abs(actual) > limit) {
+      violations.push({
+        constraint,
+        limit,
+        actual: Number.isFinite(actual) ? actual : "invalid",
+        message: Number.isFinite(actual)
+          ? `${constraint} ${actual}${unit} exceeds limit ${limit}${unit}${suffix}`
+          : `${constraint} requires a finite numeric value`,
+      });
+    }
+  };
 
-  // Velocity check
-  if (
-    effectiveMaxVelocity !== undefined &&
-    context.commandedVelocityMps !== undefined &&
-    context.commandedVelocityMps > effectiveMaxVelocity
-  ) {
-    violations.push({
-      constraint: "maxVelocityMps",
-      limit: effectiveMaxVelocity,
-      actual: context.commandedVelocityMps,
-      message: `Velocity ${context.commandedVelocityMps}m/s exceeds limit ${effectiveMaxVelocity}m/s${overrides?.maxVelocityMps !== undefined ? " (dynamic envelope)" : ""}`,
-    });
-  }
+  checkLimit("maxForceNewtons", effectiveMaxForce, context.commandedForceNewtons, "N",
+    overrides?.maxForceNewtons !== undefined ? " (dynamic envelope)" : "");
+  checkLimit("maxVelocityMps", effectiveMaxVelocity, context.commandedVelocityMps, "m/s",
+    overrides?.maxVelocityMps !== undefined ? " (dynamic envelope)" : "");
+  checkLimit("maxTorqueNm", token.constraints.maxTorqueNm, context.commandedTorqueNm, "Nm");
+  checkLimit("maxJerkMps3", token.constraints.maxJerkMps3, context.commandedJerkMps3, "m/s³");
+  checkLimit("maxAngularVelocityRps", token.constraints.maxAngularVelocityRps,
+    context.commandedAngularVelocityRps, "rad/s");
+  checkLimit("contactForceThresholdN", token.constraints.contactForceThresholdN,
+    context.currentContactForceNewtons, "N");
 
   // Geofence check
   if (token.constraints.geofence && context.position) {
