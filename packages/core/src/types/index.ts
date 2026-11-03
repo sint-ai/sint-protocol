@@ -10,6 +10,7 @@ export * from "./compliance.js";
 export * from "./protocol.js";
 export * from "./mission-authority.js";
 export * from "./kinetic-envelope.js";
+export * from "./continuous-effect.js";
 export * from "./factory-trace-bundle.js";
 export * from "./trace-bundle.js";
 export * from "./inspection.js";
