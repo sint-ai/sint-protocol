@@ -57,6 +57,7 @@ function state(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
     },
     obstacles: [{
       id: "human-7",
+      frameId: "map",
       position: { x: 1.8, y: 2.2, z: 0 },
       radiusMeters: 0.35,
       observedAt,
@@ -517,6 +518,7 @@ describe("createROS2WorldSnapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: undefined as unknown as string,
@@ -531,6 +533,7 @@ describe("createROS2WorldSnapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: "  ",
@@ -545,6 +548,7 @@ describe("createROS2WorldSnapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: ` ${observedAt}`,
@@ -559,6 +563,7 @@ describe("createROS2WorldSnapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: observedAt.replace("Z", "+00:00"),
@@ -573,6 +578,7 @@ describe("createROS2WorldSnapshot", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: new Date(now - 50).toISOString(),
@@ -1131,6 +1137,7 @@ describe("createROS2WorldSnapshot", () => {
       ...state(),
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt: sensorAt,
@@ -1816,6 +1823,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -1932,6 +1940,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0.4 },
         radiusMeters: 0.35,
         observedAt,
@@ -1947,6 +1956,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -1963,6 +1973,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -1979,6 +1990,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -1995,12 +2007,28 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
         uncertainty: 0.08,
         positionUncertaintyMeters: 0.05,
         velocityUncertaintyMps: 0.2,
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects an obstacle that omits its frame", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        id: "human-7",
+        position: { x: 1.8, y: 2.2, z: 0 },
+        radiusMeters: 0.35,
+        observedAt,
+        uncertainty: 0.08,
+        positionUncertaintyMeters: 0.05,
       }],
     }), { now: () => now });
 
@@ -2028,6 +2056,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: "   ",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -2042,6 +2071,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
         id: " human-7",
+        frameId: "map",
         position: { x: 1.8, y: 2.2, z: 0 },
         radiusMeters: 0.35,
         observedAt,
@@ -2057,6 +2087,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
       obstacles: [
         {
           id: "human-7",
+          frameId: "map",
           position: { x: 1.8, y: 2.2, z: 0 },
           radiusMeters: 0.35,
           observedAt,
@@ -2064,6 +2095,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         },
         {
           id: " human-7",
+          frameId: "map",
           position: { x: 3.1, y: 0.4, z: 0 },
           radiusMeters: 0.2,
           observedAt,

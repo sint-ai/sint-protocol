@@ -586,7 +586,7 @@ function sourceFrameDisagrees(snapshotFrame: string, frameId: string | undefined
   return frameId !== undefined && frameId !== snapshotFrame;
 }
 
-/** A declared odometry, map, or obstacle frame must be the snapshot frame. */
+/** A declared odometry or map frame must be the snapshot frame. Every obstacle frame must be present and equal to it. */
 function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefined {
   if (sourceFrameDisagrees(input.frameId, input.odometry?.frameId)) {
     return "odometry frame does not match the snapshot frame";
@@ -606,7 +606,7 @@ function validateCrossSourceFrames(input: ROS2WorldStateInput): string | undefin
     return "map frame does not match the snapshot frame";
   }
   for (const obstacle of input.obstacles ?? []) {
-    if (sourceFrameDisagrees(input.frameId, obstacle.frameId)) {
+    if (typeof obstacle.frameId !== "string" || obstacle.frameId !== input.frameId) {
       return "obstacle frame does not match the snapshot frame";
     }
   }
