@@ -469,6 +469,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (obstacle.kind === "static" && obstacle.positionUncertaintyMeters === undefined) {
       return "static obstacle requires a position uncertainty";
     }
+    if (obstacle.kind === "human" && obstacle.positionUncertaintyMeters === undefined) {
+      return "human obstacle requires a position uncertainty";
+    }
     if (
       obstacle.kind === "static"
       && obstacle.velocityUncertaintyMps !== undefined
