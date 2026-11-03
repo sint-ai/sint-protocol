@@ -431,6 +431,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || obstacle.id !== obstacle.id.trim()
       || (typeof obstacle.frameId === "string" && obstacle.frameId.trim().length === 0)
       || obstacle.position === null
+      || obstacle.position === undefined
       || !isFiniteNumber(obstacle.position.x)
       || !isFiniteNumber(obstacle.position.y)
       || !isFiniteNumber(obstacle.position.z)
