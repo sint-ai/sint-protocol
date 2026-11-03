@@ -1794,6 +1794,18 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a human obstacle that has no position uncertainty", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        ...base.obstacles![0]!,
+        kind: "human",
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a static obstacle with a nonzero velocity uncertainty", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
@@ -1815,6 +1827,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         ...base.obstacles![0]!,
         kind: "human",
         velocityUncertaintyMps: 0.2,
+        positionUncertaintyMeters: 0.05,
       }],
     }), { now: () => now });
 
@@ -1843,6 +1856,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         ...base.obstacles![0]!,
         kind: "human",
         velocityMps: { x: 0, y: 0.4, z: 0.2 },
+        positionUncertaintyMeters: 0.05,
       }],
     }), { now: () => now });
 
@@ -1887,6 +1901,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         kind: "human",
         position: { x: 1.8, y: 2.2, z: 0.4 },
         velocityMps: { x: 0, y: 0.4, z: 0 },
+        positionUncertaintyMeters: 0.05,
       }],
     }), { now: () => now });
 
