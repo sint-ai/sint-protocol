@@ -466,6 +466,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     if (obstacle.kind === "dynamic" && obstacle.positionUncertaintyMeters === undefined) {
       return "dynamic obstacle requires a position uncertainty";
     }
+    if (obstacle.kind === "static" && obstacle.positionUncertaintyMeters === undefined) {
+      return "static obstacle requires a position uncertainty";
+    }
     if (
       obstacle.kind === "static"
       && obstacle.velocityUncertaintyMps !== undefined
