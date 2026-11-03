@@ -673,9 +673,10 @@ export class PolicyGateway {
           "TOKEN_REVOKED",
           "Capability token has been revoked",
         );
-        this.emitEvent("policy.evaluated", request.agentId, request.tokenId, {
+        failures.emit("policy.evaluated", request.agentId, request.tokenId, {
           decision: decision.action,
           tier: decision.assignedTier,
+          risk: decision.assignedRisk,
           policyViolated: "TOKEN_REVOKED",
         });
         return decision;
