@@ -177,6 +177,7 @@ function isNormalized(value: number | undefined): boolean {
 }
 
 function isFinitePose(pose: Pose): boolean {
+  if (pose?.position == null) return false;
   return [
     pose.position.x,
     pose.position.y,
