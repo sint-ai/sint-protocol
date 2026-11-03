@@ -490,6 +490,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       return "human obstacle velocity uncertainty is not zero";
     }
     if (
+      obstacle.kind === undefined
+      && obstacle.velocityUncertaintyMps !== undefined
+      && obstacle.velocityUncertaintyMps > 0
+    ) {
+      return "unclassified obstacle velocity uncertainty is not zero";
+    }
+    if (
       obstacle.kind === "dynamic"
       && obstacle.velocityMps !== undefined
       && obstacle.velocityMps.z !== 0
