@@ -56,6 +56,11 @@ pnpm run build
 
 ## Supported Surface
 
+The named production topology is `gateway-postgres-redis`: one
+`apps/gateway-server` process, PostgreSQL for tokens and the ledger, and Redis
+for cache and revocation. The environment contract is
+`docs/guides/gateway-production-hardening.md`.
+
 The current production slice covers:
 
 - `apps/gateway-server`

@@ -51,16 +51,18 @@ required simulation evidence before dispatch.
 
 ## What Ships Today
 
-The repository already ships a production-minded protocol surface:
+The supported production slice is one gateway, PostgreSQL for tokens and the
+ledger, and Redis for cache and revocation:
 
-- fail-closed gateway patterns with durable PostgreSQL + Redis backing
+- fail-closed gateway startup when `SINT_ENV=production`
+- capability tokens, `PolicyGateway.intercept()`, and the hash-chained ledger
 - approval streaming and operator workflows
-- bridge coverage across MCP, A2A, ROS 2, MAVLink, OPC UA, MQTT/Sparkplug,
-  Open-RMF, Matter, Home Assistant, health, economy, and related execution
-  paths
-- certification and conformance lanes for protocol, industrial, and security
-  behavior
-- physical AI collaboration fixtures for:
+- the walkthrough in [Production Slice Verification](./guides/production-slice-verification.md)
+
+Other execution paths have code in the repo and are not part of that slice.
+Home Assistant, Matter, and health packages skip build, typecheck, and tests.
+Certification and conformance lanes cover protocol, industrial, and security
+behavior. Collaboration fixtures exist for:
   - Open-RMF fleet handoffs
   - MoveIt manipulation execution
   - Nav2 navigation and docking
@@ -115,16 +117,11 @@ real floor:
 - what human approval is required
 - what receipt gets written after execution or refusal
 
-The planned factory-control primitives are:
+The shipped factory-control primitives are `FactoryIntent`, `CellGraph`,
+`RobotActionProfile`, `SimulationReceipt`, and the industrial policy pack.
+Settlement metadata for reusable industrial skills is not part of that pack.
 
-- `FactoryIntent`
-- `CellGraph`
-- `RobotActionProfile`
-- `SimulationReceipt`
-- industrial policy packs
-- settlement metadata for reusable industrial skills and adapters
-
-The first shipped factory-control pack now includes:
+The shipped pack includes:
 
 - [Industrial Action Profile](./specs/sint-industrial-action-profile.md)
 - [Factory Intent Schema](./specs/factory-intent.schema.json)
@@ -157,9 +154,10 @@ on top of existing SINT receipts and policy events lives here:
 
 If you want the honest current protocol story in one sentence:
 
-SINT is moving from a broad reference architecture into a production protocol
-surface with stronger release gates, stronger evidence, and sharper integration
-boundaries for physical AI.
+The supported topology is gateway, PostgreSQL, and Redis. Factory control
+schemas and the conformance lanes around them are in the repo. Home Assistant,
+Matter, and health bridges are prototypes. Independent adopters and a
+multi-month outside maintainer are not claimed.
 
 ## MCP authorization semantics
 
