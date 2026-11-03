@@ -30,6 +30,8 @@ export type SintEventType =
   | "policy.evaluated"
   | "policy.plugin.failed"
   | "policy.decision.corrected"
+  | "policy.envelope.applied"
+  | "policy.envelope.fallback"
   | "approval.requested"
   | "approval.vote.recorded"
   | "approval.granted"

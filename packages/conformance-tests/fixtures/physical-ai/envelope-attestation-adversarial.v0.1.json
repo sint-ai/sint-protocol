@@ -1,0 +1,1489 @@
+{
+  "fixtureId": "envelope-attestation-adversarial-v0.1",
+  "schemaVersion": "0.1.0",
+  "profile": "physical-envelope-attestation-profile/v0.1",
+  "license": "Apache-2.0",
+  "description": "Shared adversarial fixture for condition-evidence → envelope selection → execution authorization. Co-designed with DriftCore OS / LifeCore-16. An implementation passes only if valid evidence activates the pre-authorized envelope AND every adversarial path leaves the tighter envelope active.",
+  "provenance": {
+    "requirementsSource": "Justin Gracie (DriftCore OS) review thread, five fixture requirements, 2026-09",
+    "sintReferenceRunner": "packages/conformance-tests/src/envelope-attestation-adversarial-conformance.test.ts",
+    "notes": [
+      "All times are millisecond offsets from `clock.epoch`. Runners must use an injectable clock; wall-clock runners are non-conforming.",
+      "Signer keys are generated per run by the runner. Only the trust relationships in `signers` are normative.",
+      "`outcome` is protocol-neutral: `pass` = the commanded value is inside the effective envelope and normal authorization continues; `violation` = the commanded value is outside the effective envelope; `refused` = the authorization layer declined to decide because the envelope source was unavailable and the deployment configured deny.",
+      "The effective envelope is min(authorizedLimits, activeEnvelope). Evidence may activate a pre-authorized envelope; it never widens beyond `authorizedLimits`.",
+      "A probe outside `authorizedLimits` may be refused by the authority layer before envelope selection runs (case 5b); such a violation need not carry an envelope binding."
+    ]
+  },
+  "clock": {
+    "epoch": "2026-09-22T00:00:00.000Z"
+  },
+  "signers": {
+    "fence-plc-a": {
+      "trusted": true
+    },
+    "fence-plc-b": {
+      "trusted": true
+    },
+    "rogue": {
+      "trusted": false
+    }
+  },
+  "deployment": {
+    "authorizedLimits": {
+      "maxVelocityMps": 1.5,
+      "maxForceNewtons": 150
+    },
+    "baseline": {
+      "envelopeId": "cell-a/collaborative",
+      "limits": {
+        "maxVelocityMps": 0.25,
+        "maxForceNewtons": 50
+      }
+    },
+    "permissive": {
+      "envelopeId": "cell-a/fenced",
+      "limits": {
+        "maxVelocityMps": 1.5,
+        "maxForceNewtons": 150
+      },
+      "requires": [
+        {
+          "condition": "fence_closed",
+          "value": true,
+          "minSources": 1
+        }
+      ]
+    },
+    "maxTtlMs": 10000,
+    "maxClockSkewMs": 1000,
+    "selectorFailurePolicy": {
+      "mode": "fallback",
+      "fallback": {
+        "maxVelocityMps": 0.25,
+        "maxForceNewtons": 50
+      }
+    }
+  },
+  "probe": {
+    "resource": "ros2:///cmd_vel",
+    "action": "publish",
+    "commandedVelocityMps": 1.0
+  },
+  "cases": [
+    {
+      "caseId": "1a",
+      "requirement": 1,
+      "name": "fresh, valid, correctly scoped evidence activates the pre-authorized envelope (load-bearing)",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-1a",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "events": [
+              "envelope.applied"
+            ],
+            "binding": {
+              "evidenceRefs": [
+                "ev-1a"
+              ],
+              "effectiveLimits": {
+                "maxVelocityMps": 1.5,
+                "maxForceNewtons": 150
+              },
+              "captureAs": "d1a"
+            }
+          }
+        },
+        {
+          "op": "probe",
+          "at": 150,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-1a"
+              ],
+              "evidenceDigestEquals": "d1a",
+              "envelopeDigestEquals": "d1a"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "1b",
+      "requirement": 1,
+      "name": "no evidence: baseline is active and the probe is outside it",
+      "steps": [
+        {
+          "op": "probe",
+          "at": 0,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation",
+            "binding": {
+              "evidenceRefs": [],
+              "effectiveLimits": {
+                "maxVelocityMps": 0.25,
+                "maxForceNewtons": 50
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "1c",
+      "requirement": 1,
+      "name": "baseline is admissible: a command inside the baseline passes without any evidence",
+      "steps": [
+        {
+          "op": "probe",
+          "at": 0,
+          "commandedVelocityMps": 0.2,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "pass"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2a",
+      "requirement": 2,
+      "name": "non-empty opaque proof string is unverifiable, not proof",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "proofOverride": "opaque-string",
+          "evidence": {
+            "evidenceId": "ev-2a",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "PROOF_INVALID"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2b",
+      "requirement": 2,
+      "name": "untrusted key signing on behalf of a trusted source is rejected",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "rogue",
+          "evidence": {
+            "evidenceId": "ev-2b",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "PROOF_INVALID"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2c",
+      "requirement": 2,
+      "name": "evidence altered after signing (signed FALSE, transmitted TRUE) is rejected",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "tamperAfterSigning": {
+            "value": true
+          },
+          "evidence": {
+            "evidenceId": "ev-2c",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": false,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "PROOF_INVALID"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2d",
+      "requirement": 2,
+      "name": "evidence already expired at ingestion is rejected",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2d",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": -6000,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "EVIDENCE_EXPIRED"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2e",
+      "requirement": 2,
+      "name": "expiry is evaluated at decision time with the same clock: no expiry race",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2e",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 4999,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 5000,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2f",
+      "requirement": 2,
+      "name": "zero, negative, over-maximum and unbounded TTLs are rejected",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2f-1",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 0
+          },
+          "expect": {
+            "accepted": false,
+            "code": "TTL_INVALID"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2f-2",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 2,
+            "issuedAt": 0,
+            "ttlMs": -1
+          },
+          "expect": {
+            "accepted": false,
+            "code": "TTL_INVALID"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2f-3",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 3,
+            "issuedAt": 0,
+            "ttlMs": 60000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "TTL_INVALID"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2f-4",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 4,
+            "issuedAt": 0,
+            "ttlMs": "unbounded"
+          },
+          "expect": {
+            "accepted": false,
+            "code": "TTL_INVALID"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2g",
+      "requirement": 2,
+      "name": "order independence: a newer signed FALSE retracts an earlier TRUE, and the old TRUE cannot be replayed",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2g-true",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 50,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 100,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2g-false",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": false,
+            "sequence": 2,
+            "issuedAt": 100,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 200,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 300,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2g-true",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "SEQUENCE_REPLAYED"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 400,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2g-reordered",
+      "requirement": 2,
+      "name": "order independence: FALSE arriving before an older TRUE still leaves the baseline active",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2gr-false",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": false,
+            "sequence": 2,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 100,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2gr-true",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "SEQUENCE_REPLAYED"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 200,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2h",
+      "requirement": 2,
+      "name": "conflicting evidence at the same sequence drops the source's reading until a strictly newer reading arrives",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2h-1",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 3,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 50,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 100,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2h-2",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 3,
+            "issuedAt": 100,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "SEQUENCE_CONFLICT"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 200,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 300,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2h-3",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 4,
+            "issuedAt": 300,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 400,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-2h-3"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2i",
+      "requirement": 2,
+      "name": "disagreement between trusted sources blocks activation (no majority vote)",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2i-a",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-b",
+          "evidence": {
+            "evidenceId": "ev-2i-b",
+            "sourceId": "fence-plc-b",
+            "condition": "fence_closed",
+            "value": false,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2j",
+      "requirement": 2,
+      "name": "M-of-N: a deployment requiring two independent attestors does not activate on one",
+      "deploymentOverride": {
+        "permissive": {
+          "envelopeId": "cell-a/fenced",
+          "limits": {
+            "maxVelocityMps": 1.5,
+            "maxForceNewtons": 150
+          },
+          "requires": [
+            {
+              "condition": "fence_closed",
+              "value": true,
+              "minSources": 2
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2j-a",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 200,
+          "signer": "fence-plc-b",
+          "evidence": {
+            "evidenceId": "ev-2j-b",
+            "sourceId": "fence-plc-b",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 200,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 300,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-2j-a",
+                "ev-2j-b"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2k",
+      "requirement": 2,
+      "name": "unregistered source is rejected before any cryptographic work",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "rogue",
+          "evidence": {
+            "evidenceId": "ev-2k",
+            "sourceId": "fence-plc-z",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "SOURCE_UNTRUSTED"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2l",
+      "requirement": 2,
+      "name": "future-dated evidence beyond clock skew is rejected",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2l",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 5000,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "EVIDENCE_FROM_FUTURE"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "2m",
+      "requirement": 2,
+      "name": "exact duplicate within one process is an explicit replay rejection",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2m",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 10,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-2m",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "SEQUENCE_REPLAYED"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "3a",
+      "requirement": 3,
+      "name": "verifier outage: no new activation, existing evidence expires into the baseline (demotion, not error)",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3a-1",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "verifier",
+          "at": 1000,
+          "state": "unavailable"
+        },
+        {
+          "op": "ingest",
+          "at": 1000,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3a-2",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 2,
+            "issuedAt": 1000,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "VERIFIER_UNAVAILABLE"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 1100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-3a-1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "probe",
+          "at": 5100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "verifier",
+          "at": 6000,
+          "state": "available"
+        },
+        {
+          "op": "ingest",
+          "at": 6000,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3a-3",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 3,
+            "issuedAt": 6000,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 6100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "3b",
+      "requirement": 3,
+      "name": "envelope selector fault: the authorization layer applies the deployment fallback envelope and records it",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3b",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "fault",
+          "at": 200,
+          "component": "envelope-selector",
+          "state": "throwing"
+        },
+        {
+          "op": "probe",
+          "at": 300,
+          "expect": {
+            "activeEnvelope": "fallback",
+            "outcome": "violation",
+            "events": [
+              "envelope.fallback"
+            ],
+            "binding": {
+              "effectiveLimits": {
+                "maxVelocityMps": 0.25,
+                "maxForceNewtons": 50
+              }
+            }
+          }
+        },
+        {
+          "op": "fault",
+          "at": 400,
+          "component": "envelope-selector",
+          "state": "healthy"
+        },
+        {
+          "op": "probe",
+          "at": 500,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "3c",
+      "requirement": 3,
+      "name": "envelope selector fault with deny policy: authorization is refused, never widened",
+      "deploymentOverride": {
+        "selectorFailurePolicy": {
+          "mode": "deny"
+        }
+      },
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3c",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "fault",
+          "at": 200,
+          "component": "envelope-selector",
+          "state": "throwing"
+        },
+        {
+          "op": "probe",
+          "at": 300,
+          "expect": {
+            "outcome": "refused",
+            "events": [
+              "envelope.fallback"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "3d",
+      "requirement": 3,
+      "name": "replay-store outage rejects ingestion and leaves state unchanged",
+      "steps": [
+        {
+          "op": "store",
+          "at": 0,
+          "state": "unavailable"
+        },
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-3d",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "STORE_UNAVAILABLE"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "4a",
+      "requirement": 4,
+      "name": "restart with a durable replay store: state is not carried over and old evidence cannot be replayed",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4a-5",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 5,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        },
+        {
+          "op": "restart",
+          "at": 2000,
+          "preserveSequenceStore": true
+        },
+        {
+          "op": "probe",
+          "at": 2100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 2200,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4a-5",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 5,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": [
+              "SEQUENCE_REPLAYED",
+              "EVIDENCE_PREDATES_BOOT"
+            ]
+          }
+        },
+        {
+          "op": "probe",
+          "at": 2300,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 2400,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4a-6",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 6,
+            "issuedAt": 2400,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 2500,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-4a-6"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "4b",
+      "requirement": 4,
+      "name": "restart without a durable replay store: pre-boot evidence is still rejected explicitly",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4b-5",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 5,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "restart",
+          "at": 2000,
+          "preserveSequenceStore": false
+        },
+        {
+          "op": "probe",
+          "at": 2100,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 2200,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4b-5",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 5,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": false,
+            "code": "EVIDENCE_PREDATES_BOOT"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 2300,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 2400,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-4b-6",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 6,
+            "issuedAt": 2400,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 2500,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "5a",
+      "requirement": 5,
+      "name": "authorization is bound to the exact evidence set: a new attestation or a demotion changes the binding",
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-5a-1",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-5a-1"
+              ],
+              "captureAs": "d1"
+            }
+          }
+        },
+        {
+          "op": "ingest",
+          "at": 200,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-5a-2",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 2,
+            "issuedAt": 200,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 300,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-5a-2"
+              ],
+              "evidenceDigestDiffersFrom": "d1",
+              "envelopeDigestDiffersFrom": "d1",
+              "captureAs": "d2"
+            }
+          }
+        },
+        {
+          "op": "probe",
+          "at": 6000,
+          "expect": {
+            "activeEnvelope": "cell-a/collaborative",
+            "outcome": "violation",
+            "binding": {
+              "evidenceRefs": [],
+              "envelopeDigestDiffersFrom": "d2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "5b",
+      "requirement": 5,
+      "name": "the binding names the effective limit: authorized limits below the permissive envelope still cap it (min of token and envelope)",
+      "deploymentOverride": {
+        "authorizedLimits": {
+          "maxVelocityMps": 0.5,
+          "maxForceNewtons": 150
+        }
+      },
+      "steps": [
+        {
+          "op": "ingest",
+          "at": 0,
+          "signer": "fence-plc-a",
+          "evidence": {
+            "evidenceId": "ev-5b",
+            "sourceId": "fence-plc-a",
+            "condition": "fence_closed",
+            "value": true,
+            "sequence": 1,
+            "issuedAt": 0,
+            "ttlMs": 5000
+          },
+          "expect": {
+            "accepted": true
+          }
+        },
+        {
+          "op": "probe",
+          "at": 100,
+          "expect": {
+            "outcome": "violation"
+          }
+        },
+        {
+          "op": "probe",
+          "at": 150,
+          "commandedVelocityMps": 0.4,
+          "expect": {
+            "activeEnvelope": "cell-a/fenced",
+            "outcome": "pass",
+            "binding": {
+              "evidenceRefs": [
+                "ev-5b"
+              ],
+              "effectiveLimits": {
+                "maxVelocityMps": 0.5,
+                "maxForceNewtons": 150
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

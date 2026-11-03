@@ -276,7 +276,7 @@ Profile v0.1** containing:
 1. a terminology and threat-model crosswalk;
 2. schemas for deployment envelope, enforcement attestation, and condition
    evidence;
-3. ten shared adversarial fixtures;
+3. a versioned shared adversarial fixture (25 v0.1 cases);
 4. Python and TypeScript conformance runners;
 5. one simulated fenced-cell demonstration;
 6. a residual-risk statement naming the physical protections the profile cannot
@@ -284,6 +284,18 @@ Profile v0.1** containing:
 
 This milestone is successful if both projects can reject the same unsafe cases.
 It does not require either project to adopt the other's architecture.
+
+Current progress:
+
+- the 25-case protocol-neutral v0.1 fixture, JSON Schema, SINT selector, and
+  TypeScript runner are implemented in
+  [`physical-envelope-attestation-profile-v0.1.md`](../specs/physical-envelope-attestation-profile-v0.1.md);
+- DriftCore has reviewed the case list and is preparing an independent outcome
+  report rather than claiming a pass before running it;
+- follow-up findings are recorded as v0.2 candidates while v0.1 remains stable
+  for that comparison;
+- the independent Python runner and simulated fenced-cell demonstration remain
+  open collaboration items.
 
 ## Open Questions For Review
 
