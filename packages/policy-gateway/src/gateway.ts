@@ -1370,12 +1370,12 @@ export class PolicyGateway {
           });
           if (computeProofFailure) return computeProofFailure;
         } else {
-          failures.emit("verifiable.compute.verified", request.agentId, request.tokenId, {
-            tier: tierAssignment.approvalTier,
-            proofType: proof.proofType,
-            proofRef: proof.proofRef,
-            verifierRef: proof.verifierRef,
-          });
+          return this.deny(
+            requestId,
+            timestamp,
+            "VERIFIABLE_COMPUTE_VERIFIER_REQUIRED",
+            "Verifiable compute proof required but no verifier plugin configured",
+          );
         }
       }
     }
