@@ -2116,6 +2116,23 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an obstacle whose velocity is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        id: "human-7",
+        frameId: "map",
+        position: { x: 1.8, y: 2.2, z: 0 },
+        velocityMps: null as unknown as { x: number; y: number; z: number },
+        radiusMeters: 0.35,
+        observedAt,
+        uncertainty: 0.08,
+        positionUncertaintyMeters: 0.05,
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an obstacle that omits its position", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{

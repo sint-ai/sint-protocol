@@ -439,6 +439,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || obstacle.radiusMeters < 0
       || (obstacle.positionUncertaintyMeters !== undefined
         && (!isFiniteNumber(obstacle.positionUncertaintyMeters) || obstacle.positionUncertaintyMeters < 0))
+      || obstacle.velocityMps === null
       || (obstacle.velocityMps !== undefined
         && ![obstacle.velocityMps.x, obstacle.velocityMps.y, obstacle.velocityMps.z].every(isFiniteNumber))
       || (obstacle.velocityUncertaintyMps !== undefined
