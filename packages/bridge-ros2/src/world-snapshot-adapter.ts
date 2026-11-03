@@ -415,7 +415,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   ) {
     return "map observation time is not canonical UTC";
   }
-  if ((input.obstacles ?? []).some((obstacle) => typeof obstacle.id !== "string")) {
+  if ((input.obstacles ?? []).some((obstacle) => obstacle === null || typeof obstacle.id !== "string")) {
     return "obstacle identity is not a string";
   }
   const obstacleIds = (input.obstacles ?? []).map((obstacle) => obstacle.id.trim());
