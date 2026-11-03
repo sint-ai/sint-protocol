@@ -13,6 +13,34 @@ The short version: SINT is moving from a broad reference stack into a
 production-ready protocol surface with sharper release gates, clearer evidence,
 and more credible external collaboration.
 
+## Where execution stands (2026-11-02)
+
+The supported production topology is `gateway-postgres-redis`: one gateway
+process, PostgreSQL for tokens and the ledger, and Redis for cache and
+revocation. The contract is
+[Gateway Production Hardening](./guides/gateway-production-hardening.md).
+Reuse it through
+[Production Slice Verification](./guides/production-slice-verification.md)
+and the examples under `examples/`.
+
+Release 0.1, the core slice, is implemented. CI on `main` was green at
+`2d0cfa6` on 2026-11-03, including the docs site and the industrial benchmark
+report. A schema migration and rollback rehearsal is still not recorded.
+
+Release 0.2, factory and VLA lineage, is 11 of 12 in the
+[unified delivery checklist](./roadmaps/unified-delivery-roadmap.md). The open
+item is a real guarded pilot of the orchestration service. That pilot has not
+been run.
+
+Release 0.3, an independent integrator path, has not started. Three boxes
+below stay open on purpose: an independent maintainer with a multi-month merge
+window, a named adopter outside the co-design cluster, and two or three
+external deployment or pilot signals. External pull requests are not those
+things.
+
+Home Assistant, Matter, and health packages still skip build, typecheck, and
+tests. They are outside the supported slice.
+
 ## What Landed Recently
 
 The current repo already includes:
@@ -127,7 +155,9 @@ The near-term goal is to finish tightening the core:
 - [x] robotics collaboration fixture pack
 - [x] merge the current production-readiness branch
 - [x] publish graph-first coordination upgrade roadmap lane
-- [ ] keep docs, README, and public protocol copy aligned
+- [x] keep docs, README, and public protocol copy aligned.
+  README, [the protocol page](./protocol.md), and this page name the same
+  supported slice. Home Assistant, Matter, and health stay labeled prototype.
 
 ## Q3 2026
 
@@ -136,13 +166,22 @@ environment.
 
 - [x] reference gateway path documented as the default durable deployment slice
 - [x] conformance and certification artifacts kept green on every release lane
-- [ ] at least one external collaborator thread turns into a shared fixture,
-  adapter sketch, or PR
+- [x] at least one external collaborator thread turns into a shared fixture,
+  adapter sketch, or PR.
+  [PR #266](https://github.com/sint-ai/sint-protocol/pull/266) and
+  [PR #242](https://github.com/sint-ai/sint-protocol/pull/242) from nmcitra
+  (kinetic envelope spec and vectors) and
+  [PR #174](https://github.com/sint-ai/sint-protocol/pull/174) from
+  ExpertVagabond (ROS 2 transport non-bypass example).
 - [ ] independent maintainer evidence accumulates across a real multi-month
   window
 - [ ] named adopter or pilot evidence improves beyond the immediate co-design
   cluster
-- [ ] highest-priority OpenSSF and dependency-review gaps are materially reduced
+- [x] highest-priority OpenSSF and dependency-review gaps are materially reduced.
+  [Issue #209](https://github.com/sint-ai/sint-protocol/issues/209) is closed,
+  [PR #328](https://github.com/sint-ai/sint-protocol/pull/328) cleared high and
+  critical audit advisories, and every row in the
+  [OpenSSF gap tracker](./community/openssf-gap-tracker.md) is done.
 - [x] Sprint 1 of the Factory Action Pack lands as a control-standard pack for
   prompt-generated industrial automation
 
@@ -150,12 +189,23 @@ environment.
 
 Q4 is about packaging the protocol so the story is stronger than the pitch.
 
-- [ ] public protocol page reflects what already ships, not just ambition
-- [ ] roadmap page reflects a real through-December execution plan
-- [ ] reference gateway, templates, and example integrations are clean enough to
-  reuse
+- [x] public protocol page reflects what already ships, not just ambition.
+  [Protocol page](./protocol.md) separates the supported slice from prototype
+  bridges.
+- [x] roadmap page reflects a real through-December execution plan.
+  The status section above is that plan, with the
+  [end-of-year execution plan](./roadmaps/end-of-year-2026-execution-plan.md).
+- [x] reference gateway, templates, and example integrations are clean enough to
+  reuse.
+  Follow [production-slice verification](./guides/production-slice-verification.md),
+  [gateway hardening](./guides/gateway-production-hardening.md), and
+  `examples/hello-world`, `examples/industrial-cell`,
+  `examples/mission-authority-reference-slice`, and
+  `examples/ros2-transport-hardening`.
 - [ ] 2-3 external deployment or pilot signals exist if the outreach lanes land
-- [ ] AAIF resubmission packet can be assembled from shipped evidence only
+- [x] AAIF resubmission packet can be assembled from shipped evidence only.
+  [Evidence packet, 2026-11-02](./community/aaif-resubmission-evidence-packet-2026-11.md).
+  It does not claim adopters or an independent maintainer.
 - [x] factory-control demo proves simulation-first execution and human approval
   before robot or PLC actions
 - [x] factory-control adapter profiles derive Universal Robots ROS2 and SRCI

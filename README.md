@@ -290,6 +290,11 @@ pnpm --filter @sint/bridge-mcp test
 
 ## Consumer Domains: Smart Home & Health
 
+`bridge-homeassistant`, `bridge-matter`, and `bridge-health` are prototypes.
+Their package scripts skip build, typecheck, and tests. They are not part of
+the supported production slice (gateway, PostgreSQL, Redis).
+
+
 SINT extends far beyond industrial robotics. Two major consumer domains now have governance frameworks:
 
 ### Consumer Smart Home (Home Assistant + Matter)
@@ -712,11 +717,11 @@ Extending SINT to consumer, health, and critical infrastructure domains:
 
 | Phase | Focus | Status | Examples |
 |-------|-------|--------|----------|
-| **Phase 1** | Consumer Smart Home (Q2–Q3 2026) | ✅ Complete | [`bridge-homeassistant`](packages/bridge-homeassistant) — Home Assistant MCP interceptor with 12 device classes (locks, cameras, alarms, climate, robot vacuums). Tier-appropriate defaults: locks/alarms→T2, lights/climate→T1, cameras→T0. |
-| **Phase 2** | Matter Protocol Unification (Q3–Q4 2026) | ✅ Complete | [`bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices. Device discovery, service profiles, and tier assignment. |
-| **Phase 3** | Occupancy & Human Presence (2027) | 📋 Planned | `Δ_human` plugin: escalate robot vacuums to T2 when occupancy detected. Build on Phase 1 sensor fusion. |
-| **Phase 4** | Critical Infrastructure (2027–2028) | 📋 Planned | Power grids, water systems, industrial facilities. Formalized risk models and emergency-mode escalation. |
-| **Phase 5** | Health Fabric & Wellbeing (Q4 2026–Q1 2027) | ✅ Complete | [`bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect on-device processing, differential privacy ledger, and caregiver delegation tokens. HIPAA + GDPR alignment. |
+| **Phase 1** | Consumer Smart Home | Prototype | [`bridge-homeassistant`](packages/bridge-homeassistant) skips build, typecheck, and tests. Not in the supported production slice. |
+| **Phase 2** | Matter | Prototype | [`bridge-matter`](packages/bridge-matter) skips build, typecheck, and tests. Not in the supported production slice. |
+| **Phase 3** | Occupancy | Not a production claim | `packages/policy-gateway/src/plugins/delta-human.ts` is in the tree. The Home Assistant package around it is still a prototype. |
+| **Phase 4** | Critical infrastructure | Planned | No production claim. |
+| **Phase 5** | Health fabric | Prototype | [`bridge-health`](packages/bridge-health) skips build and typecheck. Not in the supported production slice. |
 
 See [docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) for full roadmap.
 
@@ -798,13 +803,13 @@ docker-compose up
 
 **Physical AI Governance (Consumer, Health, Critical Infrastructure)**
 
-- Physical AI Governance Roadmap 2026–2029: [`docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md`](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) — Complete phases 1–5 timeline and specifications
+- Physical AI Governance Roadmap 2026–2029: [`docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md`](docs/roadmaps/PHYSICAL_AI_GOVERNANCE_2026-2029.md) — timeline and specifications. Consumer, Matter, and health packages are prototypes.
 - Consumer smart home integration guide: [`docs/guides/consumer-smart-home-integration.md`](docs/guides/consumer-smart-home-integration.md) — Home Assistant + Matter setup and deployment
 - Home Assistant bridge package: [`packages/bridge-homeassistant`](packages/bridge-homeassistant) — 12 device classes with tier-appropriate defaults and occupancy-aware escalation
 - Matter protocol bridge: [`packages/bridge-matter`](packages/bridge-matter) — Unified smart home governance across Matter-certified devices
 - Health fabric bridge: [`packages/bridge-health`](packages/bridge-health) — FHIR R5 consent governance, HealthKit/Health Connect mapping, differential privacy ledger, caregiver delegation
-- Implementation status: [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) — Session completion report and artifact inventory
-- Execution summary: [`EXECUTION_SUMMARY.md`](EXECUTION_SUMMARY.md) — Phase completion metrics and deliverables
+- Implementation status: [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) — historical April 2026 note. Do not use its percentages.
+- Execution summary: [`EXECUTION_SUMMARY.md`](EXECUTION_SUMMARY.md) — historical. Do not use its percentages.
 - Master index: [`INDEX.md`](INDEX.md) — Complete documentation navigation
 
 ## Design Principles
@@ -815,7 +820,7 @@ docker-compose up
 4. **Append-only audit** — The evidence ledger is INSERT-only with SHA-256 hash chain integrity (I-G3)
 5. **Physical safety first** — Velocity, force, and geofence constraints live *in the token*, not in external config
 6. **Interface-first persistence** — Storage adapters implement clean interfaces; swap in-memory for Postgres/Redis
-7. **Fail-open on infrastructure** — Economy/rate-limit infrastructure failures do not block the safety path
+7. **Fail closed on enforcement** — A configured policy hook, ledger append, budget check, or rate limit that cannot finish denies the action. Optional replication and revocation-relay failures stay visible and do not grant authority.
 8. **E-stop universality** — The hardware E-stop bypasses all token checks and is unconditional (I-G2)
 
 ## References
