@@ -61,6 +61,7 @@ function state(overrides: Partial<ROS2WorldStateInput> = {}): ROS2WorldStateInpu
       radiusMeters: 0.35,
       observedAt,
       uncertainty: 0.08,
+      positionUncertaintyMeters: 0.05,
     }],
     safetyController: {
       controllerId: "safety-plc-1",
@@ -576,6 +577,7 @@ describe("createROS2WorldSnapshot", () => {
         radiusMeters: 0.35,
         observedAt: new Date(now - 50).toISOString(),
         uncertainty: 0.08,
+        positionUncertaintyMeters: 0.05,
       }],
       obstacleScanObservedAt: observedAt,
     }), { now: () => now });
@@ -1133,6 +1135,7 @@ describe("createROS2WorldSnapshot", () => {
         radiusMeters: 0.35,
         observedAt: sensorAt,
         uncertainty: 0.08,
+        positionUncertaintyMeters: 0.05,
       }],
       obstacleScanObservedAt: observedAt,
       sensors: [{
@@ -1776,6 +1779,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
         kind: "dynamic",
         velocityMps: { x: 0.2, y: 0, z: 0 },
         velocityUncertaintyMps: 0.1,
+        positionUncertaintyMeters: undefined,
       }],
     }), { now: () => now });
 
@@ -1788,6 +1792,7 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
       obstacles: [{
         ...base.obstacles![0]!,
         kind: "static",
+        positionUncertaintyMeters: undefined,
       }],
     }), { now: () => now });
 
@@ -1800,6 +1805,21 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
       obstacles: [{
         ...base.obstacles![0]!,
         kind: "human",
+        positionUncertaintyMeters: undefined,
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
+  it("rejects an unclassified obstacle that has no position uncertainty", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        id: "human-7",
+        position: { x: 1.8, y: 2.2, z: 0 },
+        radiusMeters: 0.35,
+        observedAt,
+        uncertainty: 0.08,
       }],
     }), { now: () => now });
 
