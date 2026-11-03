@@ -89,7 +89,7 @@ SINT v0.2 includes tier-gated proof hooks for critical actions:
 - Tokens MAY require proof metadata through `verifiableComputeRequirements`.
 - Requests MAY attach proof metadata through `executionContext.verifiableCompute`.
 - Gateways MUST fail-closed on required tiers when required proof metadata is absent, stale, or not allowlisted.
-- Deployments MAY provide a backend-specific verifier plugin (e.g., zkVM receipt verification).
+- Deployments MAY provide a backend-specific verifier plugin (e.g., zkVM receipt verification). When a required proof is present and no verifier plugin is configured, the gateway MUST deny with `VERIFIABLE_COMPUTE_VERIFIER_REQUIRED`. Proof metadata alone is not verification.
 
 ## Avatar/CSML Runtime
 
