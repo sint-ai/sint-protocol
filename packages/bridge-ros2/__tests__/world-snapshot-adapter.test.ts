@@ -1631,6 +1631,23 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an odometry pose whose position is null", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      odometry: {
+        ...base.odometry!,
+        value: {
+          ...base.odometry!.value,
+          pose: {
+            ...base.odometry!.value.pose,
+            position: null as unknown as { x: number; y: number; z: number },
+          },
+        },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
   it("rejects an odometry pose with a nonzero vertical position", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
