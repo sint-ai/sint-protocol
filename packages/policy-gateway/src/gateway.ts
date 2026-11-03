@@ -1411,14 +1411,17 @@ export class PolicyGateway {
     let envelopeEvidenceDigest: string | undefined;
     let envelopeEvidenceRefs: readonly string[] | undefined;
     if (this.config.dynamicEnvelope) {
-      let envelope: DynamicEnvelopeResult | undefined;
-      let failure: string | undefined;
-      try {
-        envelope = await this.config.dynamicEnvelope.computeEnvelope(request);
-      } catch (cause) {
-        failure = cause instanceof Error ? cause.message : String(cause);
-      }
-      if (envelope) {
+      let thrown: string | undefined;
+      const computed = await failures.run("dynamicEnvelope.compute", async () => {
+        try {
+          return await this.config.dynamicEnvelope!.computeEnvelope(request);
+        } catch (cause) {
+          thrown = cause instanceof Error ? cause.message : String(cause);
+          throw cause;
+        }
+      });
+      if (computed.ok) {
+      const envelope = computed.value;
         if (envelope.maxVelocityMps !== undefined || envelope.maxForceNewtons !== undefined) {
           envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, envelope);
           envelopeSource = "dynamic";
@@ -1440,13 +1443,14 @@ export class PolicyGateway {
         const tier = tierAssignment.approvalTier;
         const highConsequence = tier === "T2_act" || tier === "T3_commit";
         const configuredPolicy = this.config.dynamicEnvelopeFailurePolicy;
+        const fault = thrown ?? computed.error.kind;
         if (configuredPolicy?.mode === "fallback" && configuredPolicy.fallback) {
           envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, configuredPolicy.fallback);
           envelopeSource = "fallback";
           envelopeId = "fallback";
           failures.emit("policy.envelope.fallback", request.agentId, request.tokenId, {
             mode: "fallback",
-            error: failure,
+            error: fault,
             maxVelocityMps: configuredPolicy.fallback.maxVelocityMps,
             maxForceNewtons: configuredPolicy.fallback.maxForceNewtons,
           });
@@ -1458,25 +1462,18 @@ export class PolicyGateway {
         ) {
           failures.emit("policy.envelope.fallback", request.agentId, request.tokenId, {
             mode: "deny",
-            error: failure,
+            error: computed.error.kind,
           });
           return this.deny(
             requestId,
             timestamp,
             "DYNAMIC_ENVELOPE_UNAVAILABLE",
-            `Dynamic envelope unavailable (${failure ?? "unknown error"}); fail-closed`,
+            `Dynamic envelope unavailable (${computed.error.kind}); fail-closed`,
           );
         } else if (configuredPolicy?.mode === "fail-open") {
-          // Explicit fail-open is limited to T0/T1.
+          // Explicit fail-open is limited to T0/T1. The fault stays on the decision.
         } else {
-          const envelopeFailure = await failures.check(
-            "dynamicEnvelope.compute",
-            async () => {
-              throw new Error(failure ?? "dynamic envelope unavailable");
-            },
-            () => undefined,
-          );
-          if (envelopeFailure) return envelopeFailure;
+          return failures.deny(computed.error);
         }
       }
 

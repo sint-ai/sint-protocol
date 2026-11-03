@@ -52,7 +52,7 @@ const schemas: Record<string, z.ZodTypeAny> = {
   "csml.evaluateAgent": z.object({ escalated: z.boolean(), resultTier: tierSchema, csmlScore: z.number().finite().nullable(), reason: z.string() }),
   "safetyPermit.resolve": z.object({ permitState: z.enum(["granted", "denied", "unknown", "stale"]), observedAt: z.string().datetime({ offset: true }), source: z.string(), interlockState: z.enum(["closed", "open", "fault", "unknown"]).optional(), estopState: z.enum(["clear", "triggered", "unknown"]).optional() }),
   "argInjection.analyze": z.object({ detected: z.boolean(), patterns: strings, severity, confidence: z.number().min(0).max(1) }),
-  "dynamicEnvelope.compute": z.object({ maxVelocityMps: finiteNonnegative.optional(), maxForceNewtons: finiteNonnegative.optional(), reason: z.string().optional() }).strict(),
+  "dynamicEnvelope.compute": z.object({ maxVelocityMps: finiteNonnegative.optional(), maxForceNewtons: finiteNonnegative.optional(), reason: z.string().optional(), envelopeId: z.string().optional(), evidenceDigest: z.string().optional(), evidenceRefs: z.array(z.string()).optional() }).strict(),
   "humanAuthority.evaluate": decisionSchema.optional(),
   "spatialIntegrity.evaluate": decisionSchema.optional(),
   "regulatedData.evaluate": decisionSchema.optional(),
