@@ -12,7 +12,7 @@
     "test:predictive-safety-shadow": "vitest run src/predictive-safety-shadow-conformance.test.ts",
     "test:factory-action": "vitest run src/factory-action-demo-conformance.test.ts",
     "test:ros2-loop": "vitest run src/ros2-control-loop-latency.test.ts",
-    "test:continuous-effect": "vitest run src/continuous-effect-lifecycle-conformance.test.ts"
+    "test:continuous-effect": "vitest run src/continuous-effect-lifecycle-conformance.test.ts",
     "test:envelope-attestation": "vitest run src/envelope-attestation-adversarial-conformance.test.ts"
   },
   "devDependencies": {
