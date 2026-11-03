@@ -503,6 +503,13 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
     ) {
       return "human obstacle vertical velocity is not zero";
     }
+    if (
+      obstacle.kind === undefined
+      && obstacle.velocityMps !== undefined
+      && obstacle.velocityMps.z !== 0
+    ) {
+      return "unclassified obstacle vertical velocity is not zero";
+    }
     if (obstacle.kind === "static" && obstacle.position.z !== 0) {
       return "static obstacle vertical position is not zero";
     }
