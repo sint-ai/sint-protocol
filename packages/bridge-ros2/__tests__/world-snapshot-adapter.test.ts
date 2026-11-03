@@ -1754,6 +1754,19 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a dynamic obstacle that has no velocity uncertainty", () => {
+    const base = state();
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [{
+        ...base.obstacles![0]!,
+        kind: "dynamic",
+        velocityMps: { x: 0.2, y: 0, z: 0 },
+      }],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a static obstacle with a nonzero velocity uncertainty", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({

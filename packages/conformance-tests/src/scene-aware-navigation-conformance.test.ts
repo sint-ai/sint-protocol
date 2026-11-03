@@ -279,13 +279,13 @@ describe("scene-aware navigation conformance", () => {
     expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("fail");
   });
 
-  it("returns indeterminate for a moving object without a velocity error bound", async () => {
+  it("rejects a dynamic obstacle without a velocity uncertainty", async () => {
     const result = await simulate(scene({ obstacles: [{
       id: "unbounded-cart", frameId: "map", kind: "dynamic", position: { x: 0.5, y: 2, z: 0 },
       velocityMps: { x: 0, y: 0, z: 0 },
       radiusMeters: 0.1, positionUncertaintyMeters: 0.02, observedAt,
     }] }));
-    expect(result.ok && "result" in result.value ? result.value.result.outcome : undefined).toBe("indeterminate");
+    expect(result.ok ? undefined : result.error.code).toBe("INVALID_WORLD_STATE");
   });
 
   it("expands a person's reachable region beyond the most likely stationary path", async () => {
