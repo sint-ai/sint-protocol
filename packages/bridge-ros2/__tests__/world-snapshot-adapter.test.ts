@@ -2092,6 +2092,14 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects an undefined obstacle entry", () => {
+    const captured = createROS2WorldSnapshot(state({
+      obstacles: [undefined] as unknown as ROS2WorldStateInput["obstacles"],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects an obstacle identity that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       obstacles: [{
