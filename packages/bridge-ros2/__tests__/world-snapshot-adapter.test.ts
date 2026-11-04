@@ -179,6 +179,14 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a robot identity that is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      robotId: null as unknown as string,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot frame that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       frameId: "   ",
