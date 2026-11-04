@@ -317,7 +317,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   }
   const jointState = input.jointState?.value;
   if (jointState) {
-    if (!Array.isArray(jointState.name) || !Array.isArray(jointState.position)) {
+    if (!Array.isArray(jointState.name) || !Array.isArray(jointState.position) || !Array.isArray(jointState.velocity)) {
       return "jointState arrays must align with unique joint names";
     }
     const count = jointState.name.length;
