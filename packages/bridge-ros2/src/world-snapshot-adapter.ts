@@ -229,7 +229,8 @@ function inputUncertainties(input: ROS2WorldStateInput): readonly number[] {
 
 function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (
-    input.robotId.trim().length === 0
+    typeof input.robotId !== "string"
+    || input.robotId.trim().length === 0
     || input.robotId !== input.robotId.trim()
     || input.frameId.trim().length === 0
     || input.frameId !== input.frameId.trim()
