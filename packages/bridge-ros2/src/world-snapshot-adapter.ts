@@ -818,6 +818,7 @@ function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
     return "task phase, calibration digest, or policy digest is invalid";
   }
   const payload = task.payload;
+  if (payload === null) return "task payload identity, digest, or geometry is invalid";
   if (
     payload !== undefined
     && (payload.payloadId.trim().length === 0
