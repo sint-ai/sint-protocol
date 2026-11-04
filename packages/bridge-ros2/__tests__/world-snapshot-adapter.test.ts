@@ -2425,6 +2425,20 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a task payload that is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      task: {
+        phase: "transport",
+        toolId: "gripper-1",
+        payload: null as unknown as { payloadId: string; digest: string; radiusMeters: number },
+        calibrationDigest: "c".repeat(64),
+        policyDigest: "d".repeat(64),
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform parent frame that disagrees with the snapshot frame", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
