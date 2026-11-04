@@ -699,6 +699,7 @@ const WORLD_STATE_SOURCES: readonly ROS2WorldStateSource[] = [
 function validateSensors(input: ROS2WorldStateInput): string | undefined {
   const sensors = input.sensors;
   if (sensors === undefined) return undefined;
+  if (sensors === null) return "sensor list is null";
   const sensorIds = sensors.map((sensor) => sensor.sensorId.trim());
   if (new Set(sensorIds).size !== sensorIds.length) {
     return "sensor identities must be unique within a snapshot";
