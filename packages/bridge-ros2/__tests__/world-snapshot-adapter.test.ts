@@ -2698,6 +2698,17 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a joint effort list that is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      jointState: {
+        observedAt,
+        value: { name: ["left_wheel"], position: [1.2], velocity: [0.1], effort: null as unknown as number[] },
+      },
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a joint name that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       jointState: {
