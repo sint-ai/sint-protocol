@@ -187,6 +187,15 @@ describe("createROS2WorldSnapshot", () => {
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a snapshot frame that is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      frameId: null as unknown as string,
+      map: undefined,
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a snapshot frame that is only whitespace", () => {
     const captured = createROS2WorldSnapshot(state({
       frameId: "   ",
