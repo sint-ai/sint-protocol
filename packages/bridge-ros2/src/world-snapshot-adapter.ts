@@ -805,6 +805,7 @@ function sceneContractDigest(payload: ROS2WorldSnapshotPayload): string | undefi
 
 function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
   if (task === undefined) return undefined;
+  if (task === null) return "task binding is null";
   if (
     !task.phase
     || task.phase.trim().length === 0
