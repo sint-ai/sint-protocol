@@ -821,7 +821,8 @@ function validateTask(task: ROS2TaskBinding | undefined): string | undefined {
   if (payload === null) return "task payload identity, digest, or geometry is invalid";
   if (
     payload !== undefined
-    && (payload.payloadId.trim().length === 0
+    && (typeof payload.payloadId !== "string"
+      || payload.payloadId.trim().length === 0
       || payload.payloadId !== payload.payloadId.trim()
       || !isContentDigest(payload.digest)
       || !isFiniteNumber(payload.radiusMeters)
