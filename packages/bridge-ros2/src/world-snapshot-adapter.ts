@@ -377,6 +377,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if ((input.transforms ?? []).some((transform) => transform === undefined)) {
     return "transform entry is undefined";
   }
+  if ((input.transforms ?? []).some((transform) => transform.childFrame == null)) {
+    return "transform child frame is null";
+  }
   const childFrames = (input.transforms ?? []).map((transform) => transform.childFrame.trim());
   if (new Set(childFrames).size !== childFrames.length) {
     return "transform child frames must be unique within a snapshot";
