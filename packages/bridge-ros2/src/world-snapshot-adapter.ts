@@ -413,6 +413,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       return "transform observation time is not canonical UTC";
     }
   }
+  if (input.map === null) {
+    return "map is null";
+  }
   if (
     input.map
     && (typeof input.map.observedAt !== "string"

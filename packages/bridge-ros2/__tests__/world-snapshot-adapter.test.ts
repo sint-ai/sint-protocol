@@ -2379,6 +2379,14 @@ it("rejects an occupancy observation time with leading or trailing whitespace", 
     expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
   });
 
+  it("rejects a map that is null", () => {
+    const captured = createROS2WorldSnapshot(state({
+      map: null as unknown as ROS2WorldStateInput["map"],
+    }), { now: () => now });
+
+    expect(captured.ok ? undefined : captured.error.code).toBe("INVALID_WORLD_STATE");
+  });
+
   it("rejects a transform parent frame that disagrees with the snapshot frame", () => {
     const base = state();
     const captured = createROS2WorldSnapshot(state({
