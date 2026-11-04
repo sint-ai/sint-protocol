@@ -338,6 +338,7 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
       || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(input.odometry.observedAt)
       || !Number.isFinite(Date.parse(input.odometry.observedAt))
       || new Date(input.odometry.observedAt).toISOString() !== input.odometry.observedAt
+      || input.odometry.frameId === null
       || (input.odometry.frameId !== undefined && input.odometry.frameId.trim().length === 0)
       || !isFinitePose(input.odometry.value.pose)
       || !isUnitQuaternion(input.odometry.value.pose.orientation)
