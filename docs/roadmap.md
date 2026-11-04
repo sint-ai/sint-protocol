@@ -69,6 +69,9 @@ As of May 2026, the repo should optimize for this order:
 
 The authoritative cross-sprint execution order and evidence reconciliation are
 in the [Unified Delivery Roadmap](./roadmaps/unified-delivery-roadmap.md).
+The [one completion queue](./roadmaps/unified-delivery-roadmap.md#one-completion-queue)
+in that file is the only list of what is still open on the other roadmaps.
+It does not change the public 25 of 28.
 
 ### Priority 1. Trust And Evidence
 

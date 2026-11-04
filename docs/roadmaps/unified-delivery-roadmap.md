@@ -1,7 +1,7 @@
 # SINT Unified Delivery Roadmap
 
 **Status:** active execution plan  
-**Updated:** 2026-10-24
+**Updated:** 2026-11-04
 
 **Supersedes for prioritization:** feature-first ordering in legacy phase and
 session-status documents. Those documents remain historical evidence, not the
@@ -16,6 +16,10 @@ single delivery sequence is therefore:
 2. complete the data-to-physical-action trust chain for the factory/VLA lane;
 3. convert completed internal adapters and fixtures into independent evidence;
 4. expand one adjacent vertical only after the prior release gate is green.
+
+The [one completion queue](#one-completion-queue) below is the only active list
+of what is still open across the other roadmap files. It does not change the
+public 25 of 28.
 
 No new bridge, city, health, consumer, or protocol track is a production claim
 until it has a typed build, conformance coverage, a supported deployment
@@ -34,7 +38,7 @@ contract, and an operator-facing failure path.
 | Post-quantum agility | Token metadata and fail-closed handling are implemented. | PQ verifier, hybrid issuance, ledger hash migration, transport hardening. | P2 |
 | Consumer / health / Matter | Code exists but older phase reports conflict and some packages declare prototype build/typecheck behavior. | Reconcile status by passing typed build/tests; no production claim until the prototype exemptions are removed. | P3 |
 | HRI, edge/nano, smart-city, roadway, graph coordination | Valuable proposed tracks, not release-gated work. | A funded or partnered use case plus a scoped design and conformance plan. | Deferred |
-| AAIF / external validation | Evidence plan and contributor workflows exist. | Independent adopters, sustained independent maintainer activity, external artifacts, and OpenSSF gap closure. | Ongoing, external |
+| AAIF / external validation | Evidence plan, contributor workflows, the OpenSSF profile, and the `v0.3.0-rc1` release gate exist. | Named independent adopters, a 90-day independent maintainer, a recorded live gateway run, and a filled stage proposal. | Ongoing, external |
 
 ## Executable sequence
 
@@ -110,3 +114,62 @@ backlog, not active sprint commitments.
 - [x] Provide and verify the hash-chained EvidenceLedger adapter.
 - [ ] Validate the orchestration service in a real guarded pilot.
 - [x] Run the full build/typecheck/test/docs/fixture and explicit service gates; record non-core prototype exemptions in the [foundation release evidence](../reports/foundation-release-2026-10-24.md).
+
+## One completion queue
+
+This is the only active list of what is still open. Each count stays on its own page. None of them is added to the public 25 of 28 in [docs/roadmap.md](../roadmap.md).
+
+A box is checked on its own page only when an artifact already in this repo proves it. A merged pull request is not an adopter, not a 90-day maintainer, and not a pilot.
+
+### Public roadmap
+
+Still 25 of 28. These three stay open:
+
+- an independent maintainer with a real multi-month merge window
+- a named adopter or pilot outside the co-design cluster
+- two or three external deployment or pilot signals
+
+### This page
+
+Still 11 of 12. The open line is a real guarded pilot of the orchestration service. That pilot has not been run.
+
+Release 0.1 still has one unrecorded proof: a schema migration and rollback rehearsal. That is the next repo slice. It does not check one of the three public boxes.
+
+### AAIF resubmission
+
+Two lines on [the AAIF checklist](./aaif-resubmission-2026.md) are checked because the artifacts were already in the repo:
+
+- the OpenSSF profile is published and every row in the gap tracker is done
+- `v0.3.0-rc1` passed build, test, docs build, and conformance ([release-gate report](../reports/aaif-release-gate-2026-05-21.md), issue #207)
+
+These stay open:
+
+- two or more named independent production adopters
+- one independent maintainer with 90 or more days of sustained merges
+- a reference gateway that is built, released, and running from the public docs (a live run is not recorded)
+- a filled proposal that separates co-design, interop, pilot, and production (the template exists; a submission does not)
+- a filled proposal that asks for the stage the evidence supports (the rubric exists; a filled ask does not)
+
+### Later repo slices, one behavior each
+
+After the migration rehearsal is recorded:
+
+1. Predictive safety lines that a test can prove, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
+2. Integration tests for expiry during an active effect and a duplicate stop, from the continuous-effect research note.
+3. One expansion lane only after that. Home Assistant, Matter, and health stay outside the supported slice until their build, typecheck, and tests run.
+
+### Held outside this repo
+
+Do not check these from a code change:
+
+- OATR production deploy, DNS, the well-known document, the maintainer ping, and the badge
+- launch posts, Hacker News, Discord, and directory listings
+- the OWASP form and its response
+- bug-bounty vendor choice, reward budget, and a live announcement
+- US defense legal, registration, and facility items
+- an email to AAIF, a recorded reply, and an RFC reference in AAIF docs
+- the legacy phase archive. Postgres and Redis are already the supported topology on the public roadmap. That archive is not a score.
+
+### Lanes with no checkbox score
+
+These stay lanes. They are not summed into a percent: the embodied-authorization whitepaper, the end-of-year 2026 plan, factory sprints, dexterous automation, consumer TV, deployment readiness, ecosystem outreach, graph coordination, hardware safety controllers, human–agent authority, humanoid governance, humanoid integrations, the shipyard sprint, the 120-day mission-authority plan, post-quantum agility, roadway edge intelligence, the spatial mission sprint, physical AI governance through 2029, and the DriftCore research proposal. DriftCore is a proposal for review. It is not a partnership.

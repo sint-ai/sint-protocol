@@ -201,9 +201,15 @@ Do not resubmit until all required items are true:
       activity
 - [ ] reference gateway is built, released, and running from public docs
 - [x] conformance tooling is packaged and externally runnable
-- [ ] OpenSSF Best Practices profile page is published and major gaps are
-      tracked or resolved
-- [ ] release candidate has passed build, test, docs, and conformance gates
+- [x] OpenSSF Best Practices profile page is published and major gaps are
+      tracked or resolved.
+      [OpenSSF Best Practices Project Profile](../community/openssf-best-practices-profile.md)
+      and the [OpenSSF gap tracker](../community/openssf-gap-tracker.md). Every
+      row in that tracker is done.
+- [x] release candidate has passed build, test, docs, and conformance gates.
+      [AAIF Release Gate Evidence, 2026-05-21](../reports/aaif-release-gate-2026-05-21.md)
+      records PASS for `v0.3.0-rc1` on build, test, docs build, and conformance,
+      linked from issue #207.
 - [ ] proposal distinguishes co-design, interop, pilot, and production evidence
 - [ ] proposal asks for the correct AAIF stage based on the evidence available
       at that time
