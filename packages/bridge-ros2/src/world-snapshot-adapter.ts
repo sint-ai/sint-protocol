@@ -371,6 +371,9 @@ function validateStructure(input: ROS2WorldStateInput): string | undefined {
   if (input.odometry && input.odometry.value.pose.orientation.y !== 0) {
     return "odometry pitch is not zero";
   }
+  if (input.transforms === null) {
+    return "transform list is null";
+  }
   if ((input.transforms ?? []).some((transform) => transform === null)) {
     return "transform entry is null";
   }
