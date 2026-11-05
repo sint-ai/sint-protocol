@@ -104,6 +104,8 @@ export {
 export type { QoSProfile } from "./ros2-qos.js";
 export { ROS2Interceptor } from "./ros2-interceptor.js";
 export type { ROS2InterceptorConfig } from "./ros2-interceptor.js";
+export { publishRos2CmdVelTick } from "./runtime-shield.js";
+export type { Ros2CmdVelTick, Ros2TickPublisher } from "./runtime-shield.js";
 export type {
   ROS2TopicMessage,
   ROS2ServiceCall,

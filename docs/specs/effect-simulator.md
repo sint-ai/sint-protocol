@@ -29,7 +29,10 @@ returns an authorization decision.
 7. T2/T3 requests still enter the approval workflow. The execution broker
    atomically consumes the receipt nonce immediately before dispatch.
 8. A local runtime shield rechecks current state and retains unconditional
-   E-stop authority.
+   E-stop authority. The ROS 2 reference, `publishRos2CmdVelTick` in
+   `@pshkv/bridge-ros2`, publishes a cmd_vel linear tick at the token
+   `maxVelocityMps` and does not publish a faster forward or reverse tick.
+   That check does not authorize and does not read a simulation receipt.
 
 Preflight has `authorizesExecution: false`. Possession of a preflight response
 or simulation receipt never permits execution without the final gateway
