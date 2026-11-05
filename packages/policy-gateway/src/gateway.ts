@@ -1203,6 +1203,21 @@ export class PolicyGateway {
             });
             return simulationDecision;
           }
+          if (simulationDecision.denial?.policyViolated === "SIMULATION_MODEL_GAP") {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Unsupported phenomena require human review",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
         if (!simulationDecision && request.executionContext?.simulationEvidence) {
           failures.emit("simulation.receipt.verified", request.agentId, request.tokenId, {

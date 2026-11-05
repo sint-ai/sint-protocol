@@ -213,8 +213,8 @@ declared safe fallback without disabling E-stop or the local shield.
 - [ ] publish per-model calibration error and confidence thresholds
 - [ ] introduce scenario fuzzing for sensor delay, actor motion, localization
   error, dropped messages, actuator lag, and adversarial parameters
-- [ ] require human review when uncertainty or unsupported-phenomena fields are
-  non-empty
+- [x] require human review when unsupported phenomena are non-empty: a T1 shadow request that names a model gap escalates instead of being allowed
+- [ ] require human review when the uncertainty field is non-empty
 - [ ] canary mandatory evidence for one T2 action family at one pilot site
 
 Exit gate: false-negative safety escapes are zero in the agreed evaluation
