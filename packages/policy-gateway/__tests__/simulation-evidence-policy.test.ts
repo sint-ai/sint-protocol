@@ -203,6 +203,55 @@ function tieredGateway(token: SintCapabilityToken): PolicyGateway {
   });
 }
 
+async function corridorTick(linearX: number) {
+  const corridorId = "aisle-7";
+  const maxVelocityMps = 0.5;
+  const issued = issueCapabilityToken({
+    issuer: issuer.publicKey,
+    subject: agent.publicKey,
+    resource: "ros2:///cmd_vel",
+    actions: ["publish"],
+    constraints: {},
+    executionEnvelope: {
+      corridorId,
+      maxVelocityMps,
+      expiresAt: iso(now + 3_600_000),
+    },
+    delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
+    expiresAt: iso(now + 3_600_000),
+    revocable: false,
+  }, issuer.privateKey);
+  if (!issued.ok) throw new Error(issued.error);
+  const token = issued.value;
+  const corridor = {
+    corridorId,
+    expiresAt: iso(now + 3_600_000),
+  };
+  const plan: SintRequest = {
+    requestId: generateUUIDv7(),
+    timestamp: iso(now),
+    agentId: agent.publicKey,
+    tokenId: token.tokenId,
+    resource: "ros2:///cmd_vel",
+    action: "publish",
+    params: { corridorId, maxVelocityMps },
+    executionContext: { preapprovedCorridor: corridor },
+  };
+  const receipt = signedReceipt(plan, token, (draft) => ({
+    ...draft,
+    result: { ...draft.result, maxVelocityMps },
+  }));
+  return gateway(token).value.intercept({
+    ...plan,
+    requestId: generateUUIDv7(),
+    params: { linear: { x: linearX } },
+    executionContext: {
+      preapprovedCorridor: corridor,
+      simulationEvidence: receipt,
+    },
+  });
+}
+
 describe("predictive simulation evidence policy", () => {
   it("allows the normal gateway pipeline to continue for a valid bound receipt", async () => {
     const token = makeToken();
@@ -655,5 +704,24 @@ describe("predictive simulation evidence policy", () => {
     });
 
     expect(decision.denial?.policyViolated).toBe("SIMULATION_BINDING_MISMATCH");
+  });
+
+  it("escalates a T2 cmd_vel tick at the pre-simulated corridor velocity", async () => {
+    const decision = await corridorTick(0.5);
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T2_ACT);
+  });
+
+  it("denies a T2 cmd_vel tick faster than the pre-simulated corridor velocity", async () => {
+    const decision = await corridorTick(1.2);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_CORRIDOR_VELOCITY");
+  });
+
+  it("denies a reverse T2 cmd_vel tick faster than the pre-simulated corridor velocity", async () => {
+    const decision = await corridorTick(-1.2);
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_CORRIDOR_VELOCITY");
   });
 });
