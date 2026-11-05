@@ -103,4 +103,36 @@ describe("ContinuousEffectCoordinator", () => {
     });
     expect(intercept).toHaveBeenCalledOnce();
   });
+
+  it("stops an active effect when the lease expires before renewal", async () => {
+    const start = Date.parse("2026-09-11T00:00:00.000Z");
+    let now = start;
+    const gateway = new PolicyGateway({ resolveToken: () => undefined });
+    const intercept = vi.spyOn(gateway, "intercept").mockResolvedValue(allowed);
+    const stopEffect = vi.fn();
+    const events: string[] = [];
+    const coordinator = new ContinuousEffectCoordinator(gateway, {
+      stopEffect,
+      now: () => now,
+      leaseDurationMs: 1_000,
+      emitLedgerEvent: (event) => events.push(event.eventType),
+    });
+
+    const admitted = await coordinator.admit(request);
+    if (!admitted.ok) throw new Error("admission should succeed");
+    expect(admitted.value.lease.state).toBe("ACTIVE");
+
+    now = start + 1_000;
+    const expired = await coordinator.renew(admitted.value.lease.leaseId, request);
+
+    expect(intercept).toHaveBeenCalledOnce();
+    expect(stopEffect).toHaveBeenCalledOnce();
+    expect(stopEffect).toHaveBeenCalledWith(
+      expect.objectContaining({ state: "SUSPENDED", leaseId: admitted.value.lease.leaseId }),
+      "lease expired",
+    );
+    expect(expired).toMatchObject({ ok: false, error: { code: "RENEWAL_DENIED", state: "ROLLEDBACK" } });
+    expect(coordinator.get(admitted.value.lease.leaseId)?.state).toBe("ROLLEDBACK");
+    expect(events).toEqual(["safety.estop.triggered", "action.rolledback"]);
+  });
 });

@@ -79,7 +79,10 @@ The current change set implements the smallest safe slice:
   `PolicyGateway.intercept()` first.
 - `ContinuousEffectCoordinator` owns lease bookkeeping and invokes the gateway
   for admission and every renewal. Renewal denial and deadline expiry invoke a
-  configured stop callback and emit rollback evidence.
+  configured stop callback and emit rollback evidence. A renewal after
+  `expiresAt` stops the active lease and does not call `intercept()` again.
+  That case is
+  `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`.
 - Terminal `ROLLEDBACK` and `COMPLETED` states reject later renewal or other
   lifecycle events.
 - The conformance fixture covers admission, live-state renewal, force-envelope
@@ -104,8 +107,10 @@ The current change set implements the smallest safe slice:
 - [x] Make missed renewal deadlines trigger the same safe-stop callback as explicit
   revocation, with no bridge-local authorization logic.
 - [x] Add coordinator tests for denial-driven stop and terminal-state rejection.
-- [ ] Add integration tests for expiry during an active effect and duplicate stop
-  delivery.
+- [x] A renewal after `expiresAt` stops the active lease and does not call
+  `intercept()` again.
+  `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`.
+- [ ] Add an integration test for duplicate stop delivery.
 
 ### Phase 3 — Bridge adapters
 
