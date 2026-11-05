@@ -517,6 +517,40 @@ describe("predictive simulation evidence policy", () => {
     }));
   });
 
+  it("escalates a T1 shadow request for human review when unsupported phenomena are non-empty", async () => {
+    const token = makeActionToken("mcp://server/tool", "call");
+    const request = makeActionRequest(token, "mcp://server/tool", "call");
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      result: {
+        ...draft.result,
+        unsupportedPhenomena: ["contact deformation"],
+      },
+    }));
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        tierRequirements: {
+          [ApprovalTier.T1_PREPARE]: { minEvidenceGrade: "deterministic" },
+        },
+        shadowTiers: [ApprovalTier.T1_PREPARE],
+        now: () => now,
+      }),
+    });
+
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T1_PREPARE);
+    expect(decision.escalation?.reason).toBe(
+      "Unsupported phenomena require human review",
+    );
+  });
+
   it("keeps T2 evidence fail-closed when T1 is configured for shadow mode", async () => {
     const token = makeActionToken("ros2:///cmd_vel", "publish");
     const request = makeActionRequest(token, "ros2:///cmd_vel", "publish");
