@@ -200,7 +200,7 @@ closed for the canary policy.
 - [x] the same ROS 2 shield refuses a cmd_vel yaw tick above the token angular bound: a faster forward or reverse yaw is not published
 - [x] implement a local runtime shield on one PLC/OPC UA path: a speed setpoint at the token velocity bound is written, and a faster forward or reverse setpoint is not
 - [x] preserve unconditional E-stop behavior independent of every simulator
-- [ ] support pre-simulated corridors/skill envelopes for low-latency T2 paths
+- [x] support one pre-simulated corridor for a low-latency T2 cmd_vel path: a tick at the simulated corridor velocity escalates, and a faster forward or reverse tick is denied
 
 Exit gate: concurrent replay attempts result in exactly one dispatch; stale
 world epochs never reach hardware; loss of the simulation plane triggers the

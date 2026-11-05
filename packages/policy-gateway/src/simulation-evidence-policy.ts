@@ -15,6 +15,7 @@ import {
   type UUIDv7,
 } from "@pshkv/core";
 import { hashSha256, verify } from "@pshkv/gate-capability-tokens";
+import { extractPhysicalContext } from "./constraint-checker.js";
 
 export interface SimulationEvidencePolicyPlugin {
   getRequirement?(
@@ -189,6 +190,41 @@ export function createSimulationPreflight(
   };
 }
 
+/** Simulated speed when the receipt is the pre-simulated corridor plan. */
+function preSimulatedCorridorVelocity(
+  request: SintRequest,
+  token: SintCapabilityToken,
+  receipt: SimulationEvidenceReceipt,
+): number | undefined {
+  const corridorId = token.executionEnvelope?.corridorId;
+  const simulatedMax = receipt.result.maxVelocityMps;
+  if (
+    typeof corridorId !== "string"
+    || typeof simulatedMax !== "number"
+    || !Number.isFinite(simulatedMax)
+    || request.executionContext?.preapprovedCorridor?.corridorId !== corridorId
+    || receipt.effectPlanDigest !== computeSimulationEffectPlanDigest(
+      { ...request, params: { corridorId, maxVelocityMps: simulatedMax } },
+      token.constraints.sceneContractDigest,
+    )
+  ) {
+    return undefined;
+  }
+  return simulatedMax;
+}
+
+/** Corridor plan digest: resource, action, corridor id, and the simulated speed. */
+function reusesPreSimulatedCorridor(
+  request: SintRequest,
+  token: SintCapabilityToken,
+  receipt: SimulationEvidenceReceipt,
+): boolean {
+  const simulatedMax = preSimulatedCorridorVelocity(request, token, receipt);
+  if (simulatedMax === undefined) return false;
+  const commanded = extractPhysicalContext(request).commandedVelocityMps;
+  return typeof commanded === "number" && Number.isFinite(commanded) && commanded <= simulatedMax;
+}
+
 /**
  * Fail-closed verification of signed simulation evidence.
  * A valid receipt only permits the request to continue through the gateway.
@@ -284,11 +320,33 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
       );
     }
 
+    const simulatedCorridorMax = preSimulatedCorridorVelocity(request, token, receipt);
+    if (simulatedCorridorMax !== undefined) {
+      const commanded = extractPhysicalContext(request).commandedVelocityMps;
+      if (
+        typeof commanded === "number"
+        && Number.isFinite(commanded)
+        && commanded > simulatedCorridorMax
+      ) {
+        return deny(
+          context,
+          "SIMULATION_CORRIDOR_VELOCITY",
+          `Commanded velocity ${commanded} exceeds pre-simulated corridor velocity limit ${simulatedCorridorMax}`,
+        );
+      }
+    }
+
+    const corridorTick = reusesPreSimulatedCorridor(request, token, receipt);
     if (
-      receipt.requestDigest !== computeSimulationRequestDigest(request)
-      || receipt.effectPlanDigest !== computeSimulationEffectPlanDigest(
-        request,
-        token.constraints.sceneContractDigest,
+      (
+        !corridorTick
+        && (
+          receipt.requestDigest !== computeSimulationRequestDigest(request)
+          || receipt.effectPlanDigest !== computeSimulationEffectPlanDigest(
+            request,
+            token.constraints.sceneContractDigest,
+          )
+        )
       )
       || receipt.tokenDigest !== computeSimulationTokenDigest(token)
       || receipt.resource !== request.resource
