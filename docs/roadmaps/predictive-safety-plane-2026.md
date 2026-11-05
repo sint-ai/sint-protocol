@@ -197,6 +197,7 @@ closed for the canary policy.
 - [x] bind approval resolution to the simulation receipt
 - [x] bind the execution receipt to the simulation receipt
 - [x] implement a local ROS 2 runtime shield for cmd_vel linear speed: a tick at the token velocity bound is published, and a faster forward or reverse tick is not
+- [x] the same ROS 2 shield refuses a cmd_vel yaw tick above the token angular bound: a faster forward or reverse yaw is not published
 - [ ] implement a local runtime shield on one PLC/OPC UA path
 - [x] preserve unconditional E-stop behavior independent of every simulator
 - [ ] support pre-simulated corridors/skill envelopes for low-latency T2 paths
