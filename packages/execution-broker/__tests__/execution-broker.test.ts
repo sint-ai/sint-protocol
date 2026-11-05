@@ -115,16 +115,44 @@ function decision(requestId = request().requestId): PolicyDecision {
   };
 }
 
-function approval(requestId = request().requestId) {
+function approval(subject: SintRequest = request()) {
   return {
     status: "approved" as const,
-    requestId,
+    requestId: subject.requestId,
     approvedAt: "2026-08-07T15:59:59.500Z",
     approvers: ["operator-1"],
+    simulationReceiptId: subject.executionContext!.simulationEvidence!.receiptId,
   };
 }
 
 describe("ExecutionBroker", () => {
+  it("rejects an escalated approval that omits the simulation receipt", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    const nonceStore = new InMemorySimulationReceiptNonceStore();
+    const consume = vi.fn(nonceStore.consume.bind(nonceStore));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume },
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const input = request();
+    const rejected = await broker.execute(input, {
+      decision: decision(),
+      approval: {
+        status: "approved",
+        requestId: input.requestId,
+        approvedAt: "2026-08-07T15:59:59.500Z",
+        approvers: ["operator-1"],
+      },
+    });
+
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("APPROVAL_RECEIPT_MISMATCH");
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(consume).not.toHaveBeenCalled();
+  });
+
   it("dispatches a verified request once and rejects receipt replay", async () => {
     const dispatch = vi.fn(async () => ok("sent"));
     const broker = new ExecutionBroker({
@@ -386,10 +414,10 @@ describe("ExecutionBroker", () => {
     const first = vlaRequest(0, 0, 0.2);
     const discontinuous = vlaRequest(1, 0.8, 1);
 
-    expect((await broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) })).ok).toBe(true);
+    expect((await broker.execute(first, { decision: decision(first.requestId), approval: approval(first) })).ok).toBe(true);
     const rejected = await broker.execute(discontinuous, {
       decision: decision(discontinuous.requestId),
-      approval: approval(discontinuous.requestId),
+      approval: approval(discontinuous),
     });
 
     expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_DISCONTINUITY");
@@ -410,9 +438,9 @@ describe("ExecutionBroker", () => {
     const first = vlaRequest(0, 0, 0.2);
     const skipped = vlaRequest(2, 0.2, 0.3);
 
-    await broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) });
+    await broker.execute(first, { decision: decision(first.requestId), approval: approval(first) });
     const rejected = await broker.execute(skipped, {
-      decision: decision(skipped.requestId), approval: approval(skipped.requestId),
+      decision: decision(skipped.requestId), approval: approval(skipped),
     });
     expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_SEQUENCE_INVALID");
     expect(dispatch).toHaveBeenCalledTimes(1);
@@ -436,10 +464,12 @@ describe("ExecutionBroker", () => {
     const duplicate = { ...input, executionContext: { ...input.executionContext,
       simulationEvidence: { ...input.executionContext!.simulationEvidence!, receiptId: "019fdd12-cc01-70d4-8174-208d070bbaff", nonce: "distinct-receipt" },
     } };
-    const authorization = { decision: decision(input.requestId), approval: approval(input.requestId) };
-    const first = broker.execute(input, authorization);
+    const first = broker.execute(input, { decision: decision(input.requestId), approval: approval(input) });
     await dispatchStarted;
-    const second = broker.execute(duplicate, authorization);
+    const second = broker.execute(duplicate, {
+      decision: decision(duplicate.requestId),
+      approval: approval(duplicate),
+    });
     await new Promise<void>(resolve => setImmediate(resolve));
     release();
     const results = await Promise.all([first, second]);
@@ -464,9 +494,9 @@ describe("ExecutionBroker", () => {
     });
     const first = vlaRequest(0, 0, 0.2);
     const next = vlaRequest(1, 0.2, 0.3);
-    const active = broker.execute(first, { decision: decision(first.requestId), approval: approval(first.requestId) });
+    const active = broker.execute(first, { decision: decision(first.requestId), approval: approval(first) });
     await dispatchStarted;
-    const queued = broker.execute(next, { decision: decision(next.requestId), approval: approval(next.requestId) });
+    const queued = broker.execute(next, { decision: decision(next.requestId), approval: approval(next) });
     clock += 4_001;
     release();
     await active;
@@ -487,7 +517,7 @@ describe("ExecutionBroker", () => {
       vlaContinuity: { maxPositionDelta: 0.1, maxVelocityDelta: 0.1, safeStop },
     });
     const input = vlaRequest(0, 0, 0.2);
-    const rejected = await broker.execute(input, { decision: decision(input.requestId), approval: approval(input.requestId) });
+    const rejected = await broker.execute(input, { decision: decision(input.requestId), approval: approval(input) });
     expect(rejected.ok ? undefined : rejected.error.code).toBe("VLA_CHUNK_STALE");
     expect(dispatch).not.toHaveBeenCalled();
     expect(safeStop).toHaveBeenCalledTimes(1);

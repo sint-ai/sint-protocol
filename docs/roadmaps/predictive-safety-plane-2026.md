@@ -194,7 +194,8 @@ closed for the canary policy.
   nonce immediately before its single dispatch attempt
 - [x] re-read world epoch immediately before dispatch and reject drift beyond
   the declared tolerance
-- [ ] bind approval resolution and execution receipt to the simulation receipt
+- [x] bind approval resolution to the simulation receipt
+- [ ] bind the execution receipt to the simulation receipt
 - [ ] implement a local runtime shield in ROS 2 and one PLC/OPC UA path
 - [ ] preserve unconditional E-stop behavior independent of every simulator
 - [ ] support pre-simulated corridors/skill envelopes for low-latency T2 paths

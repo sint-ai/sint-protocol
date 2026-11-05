@@ -16,6 +16,8 @@ export interface ExecutionApproval {
   readonly requestId: string;
   readonly approvedAt: ISO8601;
   readonly approvers: readonly string[];
+  /** Simulation receipt this approval authorizes. Omission is not a match. */
+  readonly simulationReceiptId?: string;
 }
 
 export interface ExecutionAuthorization {
@@ -66,6 +68,7 @@ export type ExecutionBrokerErrorCode =
   | "AUTHORIZATION_NOT_EXECUTABLE"
   | "APPROVAL_REQUIRED"
   | "APPROVAL_REQUEST_MISMATCH"
+  | "APPROVAL_RECEIPT_MISMATCH"
   | "AUTHORIZATION_VERIFICATION_FAILED"
   | "SIMULATION_EVIDENCE_REQUIRED"
   | "SIMULATION_CONTEXT_MISMATCH"
@@ -221,6 +224,13 @@ export class ExecutionBroker<T> {
       }
       if (authorization.approval.requestId !== request.requestId) {
         return reject("APPROVAL_REQUEST_MISMATCH", "Approval is not bound to this request");
+      }
+      if (
+        receipt !== undefined
+        && (typeof authorization.approval.simulationReceiptId !== "string"
+          || authorization.approval.simulationReceiptId !== receipt.receiptId)
+      ) {
+        return reject("APPROVAL_RECEIPT_MISMATCH", "Approval is not bound to this simulation receipt");
       }
     }
 

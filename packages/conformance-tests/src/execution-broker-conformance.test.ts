@@ -74,12 +74,13 @@ describe("Proof-carrying execution broker conformance", () => {
       assignedTier: "T2_act",
       assignedRisk: "T2_stateful",
     } as never;
-    const approval = {
+    const approvalFor = (subject: SintRequest) => ({
       status: "approved" as const,
       requestId,
       approvedAt: "2026-08-07T15:59:59.500Z" as never,
       approvers: ["operator-1"],
-    };
+      simulationReceiptId: subject.executionContext!.simulationEvidence!.receiptId,
+    });
     const broker = new ExecutionBroker({
       authorizationVerifier: { verify: async () => ok(true as const) },
       nonceStore: new InMemorySimulationReceiptNonceStore(),
@@ -94,8 +95,8 @@ describe("Proof-carrying execution broker conformance", () => {
     });
 
     const results = await Promise.all([
-      broker.execute(secondRequest, { decision, approval }),
-      broker.execute(request, { decision, approval }),
+      broker.execute(secondRequest, { decision, approval: approvalFor(secondRequest) }),
+      broker.execute(request, { decision, approval: approvalFor(request) }),
     ]);
 
     expect(dispatches).toBe(1);
@@ -122,7 +123,7 @@ describe("Proof-carrying execution broker conformance", () => {
       },
       now: () => Date.parse("2026-08-07T16:00:00.000Z"),
     });
-    const drifted = await driftBroker.execute(request, { decision, approval });
+    const drifted = await driftBroker.execute(request, { decision, approval: approvalFor(request) });
     expect(drifted.ok ? undefined : drifted.error.code).toBe("WORLD_STATE_DRIFTED");
     expect(driftDispatches).toBe(0);
     expect(safeStops).toBe(1);
