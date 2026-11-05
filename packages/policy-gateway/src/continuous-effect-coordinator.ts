@@ -114,6 +114,13 @@ export class ContinuousEffectCoordinator {
     ) {
       return err({ code: "REQUEST_MISMATCH", state: lease.state });
     }
+    if (this.now() >= Date.parse(lease.expiresAt)) {
+      const suspended = { ...lease, state: "SUSPENDED" as const };
+      this.leases.set(leaseId, suspended);
+      const stopped = await this.stop(suspended, "lease expired");
+      if (!stopped.ok) return err({ code: "STOP_FAILED", reason: stopped.error.message });
+      return err({ code: "RENEWAL_DENIED", state: stopped.value.state });
+    }
 
     const decision = await this.gateway.intercept(request);
     if (decision.action === "deny") {
