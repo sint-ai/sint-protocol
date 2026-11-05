@@ -133,7 +133,7 @@ Still 25 of 28. These three stay open:
 
 Still 11 of 12. The open line is a real guarded pilot of the orchestration service. That pilot has not been run.
 
-Release 0.1 records the schema migration and rollback rehearsal in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. A renewal after `expiresAt` stops the active lease in `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`. Neither recording checks one of the three public boxes. The next repo slice is an integration test for duplicate stop delivery.
+Release 0.1 records the schema migration and rollback rehearsal in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. A renewal after `expiresAt` stops the active lease, and a second stop does not deliver the callback again, in `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`. None of those recordings check one of the three public boxes. The next repo slice is one predictive-safety line a test can prove.
 
 ### AAIF resubmission
 
@@ -152,11 +152,10 @@ These stay open:
 
 ### Later repo slices, one behavior each
 
-The migration rehearsal is recorded. A renewal after `expiresAt` is recorded in the coordinator test. Next repo slices:
+The migration rehearsal is recorded. A renewal after `expiresAt` and a single stop delivery are recorded in the coordinator test. Next repo slices:
 
-1. An integration test for duplicate stop delivery, from the continuous-effect research note.
-2. Predictive safety lines that a test can prove, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
-3. One expansion lane only after that. Home Assistant, Matter, and health stay outside the supported slice until their build, typecheck, and tests run.
+1. One predictive-safety line a test can prove, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
+2. One expansion lane only after that. Home Assistant, Matter, and health stay outside the supported slice until their build, typecheck, and tests run.
 
 ### Held outside this repo
 

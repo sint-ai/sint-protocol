@@ -83,6 +83,8 @@ The current change set implements the smallest safe slice:
   `expiresAt` stops the active lease and does not call `intercept()` again.
   That case is
   `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`.
+  A second stop on a rolled-back or completed lease does not deliver the stop
+  callback again. That case is the same test file.
 - Terminal `ROLLEDBACK` and `COMPLETED` states reject later renewal or other
   lifecycle events.
 - The conformance fixture covers admission, live-state renewal, force-envelope
@@ -110,7 +112,9 @@ The current change set implements the smallest safe slice:
 - [x] A renewal after `expiresAt` stops the active lease and does not call
   `intercept()` again.
   `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`.
-- [ ] Add an integration test for duplicate stop delivery.
+- [x] A second stop on a rolled-back or completed lease does not deliver the
+  stop callback again.
+  `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`.
 
 ### Phase 3 — Bridge adapters
 
