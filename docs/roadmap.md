@@ -25,7 +25,9 @@ and the examples under `examples/`.
 
 Release 0.1, the core slice, is implemented. CI on `main` was green at
 `2d0cfa6` on 2026-11-03, including the docs site and the industrial benchmark
-report. A schema migration and rollback rehearsal is still not recorded.
+report. The schema migration and rollback rehearsal is recorded in
+`packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`.
+The public count stays 25 of 28.
 
 Release 0.2, factory and VLA lineage, is 11 of 12 in the
 [unified delivery checklist](./roadmaps/unified-delivery-roadmap.md). The open

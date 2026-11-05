@@ -142,6 +142,11 @@ Before tagging a production release:
 - Do not roll back to an image that cannot read the current signed token shape.
 - If rollback is required, keep Postgres data intact and roll back the gateway
   image only after verifying token round-trip tests against the target version.
+  That application rollback does not run
+  `packages/persistence/migrations/rollback/008_predictive_policy_fields.sql`.
+  The schema rehearsal applies that file after `008_predictive_policy_fields.sql`.
+  It drops only the four predictive columns and keeps the token row. The forward
+  `migrations/*.sql` glob does not include that rollback file.
 - Redis may be restarted independently, but revocation state must be replayed or
   reloaded from durable token/ledger state before accepting traffic.
 
