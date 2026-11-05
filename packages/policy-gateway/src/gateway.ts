@@ -1270,6 +1270,29 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const predictedForce = request.executionContext?.simulationEvidence?.result?.maxForceNewtons;
+          const observedForce = request.physicalContext?.currentContactForceNewtons;
+          if (
+            typeof predictedForce === "number"
+            && Number.isFinite(predictedForce)
+            && typeof observedForce === "number"
+            && Number.isFinite(observedForce)
+            && observedForce > predictedForce
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Observed force exceeds predicted force",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {

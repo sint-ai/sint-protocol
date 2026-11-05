@@ -209,7 +209,8 @@ declared safe fallback without disabling E-stop or the local shield.
 ### Phase 3 — Calibration and pilot (weeks 7–9)
 
 - [x] compare predicted vs observed clearance in shadow mode: a T1 shadow request whose observed clearance is below the receipt's predicted clearance escalates instead of being allowed
-- [ ] compare predicted vs observed force, duration, collision, and controller outcomes in shadow mode
+- [x] compare predicted vs observed force in shadow mode: a T1 shadow request whose observed contact force exceeds the receipt's predicted force escalates instead of being allowed
+- [ ] compare predicted vs observed duration, collision, and controller outcomes in shadow mode
 - [ ] publish per-model calibration error and confidence thresholds
 - [ ] introduce scenario fuzzing for sensor delay, actor motion, localization
   error, dropped messages, actuator lag, and adversarial parameters
