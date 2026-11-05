@@ -41,4 +41,36 @@ describe("ROS 2 runtime shield", () => {
     expect(published).toEqual([0.5]);
     expect(result.published).toBe(true);
   });
+
+  it("does not publish a cmd_vel tick whose yaw rate exceeds the token angular bound", () => {
+    const published: number[] = [];
+    const result = publishRos2CmdVelTick(
+      {
+        linearXMps: 0.2,
+        maxVelocityMps: 0.5,
+        angularZRps: 1.2,
+        maxAngularVelocityRps: 0.5,
+      },
+      { publish: (linearXMps) => published.push(linearXMps) },
+    );
+
+    expect(published).toEqual([]);
+    expect(result.published).toBe(false);
+  });
+
+  it("does not publish a reverse cmd_vel tick whose yaw rate exceeds the token angular bound", () => {
+    const published: number[] = [];
+    const result = publishRos2CmdVelTick(
+      {
+        linearXMps: 0.2,
+        maxVelocityMps: 0.5,
+        angularZRps: -1.2,
+        maxAngularVelocityRps: 0.5,
+      },
+      { publish: (linearXMps) => published.push(linearXMps) },
+    );
+
+    expect(published).toEqual([]);
+    expect(result.published).toBe(false);
+  });
 });

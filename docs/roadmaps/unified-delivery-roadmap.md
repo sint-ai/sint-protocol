@@ -133,7 +133,7 @@ Still 25 of 28. These three stay open:
 
 Still 11 of 12. The open line is a real guarded pilot of the orchestration service. That pilot has not been run.
 
-Release 0.1 records the schema migration and rollback rehearsal in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. A renewal after `expiresAt` stops the active lease, and a second stop does not deliver the callback again, in `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`. An escalated approval that omits the simulation receipt is rejected before nonce consumption, and a dispatched execution receipt names that simulation receipt, in `packages/execution-broker/__tests__/execution-broker.test.ts`. A hardware E-stop blocks that dispatch even when the simulation receipt passes, in the same test. A ROS 2 cmd_vel linear tick at the token velocity bound is published, and a faster forward or reverse tick is not, in `packages/bridge-ros2/__tests__/runtime-shield.test.ts`. None of those recordings check one of the three public boxes. The PLC/OPC UA half of the runtime shield stays open.
+Release 0.1 records the schema migration and rollback rehearsal in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. A renewal after `expiresAt` stops the active lease, and a second stop does not deliver the callback again, in `packages/policy-gateway/__tests__/continuous-effect-coordinator.test.ts`. An escalated approval that omits the simulation receipt is rejected before nonce consumption, and a dispatched execution receipt names that simulation receipt, in `packages/execution-broker/__tests__/execution-broker.test.ts`. A hardware E-stop blocks that dispatch even when the simulation receipt passes, in the same test. A ROS 2 cmd_vel linear tick at the token velocity bound is published, and a faster forward or reverse tick is not, in `packages/bridge-ros2/__tests__/runtime-shield.test.ts`. A faster forward or reverse yaw tick is not published, in the same test. None of those recordings check one of the three public boxes. The PLC/OPC UA half of the runtime shield stays open.
 
 ### AAIF resubmission
 
@@ -152,9 +152,9 @@ These stay open:
 
 ### Later repo slices, one behavior each
 
-The migration rehearsal is recorded. A renewal after `expiresAt` and a single stop delivery are recorded in the coordinator test. Approval resolution is bound to the simulation receipt, and a dispatched execution receipt names that simulation receipt, in the execution-broker test. A hardware E-stop blocks that dispatch even when the simulation receipt passes. A ROS 2 cmd_vel linear tick at the token velocity bound is published, and a faster forward or reverse tick is not, in `packages/bridge-ros2/__tests__/runtime-shield.test.ts`. Next repo slices:
+The migration rehearsal is recorded. A renewal after `expiresAt` and a single stop delivery are recorded in the coordinator test. Approval resolution is bound to the simulation receipt, and a dispatched execution receipt names that simulation receipt, in the execution-broker test. A hardware E-stop blocks that dispatch even when the simulation receipt passes. A ROS 2 cmd_vel linear tick at the token velocity bound is published, and a faster forward or reverse tick is not, in `packages/bridge-ros2/__tests__/runtime-shield.test.ts`. A faster forward or reverse yaw tick is not published, in the same test. Next repo slices:
 
-1. The same ROS 2 shield must refuse an angular cmd_vel tick above the token angular bound, on [that page](./predictive-safety-plane-2026.md). The PLC/OPC UA path stays open. Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
+1. Implement a local runtime shield on one PLC/OPC UA path, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
 2. One expansion lane only after the shield paths that page still lists. Home Assistant, Matter, and health stay outside the supported slice until their build, typecheck, and tests run.
 
 ### Held outside this repo
