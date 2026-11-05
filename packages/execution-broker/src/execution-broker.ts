@@ -70,6 +70,7 @@ export type ExecutionBrokerErrorCode =
   | "APPROVAL_REQUEST_MISMATCH"
   | "APPROVAL_RECEIPT_MISMATCH"
   | "AUTHORIZATION_VERIFICATION_FAILED"
+  | "HARDWARE_ESTOP_ACTIVE"
   | "SIMULATION_EVIDENCE_REQUIRED"
   | "SIMULATION_CONTEXT_MISMATCH"
   | "SIMULATION_OUTCOME_UNSAFE"
@@ -232,6 +233,14 @@ export class ExecutionBroker<T> {
       ) {
         return reject("APPROVAL_RECEIPT_MISMATCH", "Approval is not bound to this simulation receipt");
       }
+    }
+
+    // E-stop is unconditional. A passing simulator receipt must not dispatch.
+    if (request.executionContext?.hardwareSafety?.estopState === "triggered") {
+      return reject(
+        "HARDWARE_ESTOP_ACTIVE",
+        "Hardware emergency-stop is active; execution is blocked",
+      );
     }
 
     if (!receipt) {
