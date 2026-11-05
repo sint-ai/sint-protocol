@@ -34,6 +34,9 @@ returns an authorization decision.
    `maxVelocityMps` and does not publish a faster forward or reverse tick.
    The same function does not publish a yaw tick faster than the token
    `maxAngularVelocityRps` in either direction.
+   The OPC UA reference, `writeOpcUaSpeedSetpoint` in
+   `@pshkv/bridge-opcua`, writes a PLC speed setpoint at the token
+   `maxVelocityMps` and does not write a faster forward or reverse setpoint.
    Those checks do not authorize and do not read a simulation receipt.
 
 Preflight has `authorizesExecution: false`. Possession of a preflight response

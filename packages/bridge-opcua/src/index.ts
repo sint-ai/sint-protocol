@@ -22,3 +22,5 @@ export type {
   ShipyardSafetySnapshotOptions,
   ShipyardSafetySnapshotValue,
 } from "./shipyard-safety-signals.js";
+export { writeOpcUaSpeedSetpoint } from "./runtime-shield.js";
+export type { OpcUaSpeedSetpoint, OpcUaSetpointWriter } from "./runtime-shield.js";
