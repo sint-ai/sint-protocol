@@ -1247,6 +1247,29 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const predictedClearance = request.executionContext?.simulationEvidence?.result?.minClearanceMeters;
+          const observedClearance = request.physicalContext?.nearestObstacleMeters;
+          if (
+            typeof predictedClearance === "number"
+            && Number.isFinite(predictedClearance)
+            && typeof observedClearance === "number"
+            && Number.isFinite(observedClearance)
+            && observedClearance < predictedClearance
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Observed clearance is below predicted clearance",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {
