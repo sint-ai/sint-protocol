@@ -195,7 +195,7 @@ closed for the canary policy.
 - [x] re-read world epoch immediately before dispatch and reject drift beyond
   the declared tolerance
 - [x] bind approval resolution to the simulation receipt
-- [ ] bind the execution receipt to the simulation receipt
+- [x] bind the execution receipt to the simulation receipt
 - [ ] implement a local runtime shield in ROS 2 and one PLC/OPC UA path
 - [ ] preserve unconditional E-stop behavior independent of every simulator
 - [ ] support pre-simulated corridors/skill envelopes for low-latency T2 paths
