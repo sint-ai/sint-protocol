@@ -158,6 +158,10 @@ export class ContinuousEffectCoordinator {
     lease: ContinuousEffectLease,
     reason: string,
   ): Promise<Result<ContinuousEffectLease, Error>> {
+    const current = this.leases.get(lease.leaseId);
+    if (current?.state === "ROLLEDBACK" || current?.state === "COMPLETED") {
+      return ok(current);
+    }
     this.options.emitLedgerEvent?.({
       eventType: "safety.estop.triggered",
       agentId: lease.agentId,

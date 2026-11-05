@@ -135,4 +135,30 @@ describe("ContinuousEffectCoordinator", () => {
     expect(coordinator.get(admitted.value.lease.leaseId)?.state).toBe("ROLLEDBACK");
     expect(events).toEqual(["safety.estop.triggered", "action.rolledback"]);
   });
+
+  it("delivers the stop callback once when stop is requested twice", async () => {
+    const gateway = new PolicyGateway({ resolveToken: () => undefined });
+    vi.spyOn(gateway, "intercept").mockResolvedValue(allowed);
+    const stopEffect = vi.fn();
+    const events: string[] = [];
+    const coordinator = new ContinuousEffectCoordinator(gateway, {
+      stopEffect,
+      emitLedgerEvent: (event) => events.push(event.eventType),
+    });
+
+    const admitted = await coordinator.admit(request);
+    if (!admitted.ok) throw new Error("admission should succeed");
+
+    const first = await coordinator.stop(admitted.value.lease, "operator stop");
+    const again = await coordinator.stop(
+      first.ok ? first.value : admitted.value.lease,
+      "operator stop again",
+    );
+
+    expect(first.ok).toBe(true);
+    expect(again.ok).toBe(true);
+    expect(stopEffect).toHaveBeenCalledOnce();
+    expect(events).toEqual(["safety.estop.triggered", "action.rolledback"]);
+    expect(coordinator.get(admitted.value.lease.leaseId)?.state).toBe("ROLLEDBACK");
+  });
 });
