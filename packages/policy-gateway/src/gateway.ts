@@ -1230,6 +1230,24 @@ export class PolicyGateway {
             enforcementMode: simulationEnforcementMode,
           });
         }
+        if (simulationEnforcementMode === "shadow") {
+          const uncertainty = request.executionContext?.simulationEvidence?.worldSnapshot?.uncertainty;
+          if (typeof uncertainty === "number" && Number.isFinite(uncertainty) && uncertainty > 0) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Uncertainty requires human review",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
+        }
       } catch {
         if (simulationEnforcementMode === "shadow") {
           failures.emit("simulation.receipt.rejected", request.agentId, request.tokenId, {
