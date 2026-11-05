@@ -154,6 +154,47 @@ describe("ExecutionBroker", () => {
     expect(consume).not.toHaveBeenCalled();
   });
 
+  it("refuses dispatch when hardware E-stop is triggered even though the simulation receipt passes", async () => {
+    const dispatch = vi.fn(async () => ok("sent"));
+    const nonceStore = new InMemorySimulationReceiptNonceStore();
+    const consume = vi.fn(nonceStore.consume.bind(nonceStore));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: { consume },
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch },
+      now: () => now,
+    });
+    const base = request();
+    const originalReceipt = base.executionContext!.simulationEvidence!;
+    const withEstop: SintRequest = {
+      ...base,
+      executionContext: {
+        hardwareSafety: { estopState: "triggered" },
+      },
+    };
+    const input: SintRequest = {
+      ...withEstop,
+      executionContext: {
+        ...withEstop.executionContext,
+        simulationEvidence: {
+          ...originalReceipt,
+          requestDigest: computeExecutionRequestDigest(withEstop),
+          effectPlanDigest: computeExecutionEffectPlanDigest(withEstop),
+        },
+      },
+    };
+
+    const rejected = await broker.execute(input, {
+      decision: decision(input.requestId),
+      approval: approval(input),
+    });
+
+    expect(rejected.ok ? undefined : rejected.error.code).toBe("HARDWARE_ESTOP_ACTIVE");
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(consume).not.toHaveBeenCalled();
+  });
+
   it("binds the dispatched execution receipt to the simulation receipt", async () => {
     const events: ExecutionBrokerEvent[] = [];
     const dispatch = vi.fn(async () => ok("sent"));
