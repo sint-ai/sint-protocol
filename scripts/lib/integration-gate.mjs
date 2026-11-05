@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 
 /** Explicit release-gate inventory; every listed file must execute cases. */
 export const integrationSuites = [
-  { name: "persistence", package: "@pshkv/persistence", directory: "packages/persistence", files: ["__tests__/pg-stores.test.ts", "__tests__/redis-stores.test.ts"] },
+  { name: "persistence", package: "@pshkv/persistence", directory: "packages/persistence", files: ["__tests__/pg-stores.test.ts", "__tests__/redis-stores.test.ts", "__tests__/schema-migration-rollback-rehearsal.test.ts"] },
   { name: "gateway-persistence", package: "@pshkv/gateway-server", directory: "apps/gateway-server", files: ["__tests__/ledger-restart-postgres.test.ts", "__tests__/token-persistence-postgres.test.ts"] },
 ];
 

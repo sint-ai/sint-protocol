@@ -29,7 +29,7 @@ contract, and an operator-facing failure path.
 
 | Workstream | Current evidence-backed state | Remaining exit criteria | Priority |
 | --- | --- | --- | --- |
-| Core production slice | Build, token, policy, persistence, ledger, gateway, production docs, and readiness work exist. | Fresh CI on `main`, repeatable E2E release run, schema migration/rollback rehearsal, named supported topology. | P0 |
+| Core production slice | Build, token, policy, persistence, ledger, gateway, production docs, and readiness work exist. The schema migration and rollback rehearsal is recorded in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. | Fresh CI on `main`, repeatable E2E release run, named supported topology. | P0 |
 | Release / supply-chain evidence | Release and dependency-review artifacts exist. | Resolve active dependency findings, maintain clean release evidence, publish only verified claims. | P0 |
 | Factory Action Pack | Sprint 1 is shipped; simulation-first work and industrial pack have substantial shipped artifacts. | Run the end-to-end demo against a supported simulator and document the exact supported adapter matrix. | P1 |
 | VLA / Axonnic data governance | Token-bound lineage, digest-only provenance events and E2E conformance implement the reviewed VLA/OpenPI foundation. Unsupported signed enforcement contracts deny explicitly. | Guarded pilot, production model/transport integration and metrics dashboard. | P1 |
@@ -48,7 +48,7 @@ contract, and an operator-facing failure path.
 - Keep only the gateway/interceptor + Postgres/ledger path in the supported
   deployment statement.
 - Eliminate prototype exemptions from any package claimed in that release.
-- Rehearse schema bootstrap, upgrade, and rollback with a durable store.
+- The migration 008 upgrade and rollback rehearsal is recorded in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. It applies the real SQL files and keeps the token row.
 
 **Done when:** a new operator can reproduce token issue → intercept → durable
 evidence → revocation from the public documentation, and CI proves it.
@@ -133,7 +133,7 @@ Still 25 of 28. These three stay open:
 
 Still 11 of 12. The open line is a real guarded pilot of the orchestration service. That pilot has not been run.
 
-Release 0.1 still has one unrecorded proof: a schema migration and rollback rehearsal. That is the next repo slice. It does not check one of the three public boxes.
+Release 0.1 records the schema migration and rollback rehearsal in `packages/persistence/__tests__/schema-migration-rollback-rehearsal.test.ts`. That recording does not check one of the three public boxes. The next repo slice is an integration test for expiry during an active effect and a duplicate stop.
 
 ### AAIF resubmission
 
@@ -152,10 +152,10 @@ These stay open:
 
 ### Later repo slices, one behavior each
 
-After the migration rehearsal is recorded:
+The migration rehearsal is recorded. Next repo slices:
 
-1. Predictive safety lines that a test can prove, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
-2. Integration tests for expiry during an active effect and a duplicate stop, from the continuous-effect research note.
+1. Integration tests for expiry during an active effect and a duplicate stop, from the continuous-effect research note.
+2. Predictive safety lines that a test can prove, on [that page](./predictive-safety-plane-2026.md). Skip gRPC until a design partner requires it. Skip the pilot-site canary until a pilot site exists.
 3. One expansion lane only after that. Home Assistant, Matter, and health stay outside the supported slice until their build, typecheck, and tests run.
 
 ### Held outside this repo
