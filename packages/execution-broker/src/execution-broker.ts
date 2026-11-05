@@ -377,6 +377,10 @@ export class ExecutionBroker<T> {
         worldStateDigest: dispatchWorld.digest,
         stateEpoch: dispatchWorld.stateEpoch,
         approvers: authorization.approval?.approvers ?? [],
+        executionReceipt: {
+          requestId: request.requestId,
+          simulationReceiptId: receipt.receiptId,
+        },
       },
     });
     return ok(dispatched.value);

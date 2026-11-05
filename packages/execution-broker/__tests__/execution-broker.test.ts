@@ -11,6 +11,7 @@ import {
 } from "@pshkv/core";
 import {
   ExecutionBroker,
+  type ExecutionBrokerEvent,
   InMemorySimulationReceiptNonceStore,
   computeExecutionEffectPlanDigest,
   computeExecutionRequestDigest,
@@ -151,6 +152,30 @@ describe("ExecutionBroker", () => {
     expect(rejected.ok ? undefined : rejected.error.code).toBe("APPROVAL_RECEIPT_MISMATCH");
     expect(dispatch).not.toHaveBeenCalled();
     expect(consume).not.toHaveBeenCalled();
+  });
+
+  it("binds the dispatched execution receipt to the simulation receipt", async () => {
+    const events: ExecutionBrokerEvent[] = [];
+    const dispatch = vi.fn(async () => ok("sent"));
+    const broker = new ExecutionBroker({
+      authorizationVerifier: { verify: async () => ok(true as const) },
+      nonceStore: new InMemorySimulationReceiptNonceStore(),
+      worldStateProvider: { readCurrent: async () => world },
+      adapter: { dispatch },
+      emitEvent: (event) => {
+        events.push(event);
+      },
+      now: () => now,
+    });
+    const input = request();
+    const result = await broker.execute(input, { decision: decision(), approval: approval(input) });
+
+    expect(result).toEqual({ ok: true, value: "sent" });
+    const dispatched = events.find((event) => event.eventType === "execution.dispatched");
+    expect(dispatched?.payload.executionReceipt).toEqual({
+      requestId: input.requestId,
+      simulationReceiptId: input.executionContext!.simulationEvidence!.receiptId,
+    });
   });
 
   it("dispatches a verified request once and rejects receipt replay", async () => {
