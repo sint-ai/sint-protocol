@@ -196,7 +196,8 @@ closed for the canary policy.
   the declared tolerance
 - [x] bind approval resolution to the simulation receipt
 - [x] bind the execution receipt to the simulation receipt
-- [ ] implement a local runtime shield in ROS 2 and one PLC/OPC UA path
+- [x] implement a local ROS 2 runtime shield for cmd_vel linear speed: a tick at the token velocity bound is published, and a faster forward or reverse tick is not
+- [ ] implement a local runtime shield on one PLC/OPC UA path
 - [x] preserve unconditional E-stop behavior independent of every simulator
 - [ ] support pre-simulated corridors/skill envelopes for low-latency T2 paths
 
