@@ -1,0 +1,46 @@
+%% SINT Protocol — Package dependency graph
+%% Source of truth: the workspace dependencies in each package.json.
+%% The published npm scope is @pshkv/*; directory names differ from package
+%% names for the gate-* packages (packages/policy-gateway → @pshkv/gate-policy-gateway).
+flowchart TB
+  CORE["@pshkv/core<br/>types · Zod schemas · tier constants"]
+  TOK["@pshkv/gate-capability-tokens<br/>packages/capability-tokens"]
+  PER["@pshkv/persistence<br/>storage interfaces + in-memory"]
+  LED["@pshkv/gate-evidence-ledger<br/>packages/evidence-ledger"]
+  GWP["@pshkv/gate-policy-gateway<br/>packages/policy-gateway"]
+  REG["@pshkv/token-registry"]
+
+  subgraph BRIDGES["Bridge adapters"]
+    BM["bridge-mcp"]
+    BR["bridge-ros2"]
+    BV["bridge-mavlink"]
+    BI["bridge-iot"]
+    BA["bridge-a2a"]
+    BS["bridge-swarm"]
+    BE["bridge-economy"]
+    BX["bridge-opcua · bridge-mqtt-sparkplug<br/>bridge-open-rmf · bridge-matter<br/>bridge-homeassistant · bridge-grpc · …"]
+  end
+
+  SRV["apps/gateway-server<br/>Hono HTTP API"]
+  CONF["@pshkv/conformance-tests<br/>security regression suite"]
+
+  CORE --> TOK
+  CORE --> PER
+  TOK --> LED
+  CORE --> LED
+  TOK --> GWP
+  LED --> GWP
+  PER --> GWP
+  CORE --> GWP
+  TOK --> REG
+  CORE --> REG
+
+  GWP --> BRIDGES
+  BRIDGES --> SRV
+  GWP --> SRV
+  LED --> SRV
+  REG --> SRV
+  PER --> SRV
+  GWP --> CONF
+  BRIDGES --> CONF
+  LED --> CONF

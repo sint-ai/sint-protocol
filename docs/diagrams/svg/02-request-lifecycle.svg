@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 1992" width="1340" height="1992" role="img" aria-label="SINT Protocol — lifecycle of one SintRequest">
+  <title>SINT Protocol — lifecycle of one SintRequest</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="1992"/>
+  <text class="h1" x="40" y="48">SINT Protocol — lifecycle of one SintRequest</text>
+  <text class="sub" x="40" y="71">The numbered steps are the gateway&#x27;s own, from evaluateRequest() in packages/policy-gateway/src/gateway.ts.</text>
+  <path d="M130 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="44" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="44" y="108" width="172" height="40" rx="9" fill="var(--slate)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="130" y="133" text-anchor="middle" fill="var(--slate)">Bridge adapter</text>
+  <path d="M380 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="294" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="294" y="108" width="172" height="40" rx="9" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="380" y="133" text-anchor="middle" fill="var(--brand)">PolicyGateway</text>
+  <path d="M620 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="534" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="534" y="108" width="172" height="40" rx="9" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="620" y="133" text-anchor="middle" fill="var(--t1)">TokenResolver</text>
+  <path d="M830 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="744" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="744" y="108" width="172" height="40" rx="9" fill="var(--violet)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="830" y="133" text-anchor="middle" fill="var(--violet)">Plugin seats</text>
+  <path d="M1030 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="944" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="944" y="108" width="172" height="40" rx="9" fill="var(--t2)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="1030" y="133" text-anchor="middle" fill="var(--t2)">ApprovalQueue</text>
+  <path d="M1225 148 V1920" fill="none" stroke="var(--line-soft)" stroke-width="1.4" stroke-dasharray="4 6"/>
+  <rect x="1139" y="108" width="172" height="40" rx="9" class="card"/>
+  <rect x="1139" y="108" width="172" height="40" rx="9" fill="var(--violet)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="1225" y="133" text-anchor="middle" fill="var(--violet)">EvidenceLedger</text>
+  <path class="link" d="M130 196 H380" marker-end="url(#a)"/>
+  <text class="bd" x="255" y="187" text-anchor="middle" font-weight="650" fill="var(--ink)">SintRequest</text>
+  <text class="edge" x="56" y="208">requestId UUIDv7 · agentId · tokenId · resource · action · params · physicalContext · recentActions · consequenceContext</text>
+  <text class="edge" x="396" y="254">PluginFailureScope opens — an unexpected failure resolves at the T3_COMMIT baseline, never at allow</text>
+  <rect x="42" y="272" width="1256" height="28" rx="8" fill="var(--line-soft)" stroke="none"/>
+  <text class="grp" x="58" y="291">Pre-authorization</text>
+  <text class="edge" x="1282" y="291" text-anchor="end">nothing is trusted yet, not even the token id</text>
+  <path class="link" d="M380 338 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="329" text-anchor="start" font-weight="650" fill="var(--ink)">1  sintRequestSchema.safeParse()</text>
+  <text class="edge" x="480" y="384" text-anchor="start">invalid → deny MALFORMED_REQUEST</text>
+  <path class="link" d="M380 424 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="415" text-anchor="middle" font-weight="650" fill="var(--ink)">1a  goalHijackDetector.analyze(params)</text>
+  <text class="edge" x="605" y="442" text-anchor="middle">ASI01 — deny GOAL_HIJACK at confidence ≥ 0.6</text>
+  <path class="link" d="M380 482 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="473" text-anchor="middle" font-weight="650" fill="var(--ink)">1b-pre  memoryIntegrity.check(history)</text>
+  <text class="edge" x="605" y="500" text-anchor="middle">ASI06 — poisoned conversation or memory</text>
+  <path class="link" d="M380 540 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="531" text-anchor="middle" font-weight="650" fill="var(--ink)">1b  circuitBreaker.state(agentId)</text>
+  <text class="edge" x="605" y="558" text-anchor="middle">ASI10 — OPEN denies instantly; HALF_OPEN lets one probe through</text>
+  <rect x="42" y="596" width="1256" height="28" rx="8" fill="var(--line-soft)" stroke="none"/>
+  <text class="grp" x="58" y="615">Authorization</text>
+  <text class="edge" x="1282" y="615" text-anchor="end">@pshkv/gate-capability-tokens</text>
+  <path class="link" d="M380 662 H620" marker-end="url(#a)"/>
+  <text class="bd" x="500" y="653" text-anchor="middle" font-weight="650" fill="var(--ink)">2  resolve(tokenId)</text>
+  <path class="link" d="M380 706 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="697" text-anchor="start" font-weight="650" fill="var(--ink)">2a / 3b  token.subject === request.agentId</text>
+  <text class="edge" x="480" y="752" text-anchor="start">mismatch → deny SUBJECT_MISMATCH (ASI03 cross-agent token replay)</text>
+  <path class="link" d="M380 792 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="783" text-anchor="start" font-weight="650" fill="var(--ink)">3  revocation check</text>
+  <text class="edge" x="480" y="838" text-anchor="start">fail-closed: an unknown revocation state denies</text>
+  <path class="link" d="M380 878 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="869" text-anchor="start" font-weight="650" fill="var(--ink)">4  validateCapabilityToken()</text>
+  <text class="edge" x="480" y="924" text-anchor="start">Ed25519 signature · expiry · resource glob · actions list  (ASI02)</text>
+  <path class="link" d="M380 964 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="955" text-anchor="middle" font-weight="650" fill="var(--ink)">4a–4e  authority · deployment · spatial · regulated data · corridor · rate limit · economy · supply chain</text>
+  <text class="edge" x="605" y="982" text-anchor="middle">ASI04, ASI08</text>
+  <rect x="42" y="1020" width="1256" height="28" rx="8" fill="var(--line-soft)" stroke="none"/>
+  <text class="grp" x="58" y="1039">Tiering and envelope</text>
+  <path class="link" d="M380 1086 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="1077" text-anchor="start" font-weight="650" fill="var(--ink)">5  assignTier(request)</text>
+  <text class="edge" x="480" y="1132" text-anchor="start">→ ApprovalTier + RiskTier + escalationReasons. Pure function; a tier only ever ratchets up.</text>
+  <path class="link" d="M380 1172 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="1163" text-anchor="middle" font-weight="650" fill="var(--ink)">5b–5f  CSML escalation · simulation evidence · SafetyPermitPlugin · attestation · verifiable compute</text>
+  <text class="edge" x="605" y="1190" text-anchor="middle">SafetyPermitPlugin is fail-closed</text>
+  <path class="link" d="M380 1230 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="1221" text-anchor="middle" font-weight="650" fill="var(--ink)">6b  argInjectionDetector.analyze(params)</text>
+  <text class="edge" x="605" y="1248" text-anchor="middle">ASI05 — code execution smuggled through a parameter</text>
+  <path class="link" d="M380 1288 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="1279" text-anchor="start" font-weight="650" fill="var(--ink)">6c–6e  effective envelope = min(token constraints, dynamic overrides)</text>
+  <text class="edge" x="480" y="1334" text-anchor="start">an override may only tighten</text>
+  <path class="link" d="M380 1374 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="1365" text-anchor="start" font-weight="650" fill="var(--ink)">7  checkConstraints()</text>
+  <text class="edge" x="480" y="1420" text-anchor="start">force · velocity · torque · jerk · angular velocity · geofence · human presence · consequence limits</text>
+  <path class="link" d="M380 1460 h86 v28 h-82" marker-end="url(#a)"/>
+  <text class="bd" x="480" y="1451" text-anchor="start" font-weight="650" fill="var(--ink)">7b  checkForbiddenCombos(recentActions, action)</text>
+  <text class="edge" x="480" y="1506" text-anchor="start">filesystem.write → exec.run inside 60 s raises the required tier to T3_COMMIT</text>
+  <rect x="42" y="1544" width="1256" height="28" rx="8" fill="var(--line-soft)" stroke="none"/>
+  <text class="grp" x="58" y="1563">Outcome</text>
+  <text class="edge" x="1282" y="1563" text-anchor="end">decideBytier()</text>
+  <rect x="62" y="1610" width="238" height="76" rx="10" class="card"/>
+  <rect x="62" y="1610" width="238" height="76" rx="10" stroke="none" fill="var(--t0)" fill-opacity="var(--wash)"/>
+  <rect x="62" y="1611" width="4" height="74" rx="2" fill="var(--t0)"/>
+  <text class="bt mono" x="78" y="1632" fill="var(--t0)">allow</text>
+  <text class="bd" x="78" y="1651">T0_OBSERVE · T1_PREPARE</text>
+  <text class="bd" x="78" y="1666">auto-approved, with audit</text>
+  <path class="link" d="M380 1580 C380 1598 181 1588 181 1608" marker-end="url(#a)"/>
+  <rect x="308" y="1610" width="238" height="76" rx="10" class="card"/>
+  <rect x="308" y="1610" width="238" height="76" rx="10" stroke="none" fill="var(--t2)" fill-opacity="var(--wash)"/>
+  <rect x="308" y="1611" width="4" height="74" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="324" y="1632" fill="var(--t2)">escalate</text>
+  <text class="bd" x="324" y="1651">T2_ACT</text>
+  <text class="bd" x="324" y="1666">30 s timeout, fallback deny</text>
+  <path class="link" d="M380 1580 C380 1598 427 1588 427 1608" marker-end="url(#a)"/>
+  <rect x="554" y="1610" width="238" height="76" rx="10" class="card"/>
+  <rect x="554" y="1610" width="238" height="76" rx="10" stroke="none" fill="var(--t3)" fill-opacity="var(--wash)"/>
+  <rect x="554" y="1611" width="4" height="74" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="570" y="1632" fill="var(--t3)">escalate</text>
+  <text class="bd" x="570" y="1651">T3_COMMIT</text>
+  <text class="bd" x="570" y="1666">30 s timeout, fallback safe-stop</text>
+  <path class="link" d="M380 1580 C380 1598 673 1588 673 1608" marker-end="url(#a)"/>
+  <rect x="800" y="1610" width="238" height="76" rx="10" class="card"/>
+  <rect x="800" y="1610" width="238" height="76" rx="10" stroke="none" fill="var(--slate)" fill-opacity="var(--wash)"/>
+  <rect x="800" y="1611" width="4" height="74" rx="2" fill="var(--slate)"/>
+  <text class="bt mono" x="816" y="1632" fill="var(--slate)">deny</text>
+  <text class="bd" x="816" y="1651">any violation above</text>
+  <text class="bd" x="816" y="1666">reason + policyViolated</text>
+  <path class="link" d="M380 1580 C380 1598 919 1588 919 1608" marker-end="url(#a)"/>
+  <rect x="1046" y="1610" width="238" height="76" rx="10" class="card"/>
+  <rect x="1046" y="1610" width="238" height="76" rx="10" stroke="none" fill="var(--t1)" fill-opacity="var(--wash)"/>
+  <rect x="1046" y="1611" width="4" height="74" rx="2" fill="var(--t1)"/>
+  <text class="bt mono" x="1062" y="1632" fill="var(--t1)">transform</text>
+  <text class="bd" x="1062" y="1651">regulated-data fallback route</text>
+  <text class="bd" x="1062" y="1666">constraintOverrides</text>
+  <path class="link" d="M380 1580 C380 1598 1165 1588 1165 1608" marker-end="url(#a)"/>
+  <rect x="42" y="1720" width="1256" height="28" rx="8" fill="var(--line-soft)" stroke="none"/>
+  <text class="grp" x="58" y="1739">Evidence</text>
+  <path class="link" d="M380 1786 H1225" marker-end="url(#a)"/>
+  <text class="bd" x="802.5" y="1777" text-anchor="middle" font-weight="650" fill="var(--ink)">9  append policy.evaluated</text>
+  <text class="edge" x="802.5" y="1804" text-anchor="middle">and the approval.* / safety.* events raised along the way — append-only, previousHash chained</text>
+  <path class="link" d="M380 1844 H830" marker-end="url(#a)"/>
+  <text class="bd" x="605" y="1835" text-anchor="middle" font-weight="650" fill="var(--ink)">finalize() → economyPlugin.postIntercept()</text>
+  <text class="edge" x="605" y="1862" text-anchor="middle">settlement runs only on allow, and only after the primary audit acknowledges</text>
+  <text class="foot" x="40" y="1963">Derived from: packages/policy-gateway/src/gateway.ts (intercept L647, evaluateRequest L667, decideBytier L1752) · tier-assigner.ts · constraint-checker.ts · forbidden-combos.ts · plugin-failures.ts · regulated-data-policy.ts ·</text>
+  <text class="foot" x="40" y="1978">docs/conformance/owasp-asi-mapping.md</text>
+</svg>

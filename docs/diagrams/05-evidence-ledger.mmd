@@ -1,0 +1,17 @@
+%% SINT Protocol — Evidence ledger hash chain
+%% Source of truth: packages/evidence-ledger/src/writer.ts
+%%   GENESIS_HASH L30, computeEventHash() L35, append() L113, verifyChain()
+flowchart LR
+  G["<b>GENESIS</b><br/>previousHash = 0×64"]
+  E1["<b>seq 1</b> · request.received<br/>eventId UUIDv7 · timestamp ISO-8601 µs<br/>agentId · tokenId · payload<br/>previousHash = GENESIS<br/>hash = SHA-256(canonical event)"]
+  E2["<b>seq 2</b> · policy.evaluated<br/>payload: decision, tier, risk<br/>previousHash = hash(seq 1)<br/>hash = SHA-256(canonical event)"]
+  E3["<b>seq 3</b> · approval.requested<br/>previousHash = hash(seq 2)"]
+  E4["<b>seq 4</b> · approval.granted<br/>previousHash = hash(seq 3)"]
+  E5["<b>seq 5</b> · action.completed<br/>previousHash = hash(seq 4)"]
+
+  G --> E1 --> E2 --> E3 --> E4 --> E5
+
+  A["append() is the only write.<br/>No update. No delete."]
+  B["Hash covers eventId, sequenceNumber, timestamp,<br/>eventType, agentId, tokenId, payload, previousHash<br/>serialised with canonicalJsonStringify()"]
+  C["Edit any past event and every later hash<br/>stops matching: verifyChain() returns<br/>err(sequenceNumber) at the first break."]
+  D["LedgerWriter.restore() resumes only a chain<br/>that verifies end to end."]

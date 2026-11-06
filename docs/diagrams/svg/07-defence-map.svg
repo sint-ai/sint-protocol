@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 1020" width="1340" height="1020" role="img" aria-label="SINT Protocol — defence map, OWASP ASI01–ASI10">
+  <title>SINT Protocol — defence map, OWASP ASI01–ASI10</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="1020"/>
+  <text class="h1" x="40" y="48">SINT Protocol — defence map, OWASP ASI01–ASI10</text>
+  <text class="sub" x="40" y="71">Every control sits at the same choke point. The checkpoint column is the step number inside evaluateRequest().</text>
+  <text class="grp" x="130" y="128">Threat</text>
+  <text class="grp" x="404" y="128">Checkpoint in intercept()</text>
+  <text class="grp" x="646" y="128">Implementation</text>
+  <text class="grp" x="970" y="128">Effect at runtime</text>
+  <line x1="46" y1="142" x2="1294" y2="142" stroke="var(--line)" stroke-width="1.2"/>
+  <rect x="46" y="152" width="1248" height="64" rx="9" fill="var(--surface2)" stroke="none"/>
+  <rect x="46" y="160" width="4" height="48" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="60" y="180" font-size="13" fill="var(--t3)">ASI01</text>
+  <text class="bd" x="60" y="200" font-size="10" fill="var(--faint)">fail-open</text>
+  <text class="bt" x="130" y="180" font-size="12.5">Goal hijack / prompt injection</text>
+  <text class="bd" x="404" y="180">1a — before token resolution</text>
+  <text class="bd mono" x="646" y="178" font-size="10.5" fill="var(--ink)">DefaultGoalHijackDetector</text>
+  <text class="bd" x="646" y="204" font-size="9.5" fill="var(--faint)">goal-hijack.ts</text>
+  <text class="bd" x="970" y="180">deny GOAL_HIJACK at confidence ≥ 0.6</text>
+  <rect x="46" y="228" width="4" height="48" rx="2" fill="var(--t1)"/>
+  <text class="bt mono" x="60" y="248" font-size="13" fill="var(--t1)">ASI02</text>
+  <text class="bd" x="60" y="268" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="248" font-size="12.5">Tool misuse / resource scope abuse</text>
+  <text class="bd" x="404" y="248">4 — token validation</text>
+  <text class="bd mono" x="646" y="246" font-size="10.5" fill="var(--ink)">validateCapabilityToken + assignTier</text>
+  <text class="bd" x="646" y="272" font-size="9.5" fill="var(--faint)">capability-tokens/src</text>
+  <text class="bd" x="970" y="248">RESOURCE_MISMATCH · ACTION_NOT_PERMITTED</text>
+  <rect x="46" y="288" width="1248" height="64" rx="9" fill="var(--surface2)" stroke="none"/>
+  <rect x="46" y="296" width="4" height="48" rx="2" fill="var(--t1)"/>
+  <text class="bt mono" x="60" y="316" font-size="13" fill="var(--t1)">ASI03</text>
+  <text class="bd" x="60" y="336" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="316" font-size="12.5">Identity abuse / token forgery</text>
+  <text class="bd" x="404" y="316">3–4 — revocation + signature</text>
+  <text class="bd mono" x="646" y="314" font-size="10.5" fill="var(--ink)">validateCapabilityToken</text>
+  <text class="bd" x="646" y="340" font-size="9.5" fill="var(--faint)">capability-tokens/src</text>
+  <text class="bd" x="970" y="310">TOKEN_EXPIRED · INVALID_TOKEN ·</text>
+  <text class="bd" x="970" y="325">SUBJECT_MISMATCH</text>
+  <rect x="46" y="364" width="4" height="48" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="60" y="384" font-size="13" fill="var(--t2)">ASI04</text>
+  <text class="bd" x="60" y="404" font-size="10" fill="var(--faint)">fail-open</text>
+  <text class="bt" x="130" y="384" font-size="12.5">Supply chain / model fingerprint</text>
+  <text class="bd" x="404" y="384">4e — after token validation</text>
+  <text class="bd mono" x="646" y="382" font-size="10.5" fill="var(--ink)">DefaultSupplyChainVerifier</text>
+  <text class="bd" x="646" y="408" font-size="9.5" fill="var(--faint)">supply-chain.ts</text>
+  <text class="bd" x="970" y="384">SUPPLY_CHAIN_VIOLATION on a high-severity miss</text>
+  <rect x="46" y="424" width="1248" height="64" rx="9" fill="var(--surface2)" stroke="none"/>
+  <rect x="46" y="432" width="4" height="48" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="60" y="452" font-size="13" fill="var(--t3)">ASI05</text>
+  <text class="bd" x="60" y="472" font-size="10" fill="var(--faint)">mixed</text>
+  <text class="bt" x="130" y="452" font-size="12.5">Unsafe code execution</text>
+  <text class="bd" x="404" y="452">5, 6b, 7b — tier, args, combos</text>
+  <text class="bd mono" x="646" y="444" font-size="10.5" fill="var(--ink)">assignTier · DefaultArgInjectionDetector ·</text>
+  <text class="bd mono" x="646" y="458" font-size="10.5" fill="var(--ink)">checkForbiddenCombos</text>
+  <text class="bd" x="646" y="476" font-size="9.5" fill="var(--faint)">tier-assigner.ts · arg-injection-detector.ts · forbidden-combos.ts</text>
+  <text class="bd" x="970" y="452">mcp://exec/* floors at T3_COMMIT</text>
+  <rect x="46" y="500" width="4" height="48" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="60" y="520" font-size="13" fill="var(--t2)">ASI06</text>
+  <text class="bd" x="60" y="540" font-size="10" fill="var(--faint)">fail-open</text>
+  <text class="bt" x="130" y="520" font-size="12.5">Memory poisoning / context injection</text>
+  <text class="bd" x="404" y="520">1b-pre — before the breaker</text>
+  <text class="bd mono" x="646" y="518" font-size="10.5" fill="var(--ink)">DefaultMemoryIntegrityChecker</text>
+  <text class="bd" x="646" y="544" font-size="9.5" fill="var(--faint)">memory-integrity.ts</text>
+  <text class="bd" x="970" y="520">high severity denies; medium warns and allows</text>
+  <rect x="46" y="560" width="1248" height="64" rx="9" fill="var(--surface2)" stroke="none"/>
+  <rect x="46" y="568" width="4" height="48" rx="2" fill="var(--t1)"/>
+  <text class="bt mono" x="60" y="588" font-size="13" fill="var(--t1)">ASI07</text>
+  <text class="bd" x="60" y="608" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="588" font-size="12.5">Inter-agent trust / delegation chain</text>
+  <text class="bd" x="404" y="588">delegation time, step 4, and the A2A bridge</text>
+  <text class="bd mono" x="646" y="586" font-size="10.5" fill="var(--ink)">delegateCapabilityToken · A2AInterceptor</text>
+  <text class="bd" x="646" y="612" font-size="9.5" fill="var(--faint)">capability-tokens/src/delegator.ts · bridge-a2a/src</text>
+  <text class="bd" x="970" y="588">attenuation only, MAX_DELEGATION_DEPTH = 3</text>
+  <rect x="46" y="636" width="4" height="48" rx="2" fill="var(--violet)"/>
+  <text class="bt mono" x="60" y="656" font-size="13" fill="var(--violet)">ASI08</text>
+  <text class="bd" x="60" y="676" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="656" font-size="12.5">Resource exhaustion</text>
+  <text class="bd" x="404" y="656">4b rate limit · 1b circuit breaker</text>
+  <text class="bd mono" x="646" y="648" font-size="10.5" fill="var(--ink)">InMemoryRateLimitStore ·</text>
+  <text class="bd mono" x="646" y="662" font-size="10.5" fill="var(--ink)">InMemoryCircuitBreaker</text>
+  <text class="bd" x="646" y="680" font-size="9.5" fill="var(--faint)">@pshkv/persistence · circuit-breaker.ts</text>
+  <text class="bd" x="970" y="650">per-token sliding window; breaker opens on</text>
+  <text class="bd" x="970" y="665">repeated denial</text>
+  <rect x="46" y="696" width="1248" height="64" rx="9" fill="var(--surface2)" stroke="none"/>
+  <rect x="46" y="704" width="4" height="48" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="60" y="724" font-size="13" fill="var(--t2)">ASI09</text>
+  <text class="bd" x="60" y="744" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="724" font-size="12.5">Human oversight bypass</text>
+  <text class="bd" x="404" y="724">5–7 — tier then escalation</text>
+  <text class="bd mono" x="646" y="722" font-size="10.5" fill="var(--ink)">assignTier · ApprovalQueue</text>
+  <text class="bd" x="646" y="748" font-size="9.5" fill="var(--faint)">approval-flow.ts</text>
+  <text class="bd" x="970" y="724">T2 falls back to deny, T3 to safe-stop</text>
+  <rect x="46" y="772" width="4" height="48" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="60" y="792" font-size="13" fill="var(--t3)">ASI10</text>
+  <text class="bd" x="60" y="812" font-size="10" fill="var(--faint)">fail-closed</text>
+  <text class="bt" x="130" y="792" font-size="12.5">Rogue / autonomous agent</text>
+  <text class="bd" x="404" y="792">1b breaker state · 5c CSML auto-trip</text>
+  <text class="bd mono" x="646" y="790" font-size="10.5" fill="var(--ink)">InMemoryCircuitBreaker</text>
+  <text class="bd" x="646" y="816" font-size="9.5" fill="var(--faint)">circuit-breaker.ts</text>
+  <text class="bd" x="970" y="786">OPEN denies instantly; an anomalous persona</text>
+  <text class="bd" x="970" y="801">trips the breaker</text>
+  <rect x="46" y="850" width="404" height="108" rx="10" class="card"/>
+  <rect x="46" y="850" width="404" height="108" rx="10" stroke="none" fill="var(--t3)" fill-opacity="var(--wash)"/>
+  <rect x="46" y="851" width="4" height="106" rx="2" fill="var(--t3)"/>
+  <text class="bt" x="62" y="872" fill="var(--t3)">Fail behaviour is per seat</text>
+  <text class="bd" x="62" y="891">SafetyPermitPlugin is fail-closed: no external</text>
+  <text class="bd" x="62" y="906">safety answer means no action. Advisory seats such</text>
+  <text class="bd" x="62" y="921">as goal hijack and supply chain are fail-open — a</text>
+  <text class="bd" x="62" y="936">plugin error does not block the request, and the</text>
+  <text class="bd" x="62" y="951">fault rides along on the decision.</text>
+  <rect x="468" y="850" width="404" height="108" rx="10" class="card"/>
+  <rect x="468" y="850" width="404" height="108" rx="10" stroke="none" fill="var(--t2)" fill-opacity="var(--wash)"/>
+  <rect x="468" y="851" width="4" height="106" rx="2" fill="var(--t2)"/>
+  <text class="bt" x="484" y="872" fill="var(--t2)">Unexpected failure</text>
+  <text class="bd" x="484" y="891">PluginFailureScope resolves an unhandled gateway</text>
+  <text class="bd" x="484" y="906">failure at the T3_COMMIT baseline. The gateway</text>
+  <text class="bd" x="484" y="921">never degrades towards allow.</text>
+  <rect x="890" y="850" width="404" height="108" rx="10" class="card"/>
+  <rect x="890" y="850" width="404" height="108" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="890" y="851" width="4" height="106" rx="2" fill="var(--brand)"/>
+  <text class="bt" x="906" y="872" fill="var(--brand)">Coverage is executable</text>
+  <text class="bd" x="906" y="891">Each control is pinned by fixtures in</text>
+  <text class="bd" x="906" y="906">packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json,</text>
+  <text class="bd" x="906" y="921">run by owasp-asi-conformance.test.ts.</text>
+  <text class="foot" x="40" y="1006">Derived from: docs/conformance/owasp-asi-mapping.md (status: Certified, Phase 3) · packages/policy-gateway/src/index.ts (exported plugin interfaces) · packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json</text>
+</svg>

@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 836" width="1340" height="836" role="img" aria-label="SINT Protocol — package layering">
+  <title>SINT Protocol — package layering</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="836"/>
+  <text class="h1" x="40" y="48">SINT Protocol — package layering</text>
+  <text class="sub" x="40" y="71">Published under the @pshkv scope. The gate-* packages live in directories without the prefix — packages/policy-gateway builds @pshkv/gate-policy-gateway.</text>
+  <text class="grp" x="46" y="138">Foundation</text>
+  <line x1="46" y1="148" x2="1294" y2="148" stroke="var(--line-soft)" stroke-width="1"/>
+  <text class="grp" x="46" y="254">Authority & storage</text>
+  <line x1="46" y1="264" x2="1294" y2="264" stroke="var(--line-soft)" stroke-width="1"/>
+  <text class="grp" x="46" y="370">Audit</text>
+  <line x1="46" y1="380" x2="1294" y2="380" stroke="var(--line-soft)" stroke-width="1"/>
+  <text class="grp" x="46" y="486">Enforcement</text>
+  <line x1="46" y1="496" x2="1294" y2="496" stroke="var(--line-soft)" stroke-width="1"/>
+  <text class="grp" x="46" y="594">Protocol surface</text>
+  <line x1="46" y1="604" x2="1294" y2="604" stroke="var(--line-soft)" stroke-width="1"/>
+  <text class="grp" x="46" y="704">Edge</text>
+  <line x1="46" y1="714" x2="1294" y2="714" stroke="var(--line-soft)" stroke-width="1"/>
+  <rect x="560" y="150" width="220" height="56" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="560" y="150" width="220" height="56" rx="11" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="670.0" y="175" text-anchor="middle" font-size="12.5" fill="var(--brand)">@pshkv/core</text>
+  <text class="bd" x="670.0" y="193" text-anchor="middle">types · Zod schemas · tier rules</text>
+  <rect x="380" y="266" width="230" height="56" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="380" y="266" width="230" height="56" rx="11" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="495.0" y="291" text-anchor="middle" font-size="12.5" fill="var(--t1)">@pshkv/gate-capability-tokens</text>
+  <text class="bd" x="495.0" y="309" text-anchor="middle">packages/capability-tokens</text>
+  <rect x="640" y="266" width="200" height="56" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="640" y="266" width="200" height="56" rx="11" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="740.0" y="291" text-anchor="middle" font-size="12.5" fill="var(--t1)">@pshkv/persistence</text>
+  <text class="bd" x="740.0" y="309" text-anchor="middle">rate limits · revocation</text>
+  <rect x="870" y="266" width="190" height="56" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="870" y="266" width="190" height="56" rx="11" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="965.0" y="291" text-anchor="middle" font-size="12.5" fill="var(--t1)">@pshkv/token-registry</text>
+  <text class="bd" x="965.0" y="309" text-anchor="middle">public token registry</text>
+  <rect x="470" y="382" width="230" height="56" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="470" y="382" width="230" height="56" rx="11" fill="var(--violet)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="585.0" y="407" text-anchor="middle" font-size="12.5" fill="var(--violet)">@pshkv/gate-evidence-ledger</text>
+  <text class="bd" x="585.0" y="425" text-anchor="middle">packages/evidence-ledger</text>
+  <rect x="430" y="498" width="320" height="62" rx="11" class="card" stroke-width="1.5"/>
+  <rect x="430" y="498" width="320" height="62" rx="11" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="590.0" y="523" text-anchor="middle" font-size="12.5" fill="var(--brand)">@pshkv/gate-policy-gateway</text>
+  <text class="bd" x="590.0" y="541" text-anchor="middle">packages/policy-gateway — intercept()</text>
+  <rect class="pane" x="80" y="600" width="1180" height="76" rx="14"/>
+  <text class="grp" x="96" y="622">Bridge adapters — @pshkv/bridge-* (each depends on core, tokens and the gateway; none depends on another)</text>
+  <rect x="96" y="636" width="94" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="143" y="652" text-anchor="middle" font-size="10.5">bridge-mcp</text>
+  <rect x="198.0" y="636" width="101.6" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="248.8" y="652" text-anchor="middle" font-size="10.5">bridge-ros2</text>
+  <rect x="307.6" y="636" width="124.4" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="369.8" y="652" text-anchor="middle" font-size="10.5">bridge-mavlink</text>
+  <rect x="440.0" y="636" width="94" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="487" y="652" text-anchor="middle" font-size="10.5">bridge-iot</text>
+  <rect x="542.0" y="636" width="94" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="589" y="652" text-anchor="middle" font-size="10.5">bridge-a2a</text>
+  <rect x="644.0" y="636" width="109.2" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="698.6" y="652" text-anchor="middle" font-size="10.5">bridge-swarm</text>
+  <rect x="761.2" y="636" width="124.4" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="823.4" y="652" text-anchor="middle" font-size="10.5">bridge-economy</text>
+  <rect x="893.6" y="636" width="109.2" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="948.2" y="652" text-anchor="middle" font-size="10.5">bridge-opcua</text>
+  <rect x="1010.8" y="636" width="177.6" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="1099.6" y="652" text-anchor="middle" font-size="10.5">bridge-mqtt-sparkplug</text>
+  <rect x="96" y="662" width="132" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="162" y="678" text-anchor="middle" font-size="10.5">bridge-open-rmf</text>
+  <rect x="236.0" y="662" width="116.8" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="294.4" y="678" text-anchor="middle" font-size="10.5">bridge-matter</text>
+  <rect x="360.8" y="662" width="170" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="445.8" y="678" text-anchor="middle" font-size="10.5">bridge-homeassistant</text>
+  <rect x="538.8" y="662" width="101.6" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="589.6" y="678" text-anchor="middle" font-size="10.5">bridge-grpc</text>
+  <rect x="648.4" y="662" width="116.8" height="24" rx="7" fill="var(--brand)" fill-opacity="var(--wash)" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="706.8" y="678" text-anchor="middle" font-size="10.5">bridge-openpi</text>
+  <rect x="150" y="722" width="460" height="58" rx="10" class="card"/>
+  <rect x="150" y="722" width="460" height="58" rx="10" stroke="none" fill="var(--t2)" fill-opacity="var(--wash)"/>
+  <rect x="150" y="723" width="4" height="56" rx="2" fill="var(--t2)"/>
+  <text class="bt" x="166" y="744" fill="var(--t2)">apps/gateway-server</text>
+  <text class="bd" x="166" y="763">Hono HTTP API — core, tokens, ledger, gateway, persistence, registry,</text>
+  <text class="bd" x="166" y="778">memory, interface-bridge, bridge-a2a, bridge-economy, avatar</text>
+  <rect x="690" y="722" width="460" height="58" rx="10" class="card"/>
+  <rect x="690" y="722" width="460" height="58" rx="10" stroke="none" fill="var(--t3)" fill-opacity="var(--wash)"/>
+  <rect x="690" y="723" width="4" height="56" rx="2" fill="var(--t3)"/>
+  <text class="bt" x="706" y="744" fill="var(--t3)">@pshkv/conformance-tests</text>
+  <text class="bd" x="706" y="763">Security regression suite — depends on the gateway, the ledger and</text>
+  <text class="bd" x="706" y="778">every bridge it certifies. Must pass on every PR.</text>
+  <path class="link" d="M670 206 C670 230 495 236 495 264" marker-end="url(#a)"/>
+  <path class="link" d="M700 206 V264" marker-end="url(#a)"/>
+  <path class="link" d="M700 206 C860 220 965 230 965 264" marker-end="url(#a)"/>
+  <path class="link" d="M495 322 V380" marker-end="url(#a)"/>
+  <path class="link" d="M620 206 C560 230 560 350 585 380" marker-end="url(#a)"/>
+  <path class="link" d="M495 438 C495 466 560 470 575 496" marker-end="url(#a)"/>
+  <path class="link soft" d="M430 322 C400 360 400 460 428 498" marker-end="url(#a)"/>
+  <path class="link" d="M740 322 C760 360 740 470 700 496" marker-end="url(#a)"/>
+  <path class="link soft" d="M1010 322 C1060 420 1000 540 752 540" marker-end="url(#a)"/>
+  <path class="link" d="M590 560 V598" marker-end="url(#a)"/>
+  <path class="link" d="M400 676 C400 700 380 700 380 720" marker-end="url(#a)"/>
+  <path class="link" d="M900 676 C900 700 920 700 920 720" marker-end="url(#a)"/>
+  <text class="foot" x="40" y="822">Derived from: the workspace dependency lists in each package.json (packages/*/package.json, apps/gateway-server/package.json). CLAUDE.md&#x27;s dependency graph writes these as @sint/* — the published scope in the manifests is @pshkv/*.</text>
+</svg>

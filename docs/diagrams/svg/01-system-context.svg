@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1320 700" width="1320" height="700" role="img" aria-label="SINT Protocol — system context">
+  <title>SINT Protocol — system context</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1320" height="700"/>
+  <text class="h1" x="40" y="48">SINT Protocol — system context</text>
+  <text class="sub" x="40" y="71">Every agent action reaches the physical world through one function: PolicyGateway.intercept().</text>
+  <rect class="pane" x="36" y="110" width="214" height="300" rx="14"/>
+  <text class="grp" x="52" y="132">Agent intent</text>
+  <rect class="pane" x="290" y="110" width="258" height="530" rx="14"/>
+  <text class="grp" x="306" y="132">Bridge adapters</text>
+  <rect class="pane" x="1038" y="110" width="246" height="300" rx="14"/>
+  <text class="grp" x="1054" y="132">Tools &amp; physical world</text>
+  <rect x="56" y="150" width="174" height="62" rx="10" class="card"/>
+  <rect x="56" y="150" width="174" height="62" rx="10" stroke="none" fill="var(--violet)" fill-opacity="var(--wash)"/>
+  <rect x="56" y="151" width="4" height="60" rx="2" fill="var(--violet)"/>
+  <text class="bt" x="72" y="172" fill="var(--violet)">LLM / MCP client</text>
+  <text class="bd" x="72" y="191">tool calls</text>
+  <rect x="56" y="236" width="174" height="62" rx="10" class="card"/>
+  <rect x="56" y="236" width="174" height="62" rx="10" stroke="none" fill="var(--violet)" fill-opacity="var(--wash)"/>
+  <rect x="56" y="237" width="4" height="60" rx="2" fill="var(--violet)"/>
+  <text class="bt" x="72" y="258" fill="var(--violet)">Autonomy stack</text>
+  <text class="bd" x="72" y="277">System 1 · System 2</text>
+  <rect x="56" y="322" width="174" height="62" rx="10" class="card"/>
+  <rect x="56" y="322" width="174" height="62" rx="10" stroke="none" fill="var(--violet)" fill-opacity="var(--wash)"/>
+  <rect x="56" y="323" width="4" height="60" rx="2" fill="var(--violet)"/>
+  <text class="bt" x="72" y="344" fill="var(--violet)">Peer agent</text>
+  <text class="bd" x="72" y="363">A2A · swarm</text>
+  <rect x="310" y="146" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="146" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="147" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="168" fill="var(--brand)">MCPInterceptor</text>
+  <text class="bd" x="326" y="187">@pshkv/bridge-mcp</text>
+  <rect x="310" y="214" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="214" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="215" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="236" fill="var(--brand)">ROS2Interceptor</text>
+  <text class="bd" x="326" y="255">@pshkv/bridge-ros2</text>
+  <rect x="310" y="282" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="282" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="283" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="304" fill="var(--brand)">MAVLinkInterceptor</text>
+  <text class="bd" x="326" y="323">@pshkv/bridge-mavlink</text>
+  <rect x="310" y="350" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="350" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="351" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="372" fill="var(--brand)">IotInterceptor</text>
+  <text class="bd" x="326" y="391">@pshkv/bridge-iot</text>
+  <rect x="310" y="418" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="418" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="419" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="440" fill="var(--brand)">A2AInterceptor</text>
+  <text class="bd" x="326" y="459">@pshkv/bridge-a2a</text>
+  <rect x="310" y="486" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="486" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="487" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="508" fill="var(--brand)">SwarmCoordinator</text>
+  <text class="bd" x="326" y="527">@pshkv/bridge-swarm</text>
+  <rect x="310" y="554" width="218" height="58" rx="10" class="card"/>
+  <rect x="310" y="554" width="218" height="58" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="310" y="555" width="4" height="56" rx="2" fill="var(--brand)"/>
+  <text class="bt mono" x="326" y="576" fill="var(--brand)">EconomyPlugin</text>
+  <text class="bd" x="326" y="595">@pshkv/bridge-economy</text>
+  <path class="link" d="M232 181 L286 200" marker-end="url(#a)"/>
+  <path class="link" d="M232 267 L286 300" marker-end="url(#a)"/>
+  <path class="link" d="M232 353 L286 470" marker-end="url(#a)"/>
+  <rect x="610" y="300" width="300" height="150" rx="18" class="card" stroke-width="2.4" stroke="var(--brand)"/>
+  <rect x="610" y="300" width="300" height="150" rx="18" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="760.0" y="338" text-anchor="middle" font-size="16" fill="var(--brand)">PolicyGateway.intercept()</text>
+  <text class="bd" x="760.0" y="360" text-anchor="middle">@pshkv/gate-policy-gateway</text>
+  <text class="bt" x="760.0" y="388" text-anchor="middle">the single choke point</text>
+  <text class="bd" x="760.0" y="410" text-anchor="middle">validate · authorize · tier · constrain</text>
+  <text class="bd" x="760.0" y="426" text-anchor="middle">allow · deny · escalate · transform</text>
+  <path class="link" d="M528 175 C575 175 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 243 C575 243 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 311 C575 311 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 379 C575 379 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 447 C575 447 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 515 C575 515 565 375 608 375" marker-end="url(#a)"/>
+  <path class="link" d="M528 583 C575 583 565 375 608 375" marker-end="url(#a)"/>
+  <rect class="pane" x="610" y="110" width="300" height="152" rx="14"/>
+  <text class="grp" x="626" y="132">Authority inputs</text>
+  <rect x="630" y="146" width="260" height="50" rx="10" class="card"/>
+  <rect x="630" y="146" width="260" height="50" rx="10" stroke="none" fill="var(--t1)" fill-opacity="var(--wash)"/>
+  <rect x="630" y="147" width="4" height="48" rx="2" fill="var(--t1)"/>
+  <text class="bt" x="646" y="168" fill="var(--t1)">Capability tokens</text>
+  <text class="bd" x="646" y="187">@pshkv/gate-capability-tokens</text>
+  <rect x="630" y="204" width="260" height="46" rx="10" class="card"/>
+  <rect x="630" y="204" width="260" height="46" rx="10" stroke="none" fill="var(--t1)" fill-opacity="var(--wash)"/>
+  <rect x="630" y="205" width="4" height="44" rx="2" fill="var(--t1)"/>
+  <text class="bt" x="646" y="226" fill="var(--t1)">Rate limits · revocation</text>
+  <text class="bd" x="646" y="245">@pshkv/persistence</text>
+  <path class="link" d="M760 250 L760 298" marker-end="url(#a)"/>
+  <rect x="1038" y="540" width="246" height="82" rx="10" class="card"/>
+  <rect x="1038" y="540" width="246" height="82" rx="10" stroke="none" fill="var(--t2)" fill-opacity="var(--wash)"/>
+  <rect x="1038" y="541" width="4" height="80" rx="2" fill="var(--t2)"/>
+  <text class="bt" x="1054" y="562" fill="var(--t2)">Human reviewer</text>
+  <text class="bd" x="1054" y="581">ApprovalQueue — T2 fallback deny,</text>
+  <text class="bd" x="1054" y="596">T3 fallback safe-stop, 30 s timeout</text>
+  <path class="link" d="M910 420 C990 420 980 575 1036 575" marker-end="url(#a)"/>
+  <text class="edge" x="922" y="546">escalate T2 / T3</text>
+  <rect x="1058" y="150" width="206" height="62" rx="10" class="card"/>
+  <rect x="1058" y="150" width="206" height="62" rx="10" stroke="none" fill="var(--t0)" fill-opacity="var(--wash)"/>
+  <rect x="1058" y="151" width="4" height="60" rx="2" fill="var(--t0)"/>
+  <text class="bt" x="1074" y="172" fill="var(--t0)">MCP servers</text>
+  <text class="bd" x="1074" y="191">filesystem · exec · database</text>
+  <rect x="1058" y="236" width="206" height="62" rx="10" class="card"/>
+  <rect x="1058" y="236" width="206" height="62" rx="10" stroke="none" fill="var(--t0)" fill-opacity="var(--wash)"/>
+  <rect x="1058" y="237" width="4" height="60" rx="2" fill="var(--t0)"/>
+  <text class="bt" x="1074" y="258" fill="var(--t0)">ROS 2 graph</text>
+  <text class="bd" x="1074" y="277">topics · services · actions</text>
+  <rect x="1058" y="322" width="206" height="62" rx="10" class="card"/>
+  <rect x="1058" y="322" width="206" height="62" rx="10" stroke="none" fill="var(--t0)" fill-opacity="var(--wash)"/>
+  <rect x="1058" y="323" width="4" height="60" rx="2" fill="var(--t0)"/>
+  <text class="bt" x="1074" y="344" fill="var(--t0)">Actuators</text>
+  <text class="bd" x="1074" y="363">drones · PLCs · IoT · robots</text>
+  <path class="link" d="M910 340 C980 340 985 181 1056 181" marker-end="url(#a)"/>
+  <text class="edge" x="1000" y="258" text-anchor="middle">allow / transform</text>
+  <path class="link" d="M910 352 L1056 267" marker-end="url(#a)"/>
+  <path class="link" d="M910 364 L1056 353" marker-end="url(#a)"/>
+  <path class="link" d="M910 428 L978 456" marker-end="url(#x)" stroke="var(--t3)"/>
+  <text class="edge" x="986" y="454" fill="var(--t3)">deny — the call</text>
+  <text class="edge" x="986" y="469" fill="var(--t3)">never reaches the world</text>
+  <rect x="610" y="530" width="300" height="108" rx="10" class="card"/>
+  <rect x="610" y="530" width="300" height="108" rx="10" stroke="none" fill="var(--violet)" fill-opacity="var(--wash)"/>
+  <rect x="610" y="531" width="4" height="106" rx="2" fill="var(--violet)"/>
+  <text class="bt" x="626" y="552" fill="var(--violet)">EvidenceLedger</text>
+  <text class="bd" x="626" y="571">@pshkv/gate-evidence-ledger</text>
+  <text class="bd" x="626" y="586">SHA-256 hash-chained, append-only.</text>
+  <text class="bd" x="626" y="601">policy.evaluated for every decision;</text>
+  <text class="bd" x="626" y="616">approval.* and safety.* alongside it.</text>
+  <path class="link" d="M760 450 L760 528" marker-end="url(#a)"/>
+  <text class="edge" x="770" y="498">every decision appended</text>
+  <path class="link" d="M1036 598 L912 598" marker-end="url(#a)"/>
+  <text class="edge" x="974" y="616" text-anchor="middle">approval.granted / denied</text>
+  <text class="foot" x="40" y="686">Derived from: packages/policy-gateway/src/gateway.ts · packages/bridge-*/src/*-interceptor.ts · packages/evidence-ledger/src/writer.ts · CLAUDE.md</text>
+</svg>

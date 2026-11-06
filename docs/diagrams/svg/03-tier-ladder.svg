@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 776" width="1340" height="776" role="img" aria-label="SINT Protocol — the T0–T3 approval ladder">
+  <title>SINT Protocol — the T0–T3 approval ladder</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="776"/>
+  <text class="h1" x="40" y="48">SINT Protocol — the T0–T3 approval ladder</text>
+  <text class="sub" x="40" y="71">ApprovalTier decides who may say yes. RiskTier describes the consequence. Both are assigned by the same pure function.</text>
+  <rect x="46" y="136" width="300" height="272" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="46" y="136" width="300" height="272" rx="14" fill="var(--t0)" fill-opacity="var(--wash)" stroke="none"/>
+  <rect x="46" y="136" width="300" height="5" rx="2.5" fill="var(--t0)"/>
+  <text class="bt mono" x="64" y="176" font-size="17" fill="var(--t0)">T0_OBSERVE</text>
+  <text class="bd mono" x="64" y="196">risk T0_read</text>
+  <text class="bt" x="64" y="222" fill="var(--t0)">auto-approve + audit</text>
+  <text class="bd" x="64" y="241">Read-only. No physical state change.</text>
+  <line x1="64" y1="256" x2="328" y2="256" stroke="var(--line)" stroke-width="1"/>
+  <text class="grp" x="64" y="278">resources that land here</text>
+  <text class="bd mono" x="64" y="302" font-size="10.5">ros2:///camera/*&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;subscribe</text>
+  <text class="bd mono" x="64" y="320" font-size="10.5">mcp://filesystem/readFile&#160;&#160; call</text>
+  <text class="bd mono" x="64" y="338" font-size="10.5">mavlink://*/cmd/camera&#160;&#160;&#160;&#160;&#160;&#160;call</text>
+  <text class="bd mono" x="64" y="356" font-size="10.5">sint://interface/status&#160;&#160;&#160;&#160; call</text>
+  <path class="link" d="M348 272.0 H361" marker-end="url(#a)"/>
+  <rect x="364" y="136" width="300" height="272" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="364" y="136" width="300" height="272" rx="14" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <rect x="364" y="136" width="300" height="5" rx="2.5" fill="var(--t1)"/>
+  <text class="bt mono" x="382" y="176" font-size="17" fill="var(--t1)">T1_PREPARE</text>
+  <text class="bd mono" x="382" y="196">risk T1_write_low</text>
+  <text class="bt" x="382" y="222" fill="var(--t1)">auto-approve + audit</text>
+  <text class="bd" x="382" y="241">Idempotent writes and staging.</text>
+  <line x1="382" y1="256" x2="646" y2="256" stroke="var(--line)" stroke-width="1"/>
+  <text class="grp" x="382" y="278">resources that land here</text>
+  <text class="bd mono" x="382" y="302" font-size="10.5">ros2:///waypoints&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; publish</text>
+  <text class="bd mono" x="382" y="320" font-size="10.5">mcp://filesystem/writeFile&#160;&#160;call</text>
+  <text class="bd mono" x="382" y="338" font-size="10.5">open-rmf://*&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;prepare</text>
+  <text class="bd mono" x="382" y="356" font-size="10.5">engine://system2/plan&#160;&#160;&#160;&#160;&#160;&#160; create</text>
+  <path class="link" d="M666 272.0 H679" marker-end="url(#a)"/>
+  <rect x="682" y="136" width="300" height="272" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="682" y="136" width="300" height="272" rx="14" fill="var(--t2)" fill-opacity="var(--wash)" stroke="none"/>
+  <rect x="682" y="136" width="300" height="5" rx="2.5" fill="var(--t2)"/>
+  <text class="bt mono" x="700" y="176" font-size="17" fill="var(--t2)">T2_ACT</text>
+  <text class="bd mono" x="700" y="196">risk T2_stateful</text>
+  <text class="bt" x="700" y="222" fill="var(--t2)">escalate — human review</text>
+  <text class="bd" x="700" y="241">Stateful change with a physical effect.</text>
+  <line x1="700" y1="256" x2="964" y2="256" stroke="var(--line)" stroke-width="1"/>
+  <text class="grp" x="700" y="278">resources that land here</text>
+  <text class="bd mono" x="700" y="302" font-size="10.5">ros2:///cmd_vel&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; publish</text>
+  <text class="bd mono" x="700" y="320" font-size="10.5">humanoid://*/arm/*/joint_commands</text>
+  <text class="bd mono" x="700" y="338" font-size="10.5">mavlink://*/cmd/takeoff&#160;&#160;&#160;&#160; call</text>
+  <text class="bd mono" x="700" y="356" font-size="10.5">mqtt://*/*valve*&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;publish</text>
+  <path class="link" d="M984 272.0 H997" marker-end="url(#a)"/>
+  <rect x="1000" y="136" width="300" height="272" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="1000" y="136" width="300" height="272" rx="14" fill="var(--t3)" fill-opacity="var(--wash)" stroke="none"/>
+  <rect x="1000" y="136" width="300" height="5" rx="2.5" fill="var(--t3)"/>
+  <text class="bt mono" x="1018" y="176" font-size="17" fill="var(--t3)">T3_COMMIT</text>
+  <text class="bd mono" x="1018" y="196">risk T3_irreversible</text>
+  <text class="bt" x="1018" y="222" fill="var(--t3)">escalate — explicit approval</text>
+  <text class="bd" x="1018" y="241">Irreversible. Nothing undoes it.</text>
+  <line x1="1018" y1="256" x2="1282" y2="256" stroke="var(--line)" stroke-width="1"/>
+  <text class="grp" x="1018" y="278">resources that land here</text>
+  <text class="bd mono" x="1018" y="302" font-size="10.5">mcp://exec/*&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;call</text>
+  <text class="bd mono" x="1018" y="320" font-size="10.5">mcp://*/transfer.*&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;call</text>
+  <text class="bd mono" x="1018" y="338" font-size="10.5">mavlink://*/cmd/arm&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; call</text>
+  <text class="bd mono" x="1018" y="356" font-size="10.5">ros2:///mode_change&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; publish</text>
+  <rect x="46" y="424" width="618" height="34" rx="9" fill="var(--t0)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="64" y="446" fill="var(--t0)">Auto-approved by the gateway — logged, never silent</text>
+  <rect x="682" y="424" width="612" height="34" rx="9" fill="var(--t2)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="700" y="446" fill="var(--t2)">Escalated to a human — 30 s timeout, then the fallback action</text>
+  <rect class="pane" x="46" y="482" width="1248" height="232" rx="14"/>
+  <text class="grp" x="62" y="504">What raises a tier — assignTier(), packages/policy-gateway/src/tier-assigner.ts</text>
+  <rect x="66" y="520" width="388" height="78" rx="10" class="card"/>
+  <rect x="66" y="521" width="4" height="76" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="82" y="544" font-size="12.5">escalateOnHumanPresence</text>
+  <text class="bt mono" x="438" y="544" text-anchor="end" fill="var(--t2)">+1 tier</text>
+  <text class="bd" x="82" y="566">physicalContext.humanDetected on a rule</text>
+  <text class="bd" x="82" y="582">that opts in — e.g. ros2:///cmd_vel</text>
+  <rect x="476" y="520" width="388" height="78" rx="10" class="card"/>
+  <rect x="476" y="521" width="4" height="76" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="492" y="544" font-size="12.5">escalateOnNewAgent</text>
+  <text class="bt mono" x="848" y="544" text-anchor="end" fill="var(--t2)">+1 tier</text>
+  <text class="bd" x="492" y="566">agent trust level is untrusted or</text>
+  <text class="bd" x="492" y="582">provisional</text>
+  <rect x="886" y="520" width="388" height="78" rx="10" class="card"/>
+  <rect x="886" y="521" width="4" height="76" rx="2" fill="var(--t2)"/>
+  <text class="bt mono" x="902" y="544" font-size="12.5">currentForceNewtons present</text>
+  <text class="bt mono" x="1258" y="544" text-anchor="end" fill="var(--t2)">floor T2_ACT</text>
+  <text class="bd" x="902" y="566">a reported force means the request is</text>
+  <text class="bd" x="902" y="582">already in a physical context</text>
+  <rect x="66" y="612" width="388" height="78" rx="10" class="card"/>
+  <rect x="66" y="613" width="4" height="76" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="82" y="636" font-size="12.5">reversibility = irreversible</text>
+  <text class="bt mono" x="438" y="636" text-anchor="end" fill="var(--t3)">floor T3_COMMIT</text>
+  <text class="bd" x="82" y="658">a declared consequence outranks any</text>
+  <text class="bd" x="82" y="674">resource naming</text>
+  <rect x="476" y="612" width="388" height="78" rx="10" class="card"/>
+  <rect x="476" y="613" width="4" height="76" rx="2" fill="var(--t3)"/>
+  <text class="bt mono" x="492" y="636" font-size="12.5">forbidden combo matched</text>
+  <text class="bt mono" x="848" y="636" text-anchor="end" fill="var(--t3)">requiredTier</text>
+  <text class="bd" x="492" y="658">filesystem.write → exec.run inside 60 s</text>
+  <text class="bd" x="492" y="674">is capability laundering</text>
+  <rect x="886" y="612" width="388" height="78" rx="10" class="card"/>
+  <rect x="886" y="613" width="4" height="76" rx="2" fill="var(--t1)"/>
+  <text class="bt mono" x="902" y="636" font-size="12.5">no rule matches</text>
+  <text class="bt mono" x="1258" y="636" text-anchor="end" fill="var(--t1)">default T1_PREPARE</text>
+  <text class="bd" x="902" y="658">but MCP semantics, exec.run and physical</text>
+  <text class="bd" x="902" y="674">dispatch raise their own floors</text>
+  <text class="foot" x="40" y="747">Derived from: packages/core/src/types/policy.ts (ApprovalTier, RiskTier) · packages/core/src/constants/tiers.ts (DEFAULT_TIER_RULES) · packages/core/src/constants/forbidden-combos.ts · packages/policy-gateway/src/tier-assigner.ts ·</text>
+  <text class="foot" x="40" y="762">gateway.ts decideBytier()</text>
+</svg>
