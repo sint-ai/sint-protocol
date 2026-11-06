@@ -6,6 +6,7 @@
  *
  *   pnpm run demo:turbine-authority           print the whole run
  *   pnpm run demo:turbine-authority --step    press Enter between steps
+ *   pnpm run demo:turbine-authority --short   skip the failure tour (steps 6a-6c)
  */
 import { realpathSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
@@ -51,13 +52,13 @@ const OPERATOR = "operator-on-shift";
 const ILLUSTRATIVE_POWER_KW = 900;
 
 const READ_TOKEN_TTL_MS = 60 * 60_000;
-const CONTROL_TOKEN_TTL_MS = 5 * 60_000;
+const CONTROL_TOKEN_TTL_MS = 10 * 60_000;
 /**
  * Evidence lifetime for a human-paced walkthrough, including the policy age
  * limits below. Those default to 30s (receipt) and 5s (world state), which a
  * presenter talking between steps would exceed.
  */
-const EVIDENCE_TTL_MS = 5 * 60_000;
+const EVIDENCE_TTL_MS = 10 * 60_000;
 
 /** The broker's event names are not ledger event types; record the closest one. */
 const LEDGER_TYPE_FOR_BROKER_EVENT = {
@@ -111,7 +112,7 @@ export function createSimulatedController() {
         requestId: request.requestId,
         node: SETPOINT_NODE,
         powerKw: request.params.powerKw,
-        appliedAt: nowISO8601(),
+        acknowledgedAt: nowISO8601(),
         callNumber: calls.length + 1,
         simulated: true,
       };
@@ -132,7 +133,9 @@ export function createTurbineHarness({ controller = createSimulatedController() 
   const tokens = new Map();
   const proposals = new Map();
   const recordedApprovals = new Map();
+  const closedRequests = new Set();
   const issuedDecisions = new WeakSet();
+  const tokenLabels = new Map();
   const sensor = opcUaNodeToResourceUri(SENSOR_NODE, ENDPOINT);
   const setpoint = opcUaNodeToResourceUri(SETPOINT_NODE, ENDPOINT);
   let centralAvailable = true;
@@ -188,6 +191,9 @@ export function createTurbineHarness({ controller = createSimulatedController() 
         requestId: request.requestId,
         reason,
         tier: decision.assignedTier,
+        resource: request.resource,
+        action: request.action,
+        params: request.params,
       });
     }
     if (event.type !== "resolved") return;
@@ -201,10 +207,18 @@ export function createTurbineHarness({ controller = createSimulatedController() 
         approvers: resolution.approvers,
         simulationReceiptId: request.executionContext.simulationEvidence.receiptId,
       });
+    } else {
+      closedRequests.add(event.requestId);
     }
     const eventType = { approved: "approval.granted", denied: "approval.denied" }[resolution.status]
       ?? "approval.timeout";
-    audit(eventType, request.tokenId, { requestId: event.requestId, resolution });
+    audit(eventType, request.tokenId, {
+      requestId: event.requestId,
+      resolution,
+      resource: request.resource,
+      action: request.action,
+      params: request.params,
+    });
   });
 
   /**
@@ -222,7 +236,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
         return err({ message: "Approval was not recorded by the approval queue" });
       }
       const current = await gateway.intercept(request);
-      if (current.action !== decision.action) {
+      if (current.action !== decision.action || current.assignedTier !== decision.assignedTier) {
         const violated = current.denial?.policyViolated ?? current.action;
         return err({ message: `Gateway re-check no longer authorizes this request: ${violated}` });
       }
@@ -241,6 +255,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
         requestId,
         receiptId,
         ...payload,
+        ...(eventType === "execution.dispatched" && { controllerReceipt: controller.calls.at(-1) }),
       });
     },
   });
@@ -256,7 +271,11 @@ export function createTurbineHarness({ controller = createSimulatedController() 
       expiresAt: new Date(Date.now() + ttlMs).toISOString(),
       revocable: true,
     }, issuer.privateKey);
-    if (issued.ok) tokens.set(issued.value.tokenId, issued.value);
+    if (issued.ok) {
+      tokens.set(issued.value.tokenId, issued.value);
+      const controlTokens = [...tokenLabels.values()].filter((name) => name.startsWith("control")).length;
+      tokenLabels.set(issued.value.tokenId, actions.includes("write") ? `control token ${controlTokens + 1}` : "read token");
+    }
     return issued;
   }
 
@@ -274,7 +293,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
   }
 
   async function decide(label, token, request) {
-    const decision = await gateway.intercept(request);
+    const decision = Object.freeze(await gateway.intercept(request));
     issuedDecisions.add(decision);
     const proposal = { label, token, request, decision };
     proposals.set(request.requestId, proposal);
@@ -284,7 +303,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
   return {
     controller,
     ledger,
-    queue,
+    tokenLabels,
     mintReadToken: () => mintToken(sensor, ["read"], READ_TOKEN_TTL_MS, {}),
     mintControlToken: () => mintToken(setpoint, ["write"], CONTROL_TOKEN_TTL_MS, {
       quorum: { required: 1, authorized: [OPERATOR] },
@@ -292,7 +311,14 @@ export function createTurbineHarness({ controller = createSimulatedController() 
     setCentralAvailable(available) {
       centralAvailable = available;
     },
-    readSensor: (token) => decide("sensor read", token, buildRequest(token, sensor, "read", {})),
+
+    /** The fictional value is handed over only when the gateway allows the read. */
+    async readSensor(token) {
+      const proposal = await decide("sensor read", token, buildRequest(token, sensor, "read", {}));
+      return proposal.decision.action === "allow"
+        ? { ...proposal, value: controller.readBearingTemperatureC() }
+        : proposal;
+    },
     attemptWrite: (label, token, powerKw = ILLUSTRATIVE_POWER_KW) =>
       decide(label, token, buildRequest(token, setpoint, "write", { powerKw })),
 
@@ -307,8 +333,12 @@ export function createTurbineHarness({ controller = createSimulatedController() 
       return ok(await decide(label, token, request));
     },
 
+    /** A rejected or timed-out request is closed. Only a new proposal can reach an operator. */
     submitForApproval({ request, decision, token }) {
-      return queue.enqueue(request, decision, decision.escalation?.approvalQuorum, token);
+      if (closedRequests.has(request.requestId)) {
+        return err({ code: "REQUEST_CLOSED", message: "This request was already rejected or timed out" });
+      }
+      return ok(queue.enqueue(request, decision, decision.escalation?.approvalQuorum, token));
     },
     approve: ({ request }, by = OPERATOR) =>
       queue.resolve(request.requestId, { status: "approved", by }),
@@ -320,7 +350,10 @@ export function createTurbineHarness({ controller = createSimulatedController() 
       audit("token.revoked", token.tokenId, { reason, revokedBy: OPERATOR });
     },
 
-    /** Everything that reaches the controller goes through this one call. */
+    /**
+     * The demo's only route to the controller. Nothing in-process enforces that:
+     * a deployment must give the broker the only credential or path to the device.
+     */
     dispatch({ request, decision }, approval = recordedApprovals.get(request.requestId)) {
       return broker.execute(request, { decision, ...(approval !== undefined && { approval }) });
     },
@@ -331,7 +364,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
       const lines = [];
       for (const event of ledger.getAll()) {
         const { requestId, decision, tier, policyViolated, reason, code, resolution } = event.payload;
-        const label = proposals.get(requestId)?.label ?? "";
+        const label = [proposals.get(requestId)?.label, tokenLabels.get(event.tokenId)].filter(Boolean).join(", ");
         let text;
         if (event.eventType === "policy.evaluated" && requestId !== undefined && !seen.has(requestId)) {
           seen.add(requestId);
@@ -339,6 +372,7 @@ export function createTurbineHarness({ controller = createSimulatedController() 
         } else if (event.eventType === "approval.requested") text = "approval requested";
         else if (event.eventType === "approval.denied") text = `operator rejected (${resolution.by})`;
         else if (event.eventType === "approval.granted") text = `operator approved (${resolution.by})`;
+        else if (event.eventType === "approval.timeout") text = "approval timed out";
         else if (event.eventType === "token.revoked") text = `control token revoked: ${reason}`;
         else if (event.eventType === "action.completed") text = "dispatched to simulated controller";
         else if (event.eventType === "action.failed") text = `dispatch refused ${code}`;
@@ -359,6 +393,7 @@ export async function runTurbineAuthorityDemo({
   harness = createTurbineHarness(),
   print = console.log,
   pause = async () => {},
+  short = false,
 } = {}) {
   const { controller, ledger } = harness;
   const calls = () => controller.calls.length;
@@ -403,7 +438,8 @@ export async function runTurbineAuthorityDemo({
     if (!proposal.ok) return err(proposal.error.message);
     const shown = showDecision(proposal.value, "escalate", ApprovalTier.T2_ACT);
     if (!shown.ok) return shown;
-    harness.submitForApproval(proposal.value);
+    const queued = harness.submitForApproval(proposal.value);
+    if (!queued.ok) return err(queued.error.message);
     const resolution = harness.approve(proposal.value);
     if (resolution?.status !== "approved") return err("operator approval did not resolve");
     print(`  Operator: approved by ${resolution.by}`);
@@ -422,7 +458,7 @@ export async function runTurbineAuthorityDemo({
       const proposal = await harness.readSensor(readOnly);
       const shown = showDecision(proposal, "allow", ApprovalTier.T0_OBSERVE);
       if (!shown.ok) return shown;
-      print(`  Value: ${controller.readBearingTemperatureC()} C (fictional)`);
+      print(`  Value: ${proposal.value} C (fictional)`);
       print(`  Ledger: ${latestEvent()}`);
       return ok(true);
     }],
@@ -442,13 +478,16 @@ export async function runTurbineAuthorityDemo({
       if (!proposal.ok) return err(proposal.error.message);
       rejected = proposal.value;
       print(`  Proposed: ${ILLUSTRATIVE_POWER_KW} kW (illustrative; no signed limit applies to this number)`);
+      print("  Evidence: signed receipt from a placeholder model; it proves the evidence path ran, not that the command is safe");
       const shown = showDecision(rejected, "escalate", ApprovalTier.T2_ACT);
       if (!shown.ok) return shown;
+      print("  T2 is SINT's default for OPC UA writes, not a hazard analysis; that sets the real tier");
       return showNoDispatch();
     }],
 
     ["4. Operator rejects it, then approves a separate proposal", async () => {
-      harness.submitForApproval(rejected);
+      const queued = harness.submitForApproval(rejected);
+      if (!queued.ok) return err(queued.error.message);
       const resolution = harness.reject(rejected, "Synthetic reason: wait for the next review window");
       if (resolution?.status !== "denied") return err("operator rejection did not resolve");
       print(`  Operator: rejected by ${resolution.by}`);
@@ -467,6 +506,7 @@ export async function runTurbineAuthorityDemo({
       if (calls() !== 1) return err(`expected exactly one controller call, saw ${calls()}`);
       dispatched = result.value;
       print(`  Broker: dispatched; simulated controller calls: ${calls()}`);
+      print("  This receipt is an acknowledgment, not a measured physical outcome");
       print(`  Controller receipt: ${JSON.stringify(result.value, null, 2).replaceAll("\n", "\n  ")}`);
       print(`  Ledger: ${latestEvent()}`);
       return ok(true);
@@ -513,11 +553,12 @@ export async function runTurbineAuthorityDemo({
     }],
   ];
 
-  print("Synthetic turbine generator authority demo.");
-  print("Fictional generator: no device, network, broker, PLC, or customer system is connected.");
+  print("Synthetic turbine generator authority demo: authorization plumbing, no turbine physics.");
+  print("Fictional generator: no device, network, MQTT broker, PLC, or customer system is connected.");
   print("Software authorization does not replace plant safety interlocks or the emergency stop.");
 
   for (const [title, run] of steps) {
+    if (short && title.startsWith("6")) continue;
     await pause(title);
     print(`\n${title}`);
     const outcome = await run();
@@ -539,6 +580,7 @@ if (isMainModule()) {
   const stepping = process.argv.includes("--step") && process.stdin.isTTY === true;
   const prompt = stepping ? createInterface({ input: process.stdin, output: process.stdout }) : undefined;
   const outcome = await runTurbineAuthorityDemo({
+    short: process.argv.includes("--short"),
     pause: async (title) => {
       await prompt?.question(`\n[Enter] ${title} `);
     },
