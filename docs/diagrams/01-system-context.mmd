@@ -1,0 +1,62 @@
+%% SINT Protocol — System Context
+%% Source of truth: CLAUDE.md, packages/policy-gateway/src/gateway.ts,
+%% packages/bridge-*/src/*-interceptor.ts, packages/evidence-ledger/src/writer.ts
+flowchart LR
+  subgraph agents["Agent intent"]
+    A1["LLM / MCP client"]
+    A2["Autonomy stack<br/>(System 1 / System 2)"]
+    A3["Peer agent<br/>(A2A)"]
+  end
+
+  subgraph bridges["Bridge adapters — translate protocol into SintRequest"]
+    B1["MCPInterceptor<br/>@pshkv/bridge-mcp"]
+    B2["ROS2Interceptor<br/>@pshkv/bridge-ros2"]
+    B3["MAVLinkInterceptor<br/>@pshkv/bridge-mavlink"]
+    B4["IotInterceptor<br/>@pshkv/bridge-iot"]
+    B5["A2AInterceptor<br/>@pshkv/bridge-a2a"]
+    B6["SwarmCoordinator<br/>@pshkv/bridge-swarm"]
+    B7["EconomyPlugin<br/>@pshkv/bridge-economy"]
+  end
+
+  GW{{"PolicyGateway.intercept()<br/>@pshkv/gate-policy-gateway<br/><b>single choke point</b>"}}
+
+  subgraph inputs["Authority inputs"]
+    T["Capability tokens<br/>@pshkv/gate-capability-tokens"]
+    P["Persistence<br/>rate limits · revocation"]
+  end
+
+  L[("EvidenceLedger<br/>SHA-256 hash chain<br/>@pshkv/gate-evidence-ledger")]
+  H["Human reviewer<br/>ApprovalQueue"]
+
+  subgraph world["Physical world / tools"]
+    W1["MCP servers"]
+    W2["ROS 2 topics & services"]
+    W3["Drones · PLCs · IoT actuators"]
+  end
+
+  A1 --> B1
+  A2 --> B2
+  A2 --> B3
+  A2 --> B4
+  A3 --> B5
+  A3 --> B6
+  A1 --> B7
+
+  B1 --> GW
+  B2 --> GW
+  B3 --> GW
+  B4 --> GW
+  B5 --> GW
+  B6 --> GW
+  B7 --> GW
+
+  T --> GW
+  P --> GW
+
+  GW -- "allow / transform" --> W1
+  GW -- "allow / transform" --> W2
+  GW -- "allow / transform" --> W3
+  GW -- "escalate (T2/T3)" --> H
+  H -- "approval.granted / denied" --> L
+  GW -- "every decision appended" --> L
+  GW -. "deny" .-x world

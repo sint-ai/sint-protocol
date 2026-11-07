@@ -1,0 +1,25 @@
+%% SINT Protocol — Approval tier ladder
+%% Source of truth: packages/core/src/types/policy.ts (ApprovalTier, RiskTier),
+%%   packages/core/src/constants/tiers.ts (DEFAULT_TIER_RULES),
+%%   packages/policy-gateway/src/gateway.ts decideBytier() L1752
+flowchart TB
+  classDef auto fill:#0f766e22,stroke:#0f766e,color:#0f766e
+  classDef human fill:#b4530922,stroke:#b45309,color:#b45309
+
+  T0["<b>T0_OBSERVE</b> · risk T0_read<br/>Read-only, no physical state change<br/>auto-approve + audit<br/><br/>ros2:///camera/* subscribe<br/>mcp://filesystem/readFile<br/>mavlink://*/cmd/camera<br/>sint://interface/memory/recall"]
+  T1["<b>T1_PREPARE</b> · risk T1_write_low<br/>Idempotent writes, staging<br/>auto-approve + audit<br/><br/>ros2:///waypoints publish<br/>mcp://filesystem/writeFile<br/>open-rmf://* prepare<br/>engine://system2/plan create"]
+  T2["<b>T2_ACT</b> · risk T2_stateful<br/>Stateful change with physical effect<br/>escalate — timeout 30s, fallback <b>deny</b><br/><br/>ros2:///cmd_vel publish<br/>humanoid://*/arm/*/joint_commands<br/>mavlink://*/cmd/takeoff<br/>mqtt://*/*valve* publish"]
+  T3["<b>T3_COMMIT</b> · risk T3_irreversible<br/>Irreversible — explicit human approval<br/>escalate — timeout 30s, fallback <b>safe-stop</b><br/><br/>mcp://exec/* call<br/>mcp://*/transfer.* call<br/>mavlink://*/cmd/arm call<br/>ros2:///mode_change publish"]
+
+  T0 --> T1 --> T2 --> T3
+  class T0,T1 auto
+  class T2,T3 human
+
+  E1["Human detected in workspace<br/>escalateOnHumanPresence"] -. "+1 tier" .-> T2
+  E2["Agent trust below TRUSTED<br/>escalateOnNewAgent"] -. "+1 tier" .-> T2
+  E3["currentForceNewtons present<br/>→ floor at T2_ACT"] -. floor .-> T2
+  E4["consequenceContext.reversibility<br/>= irreversible → floor at T3"] -. floor .-> T3
+  E5["Forbidden combo matched<br/>e.g. filesystem.write → exec.run"] -. "requiredTier" .-> T3
+  E6["No rule matches<br/>→ default T1_PREPARE"] -.-> T1
+
+  note["Tiers only ever ratchet up.<br/>assignTier() is a pure function; escalateTier() never lowers a tier."]

@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 726" width="1340" height="726" role="img" aria-label="SINT Protocol — capability token delegation">
+  <title>SINT Protocol — capability token delegation</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="726"/>
+  <text class="h1" x="40" y="48">SINT Protocol — capability token delegation</text>
+  <text class="sub" x="40" y="71">Every hop narrows the grant. There is no code path that widens one.</text>
+  <rect x="46" y="134" width="332" height="262" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="46" y="134" width="332" height="262" rx="14" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="64" y="166" font-size="15" fill="var(--brand)">Root token</text>
+  <text class="bd mono" x="64" y="186">depth 0 · attenuated false</text>
+  <line x1="64" y1="200" x2="360" y2="200" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="64" y="224" font-size="10.5" fill="var(--faint)">issuer</text>
+  <text class="bd mono" x="196" y="224" font-size="10.5" fill="var(--ink)">root authority key</text>
+  <text class="bd mono" x="64" y="246" font-size="10.5" fill="var(--faint)">subject</text>
+  <text class="bd mono" x="196" y="246" font-size="10.5" fill="var(--ink)">agent A</text>
+  <text class="bd mono" x="64" y="268" font-size="10.5" fill="var(--faint)">resource</text>
+  <text class="bd mono" x="196" y="268" font-size="10.5" fill="var(--ink)">mcp://filesystem/*</text>
+  <text class="bd mono" x="64" y="290" font-size="10.5" fill="var(--faint)">actions</text>
+  <text class="bd mono" x="196" y="290" font-size="10.5" fill="var(--ink)">[call, cancel]</text>
+  <text class="bd mono" x="64" y="312" font-size="10.5" fill="var(--faint)">maxVelocityMps</text>
+  <text class="bd mono" x="196" y="312" font-size="10.5" fill="var(--ink)">1.5</text>
+  <text class="bd mono" x="64" y="334" font-size="10.5" fill="var(--faint)">maxForceNewtons</text>
+  <text class="bd mono" x="196" y="334" font-size="10.5" fill="var(--ink)">80</text>
+  <text class="bd mono" x="64" y="356" font-size="10.5" fill="var(--faint)">expiresAt</text>
+  <text class="bd mono" x="196" y="356" font-size="10.5" fill="var(--ink)">2026-12-31</text>
+  <path class="link" d="M382 265.0 H432" marker-end="url(#a)"/>
+  <text class="edge" x="407" y="253.0" text-anchor="middle" class="edge mono">delegate</text>
+  <text class="edge" x="407" y="289.0" text-anchor="middle">Capability</text>
+  <text class="edge" x="407" y="302.0" text-anchor="middle">Token()</text>
+  <rect x="438" y="134" width="332" height="262" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="438" y="134" width="332" height="262" rx="14" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="456" y="166" font-size="15" fill="var(--t1)">Delegated</text>
+  <text class="bd mono" x="456" y="186">depth 1 · attenuated true</text>
+  <line x1="456" y1="200" x2="752" y2="200" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="456" y="224" font-size="10.5" fill="var(--faint)">issuer</text>
+  <text class="bd mono" x="588" y="224" font-size="10.5" fill="var(--ink)">agent A</text>
+  <text class="bd mono" x="456" y="246" font-size="10.5" fill="var(--faint)">subject</text>
+  <text class="bd mono" x="588" y="246" font-size="10.5" fill="var(--ink)">agent B</text>
+  <text class="bd mono" x="456" y="268" font-size="10.5" fill="var(--faint)">resource</text>
+  <text class="bd mono" x="588" y="268" font-size="10.5" fill="var(--ink)">mcp://filesystem/*</text>
+  <text class="bd mono" x="456" y="290" font-size="10.5" fill="var(--faint)">actions</text>
+  <text class="bd mono" x="588" y="290" font-size="10.5" fill="var(--ink)">[call]&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;subset</text>
+  <text class="bd mono" x="456" y="312" font-size="10.5" fill="var(--faint)">maxVelocityMps</text>
+  <text class="bd mono" x="588" y="312" font-size="10.5" fill="var(--ink)">0.8&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; tightened</text>
+  <text class="bd mono" x="456" y="334" font-size="10.5" fill="var(--faint)">maxForceNewtons</text>
+  <text class="bd mono" x="588" y="334" font-size="10.5" fill="var(--ink)">50&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; tightened</text>
+  <text class="bd mono" x="456" y="356" font-size="10.5" fill="var(--faint)">expiresAt</text>
+  <text class="bd mono" x="588" y="356" font-size="10.5" fill="var(--ink)">2026-06-30&#160;&#160;&#160;&#160; ≤ parent</text>
+  <path class="link" d="M774 265.0 H824" marker-end="url(#a)"/>
+  <text class="edge" x="799" y="253.0" text-anchor="middle" class="edge mono">delegate</text>
+  <text class="edge" x="799" y="289.0" text-anchor="middle">Capability</text>
+  <text class="edge" x="799" y="302.0" text-anchor="middle">Token()</text>
+  <rect x="830" y="134" width="332" height="262" rx="14" class="card" stroke-width="1.6"/>
+  <rect x="830" y="134" width="332" height="262" rx="14" fill="var(--violet)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt" x="848" y="166" font-size="15" fill="var(--violet)">Delegated</text>
+  <text class="bd mono" x="848" y="186">depth 2 · attenuated true</text>
+  <line x1="848" y1="200" x2="1144" y2="200" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="848" y="224" font-size="10.5" fill="var(--faint)">issuer</text>
+  <text class="bd mono" x="980" y="224" font-size="10.5" fill="var(--ink)">agent B</text>
+  <text class="bd mono" x="848" y="246" font-size="10.5" fill="var(--faint)">subject</text>
+  <text class="bd mono" x="980" y="246" font-size="10.5" fill="var(--ink)">agent C</text>
+  <text class="bd mono" x="848" y="268" font-size="10.5" fill="var(--faint)">resource</text>
+  <text class="bd mono" x="980" y="268" font-size="10.5" fill="var(--ink)">mcp://filesystem/*</text>
+  <text class="bd mono" x="848" y="290" font-size="10.5" fill="var(--faint)">actions</text>
+  <text class="bd mono" x="980" y="290" font-size="10.5" fill="var(--ink)">[call]</text>
+  <text class="bd mono" x="848" y="312" font-size="10.5" fill="var(--faint)">maxVelocityMps</text>
+  <text class="bd mono" x="980" y="312" font-size="10.5" fill="var(--ink)">0.4&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; tightened</text>
+  <text class="bd mono" x="848" y="334" font-size="10.5" fill="var(--faint)">maxForceNewtons</text>
+  <text class="bd mono" x="980" y="334" font-size="10.5" fill="var(--ink)">50&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;inherited</text>
+  <text class="bd mono" x="848" y="356" font-size="10.5" fill="var(--faint)">geofence</text>
+  <text class="bd mono" x="980" y="356" font-size="10.5" fill="var(--ink)">narrower polygon</text>
+  <rect x="1166" y="190" width="228" height="150" rx="10" class="card"/>
+  <rect x="1166" y="190" width="228" height="150" rx="10" stroke="none" fill="var(--t3)" fill-opacity="var(--wash)"/>
+  <rect x="1166" y="191" width="4" height="148" rx="2" fill="var(--t3)"/>
+  <text class="bt" x="1182" y="212" fill="var(--t3)">depth 3 is the last hop</text>
+  <text class="bd" x="1182" y="231">MAX_DELEGATION_DEPTH = 3,</text>
+  <text class="bd" x="1182" y="246">in packages/core/src/</text>
+  <text class="bd" x="1182" y="261">constants/tiers.ts.</text>
+  <text class="bd" x="1182" y="276"></text>
+  <text class="bd" x="1182" y="291">A fourth hop returns</text>
+  <text class="bd" x="1182" y="306">err(DELEGATION_DEPTH_</text>
+  <text class="bd" x="1182" y="321">EXCEEDED) and issues</text>
+  <text class="bd" x="1182" y="336">nothing.</text>
+  <path class="link soft" d="M1106 265.0 H1162" marker-end="url(#a)"/>
+  <rect class="pane" x="46" y="430" width="1248" height="232" rx="14"/>
+  <text class="grp" x="62" y="452">What delegateCapabilityToken() enforces at every hop — packages/capability-tokens/src/delegator.ts</text>
+  <text class="bt mono" x="66" y="468" font-size="12" fill="var(--brand)">actions</text>
+  <text class="bd" x="66" y="485">restrictActions ∩ parent.actions. An empty intersection returns</text>
+  <text class="bd" x="66" y="500">err(INSUFFICIENT_PERMISSIONS).</text>
+  <text class="bt mono" x="680" y="468" font-size="12" fill="var(--brand)">numeric limits</text>
+  <text class="bd" x="680" y="485">min(parent, requested) for maxForceNewtons, maxVelocityMps,</text>
+  <text class="bd" x="680" y="500">maxRepetitions and the consequence limits.</text>
+  <text class="bt mono" x="66" y="516" font-size="12" fill="var(--brand)">expiresAt</text>
+  <text class="bd" x="66" y="533">capped at the parent's expiry — a longer request is silently clamped</text>
+  <text class="bd" x="66" y="548">down, never honoured.</text>
+  <text class="bt mono" x="680" y="516" font-size="12" fill="var(--brand)">requiresHumanPresence</text>
+  <text class="bd" x="680" y="533">true at the parent stays true. A child cannot switch the requirement off.</text>
+  <text class="bt mono" x="66" y="564" font-size="12" fill="var(--brand)">inherited, never widened</text>
+  <text class="bd" x="66" y="581">timeWindow, rateLimit, quorum and sceneContractDigest come straight from</text>
+  <text class="bd" x="66" y="596">the parent.</text>
+  <text class="bt mono" x="680" y="564" font-size="12" fill="var(--brand)">regulated data</text>
+  <text class="bd" x="680" y="581">processors, regions, models, purposes and context fields narrow to a</text>
+  <text class="bd" x="680" y="596">subset of the parent's lists.</text>
+  <text class="bt mono" x="66" y="612" font-size="12" fill="var(--brand)">parent must still hold</text>
+  <text class="bd" x="66" y="629">the parent's signature and expiry are re-verified before any child token</text>
+  <text class="bd" x="66" y="644">is issued.</text>
+  <text class="bt mono" x="680" y="612" font-size="12" fill="var(--brand)">no amplification</text>
+  <text class="bd" x="680" y="629">the module exposes delegate only. There is no widen, grant or escalate</text>
+  <text class="bd" x="680" y="644">operation to call.</text>
+  <text class="foot" x="40" y="697">Derived from: packages/capability-tokens/src/delegator.ts (delegateCapabilityToken L225, attenuateConstraints L53) · packages/core/src/types/capability-token.ts (SintCapabilityToken L402) · packages/core/src/constants/tiers.ts</text>
+  <text class="foot" x="40" y="712">(MAX_DELEGATION_DEPTH)</text>
+</svg>

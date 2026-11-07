@@ -20,6 +20,8 @@
     "mission-authority:release-lane": "pnpm run mission-authority:readiness && pnpm --filter @pshkv/conformance-tests exec vitest run src/mission-authority-release-lane-evidence-conformance.test.ts",
     "demo:factory-action": "pnpm --filter @pshkv/bridge-ros2 build && pnpm --filter @pshkv/conformance-tests exec vitest run src/factory-action-demo-conformance.test.ts --reporter=verbose",
     "demo:industrial-pack": "pnpm --filter @pshkv/conformance-tests exec vitest run src/sint-industrial-pack-conformance.test.ts --reporter=verbose",
+    "demo:turbine-authority": "node ./examples/turbine-authority-demo.mjs",
+    "demo:turbine-authority:console": "node ./examples/turbine-authority/build-console.mjs",
     "demo:interceptor-quickstart": "node ./examples/sint-pdp-interceptor-quickstart.mjs",
     "cert:fixtures": "pnpm --filter ./packages/policy-gateway build && pnpm --filter ./packages/conformance-tests run test:fixtures && pnpm --filter ./packages/bridge-iot run test:fixtures && pnpm --filter ./sdks/typescript run test:contracts && pnpm --filter ./packages/persistence-postgres run test:fixtures",
     "cert:bundle": "node ./scripts/generate-certification-bundle.mjs",
