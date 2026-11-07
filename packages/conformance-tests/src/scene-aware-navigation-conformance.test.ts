@@ -175,6 +175,31 @@ describe("scene-aware navigation conformance", () => {
     expect(result.value.scenarios).toMatchObject({ runCount: 2, coverage: 0.5, seeds: [] });
   });
 
+  it("fails a clear dynamic actor when the approved actor-motion fuzz reaches the path", async () => {
+    const input = scene({ obstacles: [{
+      id: "cart",
+      frameId: "map",
+      kind: "dynamic",
+      position: { x: 0.5, y: 2, z: 0 },
+      velocityMps: { x: 0, y: 0, z: 0 },
+      velocityUncertaintyMps: 0.1,
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }] });
+    const clear = await simulate(input);
+    expect(clear.ok && "result" in clear.value ? clear.value.result.outcome : undefined).toBe("pass");
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0",
+      policyId: "actor-motion-v1",
+      cases: [{ id: "faster-actor", actorMotionMps: 2 }],
+    };
+    const fuzzed = await simulate(input, undefined, policy);
+    expect(fuzzed.ok).toBe(true);
+    if (!fuzzed.ok || !("scenarios" in fuzzed.value)) return;
+    expect(fuzzed.value.result.outcome).toBe("fail");
+  });
+
   it("rejects an invalid fixed-case policy before issuing a receipt", async () => {
     const policy: NavigationScenarioPolicy = {
       version: "1.0.0", policyId: "invalid",

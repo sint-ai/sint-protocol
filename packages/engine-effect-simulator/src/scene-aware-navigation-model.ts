@@ -174,6 +174,7 @@ function closestClearance(
   robotUncertaintyMeters: number,
   maxHumanSpeedMps: number,
   totalDurationSeconds: number,
+  actorMotionMps: number,
 ): number {
   const robotVx = (target.x - start.x) / durationSeconds;
   const robotVy = (target.y - start.y) / durationSeconds;
@@ -192,7 +193,7 @@ function closestClearance(
     ? maxHumanSpeedMps * (obstacle.observationAgeSeconds + totalDurationSeconds)
     : 0;
   const motionError = obstacle.kind === "dynamic"
-    ? (Math.hypot(obstacle.velocity.x, obstacle.velocity.y) + obstacle.velocityUncertaintyMps)
+    ? (Math.hypot(obstacle.velocity.x, obstacle.velocity.y) + obstacle.velocityUncertaintyMps + actorMotionMps)
       * (obstacle.observationAgeSeconds + totalDurationSeconds)
     : 0;
   return separation - robotRadiusMeters - robotUncertaintyMeters
@@ -326,10 +327,12 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       const clearance = Math.min(...segments.map((segment) => closestClearance(
         segment.start, segment.target, segment.durationSeconds,
         obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
+        this.options.actorMotionMps ?? 0,
       )));
       const stopClearance = closestClearance(
         stopSegment.start, stopSegment.target, stopSegment.durationSeconds,
         obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
+        this.options.actorMotionMps ?? 0,
       );
       minimum = Math.min(minimum, clearance);
       minimum = Math.min(minimum, stopClearance);
