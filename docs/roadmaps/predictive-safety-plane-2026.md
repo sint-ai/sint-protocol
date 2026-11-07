@@ -213,7 +213,7 @@ declared safe fallback without disabling E-stop or the local shield.
 - [x] compare predicted vs observed duration in shadow mode: a T1 shadow request whose observed operational duration exceeds the receipt's predicted duration escalates instead of being allowed
 - [x] compare predicted vs observed collision in shadow mode: a T1 shadow request whose observed collisions exceed the receipt's predicted collisions escalates instead of being allowed
 - [x] compare predicted vs observed controller outcomes in shadow mode: a T1 shadow request whose observed safety-controller permit disagrees with the receipt's predicted controller motion permission escalates instead of being allowed
-- [ ] publish per-model calibration error and confidence thresholds
+- [x] publish per-model calibration error and confidence thresholds: a T1 shadow request whose published model calibration error exceeds its published confidence threshold escalates instead of being allowed
 - [ ] introduce scenario fuzzing for sensor delay, actor motion, localization
   error, dropped messages, actuator lag, and adversarial parameters
 - [x] require human review when unsupported phenomena are non-empty: a T1 shadow request that names a model gap escalates instead of being allowed

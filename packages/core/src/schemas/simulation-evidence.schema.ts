@@ -22,6 +22,8 @@ export const simulationRuntimeIdentitySchema = z.object({
   version: z.string().min(1).max(128),
   modelDigest: sha256Schema,
   imageDigest: sha256Schema.optional(),
+  calibrationError: z.number().min(0).max(1).optional(),
+  confidenceThreshold: z.number().min(0).max(1).optional(),
 }).strict();
 
 export const simulationScenarioEvidenceSchema = z.object({

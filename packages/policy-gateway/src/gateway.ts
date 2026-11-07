@@ -1365,6 +1365,29 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const calibrationError = request.executionContext?.simulationEvidence?.simulator?.calibrationError;
+          const confidenceThreshold = request.executionContext?.simulationEvidence?.simulator?.confidenceThreshold;
+          if (
+            typeof calibrationError === "number"
+            && Number.isFinite(calibrationError)
+            && typeof confidenceThreshold === "number"
+            && Number.isFinite(confidenceThreshold)
+            && calibrationError > confidenceThreshold
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Calibration error exceeds confidence threshold",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {

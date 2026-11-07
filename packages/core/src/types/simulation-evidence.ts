@@ -145,6 +145,10 @@ export interface SimulationRuntimeIdentity {
   readonly modelDigest: SHA256;
   /** Immutable container/VM image digest, when available. */
   readonly imageDigest?: SHA256;
+  /** Published calibration error for this model, normalized to [0, 1]. */
+  readonly calibrationError?: number;
+  /** Published confidence threshold for this model, normalized to [0, 1]. */
+  readonly confidenceThreshold?: number;
 }
 
 export interface SimulationScenarioEvidence {
