@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1340 592" width="1340" height="592" role="img" aria-label="SINT Protocol — the evidence ledger">
+  <title>SINT Protocol — the evidence ledger</title>
+  <style>
+    :root {
+      --bg:#f7f9fc; --surface:#ffffff; --surface2:#f1f5f9;
+      --line:#cbd5e1; --line-soft:#e2e8f0;
+      --ink:#0f172a; --mute:#44546a; --faint:#64748b;
+    --brand:#0f766e;
+    --t0:#0d9488;
+    --t1:#0369a1;
+    --t2:#b45309;
+    --t3:#b91c1c;
+    --violet:#6d28d9;
+    --slate:#475569;
+      --wash:0.10;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:#0a0e17; --surface:#121a28; --surface2:#0f1623;
+        --line:#2f3f55; --line-soft:#1e293b;
+        --ink:#e8edf5; --mute:#a8b6c8; --faint:#7d8da3;
+      --brand:#5eead4;
+      --t0:#5eead4;
+      --t1:#7dd3fc;
+      --t2:#fbbf24;
+      --t3:#fca5a5;
+      --violet:#c4b5fd;
+      --slate:#94a3b8;
+        --wash:0.16;
+      }
+    }
+    .bg { fill: var(--bg); }
+    text { font-family: ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif; fill: var(--ink); }
+    .mono { font-family: ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace; }
+    .h1 { font-size: 25px; font-weight: 700; letter-spacing: -0.2px; }
+    .sub { font-size: 13.5px; fill: var(--mute); }
+    .grp { font-size: 11.5px; font-weight: 700; fill: var(--faint);
+            letter-spacing: 1.2px; text-transform: uppercase; }
+    .bt { font-size: 13.5px; font-weight: 650; }
+    .bd { font-size: 11.5px; fill: var(--mute); }
+    .edge { font-size: 11px; fill: var(--faint); }
+    .card { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+    .pane { fill: var(--surface2); stroke: var(--line-soft);
+             stroke-width: 1.2; }
+    .link { fill: none; stroke: var(--line); stroke-width: 1.6;
+             stroke-linecap: round; }
+    .link.soft { stroke-dasharray: 5 5; }
+    .foot { font-size: 11px; fill: var(--faint); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M2 2 L8 8 M8 2 L2 8" stroke="var(--t3)" stroke-width="1.8" fill="none"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1340" height="592"/>
+  <text class="h1" x="40" y="48">SINT Protocol — the evidence ledger</text>
+  <text class="sub" x="40" y="71">append() is the only write. Each event carries the hash of the one before it, so a later edit cannot hide.</text>
+  <rect x="46" y="136" width="232" height="232" rx="12" class="card" stroke-width="1.5"/>
+  <rect x="46" y="136" width="232" height="232" rx="12" fill="var(--slate)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="62" y="164" font-size="14" fill="var(--slate)">GENESIS</text>
+  <line x1="62" y1="196" x2="262" y2="196" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="62" y="218" font-size="10.5">previousHash</text>
+  <text class="bd mono" x="62" y="235" font-size="10.5">0000…0000</text>
+  <text class="bd mono" x="62" y="252" font-size="10.5"></text>
+  <text class="bd mono" x="62" y="269" font-size="10.5">the chain starts</text>
+  <text class="bd mono" x="62" y="286" font-size="10.5">from a fixed</text>
+  <text class="bd mono" x="62" y="303" font-size="10.5">64-zero digest</text>
+  <rect x="46" y="332" width="232" height="36" rx="0" fill="var(--slate)" fill-opacity="0.14" stroke="none"/>
+  <text class="bd mono" x="62" y="354" font-size="10.5" fill="var(--slate)">hash = SHA-256(event)</text>
+  <path class="link" d="M280 348 H298" marker-end="url(#a)"/>
+  <text class="edge" x="290" y="340" text-anchor="middle" font-size="9.5">feeds</text>
+  <rect x="302" y="136" width="232" height="232" rx="12" class="card" stroke-width="1.5"/>
+  <rect x="302" y="136" width="232" height="232" rx="12" fill="var(--t1)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="318" y="164" font-size="14" fill="var(--t1)">seq 1</text>
+  <text class="bd mono" x="318" y="183">request.received</text>
+  <line x1="318" y1="196" x2="518" y2="196" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="318" y="218" font-size="10.5">eventId&#160;&#160; UUIDv7</text>
+  <text class="bd mono" x="318" y="235" font-size="10.5">timestamp ISO-8601 µs</text>
+  <text class="bd mono" x="318" y="252" font-size="10.5">agentId&#160;&#160; Ed25519 key</text>
+  <text class="bd mono" x="318" y="269" font-size="10.5">tokenId&#160;&#160; UUIDv7</text>
+  <text class="bd mono" x="318" y="286" font-size="10.5">payload&#160;&#160; {…}</text>
+  <text class="bd mono" x="318" y="303" font-size="10.5">previousHash&#160;&#160;GENESIS</text>
+  <rect x="302" y="332" width="232" height="36" rx="0" fill="var(--t1)" fill-opacity="0.14" stroke="none"/>
+  <text class="bd mono" x="318" y="354" font-size="10.5" fill="var(--t1)">hash = SHA-256(event)</text>
+  <path class="link" d="M536 348 H554" marker-end="url(#a)"/>
+  <text class="edge" x="546" y="340" text-anchor="middle" font-size="9.5">feeds</text>
+  <rect x="558" y="136" width="232" height="232" rx="12" class="card" stroke-width="1.5"/>
+  <rect x="558" y="136" width="232" height="232" rx="12" fill="var(--brand)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="574" y="164" font-size="14" fill="var(--brand)">seq 2</text>
+  <text class="bd mono" x="574" y="183">policy.evaluated</text>
+  <line x1="574" y1="196" x2="774" y2="196" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="574" y="218" font-size="10.5">payload&#160;&#160; decision: escalate</text>
+  <text class="bd mono" x="574" y="235" font-size="10.5">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;tier: T2_act</text>
+  <text class="bd mono" x="574" y="252" font-size="10.5">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;risk: T2_stateful</text>
+  <text class="bd mono" x="574" y="269" font-size="10.5"></text>
+  <text class="bd mono" x="574" y="286" font-size="10.5">previousHash&#160;&#160;hash(seq 1)</text>
+  <rect x="558" y="332" width="232" height="36" rx="0" fill="var(--brand)" fill-opacity="0.14" stroke="none"/>
+  <text class="bd mono" x="574" y="354" font-size="10.5" fill="var(--brand)">hash = SHA-256(event)</text>
+  <path class="link" d="M792 348 H810" marker-end="url(#a)"/>
+  <text class="edge" x="802" y="340" text-anchor="middle" font-size="9.5">feeds</text>
+  <rect x="814" y="136" width="232" height="232" rx="12" class="card" stroke-width="1.5"/>
+  <rect x="814" y="136" width="232" height="232" rx="12" fill="var(--t2)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="830" y="164" font-size="14" fill="var(--t2)">seq 3</text>
+  <text class="bd mono" x="830" y="183">approval.granted</text>
+  <line x1="830" y1="196" x2="1030" y2="196" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="830" y="218" font-size="10.5">payload&#160;&#160; reviewer, quorum</text>
+  <text class="bd mono" x="830" y="235" font-size="10.5"></text>
+  <text class="bd mono" x="830" y="252" font-size="10.5">previousHash&#160;&#160;hash(seq 2)</text>
+  <rect x="814" y="332" width="232" height="36" rx="0" fill="var(--t2)" fill-opacity="0.14" stroke="none"/>
+  <text class="bd mono" x="830" y="354" font-size="10.5" fill="var(--t2)">hash = SHA-256(event)</text>
+  <path class="link" d="M1048 348 H1066" marker-end="url(#a)"/>
+  <text class="edge" x="1058" y="340" text-anchor="middle" font-size="9.5">feeds</text>
+  <rect x="1070" y="136" width="232" height="232" rx="12" class="card" stroke-width="1.5"/>
+  <rect x="1070" y="136" width="232" height="232" rx="12" fill="var(--t0)" fill-opacity="var(--wash)" stroke="none"/>
+  <text class="bt mono" x="1086" y="164" font-size="14" fill="var(--t0)">seq 4</text>
+  <text class="bd mono" x="1086" y="183">action.completed</text>
+  <line x1="1086" y1="196" x2="1286" y2="196" stroke="var(--line)" stroke-width="1"/>
+  <text class="bd mono" x="1086" y="218" font-size="10.5">payload&#160;&#160; outcome</text>
+  <text class="bd mono" x="1086" y="235" font-size="10.5"></text>
+  <text class="bd mono" x="1086" y="252" font-size="10.5">previousHash&#160;&#160;hash(seq 3)</text>
+  <rect x="1070" y="332" width="232" height="36" rx="0" fill="var(--t0)" fill-opacity="0.14" stroke="none"/>
+  <text class="bd mono" x="1086" y="354" font-size="10.5" fill="var(--t0)">hash = SHA-256(event)</text>
+  <rect x="46" y="408" width="404" height="112" rx="10" class="card"/>
+  <rect x="46" y="408" width="404" height="112" rx="10" stroke="none" fill="var(--brand)" fill-opacity="var(--wash)"/>
+  <rect x="46" y="409" width="4" height="110" rx="2" fill="var(--brand)"/>
+  <text class="bt" x="62" y="430" fill="var(--brand)">One write operation</text>
+  <text class="bd" x="62" y="449">append() is the only mutation the writer exposes.</text>
+  <text class="bd" x="62" y="464">No update. No delete. In production the same shape</text>
+  <text class="bd" x="62" y="479">backs onto PostgreSQL rows with immutable constraints.</text>
+  <rect x="468" y="408" width="404" height="112" rx="10" class="card"/>
+  <rect x="468" y="408" width="404" height="112" rx="10" stroke="none" fill="var(--t1)" fill-opacity="var(--wash)"/>
+  <rect x="468" y="409" width="4" height="110" rx="2" fill="var(--t1)"/>
+  <text class="bt" x="484" y="430" fill="var(--t1)">What the hash covers</text>
+  <text class="bd" x="484" y="449">eventId, sequenceNumber, timestamp, eventType, agentId,</text>
+  <text class="bd" x="484" y="464">tokenId, payload and previousHash — serialised with</text>
+  <text class="bd" x="484" y="479">canonicalJsonStringify() so the digest is stable.</text>
+  <rect x="890" y="408" width="404" height="112" rx="10" class="card"/>
+  <rect x="890" y="408" width="404" height="112" rx="10" stroke="none" fill="var(--t3)" fill-opacity="var(--wash)"/>
+  <rect x="890" y="409" width="4" height="110" rx="2" fill="var(--t3)"/>
+  <text class="bt" x="906" y="430" fill="var(--t3)">Tamper evidence</text>
+  <text class="bd" x="906" y="449">Change any past event and every later hash stops matching.</text>
+  <text class="bd" x="906" y="464">verifyChain() returns err(sequenceNumber) at the first break;</text>
+  <text class="bd" x="906" y="479">LedgerWriter.restore() resumes only a chain that verifies.</text>
+  <text class="foot" x="40" y="578">Derived from: packages/evidence-ledger/src/writer.ts (GENESIS_HASH L30, computeEventHash L35, append L113, restore, verifyChain) · packages/core/src/types/evidence.ts (SintEventType)</text>
+</svg>

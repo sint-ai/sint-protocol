@@ -1,0 +1,59 @@
+%% SINT Protocol — Request lifecycle for one SintRequest
+%% Source of truth: packages/policy-gateway/src/gateway.ts
+%%   intercept() L647, evaluateRequest() L667 (numbered steps are the code's own),
+%%   decideBytier() L1752, tier-assigner.ts, constraint-checker.ts,
+%%   forbidden-combos.ts, plugin-failures.ts
+sequenceDiagram
+  autonumber
+  participant BR as Bridge adapter
+  participant GW as PolicyGateway.intercept()
+  participant TR as TokenResolver
+  participant PL as Plugin seats
+  participant LG as EvidenceLedger
+  participant HU as ApprovalQueue / human
+
+  BR->>GW: SintRequest
+  Note over GW: PluginFailureScope opens.<br/>Baseline tier on unexpected failure = T3_COMMIT
+
+  GW->>GW: 1. sintRequestSchema.safeParse()
+  alt invalid
+    GW-->>BR: deny MALFORMED_REQUEST
+  end
+
+  GW->>PL: 1a. goalHijackDetector.analyze(params) — ASI01
+  GW->>PL: 1b-pre. memoryIntegrity check — ASI06
+  GW->>PL: 1b. circuitBreaker state — ASI10
+  Note right of PL: OPEN → instant deny<br/>HALF_OPEN → probe allowed
+
+  GW->>TR: 2. resolve token by tokenId
+  GW->>GW: 2a/3b. token.subject must equal request.agentId
+  GW->>GW: 3. revocation check (fail-closed)
+  GW->>GW: 4. validateCapabilityToken() — Ed25519, expiry, resource glob, actions
+  GW->>PL: 4a–4e. authority, deployment, spatial, regulated-data,<br/>corridor, rate limit, economy, supply chain
+
+  GW->>GW: 5. assignTier(request) → ApprovalTier + RiskTier + escalationReasons
+  GW->>PL: 5b–5f. CSML escalation, simulation evidence,<br/>SafetyPermitPlugin, attestation, verifiable compute
+
+  GW->>PL: 6b. argInjectionDetector — ASI05
+  GW->>GW: 6c–6e. effective envelope = min(token constraints, dynamic overrides)
+  GW->>GW: 7. checkConstraints() — force, velocity, torque, jerk,<br/>geofence, human presence, consequence limits
+  GW->>GW: 7b. checkForbiddenCombos(recentActions, action)
+
+  GW->>GW: 8. decideBytier()
+  alt T0_OBSERVE / T1_PREPARE
+    GW-->>BR: allow
+  else T2_ACT
+    GW->>HU: escalate — timeout 30s, fallback deny
+    GW-->>BR: escalate
+  else T3_COMMIT
+    GW->>HU: escalate — timeout 30s, fallback safe-stop
+    GW-->>BR: escalate
+  else constraint / policy violation
+    GW-->>BR: deny (reason + policyViolated)
+  else regulated-data fallback route
+    GW-->>BR: transform (constraintOverrides)
+  end
+
+  GW->>LG: 9. append policy.evaluated (+ plugin / safety events)
+  Note over LG: append-only, previousHash chained
+  GW->>PL: finalize() → economyPlugin.postIntercept() on allow only

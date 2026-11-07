@@ -1,0 +1,47 @@
+%% SINT Protocol — Plugin seats and OWASP ASI01–ASI10 coverage
+%% Source of truth: docs/conformance/owasp-asi-mapping.md (status: Certified),
+%%   packages/policy-gateway/src/index.ts (exported plugin interfaces),
+%%   packages/conformance-tests/fixtures/security/owasp-asi-conformance.v1.json
+flowchart LR
+  subgraph step1["Before token resolution"]
+    GH["DefaultGoalHijackDetector<br/>goal-hijack.ts"]
+    MI["DefaultMemoryIntegrityChecker<br/>memory-integrity.ts"]
+    CB["InMemoryCircuitBreaker<br/>circuit-breaker.ts"]
+  end
+  subgraph step2["Token + authority"]
+    VT["validateCapabilityToken()<br/>Ed25519 · expiry · scope · subject"]
+    DEL["delegateCapabilityToken()<br/>attenuation + depth limit"]
+    SC["DefaultSupplyChainVerifier<br/>supply-chain.ts"]
+    RL["InMemoryRateLimitStore<br/>@pshkv/persistence"]
+    EC["EconomyPlugin<br/>@pshkv/bridge-economy"]
+  end
+  subgraph step3["Tier + envelope"]
+    TA["assignTier()<br/>tier-assigner.ts"]
+    SP["SafetyPermitPlugin<br/>safety-permit.ts (fail-closed)"]
+    DE["DynamicEnvelopePlugin<br/>computeEnvelope()"]
+    CC["checkConstraints()<br/>constraint-checker.ts"]
+    FC["checkForbiddenCombos()<br/>forbidden-combos.ts"]
+    AI["DefaultArgInjectionDetector<br/>arg-injection-detector.ts"]
+  end
+  subgraph step4["Oversight"]
+    AQ["ApprovalQueue<br/>approval-flow.ts"]
+    PE["ProactiveEscalationEngine<br/>proactive-escalation.ts"]
+  end
+
+  A01["ASI01 Goal hijack / prompt injection"] --> GH
+  A02["ASI02 Tool misuse / scope abuse"] --> VT
+  A02 --> TA
+  A03["ASI03 Identity abuse / token forgery"] --> VT
+  A04["ASI04 Supply chain / model fingerprint"] --> SC
+  A05["ASI05 Unsafe code execution"] --> TA
+  A05 --> FC
+  A05 --> AI
+  A06["ASI06 Memory poisoning"] --> MI
+  A07["ASI07 Inter-agent trust / delegation"] --> DEL
+  A08["ASI08 Resource exhaustion"] --> RL
+  A08 --> CB
+  A09["ASI09 Human oversight bypass"] --> TA
+  A09 --> AQ
+  A10["ASI10 Rogue / autonomous agent"] --> CB
+
+  note["Fail behaviour is per seat.<br/>SafetyPermitPlugin is fail-closed.<br/>Advisory seats such as goal hijack and supply chain are fail-open:<br/>a plugin error does not block the request.<br/>Unexpected gateway failure falls back to the T3_COMMIT baseline."]

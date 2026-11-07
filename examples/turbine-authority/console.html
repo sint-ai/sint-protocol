@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src data:; base-uri 'none'; form-action 'none'">
+<title>SINT Authority Console</title>
+<style>
+/* One typeface, one neutral ramp, hairlines and space. Color appears only when
+   something has a state: green allowed, amber held, red blocked, cyan dispatched.
+   Layout idea: the path is a single thin line; everything else is quiet text. */
+:root {
+  color-scheme: dark;
+  --ground: #08090b;
+  --hairline: #1e2127;
+  --text: #e4e7eb;
+  --dim: #a3aab4;
+  --faint: #7c8491;
+  --t0: #74d9a4;
+  --t1: #8ab4e8;
+  --t2: #e3b35f;
+  --t3: #ec7a7f;
+  --signal: #5fd6d6;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --gutter: clamp(20px, 3vw, 44px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--ground);
+  color: var(--text);
+  font: 400 14px/1.55 var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-variant-ligatures: none;
+  -webkit-font-smoothing: antialiased;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(14px, 3vh, 30px);
+  padding: clamp(14px, 2.6vh, 26px) var(--gutter) clamp(12px, 2.2vh, 22px);
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 1px solid var(--text); outline-offset: 3px; }
+::selection { background: #2b3038; }
+.label { color: var(--faint); }
+* { scrollbar-width: thin; scrollbar-color: var(--hairline) transparent; }
+
+/* Header */
+.top { display: flex; align-items: center; gap: 28px; white-space: nowrap; }
+.brand { display: flex; align-items: center; gap: 12px; color: var(--text); }
+.brand svg { width: 22px; height: 22px; display: block; }
+.brand b { font-weight: 600; letter-spacing: .18em; }
+.brand span { color: var(--faint); }
+.flag { color: var(--dim); text-transform: lowercase; }
+.flag.warn { color: var(--t2); display: inline-flex; align-items: center; gap: 9px; }
+.flag.warn::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--t2); }
+.spacer { flex: 1; }
+.run-facts { display: flex; gap: 24px; color: var(--faint); }
+.run-facts b { color: var(--text); font-weight: 400; }
+
+/* Deck */
+.deck { display: grid; min-height: 0; gap: clamp(28px, 4vw, 64px); grid-template-columns: 168px minmax(0, 1fr) 296px; }
+
+/* Sequence */
+.rail ol { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.rail button {
+  width: 100%; display: grid; grid-template-columns: 26px 1fr 8px; align-items: baseline; gap: 4px;
+  text-align: left; padding: 6px 0; color: var(--faint); transition: color .15s;
+}
+.rail button:hover { color: var(--text); }
+.rail .num { color: inherit; }
+.rail .name { line-height: 1.35; }
+.rail .mark { width: 5px; height: 5px; border-radius: 50%; align-self: center; justify-self: end; background: transparent; }
+.rail li[data-state="active"] button { color: var(--text); }
+.rail li[data-skipped="true"] button { color: #3f454e; }
+.rail li[data-outcome="pass"] .mark { background: var(--t0); }
+.rail li[data-outcome="hold"] .mark { background: var(--t2); }
+.rail li[data-outcome="stop"] .mark { background: var(--t3); }
+.rail li[data-outcome="fire"] .mark { background: var(--signal); }
+
+/* Stage */
+.stage { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
+.stage-head { display: flex; align-items: baseline; gap: 14px; color: var(--text); }
+.stage-head .idx { color: var(--faint); }
+.stage-head h1 { font: 400 clamp(14px, 1.15vw, 16px)/1.4 var(--mono); }
+#path { display: block; width: 100%; height: auto; flex: none; margin-block: clamp(6px, 2vh, 22px); }
+#path text { font-family: var(--mono); }
+.wire { fill: #2c3038; }
+#trail { fill: var(--signal); transform-origin: 0 0; transition: transform .55s var(--ease), fill .2s; }
+#path[data-stopped="true"] #trail { fill: var(--t3); }
+#signal { transition: transform .55s var(--ease), opacity .2s; }
+#signal circle { fill: var(--text); }
+#path[data-stopped="true"] #signal circle { fill: var(--t3); }
+#signal-tag { font-size: 16px; fill: var(--dim); text-anchor: middle; }
+
+.node .gap { fill: var(--ground); }
+.node .glyph { fill: none; stroke: var(--dim); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .2s; }
+.node .label { fill: var(--dim); font-size: 17px; text-anchor: middle; transition: fill .2s; }
+.node .note { fill: var(--faint); font-size: 17px; text-anchor: middle; }
+.node[data-state="live"] .glyph { stroke: var(--text); }
+.node[data-state="live"] .label { fill: var(--text); }
+.node[data-state="ok"] .glyph { stroke: var(--t0); }
+.node[data-state="ok"] .label, .node[data-state="ok"] .note { fill: var(--t0); }
+.node[data-state="hold"] .glyph { stroke: var(--t2); }
+.node[data-state="hold"] .label, .node[data-state="hold"] .note { fill: var(--t2); }
+.node[data-state="stop"] .glyph { stroke: var(--t3); }
+.node[data-state="stop"] .label, .node[data-state="stop"] .note { fill: var(--t3); }
+.node[data-state="fire"] .glyph { stroke: var(--signal); }
+.node[data-state="fire"] .label, .node[data-state="fire"] .note { fill: var(--signal); }
+#rotor { transform-box: fill-box; transform-origin: center; }
+#path[data-fired="true"] #rotor { animation: spin 2.6s var(--ease) 1; }
+@keyframes spin { to { transform: rotate(540deg); } }
+
+.lane { fill: none; stroke-width: 1; stroke-dasharray: 2 5; opacity: 0; stroke: var(--t0); transition: opacity .2s; }
+.lane-label { font-size: 15px; text-anchor: middle; fill: var(--faint); opacity: 0; transition: opacity .2s; }
+.lane[data-on="true"], .lane[data-on="deny"] { opacity: 1; animation: flow 1s linear infinite; }
+.lane[data-on="true"] + .lane-label, .lane[data-on="deny"] + .lane-label { opacity: 1; }
+#lane-check[data-on="true"] { stroke: var(--t1); animation-direction: reverse; }
+#lane-check[data-on="deny"] { stroke: var(--t3); animation-direction: reverse; }
+@keyframes flow { to { stroke-dashoffset: -14; } }
+
+/* Readout */
+.readout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: clamp(24px, 3vw, 48px); flex: 1; min-height: 0; }
+.verdict { --tone: var(--text); min-width: 0; }
+.verdict[data-tone="pass"] { --tone: var(--t0); }
+.verdict[data-tone="hold"] { --tone: var(--t2); }
+.verdict[data-tone="stop"] { --tone: var(--t3); }
+.verdict[data-tone="fire"] { --tone: var(--signal); }
+.verdict[data-tone="info"] { --tone: var(--t1); }
+#verdict-source { color: var(--faint); }
+#verdict-word { font: 300 clamp(30px, 3.6vw, 50px)/1.1 var(--mono); letter-spacing: -.025em; color: var(--tone); margin: 2px 0 8px; text-transform: lowercase; }
+#verdict-code { color: var(--text); overflow-wrap: anywhere; }
+#verdict-why { color: var(--dim); margin-top: 8px; max-width: 58ch; }
+.receipt { display: none; grid-template-columns: auto 1fr; gap: 0 18px; margin-top: 10px; }
+.receipt.on { display: grid; }
+.receipt dt { color: var(--faint); }
+.receipt dd { color: var(--dim); overflow-wrap: anywhere; }
+
+.side { display: flex; flex-direction: column; gap: clamp(12px, 2.4vh, 22px); min-width: 0; padding-top: 2px; }
+.token .kind { color: var(--text); }
+.token .scope { color: var(--dim); overflow-wrap: anywhere; white-space: pre-line; }
+.token[data-revoked="true"] .kind { color: var(--t3); text-decoration: line-through; }
+.stamp { display: none; color: var(--t3); margin-left: 10px; }
+.token[data-revoked="true"] .stamp { display: inline; }
+#point-text { color: var(--text); max-width: 40ch; }
+
+/* Dispatch matrix */
+.matrix {
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; list-style: none;
+  border-top: 1px solid var(--hairline); padding-top: clamp(10px, 1.8vh, 16px); margin-top: clamp(12px, 2vh, 20px);
+}
+.matrix li { min-width: 0; color: var(--faint); display: flex; flex-direction: column; gap: 1px; }
+.matrix .case { line-height: 1.3; }
+.matrix .delta { font-size: 17px; font-weight: 300; line-height: 1.3; color: var(--faint); }
+.matrix li[data-state="zero"] .delta { color: var(--text); }
+.matrix li[data-state="fire"], .matrix li[data-state="fire"] .delta { color: var(--signal); }
+
+/* Right column */
+.right { display: flex; flex-direction: column; gap: clamp(14px, 3vh, 28px); min-height: 0; min-width: 0; }
+.calls { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.calls .caption { display: block; color: var(--faint); max-width: 22ch; line-height: 1.4; }
+#calls { font: 300 clamp(44px, 5vw, 68px)/.95 var(--mono); letter-spacing: -.04em; color: var(--text); transition: color .3s; }
+#calls[data-hot="true"] { color: var(--signal); }
+.log { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.tabs { display: flex; gap: 18px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
+.tabs button { color: var(--faint); }
+.tabs button:hover { color: var(--text); }
+.tabs button[aria-selected="true"] { color: var(--text); }
+.feed { flex: 1; overflow: auto; min-height: 0; padding-top: 8px; font-size: 12.5px; line-height: 1.5; }
+.row { display: block; width: 100%; text-align: left; padding: 3px 0 5px; color: var(--dim); }
+.row:hover .type { color: var(--text); }
+.row.fresh { animation: arrive .35s var(--ease); }
+@keyframes arrive { from { opacity: 0; transform: translateY(3px); } }
+.row .line1 { display: grid; grid-template-columns: 26px 1fr auto; gap: 6px; }
+.row .seq, .row .hash { color: var(--faint); }
+.row .sub { color: var(--faint); padding-left: 32px; overflow-wrap: anywhere; }
+.row .who { color: var(--faint); }
+.row[data-kind="stop"] .seq, .row[data-kind="stop"] .type { color: var(--t3); }
+.row[data-kind="fire"] .seq, .row[data-kind="fire"] .type { color: var(--signal); }
+.row[data-kind="approval"] .seq { color: var(--t2); }
+.row[data-kind="sim"] { padding-block: 1px; }
+.row[data-kind="sim"] .type { color: var(--faint); }
+.row[data-kind="sim"] .sub { display: none; }
+.caret { display: inline-block; width: 7px; height: 14px; background: var(--text); vertical-align: -2px; margin: 4px 0 0 32px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.detail { padding: 2px 0 10px 32px; color: var(--faint); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11.5px; }
+.term { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--dim); }
+.term .h { color: var(--text); display: block; margin-top: 12px; }
+.term .h:first-child { margin-top: 0; }
+
+/* Base */
+.base { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px clamp(24px, 4vw, 56px); align-items: end; border-top: 1px solid var(--hairline); padding-top: clamp(10px, 1.8vh, 16px); }
+.chain-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+.chain-head .label { flex: none; }
+#chain-status { color: var(--dim); overflow-wrap: anywhere; min-width: 0; }
+#chain-status[data-tone="pass"] { color: var(--t0); }
+#chain-status[data-tone="stop"] { color: var(--t3); }
+#ribbon { display: flex; gap: 4px; height: 12px; }
+#ribbon i { flex: 1; min-width: 1px; max-width: 14px; background: var(--hairline); transition: background .15s; }
+#ribbon i[data-on="policy"] { background: var(--dim); }
+#ribbon i[data-on="sim"] { background: #3a4049; }
+#ribbon i[data-on="approval"] { background: var(--t2); }
+#ribbon i[data-on="stop"] { background: var(--t3); }
+#ribbon i[data-on="fire"] { background: var(--signal); }
+#ribbon i[data-check="ok"] { background: var(--t0); }
+#ribbon i[data-check="bad"] { background: var(--t3); }
+#ribbon i[data-check="after"] { background: #3b2326; }
+
+.controls { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.btn { padding: 7px 10px; color: var(--dim); white-space: nowrap; transition: color .15s, background .15s; }
+.btn:hover:not(:disabled) { color: var(--text); }
+.btn:disabled { color: #3f454e; cursor: not-allowed; }
+.btn.primary { background: var(--text); color: var(--ground); margin-left: 10px; padding-inline: 14px; }
+.btn.primary:hover:not(:disabled) { background: #fff; color: var(--ground); }
+.btn.primary:disabled { background: var(--hairline); color: var(--faint); }
+.btn[aria-pressed="true"] { color: var(--text); }
+.btn.danger { color: var(--t3); }
+.btn kbd { font: inherit; color: var(--faint); margin-left: 7px; }
+.btn.primary kbd { color: #5b626c; }
+.proof { display: none; gap: 4px; margin-right: 10px; }
+.proof.on { display: flex; }
+.legal { color: var(--faint); grid-column: 1 / -1; font-size: 12.5px; }
+
+@media (max-height: 790px) and (min-width: 1101px), (max-width: 1340px) and (min-width: 1101px) {
+  body { font-size: 13px; }
+  .deck { grid-template-columns: 148px minmax(0, 1fr) 272px; gap: 30px; }
+  .top { gap: 20px; }
+  .brand span { display: none; }
+  .calls .caption { display: none; }
+  #verdict-word { font-size: clamp(26px, 2.9vw, 36px); margin-bottom: 4px; }
+  #verdict-why { margin-top: 4px; }
+  .receipt { margin-top: 6px; line-height: 1.4; }
+  .matrix .delta { font-size: 15px; }
+}
+@media (max-width: 1100px) {
+  html, body { height: auto; }
+  body { grid-template-rows: none; }
+  .top { flex-wrap: wrap; gap: 8px 20px; }
+  .deck { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .rail ol { flex-direction: row; overflow-x: auto; gap: 18px; padding-bottom: 6px; }
+  .rail li { flex: none; }
+  .rail button { grid-template-columns: auto auto 8px; gap: 8px; }
+  .stage { overflow: visible; }
+  .right { display: grid; grid-template-rows: auto 340px; }
+  .base { grid-template-columns: minmax(0, 1fr); }
+  .controls { justify-content: flex-start; }
+}
+@media (max-width: 640px) {
+  .readout { grid-template-columns: minmax(0, 1fr); }
+  .matrix { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 12px; }
+  .run-facts, .spacer, .brand span { display: none; }
+  /* The six stations stay legible only without their captions at this width. */
+  .node .label, .node .note, #signal-tag { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+<style id="fonts">
+/* JetBrains Mono, Latin subset, SIL OFL 1.1. Icons are from Lucide (ISC). Notices in THIRD-PARTY-NOTICES.txt. */
+@font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 100 800; font-display: block; src: url(data:font/woff2;base64,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) format("woff2"); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+      <path d="M3 14c4-7.5 14-7.5 18 0"/>
+      <circle cx="12" cy="14" r="1.6" fill="currentColor" stroke="none"/>
+    </svg>
+    <b>SINT</b><span>authority console</span>
+  </div>
+  <span class="flag warn">Synthetic authorization demo: no turbine physics, connected to nothing</span>
+  <div class="spacer"></div>
+  <div class="run-facts">
+    <span>events <b id="fact-events">0</b></span>
+    <span>blocked <b id="fact-blocked">0</b></span>
+  </div>
+</header>
+
+<main class="deck">
+  <nav class="rail" aria-label="Demo sequence">
+    <ol id="rail"></ol>
+  </nav>
+
+  <section class="stage" aria-label="Authority path">
+    <div class="stage-head"><span class="idx" id="step-idx">1</span><h1 id="step-title"></h1></div>
+    <svg id="path" viewBox="0 0 1000 232" role="img" aria-label="Path from AI agent through OPC UA mapper, policy gateway, operator, and execution broker to the simulated controller">
+      <path id="lane-read" class="lane" d="M404 64 C 404 8, 914 8, 914 64"/>
+      <text class="lane-label" x="659" y="20">read lane, not a dispatch</text>
+      <path id="lane-check" class="lane" d="M744 186 C 744 234, 404 234, 404 186"/>
+      <text class="lane-label" x="574" y="229">broker asks the gateway again</text>
+
+      <rect class="wire" x="64" y="92" width="850" height="1"/>
+      <rect id="trail" x="64" y="91.75" width="850" height="1.5" style="transform: scaleX(0)"/>
+
+      <g class="node" data-node="0" transform="translate(64 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></g>
+        <text class="label" y="56">agent</text><text class="note" y="80"></text>
+      </g>
+      <g class="node" data-node="1" transform="translate(234 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></g>
+        <text class="label" y="56">opc ua mapper</text><text class="note" y="80"></text>
+      </g>
+      <g class="node" data-node="2" transform="translate(404 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></g>
+        <text class="label" y="56">gateway</text><text class="note" y="80"></text>
+      </g>
+      <g class="node" data-node="3" transform="translate(574 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></g>
+        <text class="label" y="56">operator</text><text class="note" y="80"></text>
+      </g>
+      <g class="node" data-node="4" transform="translate(744 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></g>
+        <text class="label" y="56">broker</text><text class="note" y="80"></text>
+      </g>
+      <g class="node" data-node="5" transform="translate(914 92)">
+        <rect class="gap" x="-34" y="-30" width="68" height="60"/>
+        <g class="glyph" transform="translate(-21 -21) scale(1.75)"><g id="rotor"><path d="M10.827 16.379a6.082 6.082 0 0 1-8.618-7.002l5.412 1.45a6.082 6.082 0 0 1 7.002-8.618l-1.45 5.412a6.082 6.082 0 0 1 8.618 7.002l-5.412-1.45a6.082 6.082 0 0 1-7.002 8.618l1.45-5.412Z"/><path d="M12 12v.01"/></g></g>
+        <text class="label" y="56">sim controller</text><text class="note" y="80"></text>
+      </g>
+
+      <g id="signal" style="transform: translate(64px, 92px)">
+        <circle r="3.5"/>
+        <text id="signal-tag" y="-44"></text>
+      </g>
+    </svg>
+
+    <div class="readout">
+      <div class="verdict" id="verdict" aria-live="polite">
+        <div id="verdict-source">standby</div>
+        <div id="verdict-word">ready</div>
+        <div id="verdict-code"></div>
+        <p id="verdict-why"></p>
+        <dl class="receipt" id="receipt"></dl>
+      </div>
+      <div class="side">
+        <div class="token" id="token">
+          <div class="label">token<span class="stamp">revoked</span></div>
+          <div class="kind" id="token-kind"></div>
+          <div class="scope" id="token-scope"></div>
+        </div>
+        <div class="point"><div class="label">point to make</div><p id="point-text"></p></div>
+      </div>
+    </div>
+    <ol class="matrix" id="matrix" aria-label="Controller calls added by each case"></ol>
+  </section>
+
+  <aside class="right">
+    <section class="calls" aria-label="Controller calls">
+      <div><span class="label">controller calls</span><span class="caption">raised only by an approved dispatch</span></div>
+      <output id="calls">0</output>
+    </section>
+    <section class="log" aria-label="Evidence">
+      <div class="tabs" role="tablist">
+        <button id="tab-ledger" role="tab" aria-selected="true" aria-controls="feed">ledger</button>
+        <button id="tab-term" role="tab" aria-selected="false" aria-controls="feed">terminal</button>
+      </div>
+      <div class="feed" id="feed" role="tabpanel"></div>
+    </section>
+  </aside>
+</main>
+
+<footer class="base">
+  <div>
+    <div class="chain-head">
+      <span class="label">sha-256 chain</span>
+      <span id="chain-status" data-tone="">Links appear as the run replays. Each one hashes the link before it.</span>
+    </div>
+    <div id="ribbon" aria-hidden="true"></div>
+  </div>
+  <div class="controls">
+    <div class="proof" id="proof">
+      <button class="btn" id="btn-verify">re-hash<kbd>v</kbd></button>
+      <button class="btn danger" id="btn-tamper">tamper with a copy<kbd>t</kbd></button>
+    </div>
+    <button class="btn" id="btn-short" aria-pressed="false">90 sec<kbd>s</kbd></button>
+    <button class="btn" id="btn-restart">restart<kbd>r</kbd></button>
+    <button class="btn" id="btn-auto" aria-pressed="false">auto<kbd>a</kbd></button>
+    <button class="btn" id="btn-back">back<kbd>&#8592;</kbd></button>
+    <button class="btn primary" id="btn-next">next<kbd>&#8594;</kbd></button>
+  </div>
+  <p class="legal"><span id="replay-flag">Replay of a recorded run.</span> Software authorization does not replace plant safety interlocks or the emergency stop. 900 kW is illustrative: no signed limit applies. This page cannot use the network.</p>
+</footer>
+
+<script id="trace" type="application/json">{"recordedAt":"2026-11-06T07:57:51.761Z","head":"2f9d812735bfe7b07d0f2c2ecd30237c16457d4e15db5fe59d35dd2fac5c65c4","tokenLabels":{"01a1afdd-32a4-749e-bf29-318a438ebca2":"read token","01a1afdd-32be-7eba-9d1e-cdd79eb31082":"control token 1","01a1afdd-32d9-765e-b369-50fbf84a0c5a":"control token 2","01a1afdd-32eb-732b-ac6e-5309f1a33d80":"control token 3","01a1afdd-32fc-7512-ae0e-33b28fb80b30":"control token 4"},"steps":[{"title":"1. Read fictional bearing temperature with a read-only token","lines":["  Gateway: allow (T0_observe)","  Value: 71.4 C (fictional)","  Ledger: #1 policy.evaluated 5658ef4a98ea634e..."],"ledgerFrom":0,"ledgerTo":1,"controllerCalls":0},{"title":"2. Write the fictional power setpoint with that same token","lines":["  Gateway: deny (T3_commit) INSUFFICIENT_PERMISSIONS","  Reason: Token validation failed: INSUFFICIENT_PERMISSIONS","  Controller calls: 0"],"ledgerFrom":1,"ledgerTo":2,"controllerCalls":0},{"title":"3. Propose the setpoint with a separate short-lived control token","lines":["  Proposed: 900 kW (illustrative; no signed limit applies to this number)","  Evidence: signed receipt from a placeholder model; it proves the evidence path ran, not that the command is safe","  Gateway: escalate (T2_act)","  Reason: Action requires human review (T2_act)","  T2 is SINT's default for OPC UA writes, not a hazard analysis; that sets the real tier","  Controller calls: 0"],"ledgerFrom":2,"ledgerTo":5,"controllerCalls":0},{"title":"4. Operator rejects it, then approves a separate proposal","lines":["  Operator: rejected by operator-on-shift","  Broker: refused APPROVAL_REQUIRED","  Reason: Escalated execution requires a completed approval","  Controller calls: 0 (0 new)","  New proposal, new token, new evidence:","  Gateway: escalate (T2_act)","  Reason: Action requires human review (T2_act)","  Operator: approved by operator-on-shift","  Controller calls: 0"],"ledgerFrom":5,"ledgerTo":15,"controllerCalls":0},{"title":"5. Dispatch once through the execution broker","lines":["  Broker: dispatched; simulated controller calls: 1","  This receipt is an acknowledgment, not a measured physical outcome","  Controller receipt: {\n    \"controllerReceiptId\": \"01a1afdd-32eb-77ce-a7e9-b471fd3f282f\",\n    \"requestId\": \"01a1afdd-32da-7ec5-b148-a49ddfe4fba4\",\n    \"node\": \"ns=2;s=Generator01.PowerSetpoint\",\n    \"powerKw\": 900,\n    \"acknowledgedAt\": \"2026-11-06T07:57:51.723000Z\",\n    \"callNumber\": 1,\n    \"simulated\": true\n  }","  Ledger: #18 action.completed 8539c6e3b82d77b4..."],"ledgerFrom":15,"ledgerTo":18,"controllerCalls":1},{"title":"6a. Central approval unavailable","lines":["  Gateway: deny (T3_commit) EDGE_CENTRAL_UNAVAILABLE","  Reason: central approval plane unavailable","  Broker: refused AUTHORIZATION_NOT_EXECUTABLE","  Reason: Policy decision deny cannot be dispatched","  Controller calls: 1 (0 new)"],"ledgerFrom":18,"ledgerTo":24,"controllerCalls":1},{"title":"6b. Token revoked after approval, before dispatch","lines":["  Gateway: escalate (T2_act)","  Reason: Action requires human review (T2_act)","  Operator: approved by operator-on-shift","  Control token: revoked","  Broker: refused AUTHORIZATION_VERIFICATION_FAILED","  Reason: Gateway re-check no longer authorizes this request: TOKEN_REVOKED","  Controller calls: 1 (0 new)"],"ledgerFrom":24,"ledgerTo":32,"controllerCalls":1},{"title":"6c. Replay the step 5 dispatch unchanged","lines":["  Same request, same approval, same receipt:","  Broker: refused SIMULATION_RECEIPT_REPLAYED","  Reason: Simulation receipt was already consumed","  Controller calls: 1 (0 new)"],"ledgerFrom":32,"ledgerTo":35,"controllerCalls":1},{"title":"7. Verify the evidence chain","lines":["  #01 07:57:51  gateway allow T0_observe  [sensor read, read token]","  #02 07:57:51  gateway deny T3_commit INSUFFICIENT_PERMISSIONS  [write with read-only token, read token]","  #05 07:57:51  gateway escalate T2_act  [proposal 1, control token 1]","  #06 07:57:51  approval requested  [proposal 1, control token 1]","  #07 07:57:51  operator rejected (operator-on-shift)  [proposal 1, control token 1]","  #10 07:57:51  dispatch refused APPROVAL_REQUIRED  [proposal 1, control token 1]","  #13 07:57:51  gateway escalate T2_act  [proposal 2, control token 2]","  #14 07:57:51  approval requested  [proposal 2, control token 2]","  #15 07:57:51  operator approved (operator-on-shift)  [proposal 2, control token 2]","  #18 07:57:51  dispatched to simulated controller  [proposal 2, control token 2]","  #21 07:57:51  gateway deny T3_commit EDGE_CENTRAL_UNAVAILABLE  [proposal 3, central offline, control token 3]","  #24 07:57:51  dispatch refused AUTHORIZATION_NOT_EXECUTABLE  [proposal 3, central offline, control token 3]","  #27 07:57:51  gateway escalate T2_act  [proposal 4, revoked after approval, control token 4]","  #28 07:57:51  approval requested  [proposal 4, revoked after approval, control token 4]","  #29 07:57:51  operator approved (operator-on-shift)  [proposal 4, revoked after approval, control token 4]","  #30 07:57:51  control token revoked: Synthetic reason: operator withdrew agent authority  [control token 4]","  #32 07:57:51  dispatch refused AUTHORIZATION_VERIFICATION_FAILED  [proposal 4, revoked after approval, control token 4]","  #35 07:57:51  dispatch refused SIMULATION_RECEIPT_REPLAYED  [proposal 2, control token 2]","  35 append-only events (18 key events shown); chain verified","  Head: 2f9d812735bfe7b07d0f2c2ecd30237c16457d4e15db5fe59d35dd2fac5c65c4","  Controller calls in total: 1"],"ledgerFrom":35,"ledgerTo":35,"controllerCalls":1}],"events":[{"eventId":"01a1afdd-32b8-7d26-95c7-e0ec80a90040","sequenceNumber":"1","timestamp":"2026-11-06T07:57:51.672000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32a4-749e-bf29-318a438ebca2","payload":{"decision":"allow","tier":"T0_observe","risk":"T0_read","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32ad-7e9a-a865-04f36139d46a","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"}],"auditStatus":"recorded"},"previousHash":"0000000000000000000000000000000000000000000000000000000000000000","hash":"5658ef4a98ea634e27bff2f1120f8384ec28a5ea4d391823bec11e8d091cb105"},{"eventId":"01a1afdd-32bd-7dd4-a9f6-30b2475ace96","sequenceNumber":"2","timestamp":"2026-11-06T07:57:51.677000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32a4-749e-bf29-318a438ebca2","payload":{"decision":"deny","tier":"T3_commit","risk":"T3_irreversible","policyViolated":"INSUFFICIENT_PERMISSIONS","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32b9-7c5e-87ad-ed93aa40014f","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"}],"auditStatus":"recorded"},"previousHash":"5658ef4a98ea634e27bff2f1120f8384ec28a5ea4d391823bec11e8d091cb105","hash":"8751b95542e4fdf7ae46e97a607335249660ed7bdf46a9f0d5ffa76d1b7c3359"},{"eventId":"01a1afdd-32c7-7e11-9699-f7f84d9bc7a0","sequenceNumber":"3","timestamp":"2026-11-06T07:57:51.687000Z","eventType":"simulation.receipt.issued","agentId":"386e189c1cd4104f502a40002dcd02b54d9c98db8f403bb3435af5c54f4ee2b6","payload":{"receiptId":"01a1afdd-32c5-7896-a0fc-7c1642bb4b38","receiptDigest":"88cf71fabcbb1a2507c6008f7bb2ad2cec1e28f26dbaeca9ab233572ae383401","evidenceGrade":"deterministic","requestDigest":"8d63730e1c86391c6961995573246534a883a50f6e32ea3fef4bf036b208fb8b","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","tokenDigest":"c5f4dcab0a8d357eeadca4d3ff7f10555b59d2b94050e4865bb55be20a1a40ac","worldSnapshotDigest":"5e5b4a44ce986d826736537e1e7df11cde3c2e995ad3999f507473a0e9d7c496","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","simulator":{"backend":"sint-deterministic","version":"0.0.0-synthetic","modelDigest":"8efc3370e297447deb0317719daaca5feca2298ca53f11bae12850d54012363f"},"scenarios":{"scenarioSetDigest":"8d4d2d14de26adccf064f7c8cac1994ae314a9587aac8d2c5e80e41811c23403","runCount":1,"coverage":0,"seeds":[]},"outcome":"pass","generatedAt":"2026-11-06T07:57:51.684Z","expiresAt":"2026-11-06T08:07:51.684Z","authorizesExecution":false},"previousHash":"8751b95542e4fdf7ae46e97a607335249660ed7bdf46a9f0d5ffa76d1b7c3359","hash":"806dd17ea119f2200b7039d2a7cc31ae1f3bf232ea35e72ce9472d52b3ab7117"},{"eventId":"01a1afdd-32d0-7516-9b08-78855f5ba8d5","sequenceNumber":"4","timestamp":"2026-11-06T07:57:51.697000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"receiptId":"01a1afdd-32c5-7896-a0fc-7c1642bb4b38","evidenceGrade":"deterministic","requestDigest":"8d63730e1c86391c6961995573246534a883a50f6e32ea3fef4bf036b208fb8b","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298"},"previousHash":"806dd17ea119f2200b7039d2a7cc31ae1f3bf232ea35e72ce9472d52b3ab7117","hash":"c4b814ec2e138c4429c14a0a7f13aff89cee715ed6dbbb22ed0e8b93f63e1999"},{"eventId":"01a1afdd-32d1-78b2-bca3-5dff93df1763","sequenceNumber":"5","timestamp":"2026-11-06T07:57:51.697000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"c4b814ec2e138c4429c14a0a7f13aff89cee715ed6dbbb22ed0e8b93f63e1999","hash":"d293defb5cfb6edd35a0985b2827a6434768311be22632fc46ae03fc52bf6657"},{"eventId":"01a1afdd-32d1-7d23-81bc-6a1a025e7c95","sequenceNumber":"6","timestamp":"2026-11-06T07:57:51.697000Z","eventType":"approval.requested","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298","reason":"Action requires human review (T2_act)","tier":"T2_act","resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"d293defb5cfb6edd35a0985b2827a6434768311be22632fc46ae03fc52bf6657","hash":"d98e0057b6111c16d64e91b16bd3058b8cd6da21bd5acde6d991ded757b2aebb"},{"eventId":"01a1afdd-32d2-7e7f-9010-24b6416800ce","sequenceNumber":"7","timestamp":"2026-11-06T07:57:51.698000Z","eventType":"approval.denied","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298","resolution":{"status":"denied","by":"operator-on-shift","reason":"Synthetic reason: wait for the next review window"},"resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"d98e0057b6111c16d64e91b16bd3058b8cd6da21bd5acde6d991ded757b2aebb","hash":"8d7cca1a2646367825eebe38b2988a32cbb62529339bbaff0416adc07becc5d7"},{"eventId":"01a1afdd-32d9-7e05-b99d-96ab81c6cd78","sequenceNumber":"8","timestamp":"2026-11-06T07:57:51.705000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"receiptId":"01a1afdd-32c5-7896-a0fc-7c1642bb4b38","evidenceGrade":"deterministic","requestDigest":"8d63730e1c86391c6961995573246534a883a50f6e32ea3fef4bf036b208fb8b","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298"},"previousHash":"8d7cca1a2646367825eebe38b2988a32cbb62529339bbaff0416adc07becc5d7","hash":"7c622bd40be652860c016e623e9ddd2b330e19751f7f05fd31fc4dda3a743ef7"},{"eventId":"01a1afdd-32d9-7400-bdef-5e1790b58d29","sequenceNumber":"9","timestamp":"2026-11-06T07:57:51.705000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"7c622bd40be652860c016e623e9ddd2b330e19751f7f05fd31fc4dda3a743ef7","hash":"6fd93405a073a79daba656ecbbcdb000afbb4f3d477b0a18f0e875ff489b28c8"},{"eventId":"01a1afdd-32d9-7d02-a997-afc05be686fc","sequenceNumber":"10","timestamp":"2026-11-06T07:57:51.705000Z","eventType":"action.failed","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32be-7eba-9d1e-cdd79eb31082","payload":{"brokerEvent":"execution.rejected","requestId":"01a1afdd-32bf-7fdc-b298-7ac38abd3298","receiptId":"01a1afdd-32c5-7896-a0fc-7c1642bb4b38","code":"APPROVAL_REQUIRED","message":"Escalated execution requires a completed approval"},"previousHash":"6fd93405a073a79daba656ecbbcdb000afbb4f3d477b0a18f0e875ff489b28c8","hash":"0e441494c48ea2e611b50343d26f4f30e9524a40e4bc788668645b37d345fab5"},{"eventId":"01a1afdd-32de-7a32-9a00-e2460c37ba6d","sequenceNumber":"11","timestamp":"2026-11-06T07:57:51.710000Z","eventType":"simulation.receipt.issued","agentId":"386e189c1cd4104f502a40002dcd02b54d9c98db8f403bb3435af5c54f4ee2b6","payload":{"receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","receiptDigest":"712f78197e51755c52318129974b493735149a30b498b784da109e9b085c7025","evidenceGrade":"deterministic","requestDigest":"37fe2db7e2ee9e927512b01d9386fb7f6b25d2b81e2c54b1aafd994c6a9622c9","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","tokenDigest":"6585ad2ad21886cab9a25ffab7df56df132d95e7bacdf1d58b822dade54321db","worldSnapshotDigest":"5e5b4a44ce986d826736537e1e7df11cde3c2e995ad3999f507473a0e9d7c496","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","simulator":{"backend":"sint-deterministic","version":"0.0.0-synthetic","modelDigest":"8efc3370e297447deb0317719daaca5feca2298ca53f11bae12850d54012363f"},"scenarios":{"scenarioSetDigest":"8d4d2d14de26adccf064f7c8cac1994ae314a9587aac8d2c5e80e41811c23403","runCount":1,"coverage":0,"seeds":[]},"outcome":"pass","generatedAt":"2026-11-06T07:57:51.710Z","expiresAt":"2026-11-06T08:07:51.710Z","authorizesExecution":false},"previousHash":"0e441494c48ea2e611b50343d26f4f30e9524a40e4bc788668645b37d345fab5","hash":"b3e2703852a24d493735a2d5fbf7fd040dab550a9c9d7005aeebfaf3ae2f3fe8"},{"eventId":"01a1afdd-32e4-7dbc-9675-632432a13c3d","sequenceNumber":"12","timestamp":"2026-11-06T07:57:51.716000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","evidenceGrade":"deterministic","requestDigest":"37fe2db7e2ee9e927512b01d9386fb7f6b25d2b81e2c54b1aafd994c6a9622c9","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4"},"previousHash":"b3e2703852a24d493735a2d5fbf7fd040dab550a9c9d7005aeebfaf3ae2f3fe8","hash":"e9d3ddae3be6065941fb2a6c0db97ae3e364ed8f7e9035f46d18145e89d1bc90"},{"eventId":"01a1afdd-32e4-7976-87c8-409dff007b18","sequenceNumber":"13","timestamp":"2026-11-06T07:57:51.716000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"e9d3ddae3be6065941fb2a6c0db97ae3e364ed8f7e9035f46d18145e89d1bc90","hash":"df5d3ec50b8c7aaadb22ee98b9f896b78261d391cd6ab86489e22335039a6353"},{"eventId":"01a1afdd-32e4-78ef-98be-f1b1bcd46c6f","sequenceNumber":"14","timestamp":"2026-11-06T07:57:51.716000Z","eventType":"approval.requested","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","reason":"Action requires human review (T2_act)","tier":"T2_act","resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"df5d3ec50b8c7aaadb22ee98b9f896b78261d391cd6ab86489e22335039a6353","hash":"e55a14aa700efedc98787c2bdf63c899ac274c2172f5e5d5e34ead673a5f8302"},{"eventId":"01a1afdd-32e4-7db4-9dd7-dbba349c00f2","sequenceNumber":"15","timestamp":"2026-11-06T07:57:51.716000Z","eventType":"approval.granted","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","resolution":{"status":"approved","by":"operator-on-shift","at":"2026-11-06T07:57:51.716000Z","approvers":["operator-on-shift"]},"resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"e55a14aa700efedc98787c2bdf63c899ac274c2172f5e5d5e34ead673a5f8302","hash":"5a31c7b5ba473af05786373bf0754e5c8ba855bcd4ba300d965035bca713d4ac"},{"eventId":"01a1afdd-32ea-7682-bdd6-fbae467db84a","sequenceNumber":"16","timestamp":"2026-11-06T07:57:51.722000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","evidenceGrade":"deterministic","requestDigest":"37fe2db7e2ee9e927512b01d9386fb7f6b25d2b81e2c54b1aafd994c6a9622c9","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4"},"previousHash":"5a31c7b5ba473af05786373bf0754e5c8ba855bcd4ba300d965035bca713d4ac","hash":"5d960a0160fe348930317d23937592d3cb608afd63840607e14674f22495da8e"},{"eventId":"01a1afdd-32eb-75f1-9078-ecf4776267f3","sequenceNumber":"17","timestamp":"2026-11-06T07:57:51.723000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"5d960a0160fe348930317d23937592d3cb608afd63840607e14674f22495da8e","hash":"297ec2c35e2a5d11db50becf1fdf76040bf33032ba488df6f04aff0c4b2acb37"},{"eventId":"01a1afdd-32eb-7db6-94e6-c380059d0f51","sequenceNumber":"18","timestamp":"2026-11-06T07:57:51.723000Z","eventType":"action.completed","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"brokerEvent":"execution.dispatched","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","worldStateDigest":"5e5b4a44ce986d826736537e1e7df11cde3c2e995ad3999f507473a0e9d7c496","stateEpoch":"synthetic-epoch-1","approvers":["operator-on-shift"],"executionReceipt":{"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","simulationReceiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12"},"controllerReceipt":{"controllerReceiptId":"01a1afdd-32eb-77ce-a7e9-b471fd3f282f","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","node":"ns=2;s=Generator01.PowerSetpoint","powerKw":900,"acknowledgedAt":"2026-11-06T07:57:51.723000Z","callNumber":1,"simulated":true}},"previousHash":"297ec2c35e2a5d11db50becf1fdf76040bf33032ba488df6f04aff0c4b2acb37","hash":"8539c6e3b82d77b485c3f50e3c499b36292be553f3955d8e0eeb1ce5355daf82"},{"eventId":"01a1afdd-32ef-7812-ac0c-ecd277984dca","sequenceNumber":"19","timestamp":"2026-11-06T07:57:51.727000Z","eventType":"simulation.receipt.issued","agentId":"386e189c1cd4104f502a40002dcd02b54d9c98db8f403bb3435af5c54f4ee2b6","payload":{"receiptId":"01a1afdd-32ef-7282-8513-28419710199a","receiptDigest":"b834fb04e2beeb401ad607255f8720bbd9a434c57491bfefbcf09921dc254bf1","evidenceGrade":"deterministic","requestDigest":"c79e7e81a68bc91b6e0f8860b2ce6f7593832b3995e513b70b1286da670fe718","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","tokenDigest":"4c7d80b5d8e61ee08c8ec2a1d29096d1f34fbe51fec3134e3cc445186dffc9fc","worldSnapshotDigest":"5e5b4a44ce986d826736537e1e7df11cde3c2e995ad3999f507473a0e9d7c496","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","simulator":{"backend":"sint-deterministic","version":"0.0.0-synthetic","modelDigest":"8efc3370e297447deb0317719daaca5feca2298ca53f11bae12850d54012363f"},"scenarios":{"scenarioSetDigest":"8d4d2d14de26adccf064f7c8cac1994ae314a9587aac8d2c5e80e41811c23403","runCount":1,"coverage":0,"seeds":[]},"outcome":"pass","generatedAt":"2026-11-06T07:57:51.727Z","expiresAt":"2026-11-06T08:07:51.727Z","authorizesExecution":false},"previousHash":"8539c6e3b82d77b485c3f50e3c499b36292be553f3955d8e0eeb1ce5355daf82","hash":"a13cbb1dd123f0412496e9ec67a742b1ecdd3dc12bf68fd819145f64fdf47bb0"},{"eventId":"01a1afdd-32f6-7cc6-91cf-9235f6825314","sequenceNumber":"20","timestamp":"2026-11-06T07:57:51.734000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32eb-732b-ac6e-5309f1a33d80","payload":{"receiptId":"01a1afdd-32ef-7282-8513-28419710199a","evidenceGrade":"deterministic","requestDigest":"c79e7e81a68bc91b6e0f8860b2ce6f7593832b3995e513b70b1286da670fe718","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32eb-7eea-8c6f-8087427d4874"},"previousHash":"a13cbb1dd123f0412496e9ec67a742b1ecdd3dc12bf68fd819145f64fdf47bb0","hash":"a836be144924695cbedc49ad083bb51274cfbeba9cee24d3eadadd6081ec2b5f"},{"eventId":"01a1afdd-32f6-7a40-a5e0-a5fa0d4c5369","sequenceNumber":"21","timestamp":"2026-11-06T07:57:51.734000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32eb-732b-ac6e-5309f1a33d80","payload":{"authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32eb-7eea-8c6f-8087427d4874","decision":"deny","tier":"T3_commit","risk":"T3_irreversible","policyViolated":"EDGE_CENTRAL_UNAVAILABLE","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"a836be144924695cbedc49ad083bb51274cfbeba9cee24d3eadadd6081ec2b5f","hash":"039e9f9984bf8c85ce077b2b8261334b4c67ffbb9f1a45234cc11904cb0b191e"},{"eventId":"01a1afdd-32fc-77ed-b918-6b1f9b3b3e7a","sequenceNumber":"22","timestamp":"2026-11-06T07:57:51.740000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32eb-732b-ac6e-5309f1a33d80","payload":{"receiptId":"01a1afdd-32ef-7282-8513-28419710199a","evidenceGrade":"deterministic","requestDigest":"c79e7e81a68bc91b6e0f8860b2ce6f7593832b3995e513b70b1286da670fe718","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32eb-7eea-8c6f-8087427d4874"},"previousHash":"039e9f9984bf8c85ce077b2b8261334b4c67ffbb9f1a45234cc11904cb0b191e","hash":"9792d8a9009f415728f019202542ba79416fda12d1beca6d160535c6879cc2d9"},{"eventId":"01a1afdd-32fc-7d55-bb50-49bb6bee02a5","sequenceNumber":"23","timestamp":"2026-11-06T07:57:51.740000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32eb-732b-ac6e-5309f1a33d80","payload":{"authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32eb-7eea-8c6f-8087427d4874","decision":"deny","tier":"T3_commit","risk":"T3_irreversible","policyViolated":"EDGE_CENTRAL_UNAVAILABLE","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"9792d8a9009f415728f019202542ba79416fda12d1beca6d160535c6879cc2d9","hash":"688f637c486f0e9e2ad2ab1232763baea99decb3bb0e71f331b661800eabbc5d"},{"eventId":"01a1afdd-32fc-7b37-b369-623ed2dd40f6","sequenceNumber":"24","timestamp":"2026-11-06T07:57:51.740000Z","eventType":"action.failed","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32eb-732b-ac6e-5309f1a33d80","payload":{"brokerEvent":"execution.rejected","requestId":"01a1afdd-32eb-7eea-8c6f-8087427d4874","receiptId":"01a1afdd-32ef-7282-8513-28419710199a","code":"AUTHORIZATION_NOT_EXECUTABLE","message":"Policy decision deny cannot be dispatched"},"previousHash":"688f637c486f0e9e2ad2ab1232763baea99decb3bb0e71f331b661800eabbc5d","hash":"6e2866471f94570d7edefdcaef5b2f1ceeb4442b1bb8750e41cd8a2dcb14831d"},{"eventId":"01a1afdd-3301-7892-9768-176267c308b2","sequenceNumber":"25","timestamp":"2026-11-06T07:57:51.745000Z","eventType":"simulation.receipt.issued","agentId":"386e189c1cd4104f502a40002dcd02b54d9c98db8f403bb3435af5c54f4ee2b6","payload":{"receiptId":"01a1afdd-3301-77ff-8825-0a1c2cab1270","receiptDigest":"5c5f6ebbed98798f7ba8421d8aa9ae83aebb44c9053e74aadb9bba2ed88b012e","evidenceGrade":"deterministic","requestDigest":"efcadc8b351baf974a25045c31a4fb6314e001dd432f9c47720f04b5c5a0f679","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","tokenDigest":"0d1b0186e0ccff1e854ba7dc411146a4713d93d619a98e6f76b8043fbdfcfab6","worldSnapshotDigest":"5e5b4a44ce986d826736537e1e7df11cde3c2e995ad3999f507473a0e9d7c496","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","simulator":{"backend":"sint-deterministic","version":"0.0.0-synthetic","modelDigest":"8efc3370e297447deb0317719daaca5feca2298ca53f11bae12850d54012363f"},"scenarios":{"scenarioSetDigest":"8d4d2d14de26adccf064f7c8cac1994ae314a9587aac8d2c5e80e41811c23403","runCount":1,"coverage":0,"seeds":[]},"outcome":"pass","generatedAt":"2026-11-06T07:57:51.745Z","expiresAt":"2026-11-06T08:07:51.744Z","authorizesExecution":false},"previousHash":"6e2866471f94570d7edefdcaef5b2f1ceeb4442b1bb8750e41cd8a2dcb14831d","hash":"b00da9d4277e9951737d32aabe2c48200bf15889eeda990a37fb128d0acb96c6"},{"eventId":"01a1afdd-3308-74c8-bf16-7bf9bee657fb","sequenceNumber":"26","timestamp":"2026-11-06T07:57:51.752000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"receiptId":"01a1afdd-3301-77ff-8825-0a1c2cab1270","evidenceGrade":"deterministic","requestDigest":"efcadc8b351baf974a25045c31a4fb6314e001dd432f9c47720f04b5c5a0f679","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312"},"previousHash":"b00da9d4277e9951737d32aabe2c48200bf15889eeda990a37fb128d0acb96c6","hash":"656a5b6df3fc4ff8e63bbe258e4a9eb0ea0bcb7d561a5b9b22330960380ea6d6"},{"eventId":"01a1afdd-3308-749b-9056-7ff1fe708ed2","sequenceNumber":"27","timestamp":"2026-11-06T07:57:51.752000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"656a5b6df3fc4ff8e63bbe258e4a9eb0ea0bcb7d561a5b9b22330960380ea6d6","hash":"3b10f2be7f189ebc1a875092825c77edeca1d5f2eabcec033d3f16139138aca4"},{"eventId":"01a1afdd-3308-7ce5-b2c3-6f1baedc54ee","sequenceNumber":"28","timestamp":"2026-11-06T07:57:51.752000Z","eventType":"approval.requested","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312","reason":"Action requires human review (T2_act)","tier":"T2_act","resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"3b10f2be7f189ebc1a875092825c77edeca1d5f2eabcec033d3f16139138aca4","hash":"72d558cc21889da19c8a19f11b931f8e7839e3e7f7998d58431a7e83a104277b"},{"eventId":"01a1afdd-3308-7e0d-b5dd-e4802f6361eb","sequenceNumber":"29","timestamp":"2026-11-06T07:57:51.752000Z","eventType":"approval.granted","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312","resolution":{"status":"approved","by":"operator-on-shift","at":"2026-11-06T07:57:51.752000Z","approvers":["operator-on-shift"]},"resource":"opcua://fictional-generator.invalid:4840/ns%3D2%3Bs%3DGenerator01.PowerSetpoint","action":"write","params":{"powerKw":900}},"previousHash":"72d558cc21889da19c8a19f11b931f8e7839e3e7f7998d58431a7e83a104277b","hash":"2d9a75f4daf4c2575ba1b167458ef4fd4c7fb9e880a60019e65f628a55eacd7a"},{"eventId":"01a1afdd-3308-7fbc-8851-2a8954e3e586","sequenceNumber":"30","timestamp":"2026-11-06T07:57:51.752000Z","eventType":"token.revoked","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"reason":"Synthetic reason: operator withdrew agent authority","revokedBy":"operator-on-shift"},"previousHash":"2d9a75f4daf4c2575ba1b167458ef4fd4c7fb9e880a60019e65f628a55eacd7a","hash":"9af652591af707b7296d18bfeeecc8fae63483cd3af5e9bbab957dfcdb7be686"},{"eventId":"01a1afdd-330a-79b0-ad26-b3062b55c672","sequenceNumber":"31","timestamp":"2026-11-06T07:57:51.754000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312","decision":"deny","tier":"T3_commit","risk":"T3_irreversible","policyViolated":"TOKEN_REVOKED","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"}],"auditStatus":"recorded"},"previousHash":"9af652591af707b7296d18bfeeecc8fae63483cd3af5e9bbab957dfcdb7be686","hash":"23ab58ea6e78cc713aba0bef8f8aa5d688bfdc7be68cc34efbc526b1bd2d8a2e"},{"eventId":"01a1afdd-330a-78db-adb1-3ea41bf31f3e","sequenceNumber":"32","timestamp":"2026-11-06T07:57:51.754000Z","eventType":"action.failed","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32fc-7512-ae0e-33b28fb80b30","payload":{"brokerEvent":"execution.rejected","requestId":"01a1afdd-32fd-77ca-83e0-2e7568c60312","receiptId":"01a1afdd-3301-77ff-8825-0a1c2cab1270","code":"AUTHORIZATION_VERIFICATION_FAILED","message":"Gateway re-check no longer authorizes this request: TOKEN_REVOKED"},"previousHash":"23ab58ea6e78cc713aba0bef8f8aa5d688bfdc7be68cc34efbc526b1bd2d8a2e","hash":"ddcdbb336c5e54b744ca59f8f06b2884ffecd5cf26d50cabf7f4c5756f1b9922"},{"eventId":"01a1afdd-330f-7bda-a918-7f25f20d0622","sequenceNumber":"33","timestamp":"2026-11-06T07:57:51.759000Z","eventType":"simulation.receipt.verified","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","evidenceGrade":"deterministic","requestDigest":"37fe2db7e2ee9e927512b01d9386fb7f6b25d2b81e2c54b1aafd994c6a9622c9","effectPlanDigest":"d69e309ded0846a2216c86623b04119d4ea78c42d08f70a63c375b25ef00c0ff","artifactDigest":"29b42485645603d9960040cba023bf10989bc77eea254f73f84d255a5d2e06d7","assignedTier":"T2_act","enforcementMode":"enforce","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4"},"previousHash":"ddcdbb336c5e54b744ca59f8f06b2884ffecd5cf26d50cabf7f4c5756f1b9922","hash":"f4438db425001787413c363b7933bafceac273a618d342cc8904ca393c827531"},{"eventId":"01a1afdd-330f-7b49-a3f1-5338b42b709e","sequenceNumber":"34","timestamp":"2026-11-06T07:57:51.759000Z","eventType":"policy.evaluated","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"decision":"escalate","tier":"T2_act","risk":"T2_stateful","authorizationPendingAudit":true,"authorizationPendingPostChecks":false,"requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","pluginFailures":[],"pluginChecks":[{"seat":"token.resolve","status":"success"},{"seat":"token.trustChain","status":"success"},{"seat":"revocation.check","status":"success"},{"seat":"humanAuthority.evaluate","status":"success"},{"seat":"deploymentEnvelope.evaluate","status":"success"},{"seat":"manufacturingExecution.evaluate","status":"success"},{"seat":"edge.checkCentralEscalation","status":"success"}],"auditStatus":"recorded"},"previousHash":"f4438db425001787413c363b7933bafceac273a618d342cc8904ca393c827531","hash":"d518cfdafe3e0e1e460237e0a18ea965160c32a00bfd50cbd407aa4c47c04805"},{"eventId":"01a1afdd-3310-71db-b125-f4b2e52774b6","sequenceNumber":"35","timestamp":"2026-11-06T07:57:51.760000Z","eventType":"action.failed","agentId":"40fefe4481339bf042e2704545a8f77d732bda272876d97ca63e36230ff99575","tokenId":"01a1afdd-32d9-765e-b369-50fbf84a0c5a","payload":{"brokerEvent":"execution.rejected","requestId":"01a1afdd-32da-7ec5-b148-a49ddfe4fba4","receiptId":"01a1afdd-32de-7dac-bba6-147e02a7fb12","code":"SIMULATION_RECEIPT_REPLAYED","message":"Simulation receipt was already consumed"},"previousHash":"d518cfdafe3e0e1e460237e0a18ea965160c32a00bfd50cbd407aa4c47c04805","hash":"2f9d812735bfe7b07d0f2c2ecd30237c16457d4e15db5fe59d35dd2fac5c65c4"}]}</script>
+<script>
+"use strict";
+const TRACE = JSON.parse(document.getElementById("trace").textContent);
+const EVENTS = TRACE.events ?? [];
+const $ = (id) => document.getElementById(id);
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NODE_X = [64, 234, 404, 574, 744, 914];
+const BEAT_MS = 1250;
+const AUTO_GAP_MS = 3200;
+
+const STEP_META = [
+  { id: "1", name: "read sensor", token: "read", point: "Observation stays cheap and logged." },
+  { id: "2", name: "wrong token", token: "read", point: "Authority comes from the token, not from the agent's intent." },
+  { id: "3", name: "propose", token: "control", point: "Proposing is not doing." },
+  { id: "4", name: "operator", token: "control", point: "A rejected request has no approval, so it cannot dispatch." },
+  { id: "5", name: "dispatch once", token: "control", point: "One approved request, at most one dispatch. Physical outcome is not verified here." },
+  { id: "6a", name: "central down", token: "control", point: "No approval plane means no control action. Reads can continue." },
+  { id: "6b", name: "revoked", token: "control", point: "Authority is checked again at dispatch." },
+  { id: "6c", name: "replay", token: "control", point: "An authorization cannot be used twice." },
+  { id: "7", name: "verify", token: null, point: "Editing any past event breaks the chain." },
+];
+
+const MATRIX = [
+  { step: 1, label: "wrong token" }, { step: 2, label: "escalated" }, { step: 3, label: "rejected" },
+  { step: 4, label: "approved" }, { step: 5, label: "offline" }, { step: 6, label: "revoked" }, { step: 7, label: "replay" },
+];
+
+const TOKENS = {
+  read: { kind: "read-only", scope: "read BearingTemperature, 60 min" },
+  control: { kind: "control, short-lived", scope: "write PowerSetpoint, 10 min\nquorum: operator-on-shift" },
+};
+
+const PLAIN = {
+  INSUFFICIENT_PERMISSIONS: "This token can read the sensor. It was never granted a write on the setpoint.",
+  EDGE_CENTRAL_UNAVAILABLE: "The central approval plane is unreachable, so nothing can be escalated. The gateway denies the request.",
+  APPROVAL_REQUIRED: "The operator rejected this request, so no approval exists. The broker has nothing to act on.",
+  AUTHORIZATION_NOT_EXECUTABLE: "A denied decision cannot be pushed through the broker.",
+  AUTHORIZATION_VERIFICATION_FAILED: "The operator approved it, but the broker asked the gateway again and the token had been revoked.",
+  SIMULATION_RECEIPT_REPLAYED: "Same request, same approval, same receipt. The one-time nonce was spent by step 5.",
+};
+
+const shortHash = (hash) => `${hash.slice(0, 8)}`;
+const seqText = (event) => `#${String(event.sequenceNumber).padStart(2, "0")}`;
+
+function eventKind(event) {
+  const type = event.eventType;
+  if (type.startsWith("policy.")) return event.payload.decision === "deny" ? "stop" : "policy";
+  if (type === "approval.denied" || type === "action.failed" || type === "token.revoked") return "stop";
+  if (type.startsWith("approval.")) return "approval";
+  if (type === "action.completed") return "fire";
+  return "sim";
+}
+
+function eventSummary(event) {
+  const p = event.payload;
+  if (event.eventType === "policy.evaluated") return `${p.decision} ${p.tier}${p.policyViolated ? ` ${p.policyViolated}` : ""}`;
+  if (event.eventType === "action.failed") return p.code;
+  if (event.eventType === "action.completed") return "dispatched to simulated controller";
+  if (event.eventType === "approval.denied" || event.eventType === "approval.granted") return `by ${p.resolution.by}`;
+  if (event.eventType === "approval.requested") return `${p.tier}, ${p.params.powerKw} kW requested`;
+  if (event.eventType === "token.revoked") return `by ${p.revokedBy}`;
+  if (event.eventType.startsWith("simulation.")) return "placeholder model";
+  return "";
+}
+
+/** One beat per event a person should watch. Quieter events ride along with the next beat. */
+function buildBeats() {
+  const beats = [];
+  const seen = new Set();
+  const deniedAtGateway = new Set();
+  let requestId;
+  TRACE.steps.forEach((step, stepIndex) => {
+    let riders = [];
+    for (let index = step.ledgerFrom; index < step.ledgerTo; index += 1) {
+      const event = EVENTS[index];
+      riders.push(index);
+      const type = event.eventType;
+      let kind;
+      if (type === "policy.evaluated") {
+        kind = seen.has(event.payload.requestId) ? "recheck" : "decision";
+        seen.add(event.payload.requestId);
+      } else if (["approval.requested", "approval.denied", "approval.granted", "token.revoked", "action.failed", "action.completed"].includes(type)) {
+        kind = type;
+      }
+      if (kind === undefined) continue;
+      requestId = event.payload.requestId ?? requestId;
+      if (kind === "decision" && event.payload.decision === "deny") deniedAtGateway.add(requestId);
+      beats.push({ stepIndex, kind, event, requestId, neverAllowed: deniedAtGateway.has(requestId), events: riders });
+      riders = [];
+    }
+    if (riders.length > 0) beats.at(-1).events.push(...riders);
+  });
+  beats.push({ stepIndex: TRACE.steps.length - 1, kind: "verify", event: undefined, requestId: undefined, events: [] });
+  return beats;
+}
+
+const BEATS = buildBeats();
+const READING = /[\d.]+ C/.exec(TRACE.steps?.[0]?.lines.join(" ") ?? "")?.[0] ?? "";
+const lastBeatOf = (stepIndex) => BEATS.findLastIndex((beat) => beat.stepIndex === stepIndex);
+const firstBeatOf = (stepIndex) => BEATS.findIndex((beat) => beat.stepIndex === stepIndex);
+
+/** The path is a pure function of the beats so far, so any step can be jumped to. */
+function pathView(cursor) {
+  const view = {
+    nodes: Array.from({ length: 6 }, () => ({ state: "idle", note: "" })),
+    reach: 0, stopped: false, fired: false, read: false, check: "false", revoked: false, tag: "",
+  };
+  if (cursor < 0) return view;
+  const current = BEATS[cursor];
+  if (current.kind === "verify") {
+    const count = (type) => EVENTS.filter((event) => event.eventType === type).length;
+    const requests = new Set(EVENTS.map((event) => event.payload.requestId).filter(Boolean)).size;
+    const notes = ["", "", `${requests} requests`, `${count("approval.granted")} ok, ${count("approval.denied")} no`,
+      `${count("action.completed")} sent, ${count("action.failed")} refused`, `${count("action.completed")} call`];
+    notes.forEach((note, index) => { view.nodes[index] = { state: "live", note }; });
+    return view;
+  }
+  let start = cursor;
+  while (start > 0 && BEATS[start - 1].requestId === current.requestId) start -= 1;
+  view.tag = current.stepIndex === 0 ? "read BearingTemperature" : "write PowerSetpoint 900 kW (illustrative)";
+  view.nodes[0] = { state: "live", note: "" };
+  view.nodes[1] = { state: "live", note: "" };
+  for (let index = start; index <= cursor; index += 1) {
+    const { kind, event } = BEATS[index];
+    const last = index === cursor;
+    view.check = "false";
+    if (kind === "decision") {
+      const { decision, policyViolated } = event.payload;
+      view.reach = 2;
+      if (decision === "allow") {
+        view.nodes[2] = { state: "ok", note: "allow t0" };
+        view.nodes[5] = { state: "ok", note: `read ${READING}` };
+        view.read = true;
+      } else if (decision === "deny") {
+        view.nodes[2] = { state: "stop", note: "deny" };
+        view.stopped = true;
+        view.denied = policyViolated;
+      } else {
+        view.nodes[2] = { state: "hold", note: "escalate t2" };
+      }
+    } else if (kind === "approval.requested") {
+      view.reach = 3;
+      view.nodes[2] = { state: "ok", note: "escalated t2" };
+      view.nodes[3] = { state: "hold", note: "reviewing" };
+    } else if (kind === "approval.denied") {
+      view.nodes[3] = { state: "stop", note: "rejected" };
+      view.stopped = true;
+    } else if (kind === "approval.granted") {
+      view.nodes[3] = { state: "ok", note: "approved" };
+    } else if (kind === "token.revoked") {
+      view.revoked = true;
+    } else if (kind === "recheck") {
+      view.reach = 4;
+      const denied = event.payload.decision === "deny";
+      view.nodes[4] = { state: "live", note: "checking" };
+      view.check = last ? (denied ? "deny" : "true") : "false";
+      if (denied) {
+        view.nodes[2] = { state: "stop", note: event.payload.policyViolated === "TOKEN_REVOKED" ? "revoked" : "deny" };
+        view.stopped = true;
+      }
+    } else if (kind === "action.failed") {
+      view.reach = 4;
+      view.nodes[4] = { state: "stop", note: "refused" };
+      view.stopped = true;
+    } else if (kind === "action.completed") {
+      view.stopped = false;
+      view.nodes[4] = { state: "fire", note: "nonce spent" };
+      view.nodes[5] = { state: "fire", note: "call 1" };
+      view.reach = 5;
+      view.fired = true;
+    }
+  }
+  return view;
+}
+
+function verdictFor(beat) {
+  const { kind, event } = beat;
+  const p = event?.payload ?? {};
+  switch (kind) {
+    case "decision":
+      if (p.decision === "allow") return { tone: "pass", source: "policy gateway", word: "ALLOWED", code: p.tier, why: `A read at T0 needs no human. ${READING} is a fictional value. The decision is in the ledger.` };
+      if (p.decision === "deny") return { tone: "stop", source: "policy gateway", word: "DENIED", code: p.policyViolated, why: PLAIN[p.policyViolated] ?? "" };
+      return { tone: "hold", source: "policy gateway", word: "HELD FOR REVIEW", code: `escalate ${p.tier}`, why: "T2 is the default for OPC UA writes; a hazard analysis sets the real tier. Nothing has reached the controller." };
+    case "approval.requested":
+      return { tone: "hold", source: "approval queue", word: "AWAITING OPERATOR", code: p.tier, why: "Bound to its exact value. The signed receipt proves the evidence path ran, not that the command is safe." };
+    case "approval.denied":
+      return { tone: "stop", source: "operator", word: "REJECTED", code: `by ${p.resolution.by}`, why: p.resolution.reason.replace("Synthetic reason: ", "Reason (synthetic): ") };
+    case "approval.granted":
+      return { tone: "pass", source: "operator", word: "APPROVED", code: `by ${p.resolution.by}`, why: "Approval covers this request only: this value, this receipt, this token. It does not judge the value." };
+    case "token.revoked":
+      return { tone: "stop", source: "issuer", word: "TOKEN REVOKED", code: `by ${p.revokedBy}`, why: "The approval still exists. The authority behind it does not." };
+    case "recheck":
+      if (beat.neverAllowed) return { tone: "stop", source: "forced to the broker", word: "STILL DENIED", code: p.policyViolated, why: "Someone pushes the denied request at the broker anyway. It asks the gateway and gets the same answer." };
+      return p.decision === "deny"
+        ? { tone: "stop", source: "broker asks the gateway", word: "NO LONGER AUTHORIZED", code: p.policyViolated, why: "The gateway stays the only place decisions are made, including at dispatch time." }
+        : { tone: "info", source: "broker asks the gateway", word: "RE-CHECKING", code: `${p.decision} ${p.tier}`, why: "The broker makes no decision of its own. It asks the gateway again, then checks approval and state." };
+    case "action.failed":
+      return { tone: "stop", source: "execution broker", word: "REFUSED", code: p.code, why: PLAIN[p.code] ?? p.message };
+    case "action.completed":
+      return { tone: "fire", source: "execution broker", word: "DISPATCHED", code: "accepted by the simulated controller, call 1", why: "An acknowledgment, not a measured outcome.", receipt: true };
+    default:
+      return { tone: "", source: "evidence", word: "VERIFYING", code: "", why: "" };
+  }
+}
+
+function stepOutcome(stepIndex) {
+  const last = BEATS[lastBeatOf(stepIndex)];
+  if (last.kind === "verify" || last.kind === "approval.granted") return "pass";
+  if (last.kind === "action.completed") return "fire";
+  if (last.kind === "action.failed") return "stop";
+  if (last.kind === "decision") return { allow: "pass", deny: "stop", escalate: "hold" }[last.event.payload.decision];
+  return "hold";
+}
+
+let cursor = -1;
+let stepIndex = 0;
+let timer;
+let auto = false;
+let tab = "ledger";
+let openEvent;
+let renderedEvents = 0;
+let proofRun = 0;
+let short = false;
+const SHORT_LAST_STEP = 4;
+const finalBeat = () => (short ? lastBeatOf(SHORT_LAST_STEP) : BEATS.length - 1);
+
+function eventsVisible() {
+  if (cursor < 0) return 0;
+  let count = 0;
+  for (let index = 0; index <= cursor; index += 1) {
+    for (const eventIndex of BEATS[index].events) count = Math.max(count, eventIndex + 1);
+  }
+  return count;
+}
+
+function renderRail() {
+  [...$("rail").children].forEach((item, index) => {
+    const done = cursor >= lastBeatOf(index);
+    item.dataset.state = index === stepIndex ? "active" : "";
+    if (done) item.dataset.outcome = stepOutcome(index);
+    else delete item.dataset.outcome;
+    item.dataset.skipped = String(short && index > SHORT_LAST_STEP);
+  });
+}
+
+function renderMatrix() {
+  [...$("matrix").children].forEach((cell, index) => {
+    const { step } = MATRIX[index];
+    const added = TRACE.steps[step].controllerCalls - TRACE.steps[step - 1].controllerCalls;
+    const done = cursor >= lastBeatOf(step);
+    cell.dataset.state = !done ? "" : added > 0 ? "fire" : "zero";
+    cell.querySelector(".delta").textContent = !done ? "\u00b7" : added > 0 ? `+${added}` : "0";
+  });
+}
+
+function renderPath() {
+  const view = pathView(cursor);
+  const svg = $("path");
+  svg.dataset.stopped = String(view.stopped);
+  svg.dataset.fired = String(view.fired);
+  document.querySelectorAll(".node").forEach((node, index) => {
+    node.dataset.state = view.nodes[index].state;
+    node.querySelector(".note").textContent = view.nodes[index].note;
+  });
+  const span = NODE_X[NODE_X.length - 1] - NODE_X[0];
+  $("trail").style.transform = `scaleX(${(NODE_X[view.reach] - NODE_X[0]) / span})`;
+  $("trail").style.transformOrigin = `${NODE_X[0]}px 0`;
+  $("signal").style.transform = `translate(${NODE_X[view.reach]}px, 92px)`;
+  $("signal").style.opacity = view.tag === "" ? "0" : "1";
+  $("signal-tag").textContent = view.tag;
+  $("signal-tag").style.textAnchor = view.reach === 0 ? "start" : view.reach === 5 ? "end" : "middle";
+  $("lane-read").dataset.on = String(view.read);
+  $("lane-check").dataset.on = view.check;
+  const meta = STEP_META[stepIndex];
+  const token = $("token");
+  token.dataset.kind = meta.token ?? "";
+  token.dataset.revoked = String(view.revoked);
+  const tokenId = BEATS[cursor]?.event?.tokenId;
+  const tokenName = TRACE.tokenLabels[tokenId];
+  $("token-kind").textContent = meta.token ? TOKENS[meta.token].kind : "none in use";
+  $("token-scope").textContent = meta.token
+    ? `${TOKENS[meta.token].scope}${tokenName ? `\n${tokenName} ${tokenId.slice(-8)}` : ""}`
+    : "this step reads the ledger only";
+}
+
+function renderVerdict() {
+  const box = $("verdict");
+  const receipt = $("receipt");
+  const beat = BEATS[cursor];
+  if (beat === undefined) {
+    box.dataset.tone = "";
+    $("verdict-source").textContent = "standby";
+    $("verdict-word").textContent = "ready";
+    $("verdict-code").textContent = "";
+    $("verdict-why").textContent = `A recorded run of ${EVENTS.length} ledger events is loaded. Press Next step to replay it.`;
+    receipt.classList.remove("on");
+    return;
+  }
+  if (beat.kind === "verify") return;
+  const verdict = verdictFor(beat);
+  if (!reducedMotion && $("verdict-word").textContent !== verdict.word) {
+    $("verdict-word").animate([{ opacity: .15, transform: "translateY(5px)" }, { opacity: 1, transform: "none" }], { duration: 260, easing: "ease-out" });
+  }
+  box.dataset.tone = verdict.tone;
+  $("verdict-source").textContent = verdict.source;
+  $("verdict-word").textContent = verdict.word;
+  $("verdict-code").textContent = verdict.code;
+  $("verdict-why").textContent = verdict.why;
+  receipt.classList.toggle("on", verdict.receipt === true);
+  if (verdict.receipt) {
+    const r = beat.event.payload.controllerReceipt;
+    receipt.replaceChildren(...[
+      ["receipt", r.controllerReceiptId], ["node", r.node],
+      ["value", `${r.powerKw} kW (illustrative, simulated)`], ["acknowledged", r.acknowledgedAt],
+    ].flatMap(([term, value]) => {
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = term;
+      dd.textContent = value;
+      return [dt, dd];
+    }));
+  }
+}
+
+function renderFeed(fresh) {
+  const feed = $("feed");
+  const visible = eventsVisible();
+  feed.replaceChildren();
+  if (tab === "term") {
+    const term = document.createElement("div");
+    term.className = "term";
+    TRACE.steps.forEach((step, index) => {
+      if (cursor < firstBeatOf(index)) return;
+      const heading = document.createElement("span");
+      heading.className = "h";
+      heading.textContent = step.title;
+      term.append(heading, `${step.lines.join("\n")}\n`);
+    });
+    if (cursor < 0) term.textContent = "Terminal output of the recorded run appears here, step by step.";
+    feed.append(term);
+  } else {
+    if (visible === 0) {
+      const empty = document.createElement("div");
+      empty.className = "term";
+      empty.textContent = "No events yet. The ledger is append-only: rows are only ever added.";
+      feed.append(empty);
+    }
+    for (let index = 0; index < visible; index += 1) {
+      const event = EVENTS[index];
+      const row = document.createElement("button");
+      row.className = `row${fresh && index >= renderedEvents ? " fresh" : ""}`;
+      row.dataset.kind = eventKind(event);
+      row.setAttribute("aria-expanded", String(openEvent === index));
+      const line = document.createElement("div");
+      line.className = "line1";
+      for (const [name, text] of [["seq", seqText(event)], ["type", event.eventType], ["hash", shortHash(event.hash)]]) {
+        const span = document.createElement("span");
+        span.className = name;
+        span.textContent = text;
+        line.append(span);
+      }
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = eventSummary(event);
+      const authority = TRACE.tokenLabels[event.tokenId];
+      if (authority !== undefined) {
+        const who = document.createElement("span");
+        who.className = "who";
+        who.textContent = `  ${authority}`;
+        sub.append(who);
+      }
+      row.append(line, sub);
+      row.addEventListener("click", () => {
+        openEvent = openEvent === index ? undefined : index;
+        renderFeed(false);
+      });
+      feed.append(row);
+      if (openEvent === index) {
+        const detail = document.createElement("div");
+        detail.className = "detail";
+        const { pluginChecks, pluginFailures, ...payload } = event.payload;
+        detail.textContent = `hash ${event.hash}\nprev ${event.previousHash}\ntime ${event.timestamp}\n${JSON.stringify(payload, null, 1)}`;
+        feed.append(detail);
+      }
+    }
+  }
+  if (tab === "ledger" && visible > 0 && visible < EVENTS.length) {
+    const caret = document.createElement("span");
+    caret.className = "caret";
+    feed.append(caret);
+  }
+  if (openEvent === undefined) feed.scrollTop = feed.scrollHeight;
+  renderedEvents = visible;
+}
+
+function renderChrome() {
+  const visible = eventsVisible();
+  const links = $("ribbon").children;
+  for (let index = 0; index < links.length; index += 1) {
+    if (index < visible) links[index].dataset.on = eventKind(EVENTS[index]);
+    else delete links[index].dataset.on;
+    delete links[index].dataset.check;
+  }
+  const calls = EVENTS.slice(0, visible).filter((event) => event.eventType === "action.completed").length;
+  const blocked = new Set(EVENTS.slice(0, visible)
+    .filter((event) => event.eventType === "action.failed" || event.payload.decision === "deny")
+    .map((event) => event.payload.requestId));
+  $("calls").textContent = String(calls);
+  $("calls").dataset.hot = String(calls > 0);
+  $("fact-events").textContent = String(visible);
+  $("fact-blocked").textContent = String(blocked.size);
+  const meta = STEP_META[stepIndex];
+  $("step-idx").textContent = meta.id;
+  $("step-title").textContent = TRACE.steps[stepIndex].title.replace(/^\S+\s/, "");
+  $("point-text").textContent = meta.point;
+  $("btn-back").disabled = stepIndex === 0 && cursor < 0;
+  $("btn-next").disabled = cursor >= finalBeat();
+  $("proof").classList.toggle("on", BEATS[cursor]?.kind === "verify");
+  if (BEATS[cursor]?.kind !== "verify") {
+    const status = $("chain-status");
+    status.dataset.tone = "";
+    status.textContent = visible === 0
+      ? "Links appear as the run replays. Each one hashes the link before it."
+      : `${visible} of ${EVENTS.length} links. Head ${shortHash(EVENTS[visible - 1].hash)}...`;
+  }
+}
+
+function render(fresh) {
+  renderRail();
+  renderPath();
+  renderMatrix();
+  renderVerdict();
+  renderFeed(fresh);
+  renderChrome();
+}
+
+function stopPlaying() {
+  clearTimeout(timer);
+  timer = undefined;
+}
+
+function setCursor(next, fresh = true) {
+  proofRun += 1;
+  cursor = next;
+  if (cursor >= 0) stepIndex = BEATS[cursor].stepIndex;
+  render(fresh);
+  if (BEATS[cursor]?.kind === "verify") runProof(EVENTS, "Recorded chain");
+}
+
+function setAuto(on) {
+  auto = on;
+  $("btn-auto").setAttribute("aria-pressed", String(on));
+  if (on && timer === undefined) advance();
+  if (!on && timer !== undefined && cursor === lastBeatOf(stepIndex)) stopPlaying();
+}
+
+function playStep(target) {
+  stopPlaying();
+  const last = lastBeatOf(target);
+  if (reducedMotion) {
+    setCursor(last);
+    if (auto && last < finalBeat()) timer = setTimeout(() => { timer = undefined; advance(); }, AUTO_GAP_MS);
+    return;
+  }
+  const tick = () => {
+    setCursor(cursor + 1);
+    if (cursor < last) timer = setTimeout(tick, BEAT_MS);
+    else if (auto && cursor < finalBeat()) timer = setTimeout(() => { timer = undefined; advance(); }, AUTO_GAP_MS);
+    else { timer = undefined; if (cursor >= finalBeat()) setAuto(false); }
+  };
+  tick();
+}
+
+/** Next during playback completes the step. Otherwise it plays the next step. */
+function advance() {
+  if (timer !== undefined && cursor < lastBeatOf(stepIndex)) {
+    stopPlaying();
+    setCursor(lastBeatOf(stepIndex));
+    if (auto && cursor < finalBeat()) timer = setTimeout(() => { timer = undefined; advance(); }, AUTO_GAP_MS);
+    return;
+  }
+  stopPlaying();
+  if (cursor >= finalBeat()) return;
+  playStep(cursor < 0 ? 0 : BEATS[cursor + 1].stepIndex);
+}
+
+function retreat() {
+  stopPlaying();
+  setAuto(false);
+  if (stepIndex === 0) { restart(); return; }
+  setCursor(lastBeatOf(stepIndex - 1), false);
+}
+
+function restart() {
+  stopPlaying();
+  setAuto(false);
+  openEvent = undefined;
+  renderedEvents = 0;
+  stepIndex = 0;
+  setCursor(-1, false);
+}
+
+function jump(target) {
+  stopPlaying();
+  setAuto(false);
+  setCursor(lastBeatOf(target), false);
+}
+
+/* Evidence proof: the same canonical form and hash as @pshkv/gate-evidence-ledger, recomputed here. */
+function canonical(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  const entries = Object.entries(value)
+    .filter(([, entry]) => entry !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonical(entry)}`).join(",")}}`;
+}
+
+/** FIPS 180-4 SHA-256, inlined because Web Crypto is not available to every file:// page. */
+const SHA_K = (() => {
+  const primes = [];
+  for (let n = 2; primes.length < 64; n += 1) if (primes.every((p) => n % p !== 0)) primes.push(n);
+  return primes.map((p) => Math.floor((Math.cbrt(p) % 1) * 2 ** 32));
+})();
+const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+function sha256(text) {
+  const bytes = new TextEncoder().encode(text);
+  const padded = new Uint8Array((((bytes.length + 8) >> 6) + 1) * 64);
+  padded.set(bytes);
+  padded[bytes.length] = 0x80;
+  new DataView(padded.buffer).setUint32(padded.length - 4, bytes.length * 8);
+  const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const w = new Uint32Array(64);
+  const view = new DataView(padded.buffer);
+  for (let block = 0; block < padded.length; block += 64) {
+    for (let t = 0; t < 16; t += 1) w[t] = view.getUint32(block + t * 4);
+    for (let t = 16; t < 64; t += 1) {
+      const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+      const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+      w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+    }
+    let [a, b, c, d, e, f, g, i] = h;
+    for (let t = 0; t < 64; t += 1) {
+      const t1 = (i + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + SHA_K[t] + w[t]) | 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      i = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    [a, b, c, d, e, f, g, i].forEach((value, index) => { h[index] = (h[index] + value) | 0; });
+  }
+  return h.map((value) => (value >>> 0).toString(16).padStart(8, "0")).join("");
+}
+
+function eventHash(event) {
+  return sha256(canonical({
+    eventId: event.eventId,
+    sequenceNumber: String(event.sequenceNumber),
+    timestamp: event.timestamp,
+    eventType: event.eventType,
+    agentId: event.agentId,
+    tokenId: event.tokenId,
+    payload: event.payload,
+    previousHash: event.previousHash,
+  }));
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, reducedMotion ? 0 : ms));
+
+function showProofVerdict(tone, source, word, code, why) {
+  $("verdict").dataset.tone = tone;
+  $("verdict-source").textContent = source;
+  $("verdict-word").textContent = word;
+  $("verdict-code").textContent = code;
+  $("verdict-why").textContent = why;
+  $("receipt").classList.remove("on");
+}
+
+/** Walks a chain, recomputing every hash. Returns the index of the first bad link, or -1. */
+async function runProof(events, name, tampered = false) {
+  proofRun += 1;
+  const run = proofRun;
+  const status = $("chain-status");
+  const links = $("ribbon").children;
+  for (const link of links) delete link.dataset.check;
+  status.dataset.tone = "";
+  showProofVerdict("info", "this browser", "RE-HASHING", name, "Recomputing SHA-256 for every event, right now, on this machine.");
+  let previous = "0".repeat(64);
+  let broken = -1;
+  for (let index = 0; index < events.length; index += 1) {
+    const event = events[index];
+    const recomputed = eventHash(event);
+    if (event.previousHash !== previous || recomputed !== event.hash) { broken = index; break; }
+    previous = event.hash;
+    links[index].dataset.check = "ok";
+    status.textContent = `${name}: ${index + 1} of ${events.length} links re-hashed`;
+    await sleep(34);
+    if (run !== proofRun) return;
+  }
+  if (broken < 0) {
+    const headMatches = previous === TRACE.head;
+    status.dataset.tone = headMatches ? "pass" : "stop";
+    status.textContent = `${events.length} of ${events.length} links re-hashed here. Head ${shortHash(previous)}... ${headMatches ? "matches" : "does not match"}.`;
+    showProofVerdict(headMatches ? "pass" : "stop", "this browser", headMatches ? "CHAIN VERIFIED" : "HEAD MISMATCH",
+      `head ${previous}`,
+      `${events.length} events, ${events.filter((event) => event.eventType === "action.completed").length} controller call. Every link was recomputed here just now, not read from a stored result.`);
+    return;
+  }
+  links[broken].dataset.check = "bad";
+  for (let index = broken + 1; index < links.length; index += 1) links[index].dataset.check = "after";
+  status.dataset.tone = "stop";
+  status.textContent = `${name} rejected at ${seqText(events[broken])}. The recorded chain itself is untouched.`;
+  showProofVerdict("stop", "this browser", "TAMPERING DETECTED", `break at ${seqText(events[broken])} ${events[broken].eventType}`,
+    tampered ? "This copy names a different approver on the approval event. One changed field and the recomputed hash no longer matches." : "A recomputed hash did not match.");
+}
+
+function tamperCopy() {
+  const copy = structuredClone(EVENTS);
+  const target = copy.find((event) => event.eventType === "approval.granted");
+  target.payload.resolution.by = "forged-approver";
+  runProof(copy, "Tampered copy", true);
+}
+
+function setShort(on) {
+  short = on;
+  $("btn-short").setAttribute("aria-pressed", String(on));
+  restart();
+}
+
+function selectTab(next) {
+  tab = next;
+  $("tab-ledger").setAttribute("aria-selected", String(next === "ledger"));
+  $("tab-term").setAttribute("aria-selected", String(next === "term"));
+  renderFeed(false);
+}
+
+function boot() {
+  if (EVENTS.length === 0) {
+    $("verdict-word").textContent = "NO RUN LOADED";
+    $("verdict-why").textContent = "Record one with: pnpm run demo:turbine-authority:console";
+    return;
+  }
+  STEP_META.forEach((meta, index) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    const num = document.createElement("span");
+    const name = document.createElement("span");
+    const mark = document.createElement("span");
+    num.className = "num";
+    num.textContent = meta.id;
+    name.className = "name";
+    name.textContent = meta.name;
+    mark.className = "mark";
+    button.append(num, name, mark);
+    button.addEventListener("click", () => jump(index));
+    item.append(button);
+    $("rail").append(item);
+  });
+  for (let index = 0; index < EVENTS.length; index += 1) $("ribbon").append(document.createElement("i"));
+  for (const { label } of MATRIX) {
+    const cell = document.createElement("li");
+    const name = document.createElement("span");
+    const delta = document.createElement("span");
+    name.className = "case";
+    name.textContent = label;
+    delta.className = "delta";
+    cell.append(name, delta);
+    $("matrix").append(cell);
+  }
+  $("replay-flag").textContent = `Replay of a run recorded ${TRACE.recordedAt.slice(0, 16).replace("T", " ")} UTC.`;
+  $("btn-next").addEventListener("click", advance);
+  $("btn-back").addEventListener("click", retreat);
+  $("btn-restart").addEventListener("click", restart);
+  $("btn-short").addEventListener("click", () => setShort(!short));
+  $("btn-auto").addEventListener("click", () => setAuto(!auto));
+  $("btn-verify").addEventListener("click", () => runProof(EVENTS, "Recorded chain"));
+  $("btn-tamper").addEventListener("click", tamperCopy);
+  $("tab-ledger").addEventListener("click", () => selectTab("ledger"));
+  $("tab-term").addEventListener("click", () => selectTab("term"));
+  addEventListener("keydown", (event) => {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const onButton = event.target instanceof HTMLButtonElement;
+    const proofOpen = BEATS[cursor]?.kind === "verify";
+    if (event.key === "ArrowRight" || (event.key === " " && !onButton)) { event.preventDefault(); advance(); }
+    else if (event.key === "ArrowLeft") { event.preventDefault(); retreat(); }
+    else if (event.key === "r" || event.key === "R") restart();
+    else if (event.key === "s" || event.key === "S") setShort(!short);
+    else if (event.key === "a" || event.key === "A") setAuto(!auto);
+    else if ((event.key === "v" || event.key === "V") && proofOpen) runProof(EVENTS, "Recorded chain");
+    else if ((event.key === "t" || event.key === "T") && proofOpen) tamperCopy();
+  });
+  render(false);
+}
+
+boot();
+</script>
+</body>
+</html>

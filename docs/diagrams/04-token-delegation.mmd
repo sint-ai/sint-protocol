@@ -1,0 +1,27 @@
+%% SINT Protocol — Capability token delegation (attenuation only)
+%% Source of truth: packages/capability-tokens/src/delegator.ts
+%%   delegateCapabilityToken() L225, attenuateConstraints() L53,
+%%   packages/core/src/constants/tiers.ts MAX_DELEGATION_DEPTH = 3
+%%   packages/core/src/types/capability-token.ts SintCapabilityToken L402
+flowchart LR
+  R["<b>Root token</b> · depth 0 · attenuated false<br/>issuer = root key · subject = agent A<br/>resource mcp://filesystem/*<br/>actions [call, cancel]<br/>maxVelocityMps 1.5 · maxForceNewtons 80<br/>expiresAt 2026-12-31"]
+  C1["<b>Delegated</b> · depth 1 · attenuated true<br/>issuer = agent A · subject = agent B<br/>resource mcp://filesystem/*<br/>actions [call] &nbsp;(subset)<br/>maxVelocityMps 0.8 · maxForceNewtons 50<br/>expiresAt 2026-06-30 &nbsp;(≤ parent)"]
+  C2["<b>Delegated</b> · depth 2 · attenuated true<br/>issuer = agent B · subject = agent C<br/>actions [call]<br/>maxVelocityMps 0.4 · maxForceNewtons 50<br/>+ tighter geofence"]
+  X["depth 3 is the last hop<br/>depth 4 → err(DELEGATION_DEPTH_EXCEEDED)"]
+
+  R -- "delegateCapabilityToken()" --> C1
+  C1 -- "delegateCapabilityToken()" --> C2
+  C2 -. "MAX_DELEGATION_DEPTH = 3" .-> X
+
+  subgraph rules["What every hop enforces"]
+    N1["actions = restrictActions ∩ parent.actions<br/>empty intersection → err(INSUFFICIENT_PERMISSIONS)"]
+    N2["numeric limits = min(parent, requested)<br/>maxForceNewtons · maxVelocityMps · maxRepetitions"]
+    N3["expiresAt capped at parent.expiresAt"]
+    N4["requiresHumanPresence: true at the parent<br/>cannot be turned off downstream"]
+    N5["timeWindow, rateLimit, quorum and<br/>sceneContractDigest are inherited, never widened"]
+    N6["regulated-data lists narrow to a subset<br/>(processors, regions, models, purposes)"]
+    N7["parent must still verify: signature + expiry<br/>re-checked before any child is issued"]
+  end
+
+  AMP["Amplification has no code path.<br/>There is no widen, grant or escalate operation."]
+  rules -. blocks .-x AMP
