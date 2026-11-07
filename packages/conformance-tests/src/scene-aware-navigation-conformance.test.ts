@@ -163,6 +163,18 @@ describe("scene-aware navigation conformance", () => {
     expect(result.value.scenarios).toMatchObject({ runCount: 2, coverage: 0.5, seeds: [] });
   });
 
+  it("treats a sensor-delay stress case as extra time before braking", async () => {
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0", policyId: "sensor-delay-v1",
+      cases: [{ id: "late-sensor", sensorDelayMs: 4_000 }],
+    };
+    const result = await simulate(scene(), undefined, policy);
+    expect(result.ok).toBe(true);
+    if (!result.ok || !("scenarios" in result.value)) return;
+    expect(result.value.result.outcome).toBe("indeterminate");
+    expect(result.value.scenarios).toMatchObject({ runCount: 2, coverage: 0.5, seeds: [] });
+  });
+
   it("rejects an invalid fixed-case policy before issuing a receipt", async () => {
     const policy: NavigationScenarioPolicy = {
       version: "1.0.0", policyId: "invalid",
