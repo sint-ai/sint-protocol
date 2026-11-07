@@ -48,7 +48,7 @@ decision and any required approval resolution.
 | Tier | Default requirement for supported effect classes | Approval behavior |
 |---|---|---|
 | T0 observe | None | Existing automatic decision |
-| T1 prepare | Deterministic preview in shadow mode | Existing automatic decision, except human review when world-snapshot uncertainty is greater than zero, observed clearance is below predicted clearance, observed contact force exceeds predicted force, or observed operational duration exceeds predicted duration |
+| T1 prepare | Deterministic preview in shadow mode | Existing automatic decision, except human review when world-snapshot uncertainty is greater than zero, observed clearance is below predicted clearance, observed contact force exceeds predicted force, observed operational duration exceeds predicted duration, or observed collisions exceed predicted collisions |
 | T2 act | `deterministic` or stronger | Existing human review |
 | T3 commit | `physics` or `digital-twin`, required bindings, configured quorum of at least two | M-of-N human approval |
 | Device control tick | No remote receipt | Local shield/controller only |

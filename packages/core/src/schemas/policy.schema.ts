@@ -26,6 +26,7 @@ export const physicalContextSchema = z.object({
   currentAngularVelocityRps: z.number().min(0).optional(),
   currentContactForceNewtons: z.number().min(0).optional(),
   nearestObstacleMeters: z.number().min(0).optional(),
+  observedCollisions: z.number().int().nonnegative().optional(),
   trajectoryNovel: z.boolean().optional(),
   jointStates: z.array(z.object({
     joint: z.string().min(1).max(128),

@@ -254,6 +254,8 @@ export interface SintRequest {
     readonly currentAngularVelocityRps?: number;
     readonly currentContactForceNewtons?: number;
     readonly nearestObstacleMeters?: number;
+    /** Observed collision count from the live physical context. */
+    readonly observedCollisions?: number;
     readonly trajectoryNovel?: boolean;
     readonly jointStates?: ReadonlyArray<{
       readonly joint: string;
