@@ -1316,6 +1316,29 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const predictedCollisions = request.executionContext?.simulationEvidence?.result?.collisions;
+          const observedCollisions = request.physicalContext?.observedCollisions;
+          if (
+            typeof predictedCollisions === "number"
+            && Number.isFinite(predictedCollisions)
+            && typeof observedCollisions === "number"
+            && Number.isFinite(observedCollisions)
+            && observedCollisions > predictedCollisions
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Observed collisions exceed predicted collisions",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {
