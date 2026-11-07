@@ -667,6 +667,50 @@ describe("predictive simulation evidence policy", () => {
     );
   });
 
+  it("escalates a T1 shadow request for human review when observed duration exceeds predicted duration", async () => {
+    const token = makeActionToken("mcp://server/tool", "call");
+    const request = {
+      ...makeActionRequest(token, "mcp://server/tool", "call"),
+      consequenceContext: {
+        reversibility: "reversible" as const,
+        operationalDurationMs: 5_000,
+      },
+    };
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: {
+        ...draft.worldSnapshot,
+        uncertainty: 0,
+      },
+      result: {
+        ...draft.result,
+        maxDurationMs: 1_000,
+      },
+    }));
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        tierRequirements: {
+          [ApprovalTier.T1_PREPARE]: { minEvidenceGrade: "deterministic" },
+        },
+        shadowTiers: [ApprovalTier.T1_PREPARE],
+        now: () => now,
+      }),
+    });
+
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T1_PREPARE);
+    expect(decision.escalation?.reason).toBe(
+      "Observed duration exceeds predicted duration",
+    );
+  });
+
   it("keeps T2 evidence fail-closed when T1 is configured for shadow mode", async () => {
     const token = makeActionToken("ros2:///cmd_vel", "publish");
     const request = makeActionRequest(token, "ros2:///cmd_vel", "publish");

@@ -1293,6 +1293,29 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const predictedDuration = request.executionContext?.simulationEvidence?.result?.maxDurationMs;
+          const observedDuration = request.consequenceContext?.operationalDurationMs;
+          if (
+            typeof predictedDuration === "number"
+            && Number.isFinite(predictedDuration)
+            && typeof observedDuration === "number"
+            && Number.isFinite(observedDuration)
+            && observedDuration > predictedDuration
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Observed duration exceeds predicted duration",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {

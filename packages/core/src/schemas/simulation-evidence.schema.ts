@@ -41,6 +41,7 @@ export const simulationSafetyResultSchema = z.object({
   maxJerkMps3: z.number().nonnegative().optional(),
   maxAngularVelocityRps: z.number().nonnegative().optional(),
   minClearanceMeters: z.number().nonnegative().optional(),
+  maxDurationMs: z.number().int().nonnegative().optional(),
   assumptions: z.array(z.string().min(1).max(512)).max(64).optional(),
   unsupportedPhenomena: z.array(z.string().min(1).max(512)).max(64).optional(),
 }).strict();
