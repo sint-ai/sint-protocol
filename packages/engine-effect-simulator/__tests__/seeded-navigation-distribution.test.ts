@@ -71,4 +71,21 @@ describe("seeded navigation perturbation policy", () => {
       expect(sample.extraHumanSpeedMps).toBeLessThanOrEqual(0.2);
     }
   });
+
+  it("draws a deterministic sensor delay inside the approved bound", () => {
+    const withDelay = policy();
+    const distribution = distributionOf(withDelay);
+    (distribution.bounds as { sensorDelayMs?: { min: number; max: number } }).sensorDelayMs = {
+      min: 0,
+      max: 40,
+    };
+    expect(isValidNavigationScenarioPolicy(withDelay)).toBe(true);
+    const first = sampleNavigationPerturbations(distribution);
+    const second = sampleNavigationPerturbations(distribution);
+    expect(second).toEqual(first);
+    for (const sample of first) {
+      expect(sample.sensorDelayMs).toBeGreaterThanOrEqual(0);
+      expect(sample.sensorDelayMs).toBeLessThanOrEqual(40);
+    }
+  });
 });

@@ -123,6 +123,8 @@ export interface SeededNavigationDistribution {
     readonly extraRobotRadiusMeters: NumericRange;
     readonly extraReactionTimeMs: NumericRange;
     readonly extraHumanSpeedMps: NumericRange;
+    /** Optional sensor-delay fuzz bound, in milliseconds. */
+    readonly sensorDelayMs?: NumericRange;
   };
 }
 
@@ -131,6 +133,8 @@ export interface NavigationStressCase {
   readonly extraRobotRadiusMeters?: number;
   readonly extraReactionTimeMs?: number;
   readonly extraHumanSpeedMps?: number;
+  /** Drawn sensor delay for this stress case, in milliseconds. */
+  readonly sensorDelayMs?: number;
 }
 
 /** Approved support for deterministic bounded-motion perturbations. */

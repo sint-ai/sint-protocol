@@ -52,12 +52,19 @@ function isValidDistribution(value: unknown): value is SeededNavigationDistribut
     seen.add(seed);
   }
   const bounds = distribution.bounds as Record<string, unknown> | undefined;
-  if (!bounds || typeof bounds !== "object" || Array.isArray(bounds) || Object.keys(bounds).length !== 3) return false;
+  if (!bounds || typeof bounds !== "object" || Array.isArray(bounds)) return false;
+  const keys = Object.keys(bounds);
+  const allowedBounds = ["extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs"];
+  if (keys.length < 3 || keys.length > 4 || keys.some((key) => !allowedBounds.includes(key))) return false;
+  if (!("extraRobotRadiusMeters" in bounds) || !("extraReactionTimeMs" in bounds) || !("extraHumanSpeedMps" in bounds)) return false;
   const radius = bounds.extraRobotRadiusMeters;
   const reaction = bounds.extraReactionTimeMs;
   const human = bounds.extraHumanSpeedMps;
+  const sensor = bounds.sensorDelayMs;
   if (!validRange(radius, 10) || !validRange(reaction, 30_000) || !validRange(human, 20)) return false;
-  return radius.max > 0 || reaction.max > 0 || human.max > 0;
+  if (sensor !== undefined && !validRange(sensor, 30_000)) return false;
+  const sensorMax = sensor === undefined ? 0 : sensor.max;
+  return radius.max > 0 || reaction.max > 0 || human.max > 0 || sensorMax > 0;
 }
 
 export function isValidNavigationScenarioPolicy(value: unknown): value is NavigationScenarioPolicy {
@@ -75,11 +82,12 @@ export function isValidNavigationScenarioPolicy(value: unknown): value is Naviga
     if (!scenario || typeof scenario !== "object" || Array.isArray(scenario)
       || typeof scenario.id !== "string" || !scenario.id.trim() || scenario.id.length > 128
       || scenario.id === "observed" || scenario.id.startsWith("seed:") || ids.has(scenario.id)
-      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps"].includes(key))
+      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs"].includes(key))
       || !validDelta(scenario.extraRobotRadiusMeters, 10)
       || !validDelta(scenario.extraReactionTimeMs, 30_000)
       || !validDelta(scenario.extraHumanSpeedMps, 20)
-      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps]
+      || !validDelta(scenario.sensorDelayMs, 30_000)
+      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps, scenario.sensorDelayMs]
         .some((delta) => delta !== undefined && delta > 0)) return false;
     ids.add(scenario.id);
   }
@@ -110,6 +118,9 @@ export function sampleNavigationPerturbations(
     extraRobotRadiusMeters: draw(seed, 0, distribution.bounds.extraRobotRadiusMeters),
     extraReactionTimeMs: draw(seed, 1, distribution.bounds.extraReactionTimeMs),
     extraHumanSpeedMps: draw(seed, 2, distribution.bounds.extraHumanSpeedMps),
+    ...(distribution.bounds.sensorDelayMs
+      ? { sensorDelayMs: draw(seed, 3, distribution.bounds.sensorDelayMs) }
+      : {}),
   }));
 }
 
@@ -120,7 +131,7 @@ function stressedOptions(
   return {
     ...options,
     robotRadiusMeters: options.robotRadiusMeters + (scenario.extraRobotRadiusMeters ?? 0),
-    reactionTimeMs: options.reactionTimeMs + (scenario.extraReactionTimeMs ?? 0),
+    reactionTimeMs: options.reactionTimeMs + (scenario.extraReactionTimeMs ?? 0) + (scenario.sensorDelayMs ?? 0),
     maxHumanSpeedMps: options.maxHumanSpeedMps + (scenario.extraHumanSpeedMps ?? 0),
   };
 }

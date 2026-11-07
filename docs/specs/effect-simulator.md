@@ -227,10 +227,13 @@ reaction time before using this check on
 hardware. The model expands moving obstacle reachability from observation
 through the whole horizon and expands the robot position bound by the
 age of odometry. The final waypoint is followed by a conservative full-speed
-stop corridor for reaction time plus `velocityMps/minDecelerationMps2`. This
+stop corridor for reaction time plus `velocityMps/minDecelerationMps2`. An
+approved `sensorDelayMs` on a navigation stress case, or drawn inside an
+approved seeded bound, is added to that reaction time. This
 over-approximates actual braking travel and may reject feasible routes. It does
 not simulate acceleration, turning dynamics, controller-rate behavior, or
-occluded humans.
+occluded humans. Actor motion, localization error, dropped messages, actuator
+lag, and the rest of the adversarial parameters are not part of this delay.
 
 ## Isolated Worker HTTP Contract
 
