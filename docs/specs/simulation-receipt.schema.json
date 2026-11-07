@@ -98,6 +98,7 @@
         "maxJerkMps3": { "type": "number", "minimum": 0 },
         "maxAngularVelocityRps": { "type": "number", "minimum": 0 },
         "minClearanceMeters": { "type": "number", "minimum": 0 },
+        "maxDurationMs": { "type": "integer", "minimum": 0 },
         "assumptions": {
           "type": "array",
           "maxItems": 64,

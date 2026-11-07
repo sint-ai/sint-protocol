@@ -167,6 +167,8 @@ export interface SimulationSafetyResult {
   readonly maxJerkMps3?: number;
   readonly maxAngularVelocityRps?: number;
   readonly minClearanceMeters?: number;
+  /** Predicted effect duration from the signed simulation receipt. */
+  readonly maxDurationMs?: number;
   /** Explicit model assumptions presented to policy and human reviewers. */
   readonly assumptions?: readonly string[];
   /** Known effects the selected simulator cannot model. */
