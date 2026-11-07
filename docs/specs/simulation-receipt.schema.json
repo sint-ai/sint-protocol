@@ -99,6 +99,7 @@
         "maxAngularVelocityRps": { "type": "number", "minimum": 0 },
         "minClearanceMeters": { "type": "number", "minimum": 0 },
         "maxDurationMs": { "type": "integer", "minimum": 0 },
+        "controllerPermitsMotion": { "type": "boolean" },
         "assumptions": {
           "type": "array",
           "maxItems": 64,
