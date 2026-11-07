@@ -1339,6 +1339,32 @@ export class PolicyGateway {
               assignedRisk: tierAssignment.riskTier,
             };
           }
+          const predictedControllerPermitsMotion = request.executionContext?.simulationEvidence?.result?.controllerPermitsMotion;
+          const observedPermit = request.executionContext?.hardwareSafety?.permitState;
+          const observedControllerPermitsMotion = observedPermit === "granted"
+            ? true
+            : observedPermit === "denied" || observedPermit === "unknown" || observedPermit === "stale"
+              ? false
+              : undefined;
+          if (
+            typeof predictedControllerPermitsMotion === "boolean"
+            && typeof observedControllerPermitsMotion === "boolean"
+            && observedControllerPermitsMotion !== predictedControllerPermitsMotion
+          ) {
+            return {
+              requestId,
+              timestamp,
+              action: "escalate",
+              escalation: {
+                requiredTier: tierAssignment.approvalTier,
+                reason: "Observed controller outcome disagrees with predicted controller outcome",
+                timeoutMs: DEFAULT_APPROVAL_TIMEOUT_MS,
+                fallbackAction: "deny",
+              },
+              assignedTier: tierAssignment.approvalTier,
+              assignedRisk: tierAssignment.riskTier,
+            };
+          }
         }
       } catch {
         if (simulationEnforcementMode === "shadow") {

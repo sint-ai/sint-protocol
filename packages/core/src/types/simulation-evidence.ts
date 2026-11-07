@@ -169,6 +169,8 @@ export interface SimulationSafetyResult {
   readonly minClearanceMeters?: number;
   /** Predicted effect duration from the signed simulation receipt. */
   readonly maxDurationMs?: number;
+  /** Predicted controller motion permission from the signed simulation receipt. */
+  readonly controllerPermitsMotion?: boolean;
   /** Explicit model assumptions presented to policy and human reviewers. */
   readonly assumptions?: readonly string[];
   /** Known effects the selected simulator cannot model. */
