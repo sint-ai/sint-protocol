@@ -100,6 +100,8 @@ export interface SceneAwareNavigationModelOptions {
   readonly minDecelerationMps2: number;
   /** Worst-case delay before braking begins. */
   readonly reactionTimeMs: number;
+  /** Extra dynamic-actor speed from an approved stress case, meters per second. */
+  readonly actorMotionMps?: number;
 }
 
 /**
@@ -135,6 +137,8 @@ export interface NavigationStressCase {
   readonly extraHumanSpeedMps?: number;
   /** Drawn sensor delay for this stress case, in milliseconds. */
   readonly sensorDelayMs?: number;
+  /** Extra dynamic-actor speed for this stress case, meters per second. */
+  readonly actorMotionMps?: number;
 }
 
 /** Approved support for deterministic bounded-motion perturbations. */

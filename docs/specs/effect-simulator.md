@@ -232,8 +232,10 @@ approved `sensorDelayMs` on a navigation stress case, or drawn inside an
 approved seeded bound, is added to that reaction time. This
 over-approximates actual braking travel and may reject feasible routes. It does
 not simulate acceleration, turning dynamics, controller-rate behavior, or
-occluded humans. Actor motion, localization error, dropped messages, actuator
-lag, and the rest of the adversarial parameters are not part of this delay.
+occluded humans. An approved `actorMotionMps` on a navigation stress case is
+added to a dynamic obstacle's speed for the whole horizon. Localization error,
+dropped messages, actuator lag, and the rest of the adversarial parameters are
+not part of that speed.
 
 ## Isolated Worker HTTP Contract
 
