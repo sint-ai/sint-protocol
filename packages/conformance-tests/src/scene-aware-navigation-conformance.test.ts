@@ -200,6 +200,29 @@ describe("scene-aware navigation conformance", () => {
     expect(fuzzed.value.result.outcome).toBe("fail");
   });
 
+  it("fails a clear path when the approved localization-error fuzz reaches the robot", async () => {
+    const input = scene({ obstacles: [{
+      id: "shelf",
+      frameId: "map",
+      kind: "static",
+      position: { x: 0.5, y: 0.7, z: 0 },
+      radiusMeters: 0.2,
+      positionUncertaintyMeters: 0.05,
+      observedAt,
+    }] });
+    const clear = await simulate(input);
+    expect(clear.ok && "result" in clear.value ? clear.value.result.outcome : undefined).toBe("pass");
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0",
+      policyId: "localization-error-v1",
+      cases: [{ id: "wide-localization", localizationErrorMeters: 0.2 }],
+    };
+    const fuzzed = await simulate(input, undefined, policy);
+    expect(fuzzed.ok).toBe(true);
+    if (!fuzzed.ok || !("scenarios" in fuzzed.value)) return;
+    expect(fuzzed.value.result.outcome).toBe("fail");
+  });
+
   it("rejects an invalid fixed-case policy before issuing a receipt", async () => {
     const policy: NavigationScenarioPolicy = {
       version: "1.0.0", policyId: "invalid",

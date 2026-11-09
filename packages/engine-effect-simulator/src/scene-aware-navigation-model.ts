@@ -323,7 +323,9 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       if (obstacle.kind === "human" && Math.hypot(obstacle.velocity.x, obstacle.velocity.y) > maxHumanSpeedMps) {
         return ok(indeterminate("Observed human speed exceeds the configured reachability bound"));
       }
-      const robotUncertainty = scene.value.robotPositionUncertaintyMeters + maxVelocityMps * scene.value.odometryAgeSeconds;
+      const robotUncertainty = scene.value.robotPositionUncertaintyMeters
+        + (this.options.localizationErrorMeters ?? 0)
+        + maxVelocityMps * scene.value.odometryAgeSeconds;
       const clearance = Math.min(...segments.map((segment) => closestClearance(
         segment.start, segment.target, segment.durationSeconds,
         obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
