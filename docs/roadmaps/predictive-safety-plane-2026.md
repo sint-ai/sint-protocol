@@ -216,7 +216,8 @@ declared safe fallback without disabling E-stop or the local shield.
 - [x] publish per-model calibration error and confidence thresholds: a T1 shadow request whose published model calibration error exceeds its published confidence threshold escalates instead of being allowed
 - [x] introduce scenario fuzzing for sensor delay: an approved navigation stress case adds its sensor delay to the reaction time before braking, and a seeded distribution draws that delay inside the approved bound
 - [x] introduce scenario fuzzing for actor motion: an approved navigation stress case adds its extra actor speed to a dynamic obstacle's reachability, and a clear cart fails when that speed reaches the path
-- [ ] introduce scenario fuzzing for localization error, dropped messages, actuator lag, and adversarial parameters
+- [x] introduce scenario fuzzing for localization error: an approved navigation stress case adds its extra localization error to the robot position bound, and a clear path fails when that error reaches the shelf
+- [ ] introduce scenario fuzzing for dropped messages, actuator lag, and adversarial parameters
 - [x] require human review when unsupported phenomena are non-empty: a T1 shadow request that names a model gap escalates instead of being allowed
 - [x] require human review when the uncertainty field is non-empty: a T1 shadow request whose world-snapshot uncertainty is greater than zero escalates instead of being allowed
 - [ ] canary mandatory evidence for one T2 action family at one pilot site

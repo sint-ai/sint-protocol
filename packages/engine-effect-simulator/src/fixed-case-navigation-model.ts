@@ -82,13 +82,14 @@ export function isValidNavigationScenarioPolicy(value: unknown): value is Naviga
     if (!scenario || typeof scenario !== "object" || Array.isArray(scenario)
       || typeof scenario.id !== "string" || !scenario.id.trim() || scenario.id.length > 128
       || scenario.id === "observed" || scenario.id.startsWith("seed:") || ids.has(scenario.id)
-      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs", "actorMotionMps"].includes(key))
+      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs", "actorMotionMps", "localizationErrorMeters"].includes(key))
       || !validDelta(scenario.extraRobotRadiusMeters, 10)
       || !validDelta(scenario.extraReactionTimeMs, 30_000)
       || !validDelta(scenario.extraHumanSpeedMps, 20)
       || !validDelta(scenario.sensorDelayMs, 30_000)
       || !validDelta(scenario.actorMotionMps, 20)
-      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps, scenario.sensorDelayMs, scenario.actorMotionMps]
+      || !validDelta(scenario.localizationErrorMeters, 10)
+      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps, scenario.sensorDelayMs, scenario.actorMotionMps, scenario.localizationErrorMeters]
         .some((delta) => delta !== undefined && delta > 0)) return false;
     ids.add(scenario.id);
   }
@@ -135,6 +136,7 @@ function stressedOptions(
     reactionTimeMs: options.reactionTimeMs + (scenario.extraReactionTimeMs ?? 0) + (scenario.sensorDelayMs ?? 0),
     maxHumanSpeedMps: options.maxHumanSpeedMps + (scenario.extraHumanSpeedMps ?? 0),
     actorMotionMps: (options.actorMotionMps ?? 0) + (scenario.actorMotionMps ?? 0),
+    localizationErrorMeters: (options.localizationErrorMeters ?? 0) + (scenario.localizationErrorMeters ?? 0),
   };
 }
 
