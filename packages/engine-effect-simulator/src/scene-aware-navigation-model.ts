@@ -175,6 +175,7 @@ function closestClearance(
   maxHumanSpeedMps: number,
   totalDurationSeconds: number,
   actorMotionMps: number,
+  droppedMessageSeconds: number,
 ): number {
   const robotVx = (target.x - start.x) / durationSeconds;
   const robotVy = (target.y - start.y) / durationSeconds;
@@ -189,12 +190,13 @@ function closestClearance(
     ? 0
     : Math.max(0, Math.min(durationSeconds, -(dx * vx + dy * vy) / speedSquared));
   const separation = Math.hypot(dx + vx * nearestTime, dy + vy * nearestTime);
+  const unobservedSeconds = obstacle.observationAgeSeconds + droppedMessageSeconds + totalDurationSeconds;
   const humanReach = obstacle.kind === "human"
-    ? maxHumanSpeedMps * (obstacle.observationAgeSeconds + totalDurationSeconds)
+    ? maxHumanSpeedMps * unobservedSeconds
     : 0;
   const motionError = obstacle.kind === "dynamic"
     ? (Math.hypot(obstacle.velocity.x, obstacle.velocity.y) + obstacle.velocityUncertaintyMps + actorMotionMps)
-      * (obstacle.observationAgeSeconds + totalDurationSeconds)
+      * unobservedSeconds
     : 0;
   return separation - robotRadiusMeters - robotUncertaintyMeters
     - obstacle.radiusMeters - obstacle.positionUncertaintyMeters - humanReach - motionError;
@@ -326,15 +328,18 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       const robotUncertainty = scene.value.robotPositionUncertaintyMeters
         + (this.options.localizationErrorMeters ?? 0)
         + maxVelocityMps * scene.value.odometryAgeSeconds;
+      const droppedMessageSeconds = (this.options.droppedMessageMs ?? 0) / 1_000;
       const clearance = Math.min(...segments.map((segment) => closestClearance(
         segment.start, segment.target, segment.durationSeconds,
         obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
         this.options.actorMotionMps ?? 0,
+        droppedMessageSeconds,
       )));
       const stopClearance = closestClearance(
         stopSegment.start, stopSegment.target, stopSegment.durationSeconds,
         obstacle, robotRadiusMeters, robotUncertainty, maxHumanSpeedMps, totalDurationSeconds,
         this.options.actorMotionMps ?? 0,
+        droppedMessageSeconds,
       );
       minimum = Math.min(minimum, clearance);
       minimum = Math.min(minimum, stopClearance);

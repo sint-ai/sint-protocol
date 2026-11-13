@@ -235,8 +235,10 @@ not simulate acceleration, turning dynamics, controller-rate behavior, or
 occluded humans. An approved `actorMotionMps` on a navigation stress case is
 added to a dynamic obstacle's speed for the whole horizon. An approved
 `localizationErrorMeters` on a navigation stress case is added to the robot
-position bound for the whole horizon. Dropped messages, actuator lag, and the
-rest of the adversarial parameters are not part of that bound.
+position bound for the whole horizon. An approved `droppedMessageMs` on a
+navigation stress case ages a dynamic obstacle's last update for the whole
+horizon. Actuator lag and the rest of the adversarial parameters are not part
+of that age.
 
 ## Isolated Worker HTTP Contract
 
