@@ -1316,6 +1316,13 @@ export class PolicyGateway {
             && Number.isFinite(observedDuration)
             && observedDuration > predictedDuration
           ) {
+            failures.emit("simulation.execution.drift_detected", request.agentId, request.tokenId, {
+              receiptId: request.executionContext?.simulationEvidence?.receiptId,
+              measurement: "duration",
+              predictedDurationMs: predictedDuration,
+              observedDurationMs: observedDuration,
+              enforcementMode: simulationEnforcementMode,
+            });
             return {
               requestId,
               timestamp,
