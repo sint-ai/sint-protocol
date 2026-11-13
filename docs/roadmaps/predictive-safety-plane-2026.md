@@ -240,7 +240,8 @@ traceable receipt and correction event.
 - [x] require image attestation: a receipt whose image digest is missing or not in the trusted set is rejected, and an attested digest still passes
 - [x] enforce a simulation request quota: an authenticated simulate call past the configured limit is rejected, and a health check or unauthenticated request does not consume it
 - [x] isolate a simulation worker to one tenant: a request for a different tenant, or one that omits the tenant, is rejected, and the bound tenant still returns a receipt
-- [ ] deploy workload identity, mTLS, and signer rotation
+- [x] reject a TLS client that presents no certificate: the mutual-TLS simulation listener closes that handshake
+- [ ] deploy workload identity and signer rotation
 - [ ] add regional worker pools, circuit breakers, bounded queues, and signed
   cache entries keyed by plan + world + model digests
 - [ ] publish a predictive-safety conformance profile and operator runbook
