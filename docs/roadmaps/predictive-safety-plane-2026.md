@@ -242,7 +242,7 @@ traceable receipt and correction event.
 - [x] isolate a simulation worker to one tenant: a request for a different tenant, or one that omits the tenant, is rejected, and the bound tenant still returns a receipt
 - [x] reject a TLS client that presents no certificate: the mutual-TLS simulation listener closes that handshake
 - [x] require a SPIFFE ID in the configured trust domain: a client certificate outside that domain, or one that omits the SPIFFE ID, is rejected, and a matching SPIFFE ID still reaches the worker
-- [ ] deploy signer rotation
+- [x] refuse an active signer listed as retired: startup fails when that public key is in the retired set, a different retired key is still accepted, and a malformed entry fails configuration
 - [x] stop calling the simulation worker after the configured consecutive retryable failure limit: the next call does not reach the worker
 - [ ] add regional worker pools, bounded queues, and signed
   cache entries keyed by plan + world + model digests

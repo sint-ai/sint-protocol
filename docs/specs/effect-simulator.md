@@ -287,7 +287,11 @@ depth and never an authorization decision.
 The reference worker starts with `pnpm --filter @pshkv/simulation-server
 start` after a build (or `dev` from source). Production requires
 `SINT_SIM_BEARER_TOKEN`, `SINT_SIM_SIGNER_PUBLIC_KEY`, and
-`SINT_SIM_SIGNER_PRIVATE_KEY`. `SINT_SIM_ARTIFACT_DIR` selects the durable
+`SINT_SIM_SIGNER_PRIVATE_KEY`. `SINT_SIM_RETIRED_SIGNER_KEYS` is an optional
+comma-separated list of lowercase Ed25519 public keys. Startup fails when the
+active signer is in that list. A different retired key is still accepted, and
+a malformed entry fails configuration. Unset means no retired keys.
+`SINT_SIM_ARTIFACT_DIR` selects the durable
 content-addressed trace store, while `SINT_SIM_MODEL` supplies the bounded
 motion model as JSON. Development may use an explicitly warned ephemeral
 signer; production startup fails closed without persistent identity.

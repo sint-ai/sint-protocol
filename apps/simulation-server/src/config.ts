@@ -32,6 +32,8 @@ export interface SimulationWorkerConfig {
   readonly artifactDirectory: string;
   readonly signerPublicKey: string;
   readonly signerPrivateKey: string;
+  /** Previous signer public keys that must not sign new receipts. */
+  readonly retiredSignerKeys: readonly string[];
   readonly ephemeralSigner: boolean;
   readonly version: string;
   readonly modelDigest: string;
@@ -88,6 +90,18 @@ function optionalTrustDomain(raw: string | undefined): string | undefined {
     throw new Error("SINT_SIM_TRUST_DOMAIN must be a trust domain of 1\u2013253 non-whitespace characters without a scheme or slash");
   }
   return raw;
+}
+
+function parseRetiredSignerKeys(raw: string | undefined, activePublicKey: string): readonly string[] {
+  if (raw === undefined || raw.trim() === "") return [];
+  const keys = raw.split(",");
+  if (keys.some((key) => !/^[0-9a-f]{64}$/.test(key))) {
+    throw new Error("SINT_SIM_RETIRED_SIGNER_KEYS entries must be lowercase Ed25519 public keys");
+  }
+  if (keys.includes(activePublicKey)) {
+    throw new Error("SINT_SIM_SIGNER_PUBLIC_KEY is retired and cannot sign new receipts");
+  }
+  return keys;
 }
 
 function nonNegativeNumber(value: unknown): value is number {
@@ -256,6 +270,7 @@ export function loadSimulationWorkerConfig(
     artifactDirectory: environment.SINT_SIM_ARTIFACT_DIR ?? ".sint/simulation-artifacts",
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
+    retiredSignerKeys: parseRetiredSignerKeys(environment.SINT_SIM_RETIRED_SIGNER_KEYS, signer.publicKey),
     ephemeralSigner: signer.ephemeral,
     version: environment.SINT_SIM_VERSION ?? "0.1.0",
     modelDigest: configuredModelDigest ?? hashSha256(canonicalJsonStringify(model)),
