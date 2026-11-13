@@ -333,6 +333,37 @@ describe("predictive simulation evidence policy", () => {
     expect(decision.denial?.policyViolated).toBe("SIMULATION_SIGNATURE_INVALID");
   });
 
+  it("rejects a receipt signed by a retired simulation signer key", async () => {
+    const retired = generateKeypair();
+    const token = makeToken();
+    const request = makeRequest(token);
+    const drafted = signedReceipt(request, token);
+    const retiredReceipt = {
+      ...drafted,
+      signerPublicKey: retired.publicKey,
+      signature: "0".repeat(128),
+    };
+    const receipt = {
+      ...retiredReceipt,
+      signature: sign(retired.privateKey, computeSimulationEvidenceSigningPayload(retiredReceipt)),
+    };
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        retiredSignerKeys: [retired.publicKey],
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_SIGNER_RETIRED");
+  });
+
   it("rejects stale world and receipt evidence", async () => {
     const token = makeToken();
     const request = makeRequest(token);
