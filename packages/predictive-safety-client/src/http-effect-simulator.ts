@@ -21,6 +21,8 @@ export interface HttpEffectSimulatorOptions {
   readonly trustedSignerKeys: readonly string[];
   readonly bearerToken?: string;
   readonly timeoutMs?: number;
+  /** Consecutive retryable worker failures that open the circuit. Unset means no limit. */
+  readonly failureThreshold?: number;
   readonly fetch?: typeof globalThis.fetch;
 }
 
@@ -42,6 +44,7 @@ export class HttpEffectSimulator implements EffectSimulator {
   private readonly trustedSignerKeys: ReadonlySet<string>;
   private readonly timeoutMs: number;
   private readonly fetch: typeof globalThis.fetch;
+  private consecutiveFailures = 0;
 
   constructor(private readonly options: HttpEffectSimulatorOptions) {
     this.backend = options.backend;
@@ -50,6 +53,18 @@ export class HttpEffectSimulator implements EffectSimulator {
     this.trustedSignerKeys = new Set(options.trustedSignerKeys);
     this.timeoutMs = options.timeoutMs ?? 30_000;
     this.fetch = options.fetch ?? globalThis.fetch;
+  }
+
+  private finish(
+    result: Result<SimulationEvidenceReceipt, EffectSimulationError>,
+  ): Result<SimulationEvidenceReceipt, EffectSimulationError> {
+    if (this.options.failureThreshold === undefined) return result;
+    if (result.ok) {
+      this.consecutiveFailures = 0;
+      return result;
+    }
+    if (result.error.retryable) this.consecutiveFailures += 1;
+    return result;
   }
 
   async simulate(
@@ -62,6 +77,12 @@ export class HttpEffectSimulator implements EffectSimulator {
         message: "Remote simulation requires an exact world snapshot",
         retryable: true,
       });
+    }
+    if (
+      this.options.failureThreshold !== undefined
+      && this.consecutiveFailures >= this.options.failureThreshold
+    ) {
+      return failure("Simulation worker circuit is open", false);
     }
 
     const controller = new AbortController();
@@ -82,24 +103,24 @@ export class HttpEffectSimulator implements EffectSimulator {
     } catch (cause) {
       clearTimeout(timeout);
       const timedOut = controller.signal.aborted;
-      return failure(
+      return this.finish(failure(
         timedOut
           ? `Simulation worker timed out after ${this.timeoutMs}ms`
           : `Simulation worker request failed: ${cause instanceof Error ? cause.message : "network error"}`,
         true,
-      );
+      ));
     }
     let body: unknown;
     try {
       body = await response.json();
     } catch {
       const timedOut = controller.signal.aborted;
-      return failure(
+      return this.finish(failure(
         timedOut
           ? `Simulation worker timed out after ${this.timeoutMs}ms`
           : "Simulation worker returned non-JSON output",
         timedOut || response.status >= 500,
-      );
+      ));
     } finally {
       clearTimeout(timeout);
     }
@@ -108,9 +129,9 @@ export class HttpEffectSimulator implements EffectSimulator {
       const parsedError = effectSimulationErrorSchema.safeParse(
         body && typeof body === "object" && "error" in body ? body.error : body,
       );
-      return parsedError.success
+      return this.finish(parsedError.success
         ? err(parsedError.data)
-        : failure(`Simulation worker rejected the request with HTTP ${response.status}`, response.status >= 500);
+        : failure(`Simulation worker rejected the request with HTTP ${response.status}`, response.status >= 500));
     }
 
     const receiptCandidate = body && typeof body === "object" && "receipt" in body
@@ -118,14 +139,14 @@ export class HttpEffectSimulator implements EffectSimulator {
       : body;
     const parsedReceipt = simulationEvidenceReceiptSchema.safeParse(receiptCandidate);
     if (!parsedReceipt.success) {
-      return failure("Simulation worker returned a malformed V2 receipt", false);
+      return this.finish(failure("Simulation worker returned a malformed V2 receipt", false));
     }
     const receipt = parsedReceipt.data;
     if (!this.trustedSignerKeys.has(receipt.signerPublicKey)) {
-      return failure("Simulation worker receipt signer is not trusted by the client", false);
+      return this.finish(failure("Simulation worker receipt signer is not trusted by the client", false));
     }
     if (!verify(receipt.signerPublicKey, receipt.signature, signingPayload(receipt))) {
-      return failure("Simulation worker receipt signature is invalid", false);
+      return this.finish(failure("Simulation worker receipt signature is invalid", false));
     }
     if (
       receipt.requestDigest !== preflight.effectPlan.requestDigest
@@ -135,12 +156,12 @@ export class HttpEffectSimulator implements EffectSimulator {
       || receipt.action !== preflight.effectPlan.action
       || receipt.worldSnapshot.digest !== worldSnapshot.digest
     ) {
-      return failure("Simulation worker receipt is not bound to the submitted preflight and world state", false);
+      return this.finish(failure("Simulation worker receipt is not bound to the submitted preflight and world state", false));
     }
     if (!this.supportedGrades.includes(receipt.evidenceGrade)) {
-      return failure(`Simulation worker returned undeclared ${receipt.evidenceGrade} evidence`, false);
+      return this.finish(failure(`Simulation worker returned undeclared ${receipt.evidenceGrade} evidence`, false));
     }
 
-    return ok(receipt);
+    return this.finish(ok(receipt));
   }
 }

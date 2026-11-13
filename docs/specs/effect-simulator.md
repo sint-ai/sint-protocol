@@ -278,7 +278,9 @@ addition to bearer/workload identity.
 `@pshkv/predictive-safety-client` implements `EffectSimulator` over this HTTP
 surface. It enforces a deadline and validates the response schema, trusted
 signer, Ed25519 signature, declared evidence grade, exact preflight digests,
-resource/action, and world-snapshot digest locally. The Policy Gateway repeats
+resource/action, and world-snapshot digest locally. When `failureThreshold`
+is set, that many consecutive retryable worker failures stop the next call
+from reaching the worker. Unset means no limit. The Policy Gateway repeats
 receipt verification during interception; client validation is defense in
 depth and never an authorization decision.
 

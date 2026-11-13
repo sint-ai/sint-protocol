@@ -81,4 +81,31 @@ describe("HttpEffectSimulator failures", () => {
     });
     expect(simulated.ok ? undefined : simulated.error.message).toBe("Simulation worker timed out after 10ms");
   });
+
+  it("does not call the worker after the configured consecutive failure limit", async () => {
+    let calls = 0;
+    const simulator = new HttpEffectSimulator({
+      baseUrl: "http://worker/",
+      backend: "remote-test",
+      supportedGrades: ["deterministic"],
+      trustedSignerKeys: [],
+      failureThreshold: 1,
+      fetch: async () => {
+        calls += 1;
+        throw new Error("connection refused");
+      },
+    });
+    const world = {
+      digest: digest("a"),
+      observedAt: new Date().toISOString(),
+      validUntil: new Date(Date.now() + 1_000).toISOString(),
+    };
+
+    const first = await simulator.simulate(preflight, world);
+    const second = await simulator.simulate(preflight, world);
+
+    expect(first.ok).toBe(false);
+    expect(calls).toBe(1);
+    expect(second.ok ? undefined : second.error.message).toBe("Simulation worker circuit is open");
+  });
 });
