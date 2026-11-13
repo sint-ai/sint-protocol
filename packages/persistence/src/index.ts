@@ -20,6 +20,7 @@ export { InMemoryMissionManifestStore } from "./in-memory-mission-manifest-store
 export { PgLedgerStore } from "./pg-ledger-store.js";
 export { PgTokenStore } from "./pg-token-store.js";
 export { PgMissionManifestStore } from "./pg-mission-manifest-store.js";
+export { PgSimulationReceiptNonceStore } from "./pg-simulation-receipt-nonce-store.js";
 export { getPool, closePool, type PgPoolConfig } from "./pg-pool.js";
 export { ensurePgSchema } from "./pg-schema.js";
 export { RedisCache } from "./redis-cache.js";

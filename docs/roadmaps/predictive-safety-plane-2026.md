@@ -174,7 +174,9 @@ The normative implementation contract is
   obstacles, and safety-controller state
 - [x] persist deterministic traces and canonical ROS 2 world snapshots in
   content-addressed storage with a durable filesystem reference implementation
-- [ ] add Postgres/Redis-backed nonce state and signer-key rotation
+- [x] add Postgres-backed simulation receipt nonce state: a repeated receipt id and nonce is rejected
+- [ ] add Redis-backed nonce state
+- [ ] add signer-key rotation
 - [x] append receipt-verified and receipt-rejected decisions to
   `EvidenceLedger`, including the tier and enforcement mode
 - [x] append receipt-issued events at the simulator trust boundary; issuance

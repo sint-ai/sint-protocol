@@ -145,6 +145,15 @@ export async function ensurePgSchema(pool: pg.Pool): Promise<void> {
   `);
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS sint_simulation_receipt_nonces (
+      receipt_id TEXT NOT NULL,
+      nonce TEXT NOT NULL,
+      consumed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (receipt_id, nonce)
+    );
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS sint_mission_manifests (
       manifest_id TEXT PRIMARY KEY,
       platform_id TEXT NOT NULL,

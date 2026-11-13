@@ -17,6 +17,8 @@ describe("ensurePgSchema", () => {
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_tokens");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_revocations");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_rate_limit_counters");
+    expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_simulation_receipt_nonces");
+    expect(sql).toContain("PRIMARY KEY (receipt_id, nonce)");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_mission_manifests");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_mission_manifest_revocations");
     expect(sql).toContain("CREATE TABLE IF NOT EXISTS sint_mission_authority_heads");
