@@ -72,6 +72,28 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("configured public key does not match private key");
   });
 
+  it("refuses an active signer listed as retired and still accepts a different retired key", () => {
+    const active = generateKeypair();
+    const retired = generateKeypair();
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test" }).retiredSignerKeys).toEqual([]);
+    expect(loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_SIGNER_PUBLIC_KEY: active.publicKey,
+      SINT_SIM_SIGNER_PRIVATE_KEY: active.privateKey,
+      SINT_SIM_RETIRED_SIGNER_KEYS: retired.publicKey,
+    }).retiredSignerKeys).toEqual([retired.publicKey]);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_SIGNER_PUBLIC_KEY: active.publicKey,
+      SINT_SIM_SIGNER_PRIVATE_KEY: active.privateKey,
+      SINT_SIM_RETIRED_SIGNER_KEYS: `${retired.publicKey},${active.publicKey}`,
+    })).toThrow("SINT_SIM_SIGNER_PUBLIC_KEY is retired and cannot sign new receipts");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_RETIRED_SIGNER_KEYS: "not-a-key",
+    })).toThrow("SINT_SIM_RETIRED_SIGNER_KEYS entries must be lowercase Ed25519 public keys");
+  });
+
   it("loads an explicit bounded-motion model", () => {
     const config = loadSimulationWorkerConfig({
       NODE_ENV: "test",
