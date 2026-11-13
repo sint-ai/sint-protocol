@@ -182,7 +182,8 @@ The normative implementation contract is
 - [x] append a simulation-drift event when observed clearance is below the receipt's predicted clearance
 - [x] append a simulation-drift event when observed force exceeds the receipt's predicted force
 - [x] append a simulation-drift event when observed duration exceeds the receipt's predicted duration
-- [ ] append simulation-drift events for collisions and controller disagreement
+- [x] append a simulation-drift event when observed collisions exceed the receipt's predicted collisions
+- [ ] append a simulation-drift event when the observed controller permit disagrees with the predicted controller outcome
 - [x] run T1 shadow mode on recorded fixtures; missing, unsafe, and passing
   evidence is audited without blocking production
 

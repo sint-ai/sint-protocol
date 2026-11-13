@@ -1346,6 +1346,13 @@ export class PolicyGateway {
             && Number.isFinite(observedCollisions)
             && observedCollisions > predictedCollisions
           ) {
+            failures.emit("simulation.execution.drift_detected", request.agentId, request.tokenId, {
+              receiptId: request.executionContext?.simulationEvidence?.receiptId,
+              measurement: "collisions",
+              predictedCollisions,
+              observedCollisions,
+              enforcementMode: simulationEnforcementMode,
+            });
             return {
               requestId,
               timestamp,
