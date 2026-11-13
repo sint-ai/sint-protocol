@@ -1379,6 +1379,13 @@ export class PolicyGateway {
             && typeof observedControllerPermitsMotion === "boolean"
             && observedControllerPermitsMotion !== predictedControllerPermitsMotion
           ) {
+            failures.emit("simulation.execution.drift_detected", request.agentId, request.tokenId, {
+              receiptId: request.executionContext?.simulationEvidence?.receiptId,
+              measurement: "controller",
+              predictedControllerPermitsMotion,
+              observedControllerPermitsMotion,
+              enforcementMode: simulationEnforcementMode,
+            });
             return {
               requestId,
               timestamp,

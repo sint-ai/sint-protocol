@@ -65,10 +65,10 @@ receipt verifier, but a missing or rejected receipt is appended as
 the request. A passing receipt is appended as `simulation.receipt.verified`.
 When observed clearance is below that receipt's predicted clearance, observed
 force exceeds that receipt's predicted force, observed duration exceeds that
-receipt's predicted duration, or observed collisions exceed that receipt's
-predicted collisions, the same shadow path appends
-`simulation.execution.drift_detected` before escalating. Controller
-disagreement does not append that event yet.
+receipt's predicted duration, observed collisions exceed that receipt's
+predicted collisions, or the observed controller permit disagrees with the
+predicted controller outcome, the same shadow path appends
+`simulation.execution.drift_detected` before escalating.
 T2/T3 remain `enforce` by default. Shadow mode is a calibration state, not an
 authorization path, and promotion to enforcement is an explicit deployment
 policy change.
