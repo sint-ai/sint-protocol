@@ -11,6 +11,7 @@ async function main(): Promise<void> {
     bearerToken: config.bearerToken,
     maxBodyBytes: config.maxBodyBytes,
     maxSimulateRequests: config.maxSimulateRequests,
+    tenantId: config.tenantId,
   });
   const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
     console.log(`[SINT] predictive safety worker listening on http://localhost:${info.port}`);

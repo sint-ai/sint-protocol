@@ -122,6 +122,7 @@ export const effectSimulationErrorSchema = z.object({
 export const effectSimulationRequestSchema = z.object({
   preflight: simulationPreflightSchema,
   worldSnapshot: simulationWorldSnapshotSchema,
+  tenantId: z.string().min(1).max(128).optional(),
 }).strict();
 
 export const simulationEvidenceReceiptSchema = z.object({

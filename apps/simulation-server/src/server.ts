@@ -12,6 +12,8 @@ export interface SimulationWorkerAppOptions {
   readonly maxBodyBytes?: number;
   /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
   readonly maxSimulateRequests?: number;
+  /** When set, only a simulate request naming this tenant is accepted. */
+  readonly tenantId?: string;
 }
 
 function statusForError(error: { readonly code: string; readonly retryable: boolean }): 409 | 422 | 503 {
@@ -74,6 +76,15 @@ export function createSimulationWorkerApp(options: SimulationWorkerAppOptions): 
     const parsed = effectSimulationRequestSchema.safeParse(body);
     if (!parsed.success) {
       return context.json({ error: "invalid simulation request", issues: parsed.error.issues }, 400);
+    }
+    if (options.tenantId !== undefined && parsed.data.tenantId !== options.tenantId) {
+      return context.json({
+        error: {
+          code: "TENANT_MISMATCH",
+          message: "Simulation request tenant does not match this worker",
+          retryable: false,
+        },
+      }, 403);
     }
 
     const simulated = await options.simulator.simulate(parsed.data.preflight, parsed.data.worldSnapshot);

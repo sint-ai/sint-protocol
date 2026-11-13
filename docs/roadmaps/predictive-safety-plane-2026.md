@@ -239,8 +239,8 @@ traceable receipt and correction event.
 - [x] require two independent models for selected T3 actions: a receipt that names only one model, or repeats that model digest, is rejected, and two different model digests still escalate
 - [x] require image attestation: a receipt whose image digest is missing or not in the trusted set is rejected, and an attested digest still passes
 - [x] enforce a simulation request quota: an authenticated simulate call past the configured limit is rejected, and a health check or unauthenticated request does not consume it
-- [ ] deploy workload identity, mTLS, signer rotation,
-  and tenant isolation
+- [x] isolate a simulation worker to one tenant: a request for a different tenant, or one that omits the tenant, is rejected, and the bound tenant still returns a receipt
+- [ ] deploy workload identity, mTLS, and signer rotation
 - [ ] add regional worker pools, circuit breakers, bounded queues, and signed
   cache entries keyed by plan + world + model digests
 - [ ] publish a predictive-safety conformance profile and operator runbook
