@@ -267,6 +267,11 @@ or one that omits the tenant, is rejected, and the bound tenant still
 returns a receipt.
 `listenMutualTlsWorker` requests a client certificate and closes the handshake
 when the client presents none.
+When `SINT_SIM_TRUST_DOMAIN` is set and passed to that listener, a client
+certificate outside that domain, or one that omits its SPIFFE ID, is closed,
+and a matching SPIFFE ID still reaches the worker. A blank value or a full
+SPIFFE URI fails configuration. Unset means the listener does not check the
+SPIFFE ID.
 Production deployments should terminate mTLS at the worker or its sidecar in
 addition to bearer/workload identity.
 

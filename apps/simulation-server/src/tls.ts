@@ -13,11 +13,17 @@ export interface MutualTlsListener {
   close: () => Promise<void>;
 }
 
+export interface MutualTlsListenOptions {
+  /** When set, the peer certificate must carry one SPIFFE ID in this trust domain. */
+  readonly trustDomain?: string;
+}
+
 type FetchHandler = (request: Request) => Response | Promise<Response>;
 
 export function listenMutualTlsWorker(
   fetch: FetchHandler,
   identity: MutualTlsIdentity,
+  options?: MutualTlsListenOptions,
 ): Promise<MutualTlsListener> {
   const server = createServer(
     {
@@ -30,6 +36,13 @@ export function listenMutualTlsWorker(
     (request, response) => {
       const socket = request.socket as TLSSocket;
       if (!socket.authorized) {
+        socket.destroy();
+        return;
+      }
+      if (
+        options?.trustDomain !== undefined
+        && spiffeTrustDomain(socket.getPeerCertificate().subjectaltname) !== options.trustDomain
+      ) {
         socket.destroy();
         return;
       }
@@ -53,6 +66,23 @@ export function listenMutualTlsWorker(
     server.once("error", onError);
     server.listen(0, "127.0.0.1", () => finish());
   });
+}
+
+function spiffeTrustDomain(subjectAltName: string | undefined): string | undefined {
+  if (subjectAltName === undefined) return undefined;
+  const uris = subjectAltName
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.startsWith("URI:spiffe://"));
+  if (uris.length !== 1) return undefined;
+  const body = uris[0]?.slice("URI:spiffe://".length);
+  if (body === undefined) return undefined;
+  const slash = body.indexOf("/");
+  if (slash <= 0) return undefined;
+  const domain = body.slice(0, slash);
+  const path = body.slice(slash + 1);
+  if (path.length === 0 || path.split("/").some((segment) => segment.length === 0)) return undefined;
+  return domain;
 }
 
 function listener(server: Server): MutualTlsListener {
