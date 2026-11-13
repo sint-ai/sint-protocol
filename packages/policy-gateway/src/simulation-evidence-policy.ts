@@ -84,6 +84,8 @@ export interface DefaultSimulationEvidencePolicyOptions {
   /** @deprecated Use tierRequirements or requirementFor. */
   readonly requiredFor?: (request: SintRequest, token: SintCapabilityToken) => boolean;
   readonly trustedSignerKeys: readonly Ed25519PublicKey[];
+  /** Signer keys that verified receipts before rotation and must now be rejected. */
+  readonly retiredSignerKeys?: readonly Ed25519PublicKey[];
   /** Maximum evidence grade each trusted signer is accredited to issue. */
   readonly maxEvidenceGradeBySigner?: Readonly<Record<string, SimulationEvidenceGrade>>;
   readonly allowedBackends?: readonly string[];
@@ -231,10 +233,12 @@ function reusesPreSimulatedCorridor(
  */
 export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicyPlugin {
   private readonly trustedSignerKeys: ReadonlySet<string>;
+  private readonly retiredSignerKeys: ReadonlySet<string>;
   private readonly shadowTiers: ReadonlySet<ApprovalTier>;
 
   constructor(private readonly options: DefaultSimulationEvidencePolicyOptions) {
     this.trustedSignerKeys = new Set(options.trustedSignerKeys);
+    this.retiredSignerKeys = new Set(options.retiredSignerKeys ?? []);
     this.shadowTiers = new Set(options.shadowTiers ?? []);
   }
 
@@ -280,6 +284,9 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
         : undefined;
     }
 
+    if (this.retiredSignerKeys.has(receipt.signerPublicKey)) {
+      return deny(context, "SIMULATION_SIGNER_RETIRED", "Simulation receipt signer key has been retired");
+    }
     if (!this.trustedSignerKeys.has(receipt.signerPublicKey)) {
       return deny(context, "SIMULATION_SIGNER_UNTRUSTED", "Simulation receipt signer is not trusted");
     }

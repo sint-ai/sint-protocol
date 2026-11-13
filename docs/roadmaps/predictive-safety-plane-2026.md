@@ -176,7 +176,7 @@ The normative implementation contract is
   content-addressed storage with a durable filesystem reference implementation
 - [x] add Postgres-backed simulation receipt nonce state: a repeated receipt id and nonce is rejected
 - [x] add Redis-backed simulation receipt nonce state: a repeated receipt id and nonce is rejected
-- [ ] add signer-key rotation
+- [x] add signer-key rotation: a receipt signed by a retired simulation signer key is rejected
 - [x] append receipt-verified and receipt-rejected decisions to
   `EvidenceLedger`, including the tier and enforcement mode
 - [x] append receipt-issued events at the simulator trust boundary; issuance
