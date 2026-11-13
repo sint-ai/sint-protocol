@@ -8,6 +8,18 @@ describe("standalone simulation worker configuration", () => {
     expect(config.port).toBe(3201);
     expect(config.ephemeralSigner).toBe(true);
     expect(config.model.resources).toEqual(["ros2:///cmd_vel"]);
+    expect(config.maxSimulateRequests).toBeUndefined();
+  });
+
+  it("loads a positive simulate quota and rejects a non-positive limit", () => {
+    expect(loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MAX_SIMULATE_REQUESTS: "4",
+    }).maxSimulateRequests).toBe(4);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MAX_SIMULATE_REQUESTS: "0",
+    })).toThrow("SINT_SIM_MAX_SIMULATE_REQUESTS must be a positive integer");
   });
 
   it("fails closed when production authentication or persistent signing is absent", () => {
