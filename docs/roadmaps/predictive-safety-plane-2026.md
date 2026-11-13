@@ -241,7 +241,8 @@ traceable receipt and correction event.
 - [x] enforce a simulation request quota: an authenticated simulate call past the configured limit is rejected, and a health check or unauthenticated request does not consume it
 - [x] isolate a simulation worker to one tenant: a request for a different tenant, or one that omits the tenant, is rejected, and the bound tenant still returns a receipt
 - [x] reject a TLS client that presents no certificate: the mutual-TLS simulation listener closes that handshake
-- [ ] deploy workload identity and signer rotation
+- [x] require a SPIFFE ID in the configured trust domain: a client certificate outside that domain, or one that omits the SPIFFE ID, is rejected, and a matching SPIFFE ID still reaches the worker
+- [ ] deploy signer rotation
 - [ ] add regional worker pools, circuit breakers, bounded queues, and signed
   cache entries keyed by plan + world + model digests
 - [ ] publish a predictive-safety conformance profile and operator runbook

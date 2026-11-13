@@ -34,6 +34,22 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("SINT_SIM_TENANT_ID must be 1\u2013128 non-whitespace characters");
   });
 
+  it("loads a workload trust domain and rejects a blank or URI value", () => {
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test" }).trustDomain).toBeUndefined();
+    expect(loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_TRUST_DOMAIN: "sim.sint.test",
+    }).trustDomain).toBe("sim.sint.test");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_TRUST_DOMAIN: " ",
+    })).toThrow("SINT_SIM_TRUST_DOMAIN must be a trust domain of 1\u2013253 non-whitespace characters without a scheme or slash");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_TRUST_DOMAIN: "spiffe://sim.sint.test/worker",
+    })).toThrow("SINT_SIM_TRUST_DOMAIN must be a trust domain of 1\u2013253 non-whitespace characters without a scheme or slash");
+  });
+
   it("fails closed when production authentication or persistent signing is absent", () => {
     expect(() => loadSimulationWorkerConfig({ NODE_ENV: "production" })).toThrow(
       "persistent simulation signer keypair",

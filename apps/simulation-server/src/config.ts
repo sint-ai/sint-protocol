@@ -27,6 +27,8 @@ export interface SimulationWorkerConfig {
   readonly maxSimulateRequests?: number;
   /** When set, the worker accepts only a simulate request naming this tenant. */
   readonly tenantId?: string;
+  /** When set, the mutual-TLS listener accepts only one SPIFFE ID in this trust domain. */
+  readonly trustDomain?: string;
   readonly artifactDirectory: string;
   readonly signerPublicKey: string;
   readonly signerPrivateKey: string;
@@ -69,6 +71,21 @@ function optionalTenantId(raw: string | undefined): string | undefined {
   if (raw === undefined) return undefined;
   if (raw.trim() !== raw || raw.length < 1 || raw.length > 128) {
     throw new Error("SINT_SIM_TENANT_ID must be 1\u2013128 non-whitespace characters");
+  }
+  return raw;
+}
+
+function optionalTrustDomain(raw: string | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  if (
+    raw.trim() !== raw
+    || raw.length < 1
+    || raw.length > 253
+    || raw.includes("/")
+    || raw.includes(":")
+    || /\s/.test(raw)
+  ) {
+    throw new Error("SINT_SIM_TRUST_DOMAIN must be a trust domain of 1\u2013253 non-whitespace characters without a scheme or slash");
   }
   return raw;
 }
@@ -235,6 +252,7 @@ export function loadSimulationWorkerConfig(
       environment.SINT_SIM_MAX_SIMULATE_REQUESTS,
     ),
     tenantId: optionalTenantId(environment.SINT_SIM_TENANT_ID),
+    trustDomain: optionalTrustDomain(environment.SINT_SIM_TRUST_DOMAIN),
     artifactDirectory: environment.SINT_SIM_ARTIFACT_DIR ?? ".sint/simulation-artifacts",
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
