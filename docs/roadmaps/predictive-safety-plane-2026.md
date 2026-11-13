@@ -175,7 +175,7 @@ The normative implementation contract is
 - [x] persist deterministic traces and canonical ROS 2 world snapshots in
   content-addressed storage with a durable filesystem reference implementation
 - [x] add Postgres-backed simulation receipt nonce state: a repeated receipt id and nonce is rejected
-- [ ] add Redis-backed nonce state
+- [x] add Redis-backed simulation receipt nonce state: a repeated receipt id and nonce is rejected
 - [ ] add signer-key rotation
 - [x] append receipt-verified and receipt-rejected decisions to
   `EvidenceLedger`, including the tier and enforcement mode

@@ -25,3 +25,4 @@ export { getPool, closePool, type PgPoolConfig } from "./pg-pool.js";
 export { ensurePgSchema } from "./pg-schema.js";
 export { RedisCache } from "./redis-cache.js";
 export { RedisRevocationBus } from "./redis-revocation-bus.js";
+export { RedisSimulationReceiptNonceStore } from "./redis-simulation-receipt-nonce-store.js";
