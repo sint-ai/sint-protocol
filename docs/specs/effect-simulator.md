@@ -238,8 +238,9 @@ added to a dynamic obstacle's speed for the whole horizon. An approved
 position bound for the whole horizon. An approved `droppedMessageMs` on a
 navigation stress case ages a dynamic obstacle's last update for the whole
 horizon. An approved `actuatorLagMs` on a navigation stress case is added to
-the stop corridor before braking. The rest of the adversarial parameters are
-not part of that lag.
+the stop corridor before braking. An approved `reducedDecelerationMps2` on a
+navigation stress case is subtracted from the minimum braking deceleration for
+that stop.
 
 ## Isolated Worker HTTP Contract
 

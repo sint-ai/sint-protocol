@@ -151,6 +151,8 @@ export interface NavigationStressCase {
   readonly droppedMessageMs?: number;
   /** Extra delay before the actuator starts braking for this stress case, milliseconds. */
   readonly actuatorLagMs?: number;
+  /** Reduction of the minimum braking deceleration for this stress case, meters per second squared. */
+  readonly reducedDecelerationMps2?: number;
 }
 
 /** Approved support for deterministic bounded-motion perturbations. */

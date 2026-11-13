@@ -82,7 +82,7 @@ export function isValidNavigationScenarioPolicy(value: unknown): value is Naviga
     if (!scenario || typeof scenario !== "object" || Array.isArray(scenario)
       || typeof scenario.id !== "string" || !scenario.id.trim() || scenario.id.length > 128
       || scenario.id === "observed" || scenario.id.startsWith("seed:") || ids.has(scenario.id)
-      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs", "actorMotionMps", "localizationErrorMeters", "droppedMessageMs", "actuatorLagMs"].includes(key))
+      || Object.keys(scenario).some((key) => !["id", "extraRobotRadiusMeters", "extraReactionTimeMs", "extraHumanSpeedMps", "sensorDelayMs", "actorMotionMps", "localizationErrorMeters", "droppedMessageMs", "actuatorLagMs", "reducedDecelerationMps2"].includes(key))
       || !validDelta(scenario.extraRobotRadiusMeters, 10)
       || !validDelta(scenario.extraReactionTimeMs, 30_000)
       || !validDelta(scenario.extraHumanSpeedMps, 20)
@@ -91,7 +91,8 @@ export function isValidNavigationScenarioPolicy(value: unknown): value is Naviga
       || !validDelta(scenario.localizationErrorMeters, 10)
       || !validDelta(scenario.droppedMessageMs, 30_000)
       || !validDelta(scenario.actuatorLagMs, 30_000)
-      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps, scenario.sensorDelayMs, scenario.actorMotionMps, scenario.localizationErrorMeters, scenario.droppedMessageMs, scenario.actuatorLagMs]
+      || !validDelta(scenario.reducedDecelerationMps2, 20)
+      || ![scenario.extraRobotRadiusMeters, scenario.extraReactionTimeMs, scenario.extraHumanSpeedMps, scenario.sensorDelayMs, scenario.actorMotionMps, scenario.localizationErrorMeters, scenario.droppedMessageMs, scenario.actuatorLagMs, scenario.reducedDecelerationMps2]
         .some((delta) => delta !== undefined && delta > 0)) return false;
     ids.add(scenario.id);
   }
@@ -141,6 +142,7 @@ function stressedOptions(
     localizationErrorMeters: (options.localizationErrorMeters ?? 0) + (scenario.localizationErrorMeters ?? 0),
     droppedMessageMs: (options.droppedMessageMs ?? 0) + (scenario.droppedMessageMs ?? 0),
     actuatorLagMs: (options.actuatorLagMs ?? 0) + (scenario.actuatorLagMs ?? 0),
+    minDecelerationMps2: options.minDecelerationMps2 - (scenario.reducedDecelerationMps2 ?? 0),
   };
 }
 
