@@ -902,6 +902,55 @@ describe("predictive simulation evidence policy", () => {
     );
   });
 
+  it("appends a simulation-drift event when observed collisions exceed predicted collisions", async () => {
+    const token = makeActionToken("mcp://server/tool", "call");
+    const request = {
+      ...makeActionRequest(token, "mcp://server/tool", "call"),
+      physicalContext: { observedCollisions: 1 },
+    };
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      worldSnapshot: {
+        ...draft.worldSnapshot,
+        uncertainty: 0,
+      },
+      result: {
+        ...draft.result,
+        collisions: 0,
+      },
+    }));
+    const events: Array<{ eventType: string; payload: Record<string, unknown> }> = [];
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      emitLedgerEvent: (event) => events.push(event),
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        tierRequirements: {
+          [ApprovalTier.T1_PREPARE]: { minEvidenceGrade: "deterministic" },
+        },
+        shadowTiers: [ApprovalTier.T1_PREPARE],
+        now: () => now,
+      }),
+    });
+
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("escalate");
+    expect(events).toContainEqual(expect.objectContaining({
+      eventType: "simulation.execution.drift_detected",
+      payload: expect.objectContaining({
+        receiptId: receipt.receiptId,
+        measurement: "collisions",
+        predictedCollisions: 0,
+        observedCollisions: 1,
+        enforcementMode: "shadow",
+      }),
+    }));
+  });
+
   it("escalates a T1 shadow request for human review when the observed controller permit disagrees with the predicted controller outcome", async () => {
     const token = makeActionToken("mcp://server/tool", "call");
     const request = {
