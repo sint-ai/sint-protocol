@@ -280,7 +280,12 @@ surface. It enforces a deadline and validates the response schema, trusted
 signer, Ed25519 signature, declared evidence grade, exact preflight digests,
 resource/action, and world-snapshot digest locally. When `failureThreshold`
 is set, that many consecutive retryable worker failures stop the next call
-from reaching the worker. Unset means no limit. The Policy Gateway repeats
+from reaching the worker. Unset means no limit. When `modelDigest` and
+`receiptCache` are both set, a verified receipt whose model digest matches is
+stored under the effect-plan digest, world digest, and that model digest. The
+next call with the same three values returns that signed receipt and does not
+reach the worker. A cached entry is returned only after the same schema,
+signer, signature, binding, and grade checks. Unset means no cache. The Policy Gateway repeats
 receipt verification during interception; client validation is defense in
 depth and never an authorization decision.
 

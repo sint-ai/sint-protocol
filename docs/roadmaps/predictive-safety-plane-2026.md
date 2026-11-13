@@ -244,8 +244,8 @@ traceable receipt and correction event.
 - [x] require a SPIFFE ID in the configured trust domain: a client certificate outside that domain, or one that omits the SPIFFE ID, is rejected, and a matching SPIFFE ID still reaches the worker
 - [x] refuse an active signer listed as retired: startup fails when that public key is in the retired set, a different retired key is still accepted, and a malformed entry fails configuration
 - [x] stop calling the simulation worker after the configured consecutive retryable failure limit: the next call does not reach the worker
-- [ ] add regional worker pools, bounded queues, and signed
-  cache entries keyed by plan + world + model digests
+- [x] reuse a signed simulation receipt for the same effect plan, world digest, and model digest: the next call does not reach the worker
+- [ ] add regional worker pools and bounded queues
 - [ ] publish a predictive-safety conformance profile and operator runbook
 
 Exit gate: failover and compromised-worker exercises pass; receipts remain
