@@ -23,7 +23,22 @@ export interface HttpEffectSimulatorOptions {
   readonly timeoutMs?: number;
   /** Consecutive retryable worker failures that open the circuit. Unset means no limit. */
   readonly failureThreshold?: number;
+  /** Model digest included in a signed receipt cache key. Unset means no cache. */
+  readonly modelDigest?: string;
+  /** Signed receipts reused for the same effect plan, world, and model. Unset means no cache. */
+  readonly receiptCache?: SignedSimulationReceiptCache;
   readonly fetch?: typeof globalThis.fetch;
+}
+
+export interface SignedSimulationReceiptCacheKey {
+  readonly effectPlanDigest: string;
+  readonly worldDigest: string;
+  readonly modelDigest: string;
+}
+
+export interface SignedSimulationReceiptCache {
+  get(key: SignedSimulationReceiptCacheKey): SimulationEvidenceReceipt | undefined;
+  set(key: SignedSimulationReceiptCacheKey, receipt: SimulationEvidenceReceipt): void;
 }
 
 function signingPayload(receipt: SimulationEvidenceReceipt): string {
@@ -55,6 +70,45 @@ export class HttpEffectSimulator implements EffectSimulator {
     this.fetch = options.fetch ?? globalThis.fetch;
   }
 
+  private cacheKey(
+    preflight: SimulationPreflight,
+    worldSnapshot: SimulationWorldSnapshot,
+  ): SignedSimulationReceiptCacheKey | undefined {
+    const modelDigest = this.options.modelDigest;
+    if (modelDigest === undefined || this.options.receiptCache === undefined) return undefined;
+    return {
+      effectPlanDigest: preflight.effectPlan.effectPlanDigest,
+      worldDigest: worldSnapshot.digest,
+      modelDigest,
+    };
+  }
+
+  private signedCacheHit(
+    candidate: SimulationEvidenceReceipt,
+    preflight: SimulationPreflight,
+    worldSnapshot: SimulationWorldSnapshot,
+    modelDigest: string,
+  ): SimulationEvidenceReceipt | undefined {
+    const parsed = simulationEvidenceReceiptSchema.safeParse(candidate);
+    if (!parsed.success) return undefined;
+    const receipt = parsed.data;
+    if (receipt.simulator.modelDigest !== modelDigest) return undefined;
+    if (!this.trustedSignerKeys.has(receipt.signerPublicKey)) return undefined;
+    if (!verify(receipt.signerPublicKey, receipt.signature, signingPayload(receipt))) return undefined;
+    if (
+      receipt.requestDigest !== preflight.effectPlan.requestDigest
+      || receipt.effectPlanDigest !== preflight.effectPlan.effectPlanDigest
+      || receipt.tokenDigest !== preflight.effectPlan.tokenDigest
+      || receipt.resource !== preflight.effectPlan.resource
+      || receipt.action !== preflight.effectPlan.action
+      || receipt.worldSnapshot.digest !== worldSnapshot.digest
+    ) {
+      return undefined;
+    }
+    if (!this.supportedGrades.includes(receipt.evidenceGrade)) return undefined;
+    return receipt;
+  }
+
   private finish(
     result: Result<SimulationEvidenceReceipt, EffectSimulationError>,
   ): Result<SimulationEvidenceReceipt, EffectSimulationError> {
@@ -77,6 +131,14 @@ export class HttpEffectSimulator implements EffectSimulator {
         message: "Remote simulation requires an exact world snapshot",
         retryable: true,
       });
+    }
+    const key = this.cacheKey(preflight, worldSnapshot);
+    if (key !== undefined) {
+      const cached = this.options.receiptCache?.get(key);
+      if (cached !== undefined) {
+        const hit = this.signedCacheHit(cached, preflight, worldSnapshot, key.modelDigest);
+        if (hit !== undefined) return ok(hit);
+      }
     }
     if (
       this.options.failureThreshold !== undefined
@@ -162,6 +224,9 @@ export class HttpEffectSimulator implements EffectSimulator {
       return this.finish(failure(`Simulation worker returned undeclared ${receipt.evidenceGrade} evidence`, false));
     }
 
+    if (key !== undefined && receipt.simulator.modelDigest === key.modelDigest) {
+      this.options.receiptCache?.set(key, receipt);
+    }
     return this.finish(ok(receipt));
   }
 }
