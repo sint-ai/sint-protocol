@@ -180,7 +180,8 @@ The normative implementation contract is
 - [x] append receipt-issued events at the simulator trust boundary; issuance
   fails closed when the Evidence Ledger or its durable persistence sink fails
 - [x] append a simulation-drift event when observed clearance is below the receipt's predicted clearance
-- [ ] append simulation-drift events for force, duration, collisions, and controller disagreement
+- [x] append a simulation-drift event when observed force exceeds the receipt's predicted force
+- [ ] append simulation-drift events for duration, collisions, and controller disagreement
 - [x] run T1 shadow mode on recorded fixtures; missing, unsafe, and passing
   evidence is audited without blocking production
 
