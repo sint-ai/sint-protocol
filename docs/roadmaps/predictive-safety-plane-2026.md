@@ -238,7 +238,8 @@ traceable receipt and correction event.
 - [ ] add one GPU/high-fidelity backend and one vendor industrial simulator
 - [x] require two independent models for selected T3 actions: a receipt that names only one model, or repeats that model digest, is rejected, and two different model digests still escalate
 - [x] require image attestation: a receipt whose image digest is missing or not in the trusted set is rejected, and an attested digest still passes
-- [ ] deploy workload identity, mTLS, signer rotation, quotas,
+- [x] enforce a simulation request quota: an authenticated simulate call past the configured limit is rejected, and a health check or unauthenticated request does not consume it
+- [ ] deploy workload identity, mTLS, signer rotation,
   and tenant isolation
 - [ ] add regional worker pools, circuit breakers, bounded queues, and signed
   cache entries keyed by plan + world + model digests

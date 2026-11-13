@@ -259,6 +259,9 @@ that stop.
 
 The worker rejects malformed or authorization-claiming preflights, applies a
 bounded request-body limit, and supports constant-time bearer authentication.
+When `SINT_SIM_MAX_SIMULATE_REQUESTS` is set, an authenticated simulate call
+past that limit is rejected, and a health check or unauthenticated request
+does not consume it.
 Production deployments should terminate mTLS at the worker or its sidecar in
 addition to bearer/workload identity.
 

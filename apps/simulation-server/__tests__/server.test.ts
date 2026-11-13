@@ -48,7 +48,7 @@ const worldSnapshot: SimulationWorldSnapshot = {
   uncertainty: 0.01,
 };
 
-function worker(maxBodyBytes?: number) {
+function worker(maxBodyBytes?: number, maxSimulateRequests?: number) {
   const simulator = new DeterministicEffectSimulator({
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
@@ -63,7 +63,23 @@ function worker(maxBodyBytes?: number) {
       envelope: { maxVelocityMps: 0.5, maxForceNewtons: 50 },
     })],
   });
-  return createSimulationWorkerApp({ simulator, bearerToken: "worker-secret", maxBodyBytes });
+  return createSimulationWorkerApp({
+    simulator,
+    bearerToken: "worker-secret",
+    maxBodyBytes,
+    maxSimulateRequests,
+  });
+}
+
+function simulate(app: ReturnType<typeof worker>) {
+  return app.request("http://simulation-worker/v1/simulate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer worker-secret",
+    },
+    body: JSON.stringify({ preflight, worldSnapshot }),
+  });
 }
 
 function client(fetchImpl: typeof globalThis.fetch) {
@@ -143,6 +159,37 @@ describe("simulation worker HTTP boundary", () => {
     });
 
     expect(response.status).toBe(413);
+  });
+
+  it("rejects an authenticated simulate request past the configured quota", async () => {
+    const app = worker(undefined, 1);
+    const accepted = await simulate(app);
+    const rejected = await simulate(app);
+
+    expect(accepted.status).toBe(200);
+    expect(rejected.status).toBe(429);
+    expect(await rejected.json()).toEqual({
+      error: {
+        code: "QUOTA_EXCEEDED",
+        message: "Simulation request quota is exhausted",
+        retryable: false,
+      },
+    });
+  });
+
+  it("does not count health checks or unauthenticated requests against the simulate quota", async () => {
+    const app = worker(undefined, 1);
+    const health = await app.request("http://simulation-worker/v1/health");
+    const anonymous = await app.request("http://simulation-worker/v1/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preflight, worldSnapshot }),
+    });
+    const accepted = await simulate(app);
+
+    expect(health.status).toBe(200);
+    expect(anonymous.status).toBe(401);
+    expect(accepted.status).toBe(200);
   });
 
   it("rejects a receipt whose signature is modified in transit", async () => {

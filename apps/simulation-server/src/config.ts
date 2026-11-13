@@ -23,6 +23,8 @@ export interface SimulationWorkerConfig {
   readonly port: number;
   readonly bearerToken?: string;
   readonly maxBodyBytes: number;
+  /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
+  readonly maxSimulateRequests?: number;
   readonly artifactDirectory: string;
   readonly signerPublicKey: string;
   readonly signerPrivateKey: string;
@@ -46,6 +48,15 @@ const DEFAULT_MODEL: SimulationWorkerModelConfig = {
 
 function positiveInteger(name: string, raw: string | undefined, fallback: number): number {
   const value = Number(raw ?? fallback);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+  return value;
+}
+
+function optionalPositiveInteger(name: string, raw: string | undefined): number | undefined {
+  if (raw === undefined || raw.trim() === "") return undefined;
+  const value = Number(raw);
   if (!Number.isInteger(value) || value <= 0) {
     throw new Error(`${name} must be a positive integer`);
   }
@@ -209,6 +220,10 @@ export function loadSimulationWorkerConfig(
     port: positiveInteger("SINT_SIM_PORT", environment.SINT_SIM_PORT, 3201),
     bearerToken: environment.SINT_SIM_BEARER_TOKEN,
     maxBodyBytes: positiveInteger("SINT_SIM_MAX_BODY_BYTES", environment.SINT_SIM_MAX_BODY_BYTES, 1_048_576),
+    maxSimulateRequests: optionalPositiveInteger(
+      "SINT_SIM_MAX_SIMULATE_REQUESTS",
+      environment.SINT_SIM_MAX_SIMULATE_REQUESTS,
+    ),
     artifactDirectory: environment.SINT_SIM_ARTIFACT_DIR ?? ".sint/simulation-artifacts",
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,

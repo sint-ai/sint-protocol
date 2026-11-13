@@ -10,6 +10,8 @@ export interface SimulationWorkerAppOptions {
   readonly simulator: EffectSimulator;
   readonly bearerToken?: string;
   readonly maxBodyBytes?: number;
+  /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
+  readonly maxSimulateRequests?: number;
 }
 
 function statusForError(error: { readonly code: string; readonly retryable: boolean }): 409 | 422 | 503 {
@@ -27,6 +29,7 @@ function bearerMatches(header: string | undefined, expectedToken: string): boole
 /** Create an isolated worker app; this surface issues evidence and never authorization. */
 export function createSimulationWorkerApp(options: SimulationWorkerAppOptions): Hono {
   const app = new Hono();
+  let acceptedSimulateRequests = 0;
 
   app.use("/v1/simulate", bodyLimit({
     maxSize: options.maxBodyBytes ?? 1_048_576,
@@ -48,6 +51,19 @@ export function createSimulationWorkerApp(options: SimulationWorkerAppOptions): 
     ) {
       return context.json({ error: "unauthorized" }, 401);
     }
+    if (
+      options.maxSimulateRequests !== undefined
+      && acceptedSimulateRequests >= options.maxSimulateRequests
+    ) {
+      return context.json({
+        error: {
+          code: "QUOTA_EXCEEDED",
+          message: "Simulation request quota is exhausted",
+          retryable: false,
+        },
+      }, 429);
+    }
+    acceptedSimulateRequests += 1;
 
     let body: unknown;
     try {
