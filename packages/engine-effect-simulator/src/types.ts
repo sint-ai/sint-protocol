@@ -106,6 +106,8 @@ export interface SceneAwareNavigationModelOptions {
   readonly localizationErrorMeters?: number;
   /** Extra age of the last actor update from an approved stress case, milliseconds. */
   readonly droppedMessageMs?: number;
+  /** Extra delay before the actuator starts braking, from an approved stress case, milliseconds. */
+  readonly actuatorLagMs?: number;
 }
 
 /**
@@ -147,6 +149,8 @@ export interface NavigationStressCase {
   readonly localizationErrorMeters?: number;
   /** Extra age of the last actor update for this stress case, milliseconds. */
   readonly droppedMessageMs?: number;
+  /** Extra delay before the actuator starts braking for this stress case, milliseconds. */
+  readonly actuatorLagMs?: number;
 }
 
 /** Approved support for deterministic bounded-motion perturbations. */

@@ -301,7 +301,7 @@ export class SceneAwareNavigationModel implements DeterministicEffectModel {
       cursor = next;
     }
     const last = segments[segments.length - 1]!;
-    const stopDurationSeconds = reactionTimeMs / 1_000 + velocity / minDecelerationMps2;
+    const stopDurationSeconds = (reactionTimeMs + (this.options.actuatorLagMs ?? 0)) / 1_000 + velocity / minDecelerationMps2;
     const stopTarget: Point3D = {
       x: last.target.x + (last.target.x - last.start.x) / last.durationSeconds * stopDurationSeconds,
       y: last.target.y + (last.target.y - last.start.y) / last.durationSeconds * stopDurationSeconds,

@@ -248,6 +248,29 @@ describe("scene-aware navigation conformance", () => {
     expect(fuzzed.value.result.outcome).toBe("fail");
   });
 
+  it("fails a clear stop when the approved actuator-lag fuzz lengthens braking", async () => {
+    const input = scene({ obstacles: [{
+      id: "past-stop",
+      frameId: "map",
+      kind: "static",
+      position: { x: 1.59, y: 0, z: 0 },
+      radiusMeters: 0.02,
+      positionUncertaintyMeters: 0.01,
+      observedAt,
+    }] });
+    const clear = await simulate(input);
+    expect(clear.ok && "result" in clear.value ? clear.value.result.outcome : undefined).toBe("pass");
+    const policy: NavigationScenarioPolicy = {
+      version: "1.0.0",
+      policyId: "actuator-lag-v1",
+      cases: [{ id: "slow-actuator", actuatorLagMs: 400 }],
+    };
+    const fuzzed = await simulate(input, undefined, policy);
+    expect(fuzzed.ok).toBe(true);
+    if (!fuzzed.ok || !("scenarios" in fuzzed.value)) return;
+    expect(fuzzed.value.result.outcome).toBe("fail");
+  });
+
   it("rejects an invalid fixed-case policy before issuing a receipt", async () => {
     const policy: NavigationScenarioPolicy = {
       version: "1.0.0", policyId: "invalid",
