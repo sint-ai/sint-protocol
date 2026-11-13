@@ -1256,6 +1256,13 @@ export class PolicyGateway {
             && Number.isFinite(observedClearance)
             && observedClearance < predictedClearance
           ) {
+            failures.emit("simulation.execution.drift_detected", request.agentId, request.tokenId, {
+              receiptId: request.executionContext?.simulationEvidence?.receiptId,
+              measurement: "clearance",
+              predictedClearanceMeters: predictedClearance,
+              observedClearanceMeters: observedClearance,
+              enforcementMode: simulationEnforcementMode,
+            });
             return {
               requestId,
               timestamp,
