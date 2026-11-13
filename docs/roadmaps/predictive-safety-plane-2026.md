@@ -219,7 +219,7 @@ declared safe fallback without disabling E-stop or the local shield.
 - [x] introduce scenario fuzzing for localization error: an approved navigation stress case adds its extra localization error to the robot position bound, and a clear path fails when that error reaches the shelf
 - [x] introduce scenario fuzzing for dropped messages: an approved navigation stress case ages a dynamic obstacle's last update, and a clear cart fails when that gap reaches the path
 - [x] introduce scenario fuzzing for actuator lag: an approved navigation stress case adds its actuator lag to the stop corridor, and a clear stop fails when that lag reaches the obstacle
-- [ ] introduce scenario fuzzing for adversarial parameters
+- [x] introduce scenario fuzzing for adversarial parameters: an approved navigation stress case reduces the minimum braking deceleration, and a clear stop fails when the longer braking distance reaches the obstacle
 - [x] require human review when unsupported phenomena are non-empty: a T1 shadow request that names a model gap escalates instead of being allowed
 - [x] require human review when the uncertainty field is non-empty: a T1 shadow request whose world-snapshot uncertainty is greater than zero escalates instead of being allowed
 - [ ] canary mandatory evidence for one T2 action family at one pilot site
