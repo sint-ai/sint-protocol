@@ -364,6 +364,72 @@ describe("predictive simulation evidence policy", () => {
     expect(decision.denial?.policyViolated).toBe("SIMULATION_SIGNER_RETIRED");
   });
 
+  it("rejects a receipt whose image digest is not attested", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token);
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        trustedImageDigests: ["b".repeat(64)],
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_IMAGE_UNTRUSTED");
+  });
+
+  it("rejects a receipt that omits its image digest when attestation is required", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token, (draft) => {
+      const { imageDigest: _imageDigest, ...simulatorIdentity } = draft.simulator;
+      return { ...draft, simulator: simulatorIdentity };
+    });
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        trustedImageDigests: ["3".repeat(64)],
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_IMAGE_UNTRUSTED");
+  });
+
+  it("allows a receipt whose image digest is attested", async () => {
+    const token = makeToken();
+    const request = makeRequest(token);
+    const receipt = signedReceipt(request, token);
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        trustedImageDigests: ["3".repeat(64)],
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { ...request.executionContext, simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("allow");
+    expect(decision.denial).toBeUndefined();
+  });
+
   it("rejects stale world and receipt evidence", async () => {
     const token = makeToken();
     const request = makeRequest(token);
