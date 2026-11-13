@@ -265,6 +265,8 @@ does not consume it.
 When `SINT_SIM_TENANT_ID` is set, a simulate request for a different tenant,
 or one that omits the tenant, is rejected, and the bound tenant still
 returns a receipt.
+`listenMutualTlsWorker` requests a client certificate and closes the handshake
+when the client presents none.
 Production deployments should terminate mTLS at the worker or its sidecar in
 addition to bearer/workload identity.
 
