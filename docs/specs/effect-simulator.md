@@ -262,6 +262,9 @@ bounded request-body limit, and supports constant-time bearer authentication.
 When `SINT_SIM_MAX_SIMULATE_REQUESTS` is set, an authenticated simulate call
 past that limit is rejected, and a health check or unauthenticated request
 does not consume it.
+When `SINT_SIM_TENANT_ID` is set, a simulate request for a different tenant,
+or one that omits the tenant, is rejected, and the bound tenant still
+returns a receipt.
 Production deployments should terminate mTLS at the worker or its sidecar in
 addition to bearer/workload identity.
 

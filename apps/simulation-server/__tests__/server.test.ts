@@ -48,7 +48,7 @@ const worldSnapshot: SimulationWorldSnapshot = {
   uncertainty: 0.01,
 };
 
-function worker(maxBodyBytes?: number, maxSimulateRequests?: number) {
+function worker(maxBodyBytes?: number, maxSimulateRequests?: number, tenantId?: string) {
   const simulator = new DeterministicEffectSimulator({
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
@@ -68,17 +68,22 @@ function worker(maxBodyBytes?: number, maxSimulateRequests?: number) {
     bearerToken: "worker-secret",
     maxBodyBytes,
     maxSimulateRequests,
+    tenantId,
   });
 }
 
-function simulate(app: ReturnType<typeof worker>) {
+function simulate(app: ReturnType<typeof worker>, tenantId?: string) {
   return app.request("http://simulation-worker/v1/simulate", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer worker-secret",
     },
-    body: JSON.stringify({ preflight, worldSnapshot }),
+    body: JSON.stringify({
+      preflight,
+      worldSnapshot,
+      ...(tenantId !== undefined ? { tenantId } : {}),
+    }),
   });
 }
 
@@ -190,6 +195,41 @@ describe("simulation worker HTTP boundary", () => {
     expect(health.status).toBe(200);
     expect(anonymous.status).toBe(401);
     expect(accepted.status).toBe(200);
+  });
+
+  it("rejects a simulate request for a different tenant", async () => {
+    const app = worker(undefined, undefined, "plant-a");
+    const rejected = await simulate(app, "plant-b");
+
+    expect(rejected.status).toBe(403);
+    expect(await rejected.json()).toEqual({
+      error: {
+        code: "TENANT_MISMATCH",
+        message: "Simulation request tenant does not match this worker",
+        retryable: false,
+      },
+    });
+  });
+
+  it("rejects a simulate request that omits the tenant when the worker is bound", async () => {
+    const rejected = await simulate(worker(undefined, undefined, "plant-a"));
+
+    expect(rejected.status).toBe(403);
+    expect(await rejected.json()).toEqual({
+      error: {
+        code: "TENANT_MISMATCH",
+        message: "Simulation request tenant does not match this worker",
+        retryable: false,
+      },
+    });
+  });
+
+  it("returns a receipt when the simulate request names the bound tenant", async () => {
+    const accepted = await simulate(worker(undefined, undefined, "plant-a"), "plant-a");
+
+    expect(accepted.status).toBe(200);
+    const body = await accepted.json() as { receipt?: { result?: { outcome?: string } } };
+    expect(body.receipt?.result?.outcome).toBe("pass");
   });
 
   it("rejects a receipt whose signature is modified in transit", async () => {

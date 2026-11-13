@@ -22,6 +22,18 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("SINT_SIM_MAX_SIMULATE_REQUESTS must be a positive integer");
   });
 
+  it("loads a tenant id and rejects a blank one", () => {
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test" }).tenantId).toBeUndefined();
+    expect(loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_TENANT_ID: "plant-a",
+    }).tenantId).toBe("plant-a");
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_TENANT_ID: " ",
+    })).toThrow("SINT_SIM_TENANT_ID must be 1\u2013128 non-whitespace characters");
+  });
+
   it("fails closed when production authentication or persistent signing is absent", () => {
     expect(() => loadSimulationWorkerConfig({ NODE_ENV: "production" })).toThrow(
       "persistent simulation signer keypair",

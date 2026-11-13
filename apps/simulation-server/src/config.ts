@@ -25,6 +25,8 @@ export interface SimulationWorkerConfig {
   readonly maxBodyBytes: number;
   /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
   readonly maxSimulateRequests?: number;
+  /** When set, the worker accepts only a simulate request naming this tenant. */
+  readonly tenantId?: string;
   readonly artifactDirectory: string;
   readonly signerPublicKey: string;
   readonly signerPrivateKey: string;
@@ -61,6 +63,14 @@ function optionalPositiveInteger(name: string, raw: string | undefined): number 
     throw new Error(`${name} must be a positive integer`);
   }
   return value;
+}
+
+function optionalTenantId(raw: string | undefined): string | undefined {
+  if (raw === undefined) return undefined;
+  if (raw.trim() !== raw || raw.length < 1 || raw.length > 128) {
+    throw new Error("SINT_SIM_TENANT_ID must be 1\u2013128 non-whitespace characters");
+  }
+  return raw;
 }
 
 function nonNegativeNumber(value: unknown): value is number {
@@ -224,6 +234,7 @@ export function loadSimulationWorkerConfig(
       "SINT_SIM_MAX_SIMULATE_REQUESTS",
       environment.SINT_SIM_MAX_SIMULATE_REQUESTS,
     ),
+    tenantId: optionalTenantId(environment.SINT_SIM_TENANT_ID),
     artifactDirectory: environment.SINT_SIM_ARTIFACT_DIR ?? ".sint/simulation-artifacts",
     signerPublicKey: signer.publicKey,
     signerPrivateKey: signer.privateKey,
