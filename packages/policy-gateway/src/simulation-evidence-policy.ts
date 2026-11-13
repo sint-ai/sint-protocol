@@ -86,6 +86,8 @@ export interface DefaultSimulationEvidencePolicyOptions {
   readonly trustedSignerKeys: readonly Ed25519PublicKey[];
   /** Signer keys that verified receipts before rotation and must now be rejected. */
   readonly retiredSignerKeys?: readonly Ed25519PublicKey[];
+  /** Image digests the operator has attested. When set, the receipt must name one of them. */
+  readonly trustedImageDigests?: readonly SHA256[];
   /** Maximum evidence grade each trusted signer is accredited to issue. */
   readonly maxEvidenceGradeBySigner?: Readonly<Record<string, SimulationEvidenceGrade>>;
   readonly allowedBackends?: readonly string[];
@@ -234,11 +236,13 @@ function reusesPreSimulatedCorridor(
 export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicyPlugin {
   private readonly trustedSignerKeys: ReadonlySet<string>;
   private readonly retiredSignerKeys: ReadonlySet<string>;
+  private readonly trustedImageDigests: ReadonlySet<string>;
   private readonly shadowTiers: ReadonlySet<ApprovalTier>;
 
   constructor(private readonly options: DefaultSimulationEvidencePolicyOptions) {
     this.trustedSignerKeys = new Set(options.trustedSignerKeys);
     this.retiredSignerKeys = new Set(options.retiredSignerKeys ?? []);
+    this.trustedImageDigests = new Set(options.trustedImageDigests ?? []);
     this.shadowTiers = new Set(options.shadowTiers ?? []);
   }
 
@@ -292,6 +296,16 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
     }
     if (!verify(receipt.signerPublicKey, receipt.signature, computeSimulationEvidenceSigningPayload(receipt))) {
       return deny(context, "SIMULATION_SIGNATURE_INVALID", "Simulation receipt signature is invalid");
+    }
+    if (this.trustedImageDigests.size > 0) {
+      const imageDigest = receipt.simulator.imageDigest;
+      if (typeof imageDigest !== "string" || !this.trustedImageDigests.has(imageDigest)) {
+        return deny(
+          context,
+          "SIMULATION_IMAGE_UNTRUSTED",
+          "Simulation receipt image digest is not attested",
+        );
+      }
     }
     const signerMaxGrade = this.options.maxEvidenceGradeBySigner?.[receipt.signerPublicKey];
     if (
