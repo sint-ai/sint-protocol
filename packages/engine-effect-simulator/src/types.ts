@@ -104,6 +104,8 @@ export interface SceneAwareNavigationModelOptions {
   readonly actorMotionMps?: number;
   /** Extra robot localization error from an approved stress case, meters. */
   readonly localizationErrorMeters?: number;
+  /** Extra age of the last actor update from an approved stress case, milliseconds. */
+  readonly droppedMessageMs?: number;
 }
 
 /**
@@ -143,6 +145,8 @@ export interface NavigationStressCase {
   readonly actorMotionMps?: number;
   /** Extra robot localization error for this stress case, meters. */
   readonly localizationErrorMeters?: number;
+  /** Extra age of the last actor update for this stress case, milliseconds. */
+  readonly droppedMessageMs?: number;
 }
 
 /** Approved support for deterministic bounded-motion perturbations. */
