@@ -44,6 +44,8 @@ export interface SimulationEvidenceRequirement {
   readonly expectedBindings?: Partial<SimulationSubjectBindings>;
   /** Minimum M-of-N human approval threshold required after evidence passes. */
   readonly minApprovalQuorum?: number;
+  /** Selected actions require this many distinct simulation model digests. */
+  readonly minIndependentModels?: number;
   readonly reason?: string;
 }
 
@@ -143,6 +145,8 @@ export interface SimulationRuntimeIdentity {
   readonly version: string;
   /** Digest of the physical/world model used for the run. */
   readonly modelDigest: SHA256;
+  /** Digest of a second model. It counts only when it differs from modelDigest. */
+  readonly corroboratingModelDigest?: SHA256;
   /** Immutable container/VM image digest, when available. */
   readonly imageDigest?: SHA256;
   /** Published calibration error for this model, normalized to [0, 1]. */

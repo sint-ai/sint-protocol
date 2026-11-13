@@ -1249,6 +1249,123 @@ describe("predictive simulation evidence policy", () => {
     expect(decision.escalation?.approvalQuorum?.required).toBe(2);
   });
 
+  it("rejects a selected T3 action whose receipt names only one model", async () => {
+    const token = makeActionToken("ros2:///mode_change", "publish", {
+      quorum: { required: 2, authorized: ["operator-a", "operator-b"] },
+    });
+    const request = makeActionRequest(token, "ros2:///mode_change", "publish");
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      evidenceGrade: "physics",
+      bindings: { robotId: "robot-7", controllerId: "plc-4" },
+    }));
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        maxEvidenceGradeBySigner: { [simulator.publicKey]: "digital-twin" },
+        requirementFor: () => ({
+          minEvidenceGrade: "physics",
+          minScenarioRuns: 100,
+          requiredScenarioSetDigest: "4".repeat(64),
+          requiredBindings: ["robotId", "controllerId"],
+          expectedBindings: { robotId: "robot-7", controllerId: "plc-4" },
+          minApprovalQuorum: 2,
+          minIndependentModels: 2,
+        }),
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_INDEPENDENT_MODELS_REQUIRED");
+  });
+
+  it("rejects a selected T3 action when the second model digest repeats the first", async () => {
+    const token = makeActionToken("ros2:///mode_change", "publish", {
+      quorum: { required: 2, authorized: ["operator-a", "operator-b"] },
+    });
+    const request = makeActionRequest(token, "ros2:///mode_change", "publish");
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      evidenceGrade: "physics",
+      bindings: { robotId: "robot-7", controllerId: "plc-4" },
+      simulator: {
+        ...draft.simulator,
+        corroboratingModelDigest: draft.simulator.modelDigest,
+      },
+    }));
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        maxEvidenceGradeBySigner: { [simulator.publicKey]: "digital-twin" },
+        requirementFor: () => ({
+          minEvidenceGrade: "physics",
+          minScenarioRuns: 100,
+          requiredScenarioSetDigest: "4".repeat(64),
+          requiredBindings: ["robotId", "controllerId"],
+          expectedBindings: { robotId: "robot-7", controllerId: "plc-4" },
+          minApprovalQuorum: 2,
+          minIndependentModels: 2,
+        }),
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("deny");
+    expect(decision.denial?.policyViolated).toBe("SIMULATION_INDEPENDENT_MODELS_REQUIRED");
+  });
+
+  it("escalates a selected T3 action when the receipt names two different models", async () => {
+    const token = makeActionToken("ros2:///mode_change", "publish", {
+      quorum: { required: 2, authorized: ["operator-a", "operator-b"] },
+    });
+    const request = makeActionRequest(token, "ros2:///mode_change", "publish");
+    const receipt = signedReceipt(request, token, (draft) => ({
+      ...draft,
+      evidenceGrade: "physics",
+      bindings: { robotId: "robot-7", controllerId: "plc-4" },
+      simulator: {
+        ...draft.simulator,
+        corroboratingModelDigest: "6".repeat(64),
+      },
+    }));
+    const configured = new PolicyGateway({
+      resolveToken: () => token,
+      simulationEvidencePolicy: new DefaultSimulationEvidencePolicy({
+        trustedSignerKeys: [simulator.publicKey],
+        maxEvidenceGradeBySigner: { [simulator.publicKey]: "digital-twin" },
+        requirementFor: () => ({
+          minEvidenceGrade: "physics",
+          minScenarioRuns: 100,
+          requiredScenarioSetDigest: "4".repeat(64),
+          requiredBindings: ["robotId", "controllerId"],
+          expectedBindings: { robotId: "robot-7", controllerId: "plc-4" },
+          minApprovalQuorum: 2,
+          minIndependentModels: 2,
+        }),
+        now: () => now,
+      }),
+    });
+    const decision = await configured.intercept({
+      ...request,
+      executionContext: { simulationEvidence: receipt },
+    });
+
+    expect(decision.action).toBe("escalate");
+    expect(decision.assignedTier).toBe(ApprovalTier.T3_COMMIT);
+    expect(decision.denial).toBeUndefined();
+  });
+
   it("rejects T3 evidence when the token lacks the required human quorum", async () => {
     const token = makeActionToken("ros2:///mode_change", "publish");
     const request = makeActionRequest(token, "ros2:///mode_change", "publish");

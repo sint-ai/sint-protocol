@@ -21,6 +21,7 @@ export const simulationRuntimeIdentitySchema = z.object({
   backend: z.string().min(1).max(128),
   version: z.string().min(1).max(128),
   modelDigest: sha256Schema,
+  corroboratingModelDigest: sha256Schema.optional(),
   imageDigest: sha256Schema.optional(),
   calibrationError: z.number().min(0).max(1).optional(),
   confidenceThreshold: z.number().min(0).max(1).optional(),
@@ -81,6 +82,7 @@ export const simulationEvidenceRequirementSchema = z.object({
   ])).max(6).optional(),
   expectedBindings: simulationSubjectBindingsSchema.optional(),
   minApprovalQuorum: z.number().int().positive().max(100).optional(),
+  minIndependentModels: z.number().int().min(2).max(2).optional(),
   reason: z.string().min(1).max(512).optional(),
 }).strict();
 

@@ -317,6 +317,23 @@ export class DefaultSimulationEvidencePolicy implements SimulationEvidencePolicy
       );
     }
     if (
+      requirement?.minIndependentModels !== undefined
+      && requirement.minIndependentModels > 1
+    ) {
+      const digests = new Set<string>();
+      const primary = receipt.simulator.modelDigest;
+      if (typeof primary === "string" && primary.length > 0) digests.add(primary);
+      const second = receipt.simulator.corroboratingModelDigest;
+      if (typeof second === "string" && second.length > 0 && second !== primary) digests.add(second);
+      if (digests.size < requirement.minIndependentModels) {
+        return deny(
+          context,
+          "SIMULATION_INDEPENDENT_MODELS_REQUIRED",
+          "Selected action requires two independent simulation models",
+        );
+      }
+    }
+    if (
       requirement?.minApprovalQuorum !== undefined
       && (token.constraints.quorum?.required ?? 0) < requirement.minApprovalQuorum
     ) {

@@ -236,7 +236,7 @@ traceable receipt and correction event.
 ### Phase 4 — Multi-backend production (weeks 10–12)
 
 - [ ] add one GPU/high-fidelity backend and one vendor industrial simulator
-- [ ] require two independent models for selected T3 actions
+- [x] require two independent models for selected T3 actions: a receipt that names only one model, or repeats that model digest, is rejected, and two different model digests still escalate
 - [ ] deploy workload identity, mTLS, signer rotation, image attestation, quotas,
   and tenant isolation
 - [ ] add regional worker pools, circuit breakers, bounded queues, and signed
