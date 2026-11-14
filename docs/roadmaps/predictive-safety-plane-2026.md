@@ -246,7 +246,7 @@ traceable receipt and correction event.
 - [x] stop calling the simulation worker after the configured consecutive retryable failure limit: the next call does not reach the worker
 - [x] reuse a signed simulation receipt for the same effect plan, world digest, and model digest: the next call does not reach the worker
 - [x] reject an authenticated simulate call while the configured in-flight limit is full: the call is retryable, and the next call is accepted after the in-flight call finishes
-- [ ] add regional worker pools
+- [x] call only the worker for the configured region: the simulate call does not reach another region's worker
 - [ ] publish a predictive-safety conformance profile and operator runbook
 
 Exit gate: failover and compromised-worker exercises pass; receipts remain

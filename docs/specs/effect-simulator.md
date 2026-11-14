@@ -289,7 +289,9 @@ from reaching the worker. Unset means no limit. When `modelDigest` and
 stored under the effect-plan digest, world digest, and that model digest. The
 next call with the same three values returns that signed receipt and does not
 reach the worker. A cached entry is returned only after the same schema,
-signer, signature, binding, and grade checks. Unset means no cache. The Policy Gateway repeats
+signer, signature, binding, and grade checks. Unset means no cache. When `region` matches an entry in `regions`, the call
+goes to that entry's base URL and does not reach another region's worker.
+Unset region means `baseUrl`. The Policy Gateway repeats
 receipt verification during interception; client validation is defense in
 depth and never an authorization decision.
 
