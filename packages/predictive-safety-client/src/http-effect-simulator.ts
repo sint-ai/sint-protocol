@@ -27,7 +27,16 @@ export interface HttpEffectSimulatorOptions {
   readonly modelDigest?: string;
   /** Signed receipts reused for the same effect plan, world, and model. Unset means no cache. */
   readonly receiptCache?: SignedSimulationReceiptCache;
+  /** Region whose worker receives the call. Unset means baseUrl. */
+  readonly region?: string;
+  /** Workers addressed by region. Unset means baseUrl. */
+  readonly regions?: readonly SimulationWorkerRegion[];
   readonly fetch?: typeof globalThis.fetch;
+}
+
+export interface SimulationWorkerRegion {
+  readonly region: string;
+  readonly baseUrl: string;
 }
 
 export interface SignedSimulationReceiptCacheKey {
@@ -151,7 +160,9 @@ export class HttpEffectSimulator implements EffectSimulator {
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     let response: Response;
     try {
-      response = await this.fetch(`${this.baseUrl}/v1/simulate`, {
+      const regionalBase = this.options.regions?.find((entry) => entry.region === this.options.region)?.baseUrl;
+      const workerBase = (regionalBase ?? this.baseUrl).replace(/\/$/, "");
+      response = await this.fetch(`${workerBase}/v1/simulate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -3,4 +3,5 @@ export type {
   HttpEffectSimulatorOptions,
   SignedSimulationReceiptCache,
   SignedSimulationReceiptCacheKey,
+  SimulationWorkerRegion,
 } from "./http-effect-simulator.js";
