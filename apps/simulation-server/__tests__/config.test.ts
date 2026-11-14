@@ -22,6 +22,18 @@ describe("standalone simulation worker configuration", () => {
     })).toThrow("SINT_SIM_MAX_SIMULATE_REQUESTS must be a positive integer");
   });
 
+  it("loads a positive in-flight limit and rejects a non-positive one", () => {
+    expect(loadSimulationWorkerConfig({ NODE_ENV: "test" }).maxInFlightSimulateRequests).toBeUndefined();
+    expect(loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MAX_IN_FLIGHT_REQUESTS: "2",
+    }).maxInFlightSimulateRequests).toBe(2);
+    expect(() => loadSimulationWorkerConfig({
+      NODE_ENV: "test",
+      SINT_SIM_MAX_IN_FLIGHT_REQUESTS: "0",
+    })).toThrow("SINT_SIM_MAX_IN_FLIGHT_REQUESTS must be a positive integer");
+  });
+
   it("loads a tenant id and rejects a blank one", () => {
     expect(loadSimulationWorkerConfig({ NODE_ENV: "test" }).tenantId).toBeUndefined();
     expect(loadSimulationWorkerConfig({

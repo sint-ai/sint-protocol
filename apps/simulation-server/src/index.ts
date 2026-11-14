@@ -11,6 +11,7 @@ async function main(): Promise<void> {
     bearerToken: config.bearerToken,
     maxBodyBytes: config.maxBodyBytes,
     maxSimulateRequests: config.maxSimulateRequests,
+    maxInFlightSimulateRequests: config.maxInFlightSimulateRequests,
     tenantId: config.tenantId,
   });
   const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
