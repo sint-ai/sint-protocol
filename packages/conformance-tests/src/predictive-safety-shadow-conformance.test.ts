@@ -110,6 +110,27 @@ describe("Predictive Safety Plane T1 shadow conformance", () => {
     expect(data.schemaVersion).toBe("1.0.0");
     expect(data.promotionRule).toContain("never authorize or block");
     expect(data.conformanceCommand).toContain("predictive-safety-shadow-conformance.test.ts");
+
+    const profile = readFileSync(
+      resolve(ROOT, "docs/specs/predictive-safety-conformance-profile-v1.md"),
+      "utf8",
+    );
+    expect(profile).toContain("Status: executable conformance profile");
+    expect(profile).toContain(data.fixtureId);
+    expect(profile).toContain(
+      "packages/conformance-tests/fixtures/predictive-safety/t1-shadow-evaluation.v1.json",
+    );
+    expect(profile).toContain(data.conformanceCommand);
+    expect(profile).toContain("never authorize or block");
+    expect(profile).toContain("does not publish an operator runbook");
+    for (const scenario of data.cases) {
+      expect(profile, scenario.id).toContain(scenario.id);
+      expect(profile, scenario.id).toContain(scenario.expectedDecision);
+      expect(profile, scenario.id).toContain(scenario.expectedEvent);
+      if (scenario.expectedViolation) {
+        expect(profile, scenario.id).toContain(scenario.expectedViolation);
+      }
+    }
   });
 
   it("evaluates recorded T1 actions without blocking and preserves the evidence chain", async () => {

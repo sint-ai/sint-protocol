@@ -247,7 +247,8 @@ traceable receipt and correction event.
 - [x] reuse a signed simulation receipt for the same effect plan, world digest, and model digest: the next call does not reach the worker
 - [x] reject an authenticated simulate call while the configured in-flight limit is full: the call is retryable, and the next call is accepted after the in-flight call finishes
 - [x] call only the worker for the configured region: the simulate call does not reach another region's worker
-- [ ] publish a predictive-safety conformance profile and operator runbook
+- [x] publish a predictive-safety conformance profile: a recorded T1 shadow action with a missing, unsafe, or passing receipt is allowed and still records the receipt event
+- [ ] publish a predictive-safety operator runbook
 
 Exit gate: failover and compromised-worker exercises pass; receipts remain
 portable across backends; the gateway can revoke a signer or model digest
