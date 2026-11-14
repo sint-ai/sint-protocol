@@ -30,6 +30,7 @@ import {
   err,
   ok,
   type KineticEnvelopePlugin,
+  type KineticTightenedConstraints,
   type SupervisionLevel,
 } from "@pshkv/core";
 import {
@@ -75,11 +76,17 @@ function minDefined(a: number | undefined, b: number | undefined): number | unde
 /** Tightening-only merge: min of each defined limit. */
 function mergeEnvelopeOverrides(
   current: EnvelopeOverrides | undefined,
-  next: { maxVelocityMps?: number; maxForceNewtons?: number },
+  next: EnvelopeOverrides,
 ): EnvelopeOverrides {
+  const maxTorqueNm = minDefined(current?.maxTorqueNm, next.maxTorqueNm);
+  const maxJerkMps3 = minDefined(current?.maxJerkMps3, next.maxJerkMps3);
+  const maxAngularVelocityRps = minDefined(current?.maxAngularVelocityRps, next.maxAngularVelocityRps);
   return {
     maxVelocityMps: minDefined(current?.maxVelocityMps, next.maxVelocityMps),
     maxForceNewtons: minDefined(current?.maxForceNewtons, next.maxForceNewtons),
+    ...(maxTorqueNm !== undefined ? { maxTorqueNm } : {}),
+    ...(maxJerkMps3 !== undefined ? { maxJerkMps3 } : {}),
+    ...(maxAngularVelocityRps !== undefined ? { maxAngularVelocityRps } : {}),
   };
 }
 
@@ -1119,6 +1126,7 @@ export class PolicyGateway {
       agentTrustLevel = trust.value;
     }
     let supervision: SupervisionLevel | undefined;
+    let kineticTightened: KineticTightenedConstraints | undefined;
     if (this.config.kineticEnvelope) {
       const kineticFailure = await failures.check(
         "kineticEnvelope.compute",
@@ -1133,6 +1141,7 @@ export class PolicyGateway {
             );
           }
           supervision = envelope.supervision;
+          kineticTightened = envelope.tightenedConstraints;
         },
       );
       if (kineticFailure) return kineticFailure;
@@ -1720,6 +1729,24 @@ export class PolicyGateway {
         }
       }
 
+    }
+
+    const tightened = kineticTightened;
+    if (
+      tightened !== undefined
+      && (tightened.maxVelocityMps !== undefined
+        || tightened.maxForceNewtons !== undefined
+        || tightened.maxTorqueNm !== undefined
+        || tightened.maxJerkMps3 !== undefined
+        || tightened.maxAngularVelocityRps !== undefined)
+    ) {
+      envelopeOverrides = mergeEnvelopeOverrides(envelopeOverrides, {
+        maxVelocityMps: tightened.maxVelocityMps,
+        maxForceNewtons: tightened.maxForceNewtons,
+        maxTorqueNm: tightened.maxTorqueNm,
+        maxJerkMps3: tightened.maxJerkMps3,
+        maxAngularVelocityRps: tightened.maxAngularVelocityRps,
+      });
     }
 
     // 6e. Bind the effective envelope (min of token constraints and overrides)
