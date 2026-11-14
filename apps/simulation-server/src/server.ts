@@ -12,6 +12,8 @@ export interface SimulationWorkerAppOptions {
   readonly maxBodyBytes?: number;
   /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
   readonly maxSimulateRequests?: number;
+  /** Authenticated simulate calls that may run at once. Unset means no limit. */
+  readonly maxInFlightSimulateRequests?: number;
   /** When set, only a simulate request naming this tenant is accepted. */
   readonly tenantId?: string;
 }
@@ -32,6 +34,7 @@ function bearerMatches(header: string | undefined, expectedToken: string): boole
 export function createSimulationWorkerApp(options: SimulationWorkerAppOptions): Hono {
   const app = new Hono();
   let acceptedSimulateRequests = 0;
+  let inFlightSimulateRequests = 0;
 
   app.use("/v1/simulate", bodyLimit({
     maxSize: options.maxBodyBytes ?? 1_048_576,
@@ -54,44 +57,61 @@ export function createSimulationWorkerApp(options: SimulationWorkerAppOptions): 
       return context.json({ error: "unauthorized" }, 401);
     }
     if (
-      options.maxSimulateRequests !== undefined
-      && acceptedSimulateRequests >= options.maxSimulateRequests
+      options.maxInFlightSimulateRequests !== undefined
+      && inFlightSimulateRequests >= options.maxInFlightSimulateRequests
     ) {
       return context.json({
         error: {
-          code: "QUOTA_EXCEEDED",
-          message: "Simulation request quota is exhausted",
-          retryable: false,
+          code: "QUEUE_FULL",
+          message: "Simulation request queue is full",
+          retryable: true,
         },
-      }, 429);
+      }, 503);
     }
-    acceptedSimulateRequests += 1;
-
-    let body: unknown;
+    inFlightSimulateRequests += 1;
     try {
-      body = await context.req.json();
-    } catch {
-      return context.json({ error: "request body must be JSON" }, 400);
-    }
-    const parsed = effectSimulationRequestSchema.safeParse(body);
-    if (!parsed.success) {
-      return context.json({ error: "invalid simulation request", issues: parsed.error.issues }, 400);
-    }
-    if (options.tenantId !== undefined && parsed.data.tenantId !== options.tenantId) {
-      return context.json({
-        error: {
-          code: "TENANT_MISMATCH",
-          message: "Simulation request tenant does not match this worker",
-          retryable: false,
-        },
-      }, 403);
-    }
+      if (
+        options.maxSimulateRequests !== undefined
+        && acceptedSimulateRequests >= options.maxSimulateRequests
+      ) {
+        return context.json({
+          error: {
+            code: "QUOTA_EXCEEDED",
+            message: "Simulation request quota is exhausted",
+            retryable: false,
+          },
+        }, 429);
+      }
+      acceptedSimulateRequests += 1;
 
-    const simulated = await options.simulator.simulate(parsed.data.preflight, parsed.data.worldSnapshot);
-    if (!simulated.ok) {
-      return context.json({ error: simulated.error }, statusForError(simulated.error));
+      let body: unknown;
+      try {
+        body = await context.req.json();
+      } catch {
+        return context.json({ error: "request body must be JSON" }, 400);
+      }
+      const parsed = effectSimulationRequestSchema.safeParse(body);
+      if (!parsed.success) {
+        return context.json({ error: "invalid simulation request", issues: parsed.error.issues }, 400);
+      }
+      if (options.tenantId !== undefined && parsed.data.tenantId !== options.tenantId) {
+        return context.json({
+          error: {
+            code: "TENANT_MISMATCH",
+            message: "Simulation request tenant does not match this worker",
+            retryable: false,
+          },
+        }, 403);
+      }
+
+      const simulated = await options.simulator.simulate(parsed.data.preflight, parsed.data.worldSnapshot);
+      if (!simulated.ok) {
+        return context.json({ error: simulated.error }, statusForError(simulated.error));
+      }
+      return context.json({ receipt: simulated.value }, 200);
+    } finally {
+      inFlightSimulateRequests -= 1;
     }
-    return context.json({ receipt: simulated.value }, 200);
   });
 
   return app;

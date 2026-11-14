@@ -245,7 +245,8 @@ traceable receipt and correction event.
 - [x] refuse an active signer listed as retired: startup fails when that public key is in the retired set, a different retired key is still accepted, and a malformed entry fails configuration
 - [x] stop calling the simulation worker after the configured consecutive retryable failure limit: the next call does not reach the worker
 - [x] reuse a signed simulation receipt for the same effect plan, world digest, and model digest: the next call does not reach the worker
-- [ ] add regional worker pools and bounded queues
+- [x] reject an authenticated simulate call while the configured in-flight limit is full: the call is retryable, and the next call is accepted after the in-flight call finishes
+- [ ] add regional worker pools
 - [ ] publish a predictive-safety conformance profile and operator runbook
 
 Exit gate: failover and compromised-worker exercises pass; receipts remain

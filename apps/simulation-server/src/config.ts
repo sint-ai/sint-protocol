@@ -25,6 +25,8 @@ export interface SimulationWorkerConfig {
   readonly maxBodyBytes: number;
   /** Authenticated simulate calls allowed for this process. Unset means unlimited. */
   readonly maxSimulateRequests?: number;
+  /** Authenticated simulate calls that may run at once. Unset means no limit. */
+  readonly maxInFlightSimulateRequests?: number;
   /** When set, the worker accepts only a simulate request naming this tenant. */
   readonly tenantId?: string;
   /** When set, the mutual-TLS listener accepts only one SPIFFE ID in this trust domain. */
@@ -264,6 +266,10 @@ export function loadSimulationWorkerConfig(
     maxSimulateRequests: optionalPositiveInteger(
       "SINT_SIM_MAX_SIMULATE_REQUESTS",
       environment.SINT_SIM_MAX_SIMULATE_REQUESTS,
+    ),
+    maxInFlightSimulateRequests: optionalPositiveInteger(
+      "SINT_SIM_MAX_IN_FLIGHT_REQUESTS",
+      environment.SINT_SIM_MAX_IN_FLIGHT_REQUESTS,
     ),
     tenantId: optionalTenantId(environment.SINT_SIM_TENANT_ID),
     trustDomain: optionalTrustDomain(environment.SINT_SIM_TRUST_DOMAIN),

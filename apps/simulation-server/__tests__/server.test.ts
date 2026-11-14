@@ -182,6 +182,60 @@ describe("simulation worker HTTP boundary", () => {
     });
   });
 
+  it("rejects an authenticated simulate call while the configured in-flight limit is full", async () => {
+    let release = (): void => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started = 0;
+    const inner = new DeterministicEffectSimulator({
+      signerPublicKey: signer.publicKey,
+      signerPrivateKey: signer.privateKey,
+      version: "0.1.0",
+      modelDigest: digest("b"),
+      artifactStore: new InMemorySimulationArtifactStore(),
+      receiptRecorder: new EvidenceLedgerSimulationReceiptRecorder(new LedgerWriter()),
+      now: () => now,
+      models: [new BoundedMotionEffectModel({
+        resources: ["ros2:///cmd_vel"],
+        actions: ["publish"],
+        envelope: { maxVelocityMps: 0.5, maxForceNewtons: 50 },
+      })],
+    });
+    const app = createSimulationWorkerApp({
+      simulator: {
+        backend: inner.backend,
+        supportedGrades: inner.supportedGrades,
+        async simulate(preflightInput: SimulationPreflight, world: SimulationWorldSnapshot) {
+          started += 1;
+          if (started === 1) await gate;
+          return inner.simulate(preflightInput, world);
+        },
+      },
+      bearerToken: "worker-secret",
+      maxInFlightSimulateRequests: 1,
+    });
+
+    const first = simulate(app);
+    const deadline = Date.now() + 1_000;
+    while (started < 1) {
+      if (Date.now() > deadline) throw new Error("timed out waiting for the in-flight simulate call");
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    const rejected = await simulate(app);
+    expect(rejected.status).toBe(503);
+    expect(await rejected.json()).toEqual({
+      error: {
+        code: "QUEUE_FULL",
+        message: "Simulation request queue is full",
+        retryable: true,
+      },
+    });
+    release();
+    expect((await first).status).toBe(200);
+    expect((await simulate(app)).status).toBe(200);
+  });
+
   it("does not count health checks or unauthenticated requests against the simulate quota", async () => {
     const app = worker(undefined, 1);
     const health = await app.request("http://simulation-worker/v1/health");
