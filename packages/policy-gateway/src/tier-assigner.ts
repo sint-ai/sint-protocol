@@ -14,6 +14,7 @@ import {
   ApprovalTier,
   type RiskTier,
   type SintRequest,
+  type SupervisionLevel,
   type TierAssignmentRule,
   DEFAULT_TIER_RULES,
   classifyMcpPolicy,
@@ -78,6 +79,8 @@ export function assignTier(
   options: {
     rules?: readonly TierAssignmentRule[];
     agentTrustLevel?: AgentTrustLevel;
+    /** Kinetic-envelope supervision. Raises the tier and never lowers it. */
+    supervision?: SupervisionLevel;
   } = {},
 ): TierAssignment {
   const rules = options.rules ?? DEFAULT_TIER_RULES;
@@ -163,6 +166,20 @@ export function assignTier(
       tier = ApprovalTier.T2_ACT;
       escalationReasons.push("Declared action has non-trivial blast radius");
     }
+  }
+
+  // A kinetic supervision floor raises the tier and never lowers it.
+  // stable is unchanged. silent_veto is a gateway deny, not a tier.
+  const supervisionFloor: Partial<Record<SupervisionLevel, ApprovalTier>> = {
+    metacognitive: ApprovalTier.T1_PREPARE,
+    assisted: ApprovalTier.T2_ACT,
+    regulated: ApprovalTier.T3_COMMIT,
+  };
+  const floor = options.supervision ? supervisionFloor[options.supervision] : undefined;
+  if (floor && TIER_ORDER[tier] < TIER_ORDER[floor]) {
+    tier = floor;
+    riskTier = (["T0_read", "T1_write_low", "T2_stateful", "T3_irreversible"] as const)[TIER_ORDER[tier]] as RiskTier;
+    escalationReasons.push("Kinetic envelope supervision floor");
   }
 
   return { approvalTier: tier, riskTier, escalationReasons };

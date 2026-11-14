@@ -79,6 +79,7 @@ const failureCodes: Record<string, string> = {
   "verifiableCompute.verify": "CONSTRAINT_VIOLATION",
   "spatialCorridor.verify": "SPATIAL_CORRIDOR_VERIFICATION_FAILED",
   "edge.checkCentralEscalation": "EDGE_CENTRAL_UNAVAILABLE",
+  "kineticEnvelope.compute": "KINETIC_ENVELOPE_UNAVAILABLE",
 };
 
 export class PluginFailureScope {

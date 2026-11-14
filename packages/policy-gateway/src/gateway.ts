@@ -24,10 +24,13 @@ import {
   canonicalJsonStringify,
   DEFAULT_APPROVAL_TIMEOUT_MS,
   DEFAULT_FORBIDDEN_COMBOS,
+  KINETIC_CAPACITY_EXCEEDED,
   normalizeComboAction,
   parseMcpResource,
   err,
   ok,
+  type KineticEnvelopePlugin,
+  type SupervisionLevel,
 } from "@pshkv/core";
 import {
   hashSha256,
@@ -509,6 +512,14 @@ export interface PolicyGatewayConfig extends PluginFailureOptions {
    * write robot control programs. Fail-closed on plugin errors.
    */
   readonly codeAsPolicyGuard?: CodeAsPolicyGuardPlugin;
+  /**
+   * Optional kinetic-envelope plugin.
+   * Omitted means tier assignment is unchanged. `silent_veto` denies with
+   * KINETIC_CAPACITY_EXCEEDED. A thrown compute denies with
+   * KINETIC_ENVELOPE_UNAVAILABLE. Other supervision levels floor the tier
+   * and never lower it.
+   */
+  readonly kineticEnvelope?: KineticEnvelopePlugin;
 }
 
 export interface SimulationPreflightError {
@@ -1107,7 +1118,30 @@ export class PolicyGateway {
       if (!trust.ok) return failures.deny(trust.error);
       agentTrustLevel = trust.value;
     }
-    let tierAssignment = assignTier(request, { agentTrustLevel, rules: this.config.tierRules });
+    let supervision: SupervisionLevel | undefined;
+    if (this.config.kineticEnvelope) {
+      const kineticFailure = await failures.check(
+        "kineticEnvelope.compute",
+        () => this.config.kineticEnvelope!.computeEnvelope(request),
+        envelope => {
+          if (envelope.supervision === "silent_veto") {
+            return this.deny(
+              requestId,
+              timestamp,
+              KINETIC_CAPACITY_EXCEEDED,
+              "Kinetic envelope capacity exceeded",
+            );
+          }
+          supervision = envelope.supervision;
+        },
+      );
+      if (kineticFailure) return kineticFailure;
+    }
+    let tierAssignment = assignTier(request, {
+      agentTrustLevel,
+      rules: this.config.tierRules,
+      supervision,
+    });
 
     // 5b. CSML escalation (Avatar Layer 5) — bump tier if agent's safety score exceeds θ
     if (this.config.csmlEscalation) {
