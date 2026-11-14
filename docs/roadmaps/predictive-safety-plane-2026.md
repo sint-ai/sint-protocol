@@ -248,7 +248,7 @@ traceable receipt and correction event.
 - [x] reject an authenticated simulate call while the configured in-flight limit is full: the call is retryable, and the next call is accepted after the in-flight call finishes
 - [x] call only the worker for the configured region: the simulate call does not reach another region's worker
 - [x] publish a predictive-safety conformance profile: a recorded T1 shadow action with a missing, unsafe, or passing receipt is allowed and still records the receipt event
-- [ ] publish a predictive-safety operator runbook
+- [x] publish a predictive-safety operator runbook: the shipped worker startup, quota, in-flight, tenant, retired-signer, mutual-TLS, and client controls are recorded, and a health response does not authorize execution
 
 Exit gate: failover and compromised-worker exercises pass; receipts remain
 portable across backends; the gateway can revoke a signer or model digest
