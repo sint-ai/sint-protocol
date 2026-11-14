@@ -257,7 +257,8 @@ describe("MCP Attack Surface — SINT mitigation coverage", () => {
     const token = issueAndStore({
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
-      constraints: { rateLimit: { maxCalls: 5, windowMs: 60_000 } },
+      // Larger than Date.now(), so floor(Date.now()/windowMs) stays in one bucket.
+      constraints: { rateLimit: { maxCalls: 5, windowMs: Date.now() + 86_400_000 } },
     });
 
     // Make 5 allowed calls

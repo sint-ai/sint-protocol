@@ -362,7 +362,7 @@ Target packages:
 - extend kinetic-envelope spec with center-of-mass, foot/hand contact, payload,
   floor confidence, and bimanual manipulation context
 - add conformance vectors
-- wire supervision floor into gateway tiering behind an opt-in plugin
+- supervision floor is wired into gateway tiering behind an opt-in plugin: metacognitive floors at T1, assisted at T2, regulated at T3, a higher tier is not lowered, silent veto denies with KINETIC_CAPACITY_EXCEEDED, and a thrown plugin denies with KINETIC_ENVELOPE_UNAVAILABLE (`packages/policy-gateway/__tests__/kinetic-supervision-floor.test.ts`). Tightened-constraint min-merge stays open
 
 ### Sprint 4: Human Factors And Teleop
 

@@ -81,7 +81,8 @@ describe("PolicyGateway — rate-limit enforcement", () => {
   });
 
   it("denies the (maxCalls+1)th request in the window", async () => {
-    const token = issueRateLimitedToken(3, 60_000);
+    // Larger than Date.now(), so floor(Date.now()/windowMs) stays in one bucket.
+    const token = issueRateLimitedToken(3, Date.now() + 86_400_000);
     tokenStore.set(token.tokenId, token);
 
     for (let i = 0; i < 3; i++) {
@@ -99,7 +100,8 @@ describe("PolicyGateway — rate-limit enforcement", () => {
   });
 
   it("denial message includes count and limit", async () => {
-    const token = issueRateLimitedToken(2, 60_000);
+    const windowMs = Date.now() + 86_400_000;
+    const token = issueRateLimitedToken(2, windowMs);
     tokenStore.set(token.tokenId, token);
 
     for (let i = 0; i < 2; i++) {
@@ -110,7 +112,7 @@ describe("PolicyGateway — rate-limit enforcement", () => {
       requestId: "01905f7c-4e8a-7b3d-9a1e-999999999999" as any }));
 
     expect(decision.denial?.reason).toContain("3/2");
-    expect(decision.denial?.reason).toContain("60000ms");
+    expect(decision.denial?.reason).toContain(`${windowMs}ms`);
   });
 
   it("token without rateLimit is never blocked by rate-limit check", async () => {
@@ -157,13 +159,14 @@ describe("PolicyGateway — rate-limit enforcement", () => {
   });
 
   it("different tokens have independent rate-limit counters", async () => {
-    const tokenA = issueRateLimitedToken(2, 60_000);
+    const rateWindowMs = Date.now() + 86_400_000;
+    const tokenA = issueRateLimitedToken(2, rateWindowMs);
     const req2: SintCapabilityTokenRequest = {
       issuer: root.publicKey,
       subject: agent.publicKey,
       resource: "mcp://filesystem/readFile",
       actions: ["call"],
-      constraints: { rateLimit: { maxCalls: 2, windowMs: 60_000 } },
+      constraints: { rateLimit: { maxCalls: 2, windowMs: rateWindowMs } },
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
       expiresAt: futureISO(1),
       revocable: false,

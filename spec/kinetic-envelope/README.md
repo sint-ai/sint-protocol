@@ -4,11 +4,11 @@ Spec slice for physics-aware tier assignment, proposed in sint-ai/sint-protocol#
 
 It adds an opt-in envelope step that reads an action's kinetic parameters, tightens the executable envelope, and sets a supervision level. As autonomy demand `A` climbs toward environmental capacity `E`, supervision rises (deautomation). At `A > E` the action gets a silent veto. Register a `KineticEnvelopePlugin` to turn it on. With no plugin registered, the gateway runs the way it does today.
 
-This branch is spec plus fixtures. It does not wire `supervision` into `assignTier`. That is step 4, after these vectors pass.
+An opt-in `kineticEnvelope` plugin floors `assignTier`: metacognitive at T1, assisted at T2, regulated at T3, and never lowers a higher tier. `silent_veto` denies with `KINETIC_CAPACITY_EXCEEDED`. A thrown compute denies with `KINETIC_ENVELOPE_UNAVAILABLE`. No plugin leaves tier assignment unchanged. Tightened-constraint min-merge is still not applied.
 
 ## Types
 
-Opt-in surface. A registered plugin returns a `KineticEnvelopeResult`; the gateway min-merges `tightenedConstraints` into the token envelope and reads `supervision`.
+Opt-in surface. A registered plugin returns a `KineticEnvelopeResult`. The gateway reads `supervision` as a floor. It does not yet min-merge `tightenedConstraints` into the token envelope.
 
 ```ts
 export type SupervisionLevel =
