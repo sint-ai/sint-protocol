@@ -112,7 +112,7 @@ describe("Phase 4 Invariant: Rate limiting", () => {
   });
 
   it("INVARIANT: the (maxCalls+1)th call is always denied", async () => {
-    const token = issueToken(2, 60_000);
+    const token = issueToken(2, Date.now() + 86_400_000);
     tokenStore.set(token.tokenId, token);
     for (let i = 0; i < 2; i++) {
       await gateway.intercept(makeRequest({ tokenId: token.tokenId, agentId: agent.publicKey,
@@ -125,11 +125,12 @@ describe("Phase 4 Invariant: Rate limiting", () => {
   });
 
   it("INVARIANT: rate limiting is per-token (different tokens have independent counters)", async () => {
-    const tokenA = issueToken(1, 60_000);
+    const rateWindowMs = Date.now() + 86_400_000;
+    const tokenA = issueToken(1, rateWindowMs);
     const r = issueCapabilityToken({
       issuer: root.publicKey, subject: agent.publicKey,
       resource: "mcp://filesystem/readFile", actions: ["call"],
-      constraints: { rateLimit: { maxCalls: 1, windowMs: 60_000 } },
+      constraints: { rateLimit: { maxCalls: 1, windowMs: rateWindowMs } },
       delegationChain: { parentTokenId: null, depth: 0, attenuated: false },
       expiresAt: futureISO(1), revocable: false,
     }, root.privateKey);

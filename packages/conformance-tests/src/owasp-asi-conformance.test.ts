@@ -638,7 +638,8 @@ describe("OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json", ()
       const token = issueAndStore({
         resource: "mcp://filesystem/readFile",
         actions: ["call"],
-        constraints: { rateLimit: { maxCalls: 5, windowMs: 60_000 } },
+        // Larger than Date.now(), so floor(Date.now()/windowMs) stays in one bucket.
+        constraints: { rateLimit: { maxCalls: 5, windowMs: Date.now() + 86_400_000 } },
       });
 
       for (let i = 0; i < 5; i++) {
@@ -713,7 +714,7 @@ describe("OWASP ASI01–ASI10 Conformance — owasp-asi-conformance.v1.json", ()
       const token = issueAndStore({
         resource: "mcp://filesystem/readFile",
         actions: ["call"],
-        constraints: { rateLimit: { maxCalls: 10, windowMs: 60_000 } },
+        constraints: { rateLimit: { maxCalls: 10, windowMs: Date.now() + 86_400_000 } },
       });
 
       const results: string[] = [];
