@@ -90,6 +90,18 @@ export interface EnvelopeOverrides {
   readonly maxVelocityMps?: number;
   /** Tighter force limit (N) derived from proximity to fragile objects or humans. */
   readonly maxForceNewtons?: number;
+  /** Tighter torque limit (Nm). A kinetic envelope can only lower this. */
+  readonly maxTorqueNm?: number;
+  /** Tighter jerk limit (m/s³). A kinetic envelope can only lower this. */
+  readonly maxJerkMps3?: number;
+  /** Tighter angular velocity limit (rad/s). A kinetic envelope can only lower this. */
+  readonly maxAngularVelocityRps?: number;
+}
+
+/** Effective limit is the tighter of the token and an optional override. */
+function tighter(tokenLimit: number | undefined, override: number | undefined): number | undefined {
+  if (tokenLimit !== undefined && override !== undefined) return Math.min(tokenLimit, override);
+  return override ?? tokenLimit;
 }
 
 /**
@@ -115,14 +127,11 @@ export function checkConstraints(
   const violations: ConstraintViolation[] = [];
 
   // Effective limits: envelope overrides can only tighten token limits
-  const effectiveMaxForce =
-    token.constraints.maxForceNewtons !== undefined && overrides?.maxForceNewtons !== undefined
-      ? Math.min(token.constraints.maxForceNewtons, overrides.maxForceNewtons)
-      : (overrides?.maxForceNewtons ?? token.constraints.maxForceNewtons);
-  const effectiveMaxVelocity =
-    token.constraints.maxVelocityMps !== undefined && overrides?.maxVelocityMps !== undefined
-      ? Math.min(token.constraints.maxVelocityMps, overrides.maxVelocityMps)
-      : (overrides?.maxVelocityMps ?? token.constraints.maxVelocityMps);
+  const effectiveMaxForce = tighter(token.constraints.maxForceNewtons, overrides?.maxForceNewtons);
+  const effectiveMaxVelocity = tighter(token.constraints.maxVelocityMps, overrides?.maxVelocityMps);
+  const effectiveMaxTorque = tighter(token.constraints.maxTorqueNm, overrides?.maxTorqueNm);
+  const effectiveMaxJerk = tighter(token.constraints.maxJerkMps3, overrides?.maxJerkMps3);
+  const effectiveMaxAngular = tighter(token.constraints.maxAngularVelocityRps, overrides?.maxAngularVelocityRps);
 
   const checkLimit = (
     constraint: string,
@@ -148,10 +157,13 @@ export function checkConstraints(
     overrides?.maxForceNewtons !== undefined ? " (dynamic envelope)" : "");
   checkLimit("maxVelocityMps", effectiveMaxVelocity, context.commandedVelocityMps, "m/s",
     overrides?.maxVelocityMps !== undefined ? " (dynamic envelope)" : "");
-  checkLimit("maxTorqueNm", token.constraints.maxTorqueNm, context.commandedTorqueNm, "Nm");
-  checkLimit("maxJerkMps3", token.constraints.maxJerkMps3, context.commandedJerkMps3, "m/s³");
-  checkLimit("maxAngularVelocityRps", token.constraints.maxAngularVelocityRps,
-    context.commandedAngularVelocityRps, "rad/s");
+  checkLimit("maxTorqueNm", effectiveMaxTorque, context.commandedTorqueNm, "Nm",
+    overrides?.maxTorqueNm !== undefined ? " (dynamic envelope)" : "");
+  checkLimit("maxJerkMps3", effectiveMaxJerk, context.commandedJerkMps3, "m/s³",
+    overrides?.maxJerkMps3 !== undefined ? " (dynamic envelope)" : "");
+  checkLimit("maxAngularVelocityRps", effectiveMaxAngular,
+    context.commandedAngularVelocityRps, "rad/s",
+    overrides?.maxAngularVelocityRps !== undefined ? " (dynamic envelope)" : "");
   checkLimit("contactForceThresholdN", token.constraints.contactForceThresholdN,
     context.currentContactForceNewtons, "N");
 

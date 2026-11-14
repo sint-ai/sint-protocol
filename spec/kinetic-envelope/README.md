@@ -4,11 +4,11 @@ Spec slice for physics-aware tier assignment, proposed in sint-ai/sint-protocol#
 
 It adds an opt-in envelope step that reads an action's kinetic parameters, tightens the executable envelope, and sets a supervision level. As autonomy demand `A` climbs toward environmental capacity `E`, supervision rises (deautomation). At `A > E` the action gets a silent veto. Register a `KineticEnvelopePlugin` to turn it on. With no plugin registered, the gateway runs the way it does today.
 
-An opt-in `kineticEnvelope` plugin floors `assignTier`: metacognitive at T1, assisted at T2, regulated at T3, and never lowers a higher tier. `silent_veto` denies with `KINETIC_CAPACITY_EXCEEDED`. A thrown compute denies with `KINETIC_ENVELOPE_UNAVAILABLE`. No plugin leaves tier assignment unchanged. Tightened-constraint min-merge is still not applied.
+An opt-in `kineticEnvelope` plugin floors `assignTier`: metacognitive at T1, assisted at T2, regulated at T3, and never lowers a higher tier. `silent_veto` denies with `KINETIC_CAPACITY_EXCEEDED`. A thrown compute denies with `KINETIC_ENVELOPE_UNAVAILABLE`. No plugin leaves tier assignment unchanged. Numeric tightened constraints are min-merged with the token for velocity, force, torque, jerk, and angular velocity, and a looser kinetic limit does not raise the token limit. Joint limits and the proximity minimum stay open.
 
 ## Types
 
-Opt-in surface. A registered plugin returns a `KineticEnvelopeResult`. The gateway reads `supervision` as a floor. It does not yet min-merge `tightenedConstraints` into the token envelope.
+Opt-in surface. A registered plugin returns a `KineticEnvelopeResult`. The gateway reads `supervision` as a floor and min-merges numeric `tightenedConstraints` into the token envelope for velocity, force, torque, jerk, and angular velocity. A looser kinetic value does not raise the token limit. Joint limits and the proximity minimum are not applied.
 
 ```ts
 export type SupervisionLevel =
